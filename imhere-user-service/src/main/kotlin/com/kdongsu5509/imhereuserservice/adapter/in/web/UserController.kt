@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/user/search")
 class UserController(private val userSearchUseCase: UserSearchUseCase) {
 
-    @GetMapping("/search/{keyword}")
+    @GetMapping("/{keyword}")
     fun searchUsers(
         @PathVariable @NotBlank(message = "이메일 혹은 사용자 닉네임을 입력하여야 합니다")
         keyword: String
@@ -28,7 +28,7 @@ class UserController(private val userSearchUseCase: UserSearchUseCase) {
         return APIResponse.success(responseValue)
     }
 
-    @GetMapping("/search/me")
+    @GetMapping("/me")
     fun searchMyInfo(
         @AuthenticationPrincipal user: UserDetails
     ): APIResponse<UserSearchResponse> {

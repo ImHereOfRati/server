@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/user/auth")
 class AuthController(val handleOIDCUseCase: HandleOIDCUseCase, val reissueJwtUseCase: ReissueJWTUseCase) {
 
     @PostMapping("/login")

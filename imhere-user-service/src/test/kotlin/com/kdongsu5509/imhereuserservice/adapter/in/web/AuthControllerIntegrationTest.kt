@@ -8,9 +8,9 @@ import com.kdongsu5509.imhereuserservice.adapter.out.dto.OIDCPublicKeyResponse
 import com.kdongsu5509.imhereuserservice.adapter.out.kakao.KakaoOauthClient
 import com.kdongsu5509.imhereuserservice.application.port.`in`.HandleOIDCUseCase
 import com.kdongsu5509.imhereuserservice.application.port.`in`.ReissueJWTPort
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -25,13 +25,17 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.security.interfaces.RSAPublicKey
-import java.util.Base64
-import kotlin.collections.get
+import java.util.*
 
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuthControllerIntegrationTest : TestRedisContainer() {
+
+    companion object {
+        const val LOGIN_URL = "/api/v1/user/login"
+        const val REISSUE_URL = "/api/v1/user/reissue"
+    }
 
     @Autowired
     lateinit var handleOidcUseCase: HandleOIDCUseCase
@@ -72,7 +76,7 @@ class AuthControllerIntegrationTest : TestRedisContainer() {
         )
 
         mockMvc.perform(
-            post("/api/v1/auth/login")
+            post(LOGIN_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(testMockTokenInfo)
         )
@@ -94,7 +98,7 @@ class AuthControllerIntegrationTest : TestRedisContainer() {
 
 
         mockMvc.perform(
-            post("/api/v1/auth/login")
+            post(LOGIN_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(testMockTokenInfo)
         )
@@ -114,7 +118,7 @@ class AuthControllerIntegrationTest : TestRedisContainer() {
         )
 
         mockMvc.perform(
-            post("/api/v1/auth/reissue")
+            post(REISSUE_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(testJwtRefreshToken)
         )
@@ -159,7 +163,7 @@ class AuthControllerIntegrationTest : TestRedisContainer() {
         )
 
         val result = mockMvc.perform(
-            post("/api/v1/auth/login")
+            post(LOGIN_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginRequestBody)
         )

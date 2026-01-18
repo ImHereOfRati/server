@@ -1,28 +1,21 @@
-package com.kdongsu5509.imhereuserservice.adapter.out.persistence
+package com.kdongsu5509.imhereuserservice.adapter.out.persistence.user
 
-import com.kdongsu5509.imhereuserservice.application.port.out.CheckUserPort
+import com.kdongsu5509.imhereuserservice.adapter.out.persistence.SpringDataUserRepository
+import com.kdongsu5509.imhereuserservice.adapter.out.persistence.SpringQueryDSLUserRepository
+import com.kdongsu5509.imhereuserservice.adapter.out.persistence.UserJpaEntity
+import com.kdongsu5509.imhereuserservice.adapter.out.persistence.UserMapper
 import com.kdongsu5509.imhereuserservice.application.port.out.LoadUserPort
-import com.kdongsu5509.imhereuserservice.application.port.out.SaveUserPort
 import com.kdongsu5509.imhereuserservice.domain.User
 import com.kdongsu5509.imhereuserservice.support.exception.domain.auth.UserNotFoundException
 import org.springframework.stereotype.Component
 
 @Component
-class UserPersistenceAdapter(
+class UserLoadPersistenceAdapter(
     private val userMapper: UserMapper,
     private val springDataUserRepository: SpringDataUserRepository,
     private val springQueryDSLUserRepository: SpringQueryDSLUserRepository
 
-) : CheckUserPort, SaveUserPort, LoadUserPort {
-    override fun existsByEmail(email: String): Boolean {
-        return springDataUserRepository.existsByEmail(email)
-    }
-
-    override fun save(user: User) {
-        val jpaEntity = userMapper.mapToJpaEntity(user)
-        springDataUserRepository.save(jpaEntity)
-    }
-
+) : LoadUserPort {
     override fun findByEmail(email: String): User {
         val findJpaEntity: UserJpaEntity? = springDataUserRepository.findByEmail(email)
         findJpaEntity ?: throw UserNotFoundException()

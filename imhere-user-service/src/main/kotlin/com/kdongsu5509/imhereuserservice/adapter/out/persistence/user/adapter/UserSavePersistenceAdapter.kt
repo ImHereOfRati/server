@@ -12,8 +12,9 @@ class UserSavePersistenceAdapter(
     private val springDataUserRepository: SpringDataUserRepository,
 
     ) : UserSavePort {
-    override fun save(user: User) {
+    override fun save(user: User): User {
         val jpaEntity = userMapper.mapToJpaEntity(user)
-        springDataUserRepository.save(jpaEntity)
+        val savedEntity = springDataUserRepository.save(jpaEntity)
+        return userMapper.mapToDomainEntity(savedEntity)
     }
 }

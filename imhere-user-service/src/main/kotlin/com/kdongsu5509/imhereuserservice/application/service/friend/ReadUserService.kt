@@ -15,7 +15,7 @@ class ReadUserService(private val userLoadPort: UserLoadPort) : ReadUserUseCase 
     }
 
     override fun searchMe(email: String): UserInformation {
-        val me = userLoadPort.findByEmail(email)
-        return UserInformation(me.email, me.nickname)
+        val me = userLoadPort.findActiveUserByEmailOrNull(email)
+        return UserInformation(me!!.email, me.nickname)
     }
 }

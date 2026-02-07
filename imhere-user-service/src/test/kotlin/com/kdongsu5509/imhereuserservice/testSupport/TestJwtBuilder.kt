@@ -30,29 +30,30 @@ object TestJwtBuilder {
      * 유효한 카카오 규격의 ID 토큰을 생성하는 빌더 메서드입니다.
      */
     fun buildValidIdToken(): String {
+        return createToken(KAKAO_PAYLOAD_EMAIL)
+    }
 
+    fun buildValidIdTokenWithCustomEmail(email: String): String {
+        return createToken(email)
+    }
+
+    private fun createToken(email: String): String {
         val now = Instant.now()
         val issuedAt = Date.from(now)
         val expiration = Date.from(now.plusSeconds(KAKAO_PAYLOAD_EXP_SECONDS))
 
-        // **1. 모든 클레임을 Map으로 정의**
         val payload: Map<String, Any> = mapOf(
-            // 표준 클레임
             "iss" to KAKAO_PAYLOAD_ISS,
             "aud" to KAKAO_PAYLOAD_AUD,
             "sub" to KAKAO_PAYLOAD_SUB,
             "iat" to issuedAt,
             "exp" to expiration,
-
-            // 카카오 OIDC/추가 클레임
-            "auth_time" to issuedAt, // iat와 동일하게 설정
+            "auth_time" to issuedAt,
             "nonce" to UUID.randomUUID().toString(),
-            "email" to KAKAO_PAYLOAD_EMAIL
+            "email" to email
         )
 
         val testJwt = Jwts.builder()
-
-            // **2. 헤더 설정 (setHeaderParams 사용)**
             .setHeaderParams(
                 mapOf(
                     "typ" to KAKAO_HEADER_TYP,
@@ -60,15 +61,11 @@ object TestJwtBuilder {
                     "alg" to KAKAO_HEADER_ALG
                 )
             )
-
-            // **3. Map으로 정의된 클레임을 한 번에 전달**
             .setClaims(payload)
-
-            // 4. 서명
             .signWith(testPrivateKey, SignatureAlgorithm.RS256)
             .compact()
 
-        print("TEST JWT : $testJwt")
+        println("TEST JWT for $email : $testJwt")
         return testJwt
     }
 }

@@ -19,6 +19,22 @@ import java.time.LocalDateTime
 @ExtendWith(MockitoExtension::class)
 class SelfSignedTokenProviderTest {
 
+    companion object {
+        const val USERNAME = "test@example.com"
+
+        const val ROLE = "USER"
+        const val TOKEN_INFO_ROLE = "ROLE_USER"
+
+        const val ACCESS_TOKEN = "access-token"
+        const val REFRESH_TOKEN = "refresh-token"
+
+        const val NEW_ACCESS_TOKEN = "new-access-token"
+        const val NEW_REFRESH_TOKEN = "new-refresh-token"
+
+        var EXP_DATE = LocalDateTime.now().plusDays(7)!!
+        const val REDIS_KEY = "refresh:$USERNAME"
+    }
+
     @Mock
     private lateinit var jwtTokenIssuer: JwtTokenIssuer
 
@@ -39,71 +55,57 @@ class SelfSignedTokenProviderTest {
     @DisplayName("JWT 인증 토큰을 성공적으로 발급한다")
     fun issueJwtAuth_success() {
         // given
-        val email = "test@example.com"
-        val role = "USER"
-        val accessToken = "access-token"
-        val refreshToken = "refresh-token"
-        val expirationDate = LocalDateTime.now().plusDays(7)
-
-        `when`(jwtTokenIssuer.createAccessToken(email, role)).thenReturn(accessToken)
-        `when`(jwtTokenIssuer.createRefreshToken(email, role)).thenReturn(refreshToken)
-        `when`(jwtTokenUtil.getExpirationDateFromToken(refreshToken)).thenReturn(expirationDate)
+        `when`(jwtTokenIssuer.createAccessToken(USERNAME, ROLE)).thenReturn(ACCESS_TOKEN)
+        `when`(jwtTokenIssuer.createRefreshToken(USERNAME, ROLE)).thenReturn(REFRESH_TOKEN)
+        `when`(jwtTokenUtil.getExpirationDateFromToken(REFRESH_TOKEN)).thenReturn(EXP_DATE)
 
         // when
-        val result = selfSignedTokenProvider.issueJwtAuth(email, role)
+        val result = selfSignedTokenProvider.issueJwtToken(USERNAME, ROLE)
 
         // then
         assertThat(result).isNotNull()
-        assertThat(result.accessToken).isEqualTo(accessToken)
-        assertThat(result.refreshToken).isEqualTo(refreshToken)
+        assertThat(result.accessToken).isEqualTo(ACCESS_TOKEN)
+        assertThat(result.refreshToken).isEqualTo(REFRESH_TOKEN)
 
-        verify(jwtTokenIssuer).createAccessToken(email, role)
-        verify(jwtTokenIssuer).createRefreshToken(email, role)
-        verify(jwtTokenUtil).getExpirationDateFromToken(refreshToken)
+        verify(jwtTokenIssuer).createAccessToken(USERNAME, ROLE)
+        verify(jwtTokenIssuer).createRefreshToken(USERNAME, ROLE)
+        verify(jwtTokenUtil).getExpirationDateFromToken(REFRESH_TOKEN)
     }
 
     @Test
     @DisplayName("유효한 리프레시 토큰으로 JWT 토큰을 재발급한다")
     fun reissueJwtToken_validRefreshToken_success() {
         // given
-        val refreshToken = "valid-refresh-token"
-        val username = "test@example.com"
-        val role = "ROLE_USER"
-        val expirationDate = LocalDateTime.now().plusDays(1)
-        val newAccessToken = "new-access-token"
-        val newRefreshToken = "new-refresh-token"
-        val redisKey = "refresh:$username"
-
-        `when`(jwtTokenUtil.getUsernameFromToken(refreshToken)).thenReturn(username)
-        `when`(jwtTokenUtil.getRoleFromToken(refreshToken)).thenReturn(role)
-        `when`(jwtTokenUtil.validateToken(refreshToken)).thenReturn(true)
-        `when`(cachePort.find(redisKey)).thenReturn(refreshToken)
-        `when`(jwtTokenIssuer.createAccessToken(username, role)).thenReturn(newAccessToken)
-        `when`(jwtTokenIssuer.createRefreshToken(username, role)).thenReturn(newRefreshToken)
-        `when`(jwtTokenUtil.getExpirationDateFromToken(newRefreshToken)).thenReturn(expirationDate)
+        `when`(jwtTokenUtil.getUsernameFromToken(REFRESH_TOKEN)).thenReturn(USERNAME)
+        `when`(jwtTokenUtil.getRoleFromToken(REFRESH_TOKEN)).thenReturn(TOKEN_INFO_ROLE)
+        `when`(jwtTokenUtil.validateToken(REFRESH_TOKEN)).thenReturn(true)
+        `when`(cachePort.find(REDIS_KEY)).thenReturn(REFRESH_TOKEN)
+        `when`(jwtTokenIssuer.createAccessToken(USERNAME, TOKEN_INFO_ROLE)).thenReturn(NEW_ACCESS_TOKEN)
+        `when`(jwtTokenIssuer.createRefreshToken(USERNAME, TOKEN_INFO_ROLE)).thenReturn(NEW_REFRESH_TOKEN)
+        `when`(jwtTokenUtil.getExpirationDateFromToken(NEW_REFRESH_TOKEN)).thenReturn(EXP_DATE)
 
         // when
-        val result = selfSignedTokenProvider.reissueJwtToken(refreshToken)
+        val result = selfSignedTokenProvider.reissueJwtToken(REFRESH_TOKEN)
 
         // then
         assertThat(result).isNotNull()
-        assertThat(result.accessToken).isEqualTo(newAccessToken)
-        assertThat(result.refreshToken).isEqualTo(newRefreshToken)
+        assertThat(result.accessToken).isEqualTo(NEW_ACCESS_TOKEN)
+        assertThat(result.refreshToken).isEqualTo(NEW_REFRESH_TOKEN)
 
-        verify(jwtTokenUtil).getUsernameFromToken(refreshToken)
-        verify(jwtTokenUtil).getRoleFromToken(refreshToken)
-        verify(jwtTokenUtil).validateToken(refreshToken)
-        verify(cachePort).find(redisKey)
-        verify(jwtTokenIssuer).createAccessToken(username, role)
-        verify(jwtTokenIssuer).createRefreshToken(username, role)
-        verify(jwtTokenUtil).getExpirationDateFromToken(newRefreshToken)
+        verify(jwtTokenUtil).getUsernameFromToken(REFRESH_TOKEN)
+        verify(jwtTokenUtil).getRoleFromToken(REFRESH_TOKEN)
+        verify(jwtTokenUtil).validateToken(REFRESH_TOKEN)
+        verify(cachePort).find(REDIS_KEY)
+        verify(jwtTokenIssuer).createAccessToken(USERNAME, TOKEN_INFO_ROLE)
+        verify(jwtTokenIssuer).createRefreshToken(USERNAME, TOKEN_INFO_ROLE)
+        verify(jwtTokenUtil).getExpirationDateFromToken(NEW_REFRESH_TOKEN)
 
         val keyCaptor: ArgumentCaptor<String> = ArgumentCaptor.forClass(String::class.java)
         val valueCaptor: ArgumentCaptor<String> = ArgumentCaptor.forClass(String::class.java)
         val durationCaptor: ArgumentCaptor<Duration> = ArgumentCaptor.forClass(Duration::class.java)
         verify(cachePort).save(capture(keyCaptor), capture(valueCaptor), capture(durationCaptor))
-        assertThat(keyCaptor.value).isEqualTo("refresh:$username")
-        assertThat(valueCaptor.value).isEqualTo(newRefreshToken)
+        assertThat(keyCaptor.value).isEqualTo("refresh:$USERNAME")
+        assertThat(valueCaptor.value).isEqualTo(NEW_REFRESH_TOKEN)
         assertThat(durationCaptor.value).isNotNull()
     }
 
@@ -115,11 +117,9 @@ class SelfSignedTokenProviderTest {
     fun reissueJwtToken_invalidRefreshToken_throwsException() {
         // given
         val invalidRefreshToken = "invalid-refresh-token"
-        val username = "test@example.com"
-        val role = "ROLE_USER"
 
-        `when`(jwtTokenUtil.getUsernameFromToken(invalidRefreshToken)).thenReturn(username)
-        `when`(jwtTokenUtil.getRoleFromToken(invalidRefreshToken)).thenReturn(role)
+        `when`(jwtTokenUtil.getUsernameFromToken(invalidRefreshToken)).thenReturn(USERNAME)
+        `when`(jwtTokenUtil.getRoleFromToken(invalidRefreshToken)).thenReturn(TOKEN_INFO_ROLE)
         `when`(jwtTokenUtil.validateToken(invalidRefreshToken)).thenReturn(false)
 
         // when & then
@@ -137,11 +137,9 @@ class SelfSignedTokenProviderTest {
     fun reissueJwtToken_expiredRefreshToken_throwsException() {
         // given
         val expiredRefreshToken = "expired-refresh-token"
-        val username = "test@example.com"
-        val role = "ROLE_USER"
 
-        `when`(jwtTokenUtil.getUsernameFromToken(expiredRefreshToken)).thenReturn(username)
-        `when`(jwtTokenUtil.getRoleFromToken(expiredRefreshToken)).thenReturn(role)
+        `when`(jwtTokenUtil.getUsernameFromToken(expiredRefreshToken)).thenReturn(USERNAME)
+        `when`(jwtTokenUtil.getRoleFromToken(expiredRefreshToken)).thenReturn(TOKEN_INFO_ROLE)
         `when`(jwtTokenUtil.validateToken(expiredRefreshToken)).thenReturn(false)
 
         // when & then
@@ -183,65 +181,45 @@ class SelfSignedTokenProviderTest {
     @DisplayName("Redis에 리프레시 토큰이 없을 때 재발급 시 예외가 발생한다")
     fun reissueJwtToken_noTokenInRedis_throwsException() {
         // given
-        val refreshToken = "refresh-token"
-        val username = "test@example.com"
-        val role = "ROLE_USER"
-        val expirationDate = LocalDateTime.now().plusDays(1)
-        val redisKey = "refresh:$username"
-
-        `when`(jwtTokenUtil.getUsernameFromToken(refreshToken)).thenReturn(username)
-        `when`(jwtTokenUtil.getRoleFromToken(refreshToken)).thenReturn(role)
-        `when`(jwtTokenUtil.validateToken(refreshToken)).thenReturn(true)
-        `when`(cachePort.find(redisKey)).thenReturn(null)
+        `when`(jwtTokenUtil.getUsernameFromToken(REFRESH_TOKEN)).thenReturn(USERNAME)
+        `when`(jwtTokenUtil.getRoleFromToken(REFRESH_TOKEN)).thenReturn(TOKEN_INFO_ROLE)
+        `when`(jwtTokenUtil.validateToken(REFRESH_TOKEN)).thenReturn(true)
+        `when`(cachePort.find(REDIS_KEY)).thenReturn(null)
 
         // when & then
         assertThrows<IllegalArgumentException> {
-            selfSignedTokenProvider.reissueJwtToken(refreshToken)
+            selfSignedTokenProvider.reissueJwtToken(REFRESH_TOKEN)
         }.also { exception ->
             assertThat(exception.message).isEqualTo("일치하지 않는 리프레시 토큰")
         }
 
-        verify(cachePort).find(redisKey)
+        verify(cachePort).find(REDIS_KEY)
     }
 
     @Test
     @DisplayName("재발급 시 토큰에서 추출한 role을 그대로 전달한다")
     fun reissueJwtToken_passesRoleAsIs() {
         // given
-        val refreshToken = "valid-refresh-token"
-        val username = "test@example.com"
-        val role = "ROLE_USER"
         val expirationDate = LocalDateTime.now().plusDays(1)
-        val newAccessToken = "new-access-token"
-        val newRefreshToken = "new-refresh-token"
-        val redisKey = "refresh:$username"
 
-        `when`(jwtTokenUtil.getUsernameFromToken(refreshToken)).thenReturn(username)
-        `when`(jwtTokenUtil.getRoleFromToken(refreshToken)).thenReturn(role)
-        `when`(jwtTokenUtil.validateToken(refreshToken)).thenReturn(true)
-        `when`(cachePort.find(redisKey)).thenReturn(refreshToken)
-        `when`(jwtTokenIssuer.createAccessToken(username, role)).thenReturn(newAccessToken)
-        `when`(jwtTokenIssuer.createRefreshToken(username, role)).thenReturn(newRefreshToken)
-        `when`(jwtTokenUtil.getExpirationDateFromToken(newRefreshToken)).thenReturn(expirationDate)
+        `when`(jwtTokenUtil.getUsernameFromToken(REFRESH_TOKEN)).thenReturn(USERNAME)
+        `when`(jwtTokenUtil.getRoleFromToken(REFRESH_TOKEN)).thenReturn(TOKEN_INFO_ROLE)
+        `when`(jwtTokenUtil.validateToken(REFRESH_TOKEN)).thenReturn(true)
+        `when`(cachePort.find(REDIS_KEY)).thenReturn(REFRESH_TOKEN)
+        `when`(jwtTokenIssuer.createAccessToken(USERNAME, TOKEN_INFO_ROLE)).thenReturn(NEW_ACCESS_TOKEN)
+        `when`(jwtTokenIssuer.createRefreshToken(USERNAME, TOKEN_INFO_ROLE)).thenReturn(NEW_REFRESH_TOKEN)
+        `when`(jwtTokenUtil.getExpirationDateFromToken(NEW_REFRESH_TOKEN)).thenReturn(expirationDate)
 
         // when
-        val result = selfSignedTokenProvider.reissueJwtToken(refreshToken)
+        val result = selfSignedTokenProvider.reissueJwtToken(REFRESH_TOKEN)
 
         // then
         assertThat(result).isNotNull()
-        assertThat(result.accessToken).isEqualTo(newAccessToken)
-        assertThat(result.refreshToken).isEqualTo(newRefreshToken)
-        verify(jwtTokenIssuer).createAccessToken(username, role)
-        verify(jwtTokenIssuer).createRefreshToken(username, role)
-        verify(jwtTokenUtil).getExpirationDateFromToken(newRefreshToken)
-//
-//        val keyCaptor: ArgumentCaptor<String> = ArgumentCaptor.forClass(String::class.java)
-//        val valueCaptor: ArgumentCaptor<String> = ArgumentCaptor.forClass(String::class.java)
-//        val durationCaptor: ArgumentCaptor<Duration> = ArgumentCaptor.forClass(Duration::class.java)
-//        verify(cachePort).save(keyCaptor.capture(), valueCaptor.capture(), durationCaptor.capture())
-//        assertThat(keyCaptor.value).isEqualTo("refresh:$username")
-//        assertThat(valueCaptor.value).isEqualTo(newRefreshToken)
-//        assertThat(durationCaptor.value).isNotNull()
+        assertThat(result.accessToken).isEqualTo(NEW_ACCESS_TOKEN)
+        assertThat(result.refreshToken).isEqualTo(NEW_REFRESH_TOKEN)
+        verify(jwtTokenIssuer).createAccessToken(USERNAME, TOKEN_INFO_ROLE)
+        verify(jwtTokenIssuer).createRefreshToken(USERNAME, TOKEN_INFO_ROLE)
+        verify(jwtTokenUtil).getExpirationDateFromToken(NEW_REFRESH_TOKEN)
     }
 }
 

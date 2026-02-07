@@ -7,6 +7,7 @@ import com.kdongsu5509.imhereuserservice.adapter.out.persistence.user.mapper.Use
 import com.kdongsu5509.imhereuserservice.domain.user.OAuth2Provider
 import com.kdongsu5509.imhereuserservice.domain.user.User
 import com.kdongsu5509.imhereuserservice.domain.user.UserRole
+import com.kdongsu5509.imhereuserservice.domain.user.UserStatus
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito
@@ -33,8 +34,14 @@ class UserSavePersistenceAdapterTest {
     companion object {
         const val testEmail = "test@test.com"
         const val testNickname = "고동수"
-        val testUser = User(testEmail, testNickname, OAuth2Provider.KAKAO, UserRole.NORMAL)
-        val testUserEntity = UserJpaEntity(testUser.email, testUser.nickname, testUser.role, OAuth2Provider.KAKAO)
+        val testUser = User(testEmail, testNickname, OAuth2Provider.KAKAO, UserRole.NORMAL, status = UserStatus.ACTIVE)
+        val testUserEntity = UserJpaEntity(
+            testUser.email,
+            testUser.nickname,
+            testUser.role,
+            OAuth2Provider.KAKAO,
+            status = UserStatus.ACTIVE
+        )
     }
 
     @Test

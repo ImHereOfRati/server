@@ -5,6 +5,7 @@ import com.kdongsu5509.imhereuserservice.adapter.out.persistence.user.jpa.Spring
 import com.kdongsu5509.imhereuserservice.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.imhereuserservice.domain.user.OAuth2Provider
 import com.kdongsu5509.imhereuserservice.domain.user.UserRole
+import com.kdongsu5509.imhereuserservice.domain.user.UserStatus
 import org.hamcrest.Matchers.hasSize
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -100,7 +101,8 @@ class UserControllerTest {
                 email = testEmail,
                 nickname = DSKO,
                 role = UserRole.NORMAL,
-                provider = OAuth2Provider.KAKAO
+                provider = OAuth2Provider.KAKAO,
+                status = UserStatus.ACTIVE
             )
             list.add(testUserEntity)
         }
@@ -117,7 +119,8 @@ class UserControllerTest {
             email = TEST_EMAIL,
             nickname = DSKO,
             role = UserRole.NORMAL,
-            provider = OAuth2Provider.KAKAO
+            provider = OAuth2Provider.KAKAO,
+            status = UserStatus.ACTIVE
         )
         springDataUserRepository.save(testUser)
 

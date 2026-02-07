@@ -5,6 +5,7 @@ import com.kdongsu5509.imhereuserservice.application.port.out.user.UserLoadPort
 import com.kdongsu5509.imhereuserservice.domain.user.OAuth2Provider
 import com.kdongsu5509.imhereuserservice.domain.user.User
 import com.kdongsu5509.imhereuserservice.domain.user.UserRole
+import com.kdongsu5509.imhereuserservice.domain.user.UserStatus
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.DisplayName
@@ -28,8 +29,9 @@ class ReadUserServiceTest {
         const val TEST_EMAIL = "test@test.com"
         const val TEST_NICKNAME = "테스트"
         val testOauthProvider = OAuth2Provider.KAKAO
+        val testUserStatus = UserStatus.ACTIVE
         val testRole = UserRole.NORMAL
-        val testUser = User(TEST_EMAIL, TEST_NICKNAME, testOauthProvider, testRole)
+        val testUser = User(TEST_EMAIL, TEST_NICKNAME, testOauthProvider, testRole, testUserStatus)
     }
 
     @Test
@@ -68,7 +70,7 @@ class ReadUserServiceTest {
     @DisplayName("사용자의 정보를 잘 찾아오면 변환해서 잘 나간다.")
     fun searchMe() {
         //given
-        `when`(userLoadPort.findByEmail(TEST_KEYWORD)).thenReturn(
+        `when`(userLoadPort.findActiveUserByEmailOrNull(TEST_KEYWORD)).thenReturn(
             testUser
         )
 

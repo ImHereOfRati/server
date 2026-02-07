@@ -2,6 +2,7 @@ package com.kdongsu5509.imhereuserservice.adapter.out.persistence.user.jpa
 
 import com.kdongsu5509.imhereuserservice.domain.user.OAuth2Provider
 import com.kdongsu5509.imhereuserservice.domain.user.UserRole
+import com.kdongsu5509.imhereuserservice.domain.user.UserStatus
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Assertions
@@ -35,12 +36,40 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
     @BeforeEach
     @DisplayName("테스트 USER 주입")
     fun setUpUser() {
-        val testUser1 = UserJpaEntity("test1@kakao.com", "테스터1", UserRole.NORMAL, OAuth2Provider.KAKAO)
-        val testUser2 = UserJpaEntity("test2@kakao.com", "테스터2", UserRole.NORMAL, OAuth2Provider.KAKAO)
-        val testUser3 = UserJpaEntity("test3@kakao.com", "테스터3", UserRole.NORMAL, OAuth2Provider.KAKAO)
+        val testUser1 =
+            UserJpaEntity("test1@kakao.com", "테스터1", UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.ACTIVE)
+        val testUser2 =
+            UserJpaEntity("test2@kakao.com", "테스터2", UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.ACTIVE)
+        val testUser3 =
+            UserJpaEntity("test3@kakao.com", "테스터3", UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.ACTIVE)
 
-        val testUsers = listOf(testUser1, testUser2, testUser3)
+        val testUser4 =
+            UserJpaEntity("test4@kakao.com", "테스터4", UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.PENDING)
+        val testUser5 =
+            UserJpaEntity("test5@kakao.com", "테스터5", UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.PENDING)
+
+        val testUsers = listOf(testUser1, testUser2, testUser3, testUser4, testUser5)
         saveTestUsers(testUsers)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["test999@kakao.com", "test1000@kakao.com"])
+    @DisplayName("없는 사용자들을 검색하면 조회되지 않는다")
+    fun findActiveUserByEmail_not_exist_user(testEmail: String) {
+        //when
+        val queryResult = userRepository.findActiveUserByEmail(testEmail)
+        //then
+        Assertions.assertEquals(true, queryResult.isEmpty)
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["test4@kakao.com", "test5@kakao.com"])
+    @DisplayName("비활성화 된 사용자들을 검색하면 조회되지 않는다")
+    fun findActiveUserByEmail_pending_user(testEmail: String) {
+        //when
+        val queryResult = userRepository.findActiveUserByEmail(testEmail)
+        //then
+        Assertions.assertEquals(true, queryResult.isEmpty)
     }
 
     @ParameterizedTest
@@ -87,9 +116,12 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
     }
 
     private fun createAndSaveDuplicatedNicknameUsers() {
-        val duplicatedNameUser1 = UserJpaEntity("test11@kakao.com", "테스터1", UserRole.NORMAL, OAuth2Provider.KAKAO)
-        val duplicatedNameUser2 = UserJpaEntity("test12@kakao.com", "테스터2", UserRole.NORMAL, OAuth2Provider.KAKAO)
-        val duplicatedNameUser3 = UserJpaEntity("test13@kakao.com", "테스터3", UserRole.NORMAL, OAuth2Provider.KAKAO)
+        val duplicatedNameUser1 =
+            UserJpaEntity("test11@kakao.com", "테스터1", UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.ACTIVE)
+        val duplicatedNameUser2 =
+            UserJpaEntity("test12@kakao.com", "테스터2", UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.ACTIVE)
+        val duplicatedNameUser3 =
+            UserJpaEntity("test13@kakao.com", "테스터3", UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.ACTIVE)
 
         val duplicatedNicknameUsers = listOf(duplicatedNameUser1, duplicatedNameUser2, duplicatedNameUser3)
         saveTestUsers(duplicatedNicknameUsers)

@@ -11,7 +11,8 @@ class UserMapper {
             domainUser.email,
             domainUser.nickname,
             domainUser.role,
-            domainUser.oauthProvider
+            domainUser.oauthProvider,
+            domainUser.status
         )
     }
 
@@ -20,7 +21,8 @@ class UserMapper {
             jpaEntity.email,
             jpaEntity.nickname,
             jpaEntity.provider,
-            jpaEntity.role
+            jpaEntity.role,
+            jpaEntity.status
         )
     }
 }

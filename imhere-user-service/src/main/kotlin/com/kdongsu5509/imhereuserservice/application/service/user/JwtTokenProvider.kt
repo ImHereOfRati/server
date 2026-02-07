@@ -1,9 +1,9 @@
 package com.kdongsu5509.imhereuserservice.application.service.user
 
-import com.kdongsu5509.imhereuserservice.application.dto.SelfSignedJWT
+import com.kdongsu5509.imhereuserservice.application.dto.ImHereJwt
 
 interface JwtTokenProvider {
-    fun issueJwtAuth(email: String, role: String): SelfSignedJWT
+    fun issueJwtToken(email: String, role: String): ImHereJwt
 
-    fun reissueJwtToken(refreshToken: String): SelfSignedJWT
+    fun reissueJwtToken(refreshToken: String): ImHereJwt
 }

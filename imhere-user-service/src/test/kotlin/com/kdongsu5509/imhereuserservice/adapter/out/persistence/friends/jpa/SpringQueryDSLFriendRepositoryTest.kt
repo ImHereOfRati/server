@@ -5,6 +5,7 @@ import com.kdongsu5509.imhereuserservice.adapter.out.persistence.user.jpa.UserJp
 import com.kdongsu5509.imhereuserservice.domain.friend.FriendshipStatus
 import com.kdongsu5509.imhereuserservice.domain.user.OAuth2Provider
 import com.kdongsu5509.imhereuserservice.domain.user.UserRole
+import com.kdongsu5509.imhereuserservice.domain.user.UserStatus
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Assertions
@@ -84,10 +85,10 @@ class SpringQueryDSLFriendRepositoryTest @Autowired constructor(
 
     private fun saveTwoUsers() {
         val testEntityOne = UserJpaEntity(
-            testEmailOne, testNicknameOne, UserRole.NORMAL, OAuth2Provider.KAKAO
+            testEmailOne, testNicknameOne, UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.ACTIVE
         )
         val testEntityTwo = UserJpaEntity(
-            testEmailTwo, testNicknameTwo, UserRole.NORMAL, OAuth2Provider.KAKAO
+            testEmailTwo, testNicknameTwo, UserRole.NORMAL, OAuth2Provider.KAKAO, status = UserStatus.ACTIVE
         )
         userRepository.save(testEntityOne)
         userRepository.save(testEntityTwo)

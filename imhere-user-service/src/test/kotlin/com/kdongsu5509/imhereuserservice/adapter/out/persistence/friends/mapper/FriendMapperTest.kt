@@ -5,6 +5,7 @@ import com.kdongsu5509.imhereuserservice.adapter.out.persistence.user.jpa.UserJp
 import com.kdongsu5509.imhereuserservice.domain.friend.FriendshipStatus
 import com.kdongsu5509.imhereuserservice.domain.user.OAuth2Provider
 import com.kdongsu5509.imhereuserservice.domain.user.UserRole
+import com.kdongsu5509.imhereuserservice.domain.user.UserStatus
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -27,7 +28,8 @@ class FriendMapperTest {
             testEmail,
             testNickname,
             UserRole.NORMAL,
-            OAuth2Provider.KAKAO
+            OAuth2Provider.KAKAO,
+            status = UserStatus.ACTIVE
         ).apply {
             this.id = UUID.randomUUID()
         }
@@ -35,7 +37,8 @@ class FriendMapperTest {
             testEmail2,
             testNickname2,
             UserRole.NORMAL,
-            OAuth2Provider.KAKAO
+            OAuth2Provider.KAKAO,
+            status = UserStatus.ACTIVE
         ).apply {
             this.id = UUID.randomUUID()
         }

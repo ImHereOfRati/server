@@ -4,10 +4,10 @@ import com.kdongsu5509.imhereuserservice.adapter.`in`.web.common.APIResponse
 import com.kdongsu5509.imhereuserservice.adapter.`in`.web.user.dto.AuthenticationRequest
 import com.kdongsu5509.imhereuserservice.adapter.`in`.web.user.dto.AuthenticationResponse
 import com.kdongsu5509.imhereuserservice.adapter.`in`.web.user.dto.ReAuthenticationResponse
-import com.kdongsu5509.imhereuserservice.application.dto.SelfSignedJWT
 import com.kdongsu5509.imhereuserservice.application.port.`in`.user.AuthenticateWithOidcUseCase
 import com.kdongsu5509.imhereuserservice.application.port.`in`.user.ReissueJWTUseCase
 import lombok.extern.slf4j.Slf4j
+import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -21,18 +21,24 @@ class AuthController(
     val authenticateWithOidcUseCase: AuthenticateWithOidcUseCase,
     val reissueJwtUseCase: ReissueJWTUseCase
 ) {
-
     @PostMapping("/login")
     fun handleIdToken(
         @Validated @RequestBody authenticationRequest: AuthenticationRequest
-    ): APIResponse<AuthenticationResponse?> {
-        val jwt: SelfSignedJWT = authenticateWithOidcUseCase.verifyIdTokenAndReturnJwt(
+    ): ResponseEntity<APIResponse<AuthenticationResponse?>> {
+        val authResult = authenticateWithOidcUseCase.authenticate(
             authenticationRequest.idToken, authenticationRequest.provider
         )
 
-        return APIResponse.success(
-            AuthenticationResponse(jwt.accessToken, jwt.refreshToken)
-        )
+        return ResponseEntity.status(authResult.statusCode)
+            .body(
+                APIResponse.successWithHttpStatusCode(
+                    authResult.statusCode,
+                    AuthenticationResponse(
+                        authResult.accessToken,
+                        authResult.refreshToken
+                    )
+                )
+            )
     }
 
     @PostMapping("/reissue")

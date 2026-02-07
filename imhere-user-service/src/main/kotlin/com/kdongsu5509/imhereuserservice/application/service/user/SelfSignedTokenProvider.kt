@@ -1,6 +1,6 @@
 package com.kdongsu5509.imhereuserservice.application.service.user
 
-import com.kdongsu5509.imhereuserservice.application.dto.SelfSignedJWT
+import com.kdongsu5509.imhereuserservice.application.dto.ImHereJwt
 import com.kdongsu5509.imhereuserservice.application.port.out.user.CachePort
 import com.kdongsu5509.imhereuserservice.support.exception.BusinessException
 import com.kdongsu5509.imhereuserservice.support.exception.ErrorCode
@@ -15,7 +15,7 @@ class SelfSignedTokenProvider(
     private val jwtTokenUtil: JwtTokenUtil,
     private val cachePort: CachePort,
 ) : JwtTokenProvider {
-    override fun issueJwtAuth(email: String, role: String): SelfSignedJWT {
+    override fun issueJwtToken(email: String, role: String): ImHereJwt {
         val accessToken = jwtTokenIssuer.createAccessToken(email, role)
         val refreshToken = jwtTokenIssuer.createRefreshToken(email, role)
 
@@ -25,10 +25,10 @@ class SelfSignedTokenProvider(
         val redisKey = "refresh:$email"
         cachePort.save(redisKey, refreshToken, duration)
 
-        return SelfSignedJWT(accessToken, refreshToken)
+        return ImHereJwt(accessToken, refreshToken)
     }
 
-    override fun reissueJwtToken(refreshToken: String): SelfSignedJWT {
+    override fun reissueJwtToken(refreshToken: String): ImHereJwt {
         val username = jwtTokenUtil.getUsernameFromToken(refreshToken)
         val role = jwtTokenUtil.getRoleFromToken(refreshToken)
 
@@ -40,7 +40,7 @@ class SelfSignedTokenProvider(
         val refreshTokenFromRedis = cachePort.find("refresh:$username") as String?
 
         if (refreshTokenFromRedis != null && refreshTokenFromRedis == refreshToken) {
-            return issueJwtAuth(username, role)
+            return issueJwtToken(username, role)
         }
 
         throw IllegalArgumentException("일치하지 않는 리프레시 토큰")

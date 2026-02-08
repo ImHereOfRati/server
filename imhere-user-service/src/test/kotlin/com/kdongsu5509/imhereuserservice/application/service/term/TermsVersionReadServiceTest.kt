@@ -37,7 +37,7 @@ class TermsVersionReadServiceTest {
             effectiveDate = LocalDateTime.now(),
         )
 
-        given(termsVersionLoadPort.loadSpecificTermVersion(termDefinitionId))
+        given(termsVersionLoadPort.loadSpecificActiveTermVersion(termDefinitionId))
             .willReturn(domainEntity)
 
         // when
@@ -47,7 +47,7 @@ class TermsVersionReadServiceTest {
         assertThat(result.version).isEqualTo("v1.0")
         assertThat(result.content).isEqualTo("테스트 약관 내용")
 
-        verify(termsVersionLoadPort).loadSpecificTermVersion(termDefinitionId)
+        verify(termsVersionLoadPort).loadSpecificActiveTermVersion(termDefinitionId)
     }
 
     @Test
@@ -55,7 +55,7 @@ class TermsVersionReadServiceTest {
     fun read_fail_notFound() {
         // given
         val invalidId = 999L
-        given(termsVersionLoadPort.loadSpecificTermVersion(invalidId))
+        given(termsVersionLoadPort.loadSpecificActiveTermVersion(invalidId))
             .willThrow(
                 BusinessException(
                     ErrorCode.TERM_DEFINITION_NOT_FOUND

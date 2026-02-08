@@ -10,7 +10,7 @@ import java.time.Instant
 import java.time.ZoneId
 
 @Component
-class SelfSignedTokenProvider(
+class ImHereJWTTokenProvider(
     private val jwtTokenIssuer: JwtTokenIssuer,
     private val jwtTokenUtil: JwtTokenUtil,
     private val cachePort: CachePort,

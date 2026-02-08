@@ -61,7 +61,7 @@ class TermsVersionQueryPersistenceAdapterTest {
         given(springDataTermsVersionRepository.findActiveVersion(TERM_DEFINITION_ID)).willReturn(Optional.of(jpaEntity))
 
         // when
-        val result = adapter.loadSpecificTermVersion(TERM_DEFINITION_ID)
+        val result = adapter.loadSpecificActiveTermVersion(TERM_DEFINITION_ID)
 
         // then
         assertThat(result.content).isEqualTo(CONTENT)
@@ -84,7 +84,7 @@ class TermsVersionQueryPersistenceAdapterTest {
 
         // when, then
         assertThatThrownBy {
-            adapter.loadSpecificTermVersion(invalidTermDefinitionId)
+            adapter.loadSpecificActiveTermVersion(invalidTermDefinitionId)
         }
             .isInstanceOf(BusinessException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.TERM_DEFINITION_NOT_FOUND)

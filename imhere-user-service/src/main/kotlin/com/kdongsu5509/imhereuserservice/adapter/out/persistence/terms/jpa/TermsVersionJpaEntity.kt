@@ -1,5 +1,6 @@
 package com.kdongsu5509.imhereuserservice.adapter.out.persistence.terms.jpa
 
+import com.kdongsu5509.imhereuserservice.adapter.out.persistence.common.BaseEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -22,7 +23,7 @@ class TermsVersionJpaEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "terms_id")
     var terms: TermsDefinitionJpaEntity // 어떤 약관의 버전인지 명시
-) {
+) : BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val versionId: Long? = null

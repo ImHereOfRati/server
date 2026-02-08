@@ -83,10 +83,16 @@ enum class ErrorCode(
         "사용자를 찾을 수 없습니다."
     ),
 
+    USER_NOT_ACTIVE(
+        HttpStatus.NOT_FOUND,
+        "USER_002",
+        "사용자가 PENDING 상태입니다."
+    ),
+
     /**
      * TERM ERROR : 약관 관련 오류
      */
-    TERM_DEFINITION_EXIST(
+    TERM_DEFINITION_ALREADY_EXIST(
         HttpStatus.BAD_REQUEST,
         "TERM_001",
         "이미 존재하는 약관 입니다."
@@ -96,6 +102,12 @@ enum class ErrorCode(
         HttpStatus.NOT_FOUND,
         "TERM_002",
         "해당 약관 종류는 존재하지 않습니다"
+    ),
+
+    OBLIGATORY_TERM_NOT_AGREED(
+        HttpStatus.BAD_REQUEST,
+        "TERM_003",
+        "필수 약관에 동의하지 않았습니다."
     ),
 
     /**

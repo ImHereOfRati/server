@@ -7,6 +7,7 @@ import com.kdongsu5509.imhereuserservice.domain.terms.TermDefinition
 import com.kdongsu5509.imhereuserservice.domain.terms.TermsTypes
 import com.kdongsu5509.imhereuserservice.support.exception.BusinessException
 import com.kdongsu5509.imhereuserservice.support.exception.ErrorCode
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
@@ -33,6 +34,12 @@ class TermsDefinitionQueryPersistenceAdapter(
 
     override fun loadAllTermsDefinitions(pageable: Pageable): Page<TermDefinition> {
         return springDataTermsDefinitionRepository.findAll(pageable)
+            .map { termDefinitionMapper.mapToDomainEntity(it) }
+    }
+
+    @Cacheable(value = ["terms"], key = "'all'", cacheManager = "redisCacheManager")
+    override fun loadAllTerms(): List<TermDefinition> {
+        return springDataTermsDefinitionRepository.findAll()
             .map { termDefinitionMapper.mapToDomainEntity(it) }
     }
 }

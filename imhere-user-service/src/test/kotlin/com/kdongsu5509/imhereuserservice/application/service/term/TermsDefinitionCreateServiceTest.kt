@@ -71,7 +71,7 @@ class TermsDefinitionCreateServiceTest {
         assertThrows<BusinessException> {
             termsDefinitionCreateService.createNewTermsDefinition(testReq)
         }.also {
-            assertThat(it.errorCode).isEqualTo(ErrorCode.TERM_DEFINITION_EXIST)
+            assertThat(it.errorCode).isEqualTo(ErrorCode.TERM_DEFINITION_ALREADY_EXIST)
         }
     }
 }

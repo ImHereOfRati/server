@@ -13,4 +13,7 @@ interface SpringDataTermsVersionRepository : JpaRepository<TermsVersionJpaEntity
 """
     )
     fun findActiveVersion(termsDefinitionId: Long): Optional<TermsVersionJpaEntity>
+
+    @Query("SELECT tv FROM TermsVersionJpaEntity tv WHERE tv.terms.id IN :termDefinitionIds AND tv.isActive = true")
+    fun findAllActiveByDefinitionIds(termDefinitionIds: List<Long>): List<TermsVersionJpaEntity>
 }

@@ -17,7 +17,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
-class SelfSignedTokenProviderTest {
+class ImHereJWTTokenProviderTest {
 
     companion object {
         const val USERNAME = "test@example.com"
@@ -44,11 +44,11 @@ class SelfSignedTokenProviderTest {
     @Mock
     private lateinit var cachePort: CachePort
 
-    private lateinit var selfSignedTokenProvider: SelfSignedTokenProvider
+    private lateinit var imHereJWTTokenProvider: ImHereJWTTokenProvider
 
     @BeforeEach
     fun setUp() {
-        selfSignedTokenProvider = SelfSignedTokenProvider(jwtTokenIssuer, jwtTokenUtil, cachePort)
+        imHereJWTTokenProvider = ImHereJWTTokenProvider(jwtTokenIssuer, jwtTokenUtil, cachePort)
     }
 
     @Test
@@ -60,7 +60,7 @@ class SelfSignedTokenProviderTest {
         `when`(jwtTokenUtil.getExpirationDateFromToken(REFRESH_TOKEN)).thenReturn(EXP_DATE)
 
         // when
-        val result = selfSignedTokenProvider.issueJwtToken(USERNAME, ROLE)
+        val result = imHereJWTTokenProvider.issueJwtToken(USERNAME, ROLE)
 
         // then
         assertThat(result).isNotNull()
@@ -85,7 +85,7 @@ class SelfSignedTokenProviderTest {
         `when`(jwtTokenUtil.getExpirationDateFromToken(NEW_REFRESH_TOKEN)).thenReturn(EXP_DATE)
 
         // when
-        val result = selfSignedTokenProvider.reissueJwtToken(REFRESH_TOKEN)
+        val result = imHereJWTTokenProvider.reissueJwtToken(REFRESH_TOKEN)
 
         // then
         assertThat(result).isNotNull()
@@ -124,7 +124,7 @@ class SelfSignedTokenProviderTest {
 
         // when & then
         assertThrows<BusinessException> {
-            selfSignedTokenProvider.reissueJwtToken(invalidRefreshToken)
+            imHereJWTTokenProvider.reissueJwtToken(invalidRefreshToken)
         }.also { exception ->
             assertThat(exception.message).isEqualTo("잘못된 토큰입니다")
         }
@@ -144,7 +144,7 @@ class SelfSignedTokenProviderTest {
 
         // when & then
         assertThrows<BusinessException> {
-            selfSignedTokenProvider.reissueJwtToken(expiredRefreshToken)
+            imHereJWTTokenProvider.reissueJwtToken(expiredRefreshToken)
         }.also { exception ->
             assertThat(exception.message).isEqualTo("잘못된 토큰입니다")
         }
@@ -169,7 +169,7 @@ class SelfSignedTokenProviderTest {
 
         // when & then
         assertThrows<IllegalArgumentException> {
-            selfSignedTokenProvider.reissueJwtToken(refreshToken)
+            imHereJWTTokenProvider.reissueJwtToken(refreshToken)
         }.also { exception ->
             assertThat(exception.message).isEqualTo("일치하지 않는 리프레시 토큰")
         }
@@ -188,7 +188,7 @@ class SelfSignedTokenProviderTest {
 
         // when & then
         assertThrows<IllegalArgumentException> {
-            selfSignedTokenProvider.reissueJwtToken(REFRESH_TOKEN)
+            imHereJWTTokenProvider.reissueJwtToken(REFRESH_TOKEN)
         }.also { exception ->
             assertThat(exception.message).isEqualTo("일치하지 않는 리프레시 토큰")
         }
@@ -211,7 +211,7 @@ class SelfSignedTokenProviderTest {
         `when`(jwtTokenUtil.getExpirationDateFromToken(NEW_REFRESH_TOKEN)).thenReturn(expirationDate)
 
         // when
-        val result = selfSignedTokenProvider.reissueJwtToken(REFRESH_TOKEN)
+        val result = imHereJWTTokenProvider.reissueJwtToken(REFRESH_TOKEN)
 
         // then
         assertThat(result).isNotNull()

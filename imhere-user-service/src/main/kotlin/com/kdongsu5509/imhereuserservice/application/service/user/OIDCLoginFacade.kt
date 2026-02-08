@@ -18,55 +18,43 @@ import org.springframework.stereotype.Service
 @Transactional
 class OIDCLoginFacade(
     private val oidcVerificationPort: OIDCVerificationPort,
-    private val jwtTokenProvider: JwtTokenProvider,
+    private val jwtTokenProvider: JwtTokenProvider, // JWT 발급 컴포넌트
     private val userSavePort: UserSavePort,
     private val userLoadPort: UserLoadPort,
 ) : AuthenticateWithOidcUseCase, VerifyOIDCUseCase {
+
+    //OIDC 검증 -> 유저 조회/등록 -> 토큰 발행 및 상태 결정
     override fun authenticate(idToken: String, provider: OAuth2Provider): AuthenticationProcessResult {
         val userInformation = verifyOIDC(idToken, provider)
-        val (user, isNewAndActive) = getOrRegisterUser(userInformation, provider)
-        return convertToAuthenticationResult(user, isNewAndActive)
+        // 기존 유저 조회 또는 신규 유저 등록
+        val user = getOrRegisterUser(userInformation, provider)
+
+        return convertToAuthenticationResult(user)
     }
 
     override fun verifyOIDC(oidc: String, oAuth2Provider: OAuth2Provider): UserInformation {
         return oidcVerificationPort.verifyAndReturnUserInformation(oidc)
     }
 
-    private fun getOrRegisterUser(userInfo: UserInformation, provider: OAuth2Provider): Pair<User, Boolean> {
-        val existUser: User? = userLoadPort.findUserByEmailOrNull(userInfo.email)
+    private fun getOrRegisterUser(userInfo: UserInformation, provider: OAuth2Provider): User {
+        val existUser = userLoadPort.findUserByEmailOrNull(userInfo.email)
 
-        val isExist = existUser != null
-        val isActiveUser = isExist && (existUser.status != UserStatus.ACTIVE)
-
-        if (isActiveUser) {
-            return existUser to false
-        }
-
-        if (isExist) {
-            return existUser to true
-        }
-
-        // 완전 신규
-        val savedUser = createNewUser(userInfo, provider)
-        return savedUser to true
+        // 유저가 없으면 생성(PENDING 상태), 있으면 그대로 반환
+        return existUser ?: createNewUser(userInfo, provider)
     }
 
-    private fun createNewUser(
-        userInfo: UserInformation,
-        provider: OAuth2Provider
-    ): User {
+    private fun createNewUser(userInfo: UserInformation, provider: OAuth2Provider): User {
         val newUser = User.createPendingUser(
             email = userInfo.email,
             nickname = userInfo.nickname,
             oauthProvider = provider
         )
-
-        val savedUser = userSavePort.save(newUser)
-        return savedUser
+        return userSavePort.save(newUser)
     }
 
-    private fun convertToAuthenticationResult(user: User, isNew: Boolean): AuthenticationProcessResult {
-        val statusCode = if (isNew) HttpStatus.CREATED.value() else HttpStatus.OK.value()
+    private fun convertToAuthenticationResult(user: User): AuthenticationProcessResult {
+        val statusCode = decideStatusCode(user)
+
         val jwtToken = jwtTokenProvider.issueJwtToken(user.email, user.role.toString())
 
         return AuthenticationProcessResult(
@@ -74,5 +62,12 @@ class OIDCLoginFacade(
             accessToken = jwtToken.accessToken,
             refreshToken = jwtToken.refreshToken
         )
+    }
+
+    private fun decideStatusCode(user: User): Int {
+        if (user.status == UserStatus.PENDING) {
+            return HttpStatus.CREATED.value() // 201
+        }
+        return HttpStatus.OK.value()
     }
 }

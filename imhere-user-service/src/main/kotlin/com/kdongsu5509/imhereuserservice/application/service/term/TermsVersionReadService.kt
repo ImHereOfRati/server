@@ -12,6 +12,6 @@ class TermsVersionReadService(
     private val termsVersionLoadPort: TermsVersionLoadPort
 ) : ReadTermsVersionUseCase {
     override fun read(termDefinitionId: Long): TermVersionResponse {
-        return TermVersionResponse.from(termsVersionLoadPort.loadSpecificTermVersion(termDefinitionId))
+        return TermVersionResponse.from(termsVersionLoadPort.loadSpecificActiveTermVersion(termDefinitionId))
     }
 }

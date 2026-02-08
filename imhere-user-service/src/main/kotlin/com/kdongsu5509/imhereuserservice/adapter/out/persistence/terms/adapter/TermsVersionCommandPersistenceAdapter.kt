@@ -8,6 +8,7 @@ import com.kdongsu5509.imhereuserservice.adapter.out.persistence.terms.mapper.Te
 import com.kdongsu5509.imhereuserservice.application.port.out.term.TermsVersionSavePort
 import com.kdongsu5509.imhereuserservice.support.exception.BusinessException
 import com.kdongsu5509.imhereuserservice.support.exception.ErrorCode
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
@@ -19,6 +20,11 @@ class TermsVersionCommandPersistenceAdapter(
 ) :
     TermsVersionSavePort {
 
+    @CacheEvict(
+        value = ["term-versions"],
+        key = "#termDefinitionId",
+        cacheManager = "redisCacheManager"
+    )
     override fun saveTermVersion(
         termDefinitionId: Long,
         version: String,

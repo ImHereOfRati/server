@@ -4,6 +4,7 @@ import com.kdongsu5509.imhereuserservice.adapter.out.persistence.terms.jpa.Sprin
 import com.kdongsu5509.imhereuserservice.adapter.out.persistence.terms.mapper.TermDefinitionMapper
 import com.kdongsu5509.imhereuserservice.application.port.out.term.TermsDefinitionSavePort
 import com.kdongsu5509.imhereuserservice.domain.terms.TermsTypes
+import org.springframework.cache.annotation.CacheEvict
 import org.springframework.stereotype.Component
 
 @Component
@@ -13,6 +14,11 @@ class TermsDefinitionCommandPersistenceAdapter(
 ) :
     TermsDefinitionSavePort {
 
+    @CacheEvict(
+        value = ["terms"],
+        allEntries = true,
+        cacheManager = "redisCacheManager"
+    )
     override fun saveTermDefinition(termsName: String, termType: TermsTypes, isRequired: Boolean) {
         springDataTermsDefinitionRepository.save(
             mapper.mapToJpaEntity(

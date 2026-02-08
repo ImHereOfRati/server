@@ -1,5 +1,6 @@
 package com.kdongsu5509.imhereuserservice.adapter.out.persistence.terms.jpa
 
+import com.kdongsu5509.imhereuserservice.adapter.out.persistence.common.BaseEntity
 import com.kdongsu5509.imhereuserservice.domain.terms.TermsTypes
 import jakarta.persistence.*
 
@@ -15,7 +16,7 @@ class TermsDefinitionJpaEntity(
 
     @Column(nullable = false)
     var isRequired: Boolean
-) {
+) : BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

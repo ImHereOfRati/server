@@ -16,4 +16,6 @@ interface TermsDefinitionLoadPort {
     ): TermDefinition
 
     fun loadAllTermsDefinitions(pageable: Pageable): Page<TermDefinition>
+
+    fun loadAllTerms(): List<TermDefinition>
 }

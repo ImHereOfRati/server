@@ -3,5 +3,5 @@ package com.kdongsu5509.imhereuserservice.application.port.out.term
 import com.kdongsu5509.imhereuserservice.domain.terms.TermVersion
 
 interface TermsVersionLoadPort {
-    fun loadSpecificTermVersion(termDefinitionId: Long): TermVersion
+    fun loadSpecificActiveTermVersion(termDefinitionId: Long): TermVersion
 }

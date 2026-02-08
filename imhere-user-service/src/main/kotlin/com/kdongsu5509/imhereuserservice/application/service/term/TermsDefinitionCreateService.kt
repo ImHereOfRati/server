@@ -23,7 +23,7 @@ class TermsDefinitionCreateService(
         val required = newTermDefinitionRequest.isRequired
 
         validateTermsDefinitionUniqueness(name, type)
-        
+
         termsDefinitionSavePort.saveTermDefinition(
             name, type, required
         )
@@ -32,7 +32,7 @@ class TermsDefinitionCreateService(
     private fun validateTermsDefinitionUniqueness(termsName: String, termsType: TermsTypes) {
         val checkExistence = termsDefinitionLoadPort.checkExistence(termsName, termsType)
         if (checkExistence) {
-            throw BusinessException(ErrorCode.TERM_DEFINITION_EXIST)
+            throw BusinessException(ErrorCode.TERM_DEFINITION_ALREADY_EXIST)
         }
     }
 }

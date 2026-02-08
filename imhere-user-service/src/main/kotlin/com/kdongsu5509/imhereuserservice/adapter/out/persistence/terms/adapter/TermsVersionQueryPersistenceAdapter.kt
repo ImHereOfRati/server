@@ -6,6 +6,7 @@ import com.kdongsu5509.imhereuserservice.application.port.out.term.TermsVersionL
 import com.kdongsu5509.imhereuserservice.domain.terms.TermVersion
 import com.kdongsu5509.imhereuserservice.support.exception.BusinessException
 import com.kdongsu5509.imhereuserservice.support.exception.ErrorCode
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 
 @Component
@@ -14,7 +15,12 @@ class TermsVersionQueryPersistenceAdapter(
     private val springDataTermsVersionRepository: SpringDataTermsVersionRepository
 ) :
     TermsVersionLoadPort {
-    override fun loadSpecificTermVersion(termDefinitionId: Long): TermVersion {
+    @Cacheable(
+        value = ["term-versions"],
+        key = "#termDefinitionId",
+        cacheManager = "redisCacheManager"
+    )
+    override fun loadSpecificActiveTermVersion(termDefinitionId: Long): TermVersion {
         val queryResult = springDataTermsVersionRepository.findActiveVersion(termDefinitionId)
 
         if (queryResult.isEmpty) {

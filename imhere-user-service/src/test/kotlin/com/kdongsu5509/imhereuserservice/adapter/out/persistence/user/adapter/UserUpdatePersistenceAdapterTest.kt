@@ -27,13 +27,7 @@ class UserUpdatePersistenceAdapterTest @Autowired constructor(
     fun activate_success() {
         // given
         val email = "pending@kakao.com"
-        val pendingUser = UserJpaEntity(
-            email = email,
-            nickname = "테스터",
-            provider = OAuth2Provider.KAKAO,
-            role = UserRole.NORMAL,
-            status = UserStatus.PENDING
-        )
+        val pendingUser = createUserJpaEntity(email, UserStatus.PENDING)
         springDataUserRepository.save(pendingUser)
 
         // when
@@ -50,13 +44,7 @@ class UserUpdatePersistenceAdapterTest @Autowired constructor(
     fun activate_already_active() {
         // given
         val email = "active@kakao.com"
-        val activeUser = UserJpaEntity(
-            email = email,
-            nickname = "활성유저",
-            provider = OAuth2Provider.KAKAO,
-            role = UserRole.NORMAL,
-            status = UserStatus.ACTIVE
-        )
+        val activeUser = createUserJpaEntity(email, UserStatus.ACTIVE)
         springDataUserRepository.save(activeUser)
 
         // when
@@ -68,8 +56,8 @@ class UserUpdatePersistenceAdapterTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("사용자가 없으면 오류가 발생한다")
-    fun user_not_exist() {
+    @DisplayName("활성화 시도 시에 사용자가 없으면 오류가 발생한다")
+    fun activate_with_user_not_exist() {
         // given
         val notUserEmail = "none@kakao.com"
 
@@ -80,4 +68,51 @@ class UserUpdatePersistenceAdapterTest @Autowired constructor(
             .extracting("errorCode")
             .isEqualTo(ErrorCode.USER_NOT_FOUND)
     }
+
+    @Test
+    @DisplayName("사용자의 닉네임을 새롭게 잘 변경한다")
+    fun changeNickname_success() {
+        // given
+        val email = "testing@kakao.com"
+        val testUser = createUserJpaEntity(email, UserStatus.ACTIVE)
+
+        val newNickname = "neue"
+        springDataUserRepository.save(testUser)
+
+        // when
+        val result = userUpdatePersistenceAdapter.updateNickname(email, newNickname)
+
+        // then
+        assertThat(result.nickname).isEqualTo(newNickname)
+    }
+
+    @Test
+    @DisplayName("닉네임 변경 시에 사용자가 없으면 오류가 발생한다")
+    fun changeNickname_with_user_not_exist() {
+        // given
+        val notUserEmail = "none@kakao.com"
+        val notNewUserNickname = "notExist"
+
+        // when, then
+        assertThatThrownBy {
+            userUpdatePersistenceAdapter.updateNickname(notUserEmail, notNewUserNickname)
+        }.isInstanceOf(BusinessException::class.java)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.USER_NOT_FOUND)
+    }
+
+    private fun createUserJpaEntity(email: String, status: UserStatus): UserJpaEntity = UserJpaEntity(
+        email = email,
+        nickname = "테스터",
+        provider = OAuth2Provider.KAKAO,
+        role = UserRole.NORMAL,
+        status = status
+    )
+
+
+    ///override fun updateNickname(userEmail: String, newNickname: String) {
+    //        val queryResult = findUserJpaEntity(userEmail)
+    //        queryResult.changeNickname(newNickname)
+    //        springDataUserRepository.save(queryResult)
+    //    }
 }

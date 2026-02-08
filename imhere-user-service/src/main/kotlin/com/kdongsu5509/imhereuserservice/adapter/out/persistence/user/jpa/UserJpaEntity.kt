@@ -37,4 +37,8 @@ class UserJpaEntity(
     fun activate() {
         this.status = UserStatus.ACTIVE
     }
+
+    fun changeNickname(newNickname: String) {
+        this.nickname = newNickname
+    }
 }

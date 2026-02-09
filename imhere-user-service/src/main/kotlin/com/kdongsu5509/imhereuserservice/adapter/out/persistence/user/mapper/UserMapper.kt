@@ -18,6 +18,7 @@ class UserMapper {
 
     fun mapToDomainEntity(jpaEntity: UserJpaEntity): User {
         return User(
+            jpaEntity.id,
             jpaEntity.email,
             jpaEntity.nickname,
             jpaEntity.provider,

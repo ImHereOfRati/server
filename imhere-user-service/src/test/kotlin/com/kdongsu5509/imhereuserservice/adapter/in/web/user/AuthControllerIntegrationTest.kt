@@ -157,7 +157,7 @@ class AuthControllerIntegrationTest : TestRedisContainer() {
 
     private fun saveUser(email: String, status: UserStatus) {
         userSavePort.save(
-            User(email, "테스터", OAuth2Provider.KAKAO, UserRole.NORMAL, status = status)
+            User(UUID.randomUUID(), email, "테스터", OAuth2Provider.KAKAO, UserRole.NORMAL, status = status)
         )
     }
 

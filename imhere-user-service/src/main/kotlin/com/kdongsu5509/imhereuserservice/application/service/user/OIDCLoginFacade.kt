@@ -1,7 +1,7 @@
 package com.kdongsu5509.imhereuserservice.application.service.user
 
 import com.kdongsu5509.imhereuserservice.application.dto.AuthenticationProcessResult
-import com.kdongsu5509.imhereuserservice.application.dto.UserInformation
+import com.kdongsu5509.imhereuserservice.application.dto.OIDCUserInformation
 import com.kdongsu5509.imhereuserservice.application.port.`in`.user.AuthenticateWithOidcUseCase
 import com.kdongsu5509.imhereuserservice.application.port.`in`.user.VerifyOIDCUseCase
 import com.kdongsu5509.imhereuserservice.application.port.out.user.UserLoadPort
@@ -32,18 +32,18 @@ class OIDCLoginFacade(
         return convertToAuthenticationResult(user)
     }
 
-    override fun verifyOIDC(oidc: String, oAuth2Provider: OAuth2Provider): UserInformation {
+    override fun verifyOIDC(oidc: String, oAuth2Provider: OAuth2Provider): OIDCUserInformation {
         return oidcVerificationPort.verifyAndReturnUserInformation(oidc)
     }
 
-    private fun getOrRegisterUser(userInfo: UserInformation, provider: OAuth2Provider): User {
+    private fun getOrRegisterUser(userInfo: OIDCUserInformation, provider: OAuth2Provider): User {
         val existUser = userLoadPort.findUserByEmailOrNull(userInfo.email)
 
         // 유저가 없으면 생성(PENDING 상태), 있으면 그대로 반환
         return existUser ?: createNewUser(userInfo, provider)
     }
 
-    private fun createNewUser(userInfo: UserInformation, provider: OAuth2Provider): User {
+    private fun createNewUser(userInfo: OIDCUserInformation, provider: OAuth2Provider): User {
         val newUser = User.createPendingUser(
             email = userInfo.email,
             nickname = userInfo.nickname,

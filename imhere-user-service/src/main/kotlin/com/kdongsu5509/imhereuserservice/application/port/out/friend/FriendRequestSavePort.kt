@@ -1,7 +1,8 @@
 package com.kdongsu5509.imhereuserservice.application.port.out.friend
 
-import com.kdongsu5509.imhereuserservice.domain.friend.FriendshipStatus
+import com.kdongsu5509.imhereuserservice.domain.friend.FriendRequest
+import java.util.*
 
 interface FriendRequestSavePort {
-    fun createNewFriendship(requesterEmail: String, receiverEmail: String, friendshipStatus: FriendshipStatus)
+    fun createFriendshipRequest(myEmail: String, receiverId: UUID, message: String): FriendRequest
 }

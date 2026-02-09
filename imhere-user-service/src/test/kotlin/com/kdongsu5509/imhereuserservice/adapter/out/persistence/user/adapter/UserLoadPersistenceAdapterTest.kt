@@ -34,7 +34,14 @@ class UserLoadPersistenceAdapterTest {
     companion object {
         const val testEmail = "test@test.com"
         const val testNickname = "고동수"
-        val testUser = User(testEmail, testNickname, OAuth2Provider.KAKAO, UserRole.NORMAL, status = UserStatus.ACTIVE)
+        val testUser = User(
+            UUID.randomUUID(),
+            testEmail,
+            testNickname,
+            OAuth2Provider.KAKAO,
+            UserRole.NORMAL,
+            status = UserStatus.ACTIVE
+        )
         val testUserEntity = UserJpaEntity(
             testUser.email,
             testUser.nickname,

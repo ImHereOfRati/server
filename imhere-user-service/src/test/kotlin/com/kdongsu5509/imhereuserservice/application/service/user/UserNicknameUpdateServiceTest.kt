@@ -15,6 +15,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class UserNicknameUpdateServiceTest {
@@ -32,6 +33,7 @@ class UserNicknameUpdateServiceTest {
         val testNewNickname = "new_nick_name"
         `when`(userUpdatePort.updateNickname(testEmail, testNewNickname)).thenReturn(
             User(
+                id = UUID.randomUUID(),
                 email = testEmail,
                 nickname = testNewNickname,
                 oauthProvider = OAuth2Provider.KAKAO,

@@ -89,6 +89,12 @@ enum class ErrorCode(
         "사용자가 PENDING 상태입니다."
     ),
 
+    USER_ID_NULL(
+        HttpStatus.BAD_REQUEST,
+        "USER_003",
+        "사용자의 ID가 없습니다."
+    ),
+
     /**
      * TERM ERROR : 약관 관련 오류
      */
@@ -109,6 +115,22 @@ enum class ErrorCode(
         "TERM_003",
         "필수 약관에 동의하지 않았습니다."
     ),
+
+    /**
+     * FRIEND ERROR : 친구 요청 관련 오류
+     */
+    SELF_FRIENDSHIP(
+        HttpStatus.BAD_REQUEST,
+        "FRIEND_REQUEST_001",
+        "자기 자신에게 친구 요청을 보낼 수 없습니다."
+    ),
+
+    FRIENDSHIP_REQUEST_MESSAGE_OVER(
+        HttpStatus.BAD_REQUEST,
+        "FRIEND_REQUEST_002",
+        "친구 요청 메시지의 길이는 최대 255자까지 가능합니다."
+    ),
+
 
     /**
      * FCM ERRORS : FCM 토큰 관련 오류

@@ -2,9 +2,10 @@ package com.kdongsu5509.imhereuserservice.application.service.friend
 
 import com.kdongsu5509.imhereuserservice.application.port.`in`.friend.CreateFriendRequestUseCase
 import com.kdongsu5509.imhereuserservice.application.port.out.friend.FriendRequestSavePort
-import com.kdongsu5509.imhereuserservice.domain.friend.FriendshipStatus
+import com.kdongsu5509.imhereuserservice.domain.friend.FriendRequest
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.util.*
 
 @Component
 @Transactional
@@ -12,15 +13,11 @@ class FriendRequestCreateService(
     private val friendRequestSavePort: FriendRequestSavePort
 ) : CreateFriendRequestUseCase {
 
-    companion object {
-        val ON_PENDING_STATUS = FriendshipStatus.PENDING
-    }
-
-    override fun request(myEmail: String, targetEmail: String) {
-        friendRequestSavePort.createNewFriendship(
-            myEmail,
-            targetEmail,
-            ON_PENDING_STATUS
+    override fun request(myEmail: String, receiverId: UUID, message: String): FriendRequest {
+        return friendRequestSavePort.createFriendshipRequest(
+            myEmail = myEmail,
+            receiverId = receiverId,
+            message = message
         )
     }
 }

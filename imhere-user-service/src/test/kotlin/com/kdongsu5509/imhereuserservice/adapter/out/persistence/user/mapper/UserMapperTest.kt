@@ -9,6 +9,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.util.*
 
 class UserMapperTest {
 
@@ -20,6 +21,7 @@ class UserMapperTest {
     fun shouldMapDomainToJpaEntity(userStatus: UserStatus) {
         // given
         val domainUser = User(
+            id = UUID.randomUUID(),
             email = "test@example.com",
             nickname = "동수",
             oauthProvider = OAuth2Provider.KAKAO,

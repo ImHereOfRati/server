@@ -97,7 +97,7 @@ class UserControllerIntegrationTest {
     @DisplayName("내 닉네임 변경")
     fun changeNickname_success() {
         // given
-        saveUser(email = TEST_EMAIL)
+        val saveEntity = saveUser(email = TEST_EMAIL)
         val newNickname = "dongsuKo"
         val request = NicknameChangeRequest(newNickname)
 
@@ -108,6 +108,7 @@ class UserControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(request))
         )
             .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.userId").value(saveEntity.id.toString()))
             .andExpect(jsonPath("$.data.userEmail").value(TEST_EMAIL))
             .andExpect(jsonPath("$.data.userNickname").value(newNickname))
     }

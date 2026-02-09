@@ -1,6 +1,9 @@
 package com.kdongsu5509.imhereuserservice.domain.user
 
+import java.util.*
+
 data class User(
+    val id: UUID?,
     val email: String,
     var nickname: String,
     val oauthProvider: OAuth2Provider,
@@ -14,6 +17,7 @@ data class User(
             oauthProvider: OAuth2Provider
         ): User {
             return User(
+                id = null,
                 email = email,
                 nickname = nickname,
                 oauthProvider = oauthProvider,

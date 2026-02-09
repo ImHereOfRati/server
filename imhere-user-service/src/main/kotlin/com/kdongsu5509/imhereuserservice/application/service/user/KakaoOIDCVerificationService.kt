@@ -1,6 +1,6 @@
 package com.kdongsu5509.imhereuserservice.application.service.user
 
-import com.kdongsu5509.imhereuserservice.application.dto.UserInformation
+import com.kdongsu5509.imhereuserservice.application.dto.OIDCUserInformation
 import com.kdongsu5509.imhereuserservice.application.port.out.user.JwtParserPort
 import com.kdongsu5509.imhereuserservice.application.port.out.user.JwtVerificationPort
 import com.kdongsu5509.imhereuserservice.application.port.out.user.oauth.OIDCVerificationPort
@@ -15,10 +15,10 @@ class KakaoOIDCVerificationService(
     private val jwtVerificationPort: JwtVerificationPort
 ) : OIDCVerificationPort {
 
-    override fun verifyAndReturnUserInformation(idToken: String): UserInformation {
+    override fun verifyAndReturnUserInformation(idToken: String): OIDCUserInformation {
         val payload = jwtParserPort.parse(idToken)
         jwtVerificationPort.verifyPayLoad(payload)
         payload.email ?: throw MalformedJwtException("ID 토큰에 이메일 정보가 없습니다")
-        return UserInformation(payload.email, payload.nickname.orEmpty())
+        return OIDCUserInformation(payload.email, payload.nickname.orEmpty())
     }
 }

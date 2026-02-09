@@ -17,6 +17,6 @@ class UserNicknameUpdateService(
         newNickname: String
     ): UserInformation {
         val updatedUser = userUpdatePort.updateNickname(userEmail, newNickname)
-        return UserInformation(updatedUser.email, updatedUser.nickname)
+        return UserInformation.convertToUserInformation(updatedUser)
     }
 }

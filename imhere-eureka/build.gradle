@@ -1,26 +1,11 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.5.7'
-    id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot'
+	id 'io.spring.dependency-management'
 }
 
-group = 'com.kdongsu5509'
-version = '0.0.1-SNAPSHOT'
 description = 'imhere-eureka'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
 
-repositories {
-    mavenCentral()
-}
-
-ext {
-    set('springCloudVersion', "2025.0.1")
-}
 
 dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
@@ -28,12 +13,4 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
-}
 
-tasks.named('test') {
-    useJUnitPlatform()
-}

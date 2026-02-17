@@ -1,31 +1,13 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.7'
-    id 'org.jetbrains.kotlin.jvm' version '2.2.21'
-    id 'org.jetbrains.kotlin.plugin.spring' version '2.2.21'
-    id 'io.spring.dependency-management' version '1.1.7'
-    id 'org.jetbrains.kotlin.plugin.jpa' version '2.2.21'
+    id 'org.springframework.boot'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'org.jetbrains.kotlin.plugin.spring'
+    id 'io.spring.dependency-management'
+    id 'org.jetbrains.kotlin.plugin.jpa'
     id 'jacoco'
 }
 
-group = 'com.kdongsu5509'
-version = '0.0.1-SNAPSHOT'
-description = 'ImHere Monolith (Previous Version)'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     //WEB
@@ -75,9 +57,7 @@ allOpen {
     annotation 'jakarta.persistence.Embeddable'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
+
 
 // JaCoCo Code Coverage
 jacoco {
@@ -136,7 +116,6 @@ jacocoTestCoverageVerification {
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
 
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacoco.exec")

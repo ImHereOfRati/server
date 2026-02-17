@@ -1,26 +1,14 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.7'
-    id 'org.jetbrains.kotlin.jvm' version '2.2.21'
+    id 'org.springframework.boot'
+    id 'org.jetbrains.kotlin.jvm'
     id 'org.jetbrains.kotlin.plugin.spring'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'io.spring.dependency-management'
     id 'org.jetbrains.kotlin.plugin.jpa'
     id 'org.jetbrains.kotlin.kapt'
     id 'jacoco'
 }
 
-group = 'com.kdongsu5509'
-version = '0.0.1-SNAPSHOT'
-description = 'imhere-user-service'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     //JWT
@@ -68,15 +56,7 @@ dependencies {
     kapt 'jakarta.persistence:jakarta.persistence-api'
 }
 
-ext {
-    set('springCloudVersion', "2025.0.1")
-}
 
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
-}
 
 kotlin {
     compilerOptions {
@@ -91,7 +71,6 @@ allOpen {
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
     finalizedBy 'jacocoTestReport'
 }
 

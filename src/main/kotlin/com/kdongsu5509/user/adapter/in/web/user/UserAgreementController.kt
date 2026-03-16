@@ -15,9 +15,6 @@ import org.springframework.web.bind.annotation.*
 class UserAgreementController(
     private val agreementTermUseCase: AgreementTermUseCase
 ) {
-    /**
-     * ?�용?��? ?�원 ?�보�??�의?�는 것을 받는 `API` ?�인?�입?�다.
-     */
     @PostMapping("/consent")
     fun consentAll(
         @AuthenticationPrincipal userDetail: UserDetails,
@@ -30,7 +27,7 @@ class UserAgreementController(
     @PostMapping("/consent/{termDefinitionId}")
     fun consentSingle(
         @AuthenticationPrincipal userDetail: UserDetails,
-        @PathVariable @Validated @NotNull @Positive(message = "?�바�??��? ID가 ?�닙?�다") termDefinitionId: Long
+        @PathVariable @Validated @NotNull @Positive(message = "약관 ID는 양의 정수입니다") termDefinitionId: Long
     ): APIResponse<Unit> {
         agreementTermUseCase.consent(userDetail.username, termDefinitionId)
         return APIResponse.success()

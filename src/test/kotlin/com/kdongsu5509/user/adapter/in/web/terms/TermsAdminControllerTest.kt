@@ -33,6 +33,12 @@ class TermsAdminControllerTest @Autowired constructor(
     private val springDataTermsVersionRepository: SpringDataTermsVersionRepository
 ) {
 
+    companion object {
+        const val BASE_URL = "/api/v1/user/terms"
+        const val DEFINITION_URL = "/definition"
+        const val VERSION_URL = "/version"
+    }
+
     @Test
     @WithMockUser(roles = ["ADMIN"])
     @DisplayName("관리자 권한으로 새로운 약관 종류를 생성한다.")
@@ -42,7 +48,7 @@ class TermsAdminControllerTest @Autowired constructor(
 
         // when & then
         mockMvc.perform(
-            post("/api/v1/user/terms/definition")
+            post(BASE_URL + DEFINITION_URL)
                 .with(csrf()) // Spring Security 사용 시 필요
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
@@ -50,7 +56,7 @@ class TermsAdminControllerTest @Autowired constructor(
     }
 
     @Test
-    @WithMockUser(roles = ["USER"]) // 관리자가 아닌 일반 유저
+    @WithMockUser(roles = ["USER"])
     @DisplayName("관리자 권한이 없으면 약관 생성에 실패한다(403).")
     fun createNewTermDefinition_Forbidden() {
         // given
@@ -58,7 +64,7 @@ class TermsAdminControllerTest @Autowired constructor(
 
         // when & then
         mockMvc.perform(
-            post("/api/v1/user/terms/definition")
+            post(BASE_URL + DEFINITION_URL)
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
@@ -73,7 +79,7 @@ class TermsAdminControllerTest @Autowired constructor(
         val defRequest = NewTermDefinitionRequest("통합 테스트 약관", TermsTypes.SERVICE, true)
 
         mockMvc.perform(
-            post("/api/v1/user/terms/definition")
+            post(BASE_URL + DEFINITION_URL)
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(defRequest))
@@ -93,7 +99,7 @@ class TermsAdminControllerTest @Autowired constructor(
         )
 
         mockMvc.perform(
-            post("/api/v1/user/terms/version")
+            post(BASE_URL + VERSION_URL)
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(verRequest))

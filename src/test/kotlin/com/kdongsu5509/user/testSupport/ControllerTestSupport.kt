@@ -29,7 +29,7 @@ import org.springframework.web.filter.CharacterEncodingFilter
 @AutoConfigureRestDocs
 @Import(RestDocsConfiguration::class)
 @ExtendWith(RestDocumentationExtension::class)
-abstract class ControllerTestSupport {
+abstract class ControllerTestSupport : TestRedisContainer() {
 
     @Autowired
     protected lateinit var mockMvc: MockMvc

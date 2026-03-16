@@ -19,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
@@ -36,8 +37,9 @@ import org.springframework.transaction.annotation.Transactional
 class FriendsRequestCommandControllerIntegrationTest {
 
     companion object {
-        const val BASE_FRIEND_REQUEST_URL = "/api/v1/user/friends/request"
-        const val FRIEND_REQUEST_MESSAGE = "친하게 지내요!"
+        const val BASE_URL = "/api/v1/user/friends/request"
+        const val FRIEND_REQUEST_MESSAGE = "안녕하세요 저는 라티입니다! 친하게 지내요!"
+        const val REQ_EMAIL = "requester1@kakao.com"
     }
 
     private lateinit var requester1: UserJpaEntity
@@ -57,16 +59,20 @@ class FriendsRequestCommandControllerIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        requester1 = createUser("requester1@kakao.com", "요청자")
+        requester1 = createUser(REQ_EMAIL, "요청자")
         receiver = createUser("receiver@kakao.com", "수신자")
     }
 
     @Test
+    @WithMockUser(REQ_EMAIL)
     @DisplayName("친구 요청 API 호출 시 DB 저장까지 성공한다")
     fun requestFriendship_IntegrationSuccess() {
-        val requestDto = mapOf("receiverId" to receiver.id.toString(), "message" to FRIEND_REQUEST_MESSAGE)
+        val requestDto = mapOf(
+            "receiverId" to receiver.id,
+            "message" to FRIEND_REQUEST_MESSAGE
+        )
 
-        performPost(BASE_FRIEND_REQUEST_URL, requester1.email, requestDto)
+        performPost(BASE_URL, requester1.email, requestDto)
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.code").value(200))
             .andExpect(jsonPath("$.data.friendRequestId").exists())
@@ -83,7 +89,7 @@ class FriendsRequestCommandControllerIntegrationTest {
     fun acceptToFriendRequest() {
         val requestId = createFriendRequest(requester1, receiver)
 
-        performPost("$BASE_FRIEND_REQUEST_URL/accept/$requestId", receiver.email)
+        performPost("$BASE_URL/accept/$requestId", receiver.email)
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.friendEmail").value(requester1.email))
     }
@@ -93,7 +99,7 @@ class FriendsRequestCommandControllerIntegrationTest {
     fun rejectToFriendRequest() {
         val requestId = createFriendRequest(requester1, receiver)
 
-        performPost("$BASE_FRIEND_REQUEST_URL/reject/$requestId", receiver.email)
+        performPost("$BASE_URL/reject/$requestId", receiver.email)
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.targetEmail").value(requester1.email))
     }

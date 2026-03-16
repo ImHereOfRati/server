@@ -1,6 +1,6 @@
 package com.kdongsu5509.user.adapter.`in`.web.user
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.epages.restdocs.apispec.ResourceDocumentation.resource
 import com.kdongsu5509.support.exception.AuthErrorCode
 import com.kdongsu5509.user.adapter.out.auth.oauth.KakaoOauthClient
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKey
@@ -10,37 +10,34 @@ import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.User
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
+import com.kdongsu5509.user.testSupport.ControllerTestSupport
 import com.kdongsu5509.user.testSupport.TestJwtBuilder
-import com.kdongsu5509.user.testSupport.TestRedisContainer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
+import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post
+import org.springframework.restdocs.payload.JsonFieldType
+import org.springframework.restdocs.payload.PayloadDocumentation.*
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.transaction.annotation.Transactional
 import java.security.interfaces.RSAPublicKey
 import java.util.*
 
-@ActiveProfiles("test")
-@Transactional
-@SpringBootTest
-@AutoConfigureMockMvc
-class AuthControllerIntegrationTest : TestRedisContainer() {
+@TestPropertySource(properties = ["spring.data.redis.host=localhost", "spring.data.redis.port=6379"])
+class AuthControllerIntegrationTest : ControllerTestSupport() {
 
     companion object {
-        const val LOGIN_URL = "/api/v1/user/auth/login"
-        const val REISSUE_URL = "/api/v1/user/auth/reissue"
+        const val BASE_URL = "/api/v1/user/auth"
+        const val LOGIN_URL = "/login"
+        const val REISSUE_URL = "/reissue"
         const val DEFAULT_TEST_EMAIL = "ds.ko@kakao.com"
     }
 
@@ -48,12 +45,7 @@ class AuthControllerIntegrationTest : TestRedisContainer() {
     lateinit var userSavePort: UserSavePort
 
     @Autowired
-    lateinit var mockMvc: MockMvc
-
-    @Autowired
-    lateinit var objectMapper: ObjectMapper
-
-    @Autowired
+    @Qualifier("customRedisTemplate")
     lateinit var redisTemplate: RedisTemplate<String, Any>
 
     @MockitoBean
@@ -77,6 +69,23 @@ class AuthControllerIntegrationTest : TestRedisContainer() {
         performLogin(idToken)
             .andExpect(status().isCreated)
             .andExpect(jsonPath("$.data.accessToken").exists())
+            .andDo(
+                restDocs.document(
+                    resource(
+                        "카카오 OAuth 로그인/회원가입",
+                    ),
+                    requestFields(
+                        fieldWithPath("provider").type(JsonFieldType.STRING).description("OAuth2 제공자 (KAKAO)"),
+                        fieldWithPath("idToken").type(JsonFieldType.STRING).description("OAuth2 ID Token")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").type(JsonFieldType.NUMBER).description("응답 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지").optional(),
+                        fieldWithPath("data.accessToken").type(JsonFieldType.STRING).description("액세스 토큰"),
+                        fieldWithPath("data.refreshToken").type(JsonFieldType.STRING).description("리프레시 토큰")
+                    )
+                )
+            )
     }
 
     @Test
@@ -132,18 +141,34 @@ class AuthControllerIntegrationTest : TestRedisContainer() {
 
         // when & then
         mockMvc.perform(
-            post(REISSUE_URL)
+            post(BASE_URL + REISSUE_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.accessToken").exists())
+            .andDo(
+                restDocs.document(
+                    resource(
+                        "토큰 재발급",
+                    ),
+                    requestFields(
+                        fieldWithPath("refreshToken").type(JsonFieldType.STRING).description("리프레시 토큰")
+                    ),
+                    responseFields(
+                        fieldWithPath("code").type(JsonFieldType.NUMBER).description("응답 코드"),
+                        fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지").optional(),
+                        fieldWithPath("data.accessToken").type(JsonFieldType.STRING).description("새로운 액세스 토큰"),
+                        fieldWithPath("data.refreshToken").type(JsonFieldType.STRING).description("새로운 리프레시 토큰")
+                    )
+                )
+            )
     }
 
     // --- Helper Methods ---
 
     private fun performLogin(idToken: String) = mockMvc.perform(
-        post(LOGIN_URL)
+        post(BASE_URL + LOGIN_URL)
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 objectMapper.writeValueAsString(

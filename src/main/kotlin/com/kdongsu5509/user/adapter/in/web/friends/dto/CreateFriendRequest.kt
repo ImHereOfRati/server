@@ -7,7 +7,7 @@ import java.util.*
 
 data class CreateFriendRequest(
     @field:NotNull(message = "수신자 ID는 필수입니다")
-    var receiverId: UUID,
+    val receiverId: UUID,
 
     @field:NotBlank(message = "공백은 허용되지 않습니다")
     @field:Length(min = 10, max = 255, message = "요청 메시지는 10 ~ 255자 사이여야 합니다")

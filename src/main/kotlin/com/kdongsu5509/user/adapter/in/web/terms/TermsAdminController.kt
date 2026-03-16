@@ -19,10 +19,7 @@ class TermsAdminController(
     private val createTermsDefinitionUseCase: CreateTermsDefinitionUseCase,
     private val createTermVersionUseCase: CreateTermVersionUseCase,
 ) {
-    /**
-     * Create
-     */
-    // ?��? 종류
+    // 약관의 종류 생성
     @PostMapping("/definition")
     fun createNewTermDefinition(
         @Validated @RequestBody newTermDefinitionRequest: NewTermDefinitionRequest
@@ -31,7 +28,7 @@ class TermsAdminController(
         return APIResponse.success()
     }
 
-    // ?��? ?��? ?�용
+    // 약관 추가용
     @PostMapping("/version")
     fun createNewTermVersion(
         @Validated @RequestBody newTermVersionRequest: NewTermVersionRequest

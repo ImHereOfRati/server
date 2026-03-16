@@ -25,7 +25,9 @@ class RedisConfig {
     private lateinit var host: String
 
     @Value("\${spring.data.redis.port:6379}")
-    private var port: Int = 0
+    private var port: String = "6379"
+
+    private fun getPort(): Int = port.ifBlank { "6379" }.toInt()
 
     // Redis 캐시용 Serializer를 Bean으로 정의
     @Bean

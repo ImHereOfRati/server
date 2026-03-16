@@ -1,8 +1,8 @@
 package com.kdongsu5509.user.config
 
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
-import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation
 import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler
 import org.springframework.restdocs.operation.preprocess.Preprocessors
 
@@ -11,7 +11,7 @@ class RestDocsConfiguration {
 
     @Bean
     fun write(): RestDocumentationResultHandler {
-        return MockMvcRestDocumentation.document(
+        return MockMvcRestDocumentationWrapper.document(
             "{class-name}/{method-name}",
             Preprocessors.preprocessRequest(Preprocessors.prettyPrint()),
             Preprocessors.preprocessResponse(Preprocessors.prettyPrint())

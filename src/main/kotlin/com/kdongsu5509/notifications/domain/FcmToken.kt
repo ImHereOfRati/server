@@ -3,9 +3,9 @@ package com.kdongsu5509.notifications.domain
 import java.time.LocalDateTime
 
 data class FcmToken(
-    var id: Long?,
-    var userEmail: String,
-    var fcmToken: String,
-    var deviceType: DeviceType,
-    var updatedAt: LocalDateTime?
+    val id: Long?,
+    val userEmail: String,
+    val fcmToken: String,
+    val deviceType: DeviceType,
+    val updatedAt: LocalDateTime?
 )

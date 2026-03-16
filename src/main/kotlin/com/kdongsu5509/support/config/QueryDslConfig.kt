@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class QueryDslConfig(private val entityManager: EntityManager) {
     @Bean
-    fun japQueryFactory(): JPAQueryFactory {
+    fun jpaQueryFactory(): JPAQueryFactory {
         return JPAQueryFactory(entityManager)
     }
 }

@@ -1,9 +1,9 @@
 package com.kdongsu5509.user.application.service.user
 
+import com.kdongsu5509.support.exception.AuthErrorCode
+import com.kdongsu5509.support.exception.BusinessException
 import com.kdongsu5509.user.application.dto.ImHereJwt
 import com.kdongsu5509.user.application.port.out.user.CachePort
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
@@ -40,7 +40,7 @@ class ImHereJWTTokenProvider(
 
         // 토큰 유효성 검사 (만료 시간 포함)
         if (!jwtTokenUtil.validateToken(refreshToken)) {
-            throw BusinessException(ErrorCode.IMHERE_INVALID_TOKEN)
+            throw BusinessException(AuthErrorCode.IMHERE_INVALID_TOKEN)
         }
 
         val refreshTokenFromRedis = cachePort.find("refresh:$username") as String?

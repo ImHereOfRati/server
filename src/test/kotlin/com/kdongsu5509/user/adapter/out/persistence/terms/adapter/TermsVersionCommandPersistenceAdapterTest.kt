@@ -1,12 +1,12 @@
 package com.kdongsu5509.user.adapter.out.persistence.terms.adapter
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.ErrorCode
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsDefinitionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsVersionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsDefinitionJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.terms.mapper.TermVersionMapper
 import com.kdongsu5509.user.domain.terms.TermsTypes
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName

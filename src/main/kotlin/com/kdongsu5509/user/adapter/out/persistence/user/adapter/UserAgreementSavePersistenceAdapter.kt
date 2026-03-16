@@ -1,5 +1,8 @@
 package com.kdongsu5509.user.adapter.out.persistence.user.adapter
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.TermErrorCode
+import com.kdongsu5509.support.exception.UserErrorCode
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsVersionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsVersionJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserAgreementRepository
@@ -7,8 +10,6 @@ import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepos
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserAgreementJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.application.port.out.user.UserAgreementSavePort
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.stereotype.Component
 
 @Component
@@ -40,17 +41,17 @@ class UserAgreementSavePersistenceAdapter(
 
     private fun findUserEntity(userEmail: String): UserJpaEntity =
         springDataUserRepository.findByEmail(userEmail)
-            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+            ?: throw BusinessException(UserErrorCode.USER_NOT_FOUND)
 
     private fun findTermVersion(termDefinitionId: Long): TermsVersionJpaEntity =
         springDataTermsVersionRepository.findActiveVersion(termDefinitionId)
-            .orElseThrow { BusinessException(ErrorCode.TERM_DEFINITION_NOT_FOUND) }
+            .orElseThrow { BusinessException(TermErrorCode.TERM_DEFINITION_NOT_FOUND) }
 
     private fun findTermVersions(termDefinitionIds: List<Long>): List<TermsVersionJpaEntity> {
         val activeVersions = springDataTermsVersionRepository.findAllActiveByDefinitionIds(termDefinitionIds)
 
         if (activeVersions.size != termDefinitionIds.size) {
-            throw BusinessException(ErrorCode.TERM_DEFINITION_NOT_FOUND)
+            throw BusinessException(TermErrorCode.TERM_DEFINITION_NOT_FOUND)
         }
 
         return activeVersions

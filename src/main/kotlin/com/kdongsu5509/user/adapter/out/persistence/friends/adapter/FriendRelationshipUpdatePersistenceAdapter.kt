@@ -1,5 +1,8 @@
 package com.kdongsu5509.user.adapter.out.persistence.friends.adapter
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.FriendErrorCode
+import com.kdongsu5509.support.exception.UserErrorCode
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.FriendRelationshipsJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.SpringDataFriendRelationshipsRepository
 import com.kdongsu5509.user.adapter.out.persistence.friends.mapper.FriendRelationshipMapper
@@ -7,8 +10,6 @@ import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringQueryDSLUserR
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.application.port.out.friend.FriendRelationshipUpdatePort
 import com.kdongsu5509.user.domain.friend.FriendRelationship
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.stereotype.Component
 import java.util.*
 
@@ -25,7 +26,7 @@ class FriendRelationshipUpdatePersistenceAdapter(
     ): FriendRelationship {
         val friendRelationshipEntity = fetchRequiredFriendRelationship(friendRelationshipId)
         if (friendRelationshipEntity.ownerUser.email != userEmail) {
-            throw BusinessException(ErrorCode.FRIEND_RELATIONSHIP_OWNER_MISS_MATCH)
+            throw BusinessException(FriendErrorCode.FRIEND_RELATIONSHIP_OWNER_MISS_MATCH)
         }
 
         friendRelationshipEntity.updateAlias(newFriendAlias)
@@ -37,13 +38,13 @@ class FriendRelationshipUpdatePersistenceAdapter(
         val friendRelationshipEntity = fetchRequiredFriendRelationship(friendRelationshipId)
 
         if (friendRelationshipEntity.ownerUser.email != userEmail) {
-            throw BusinessException(ErrorCode.FRIEND_RELATIONSHIP_OWNER_MISS_MATCH)
+            throw BusinessException(FriendErrorCode.FRIEND_RELATIONSHIP_OWNER_MISS_MATCH)
         }
 
         val otherRelationship = springDataFriendRelationshipsRepository.findByOwnerUserAndFriendUser(
             owner = friendRelationshipEntity.friendUser,
             friend = friendRelationshipEntity.ownerUser
-        ).orElseThrow { BusinessException(ErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND) }
+        ).orElseThrow { BusinessException(FriendErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND) }
 
         springDataFriendRelationshipsRepository.delete(friendRelationshipEntity)
         springDataFriendRelationshipsRepository.delete(otherRelationship)
@@ -51,12 +52,12 @@ class FriendRelationshipUpdatePersistenceAdapter(
 
     private fun fetchRequiredUser(email: String): UserJpaEntity {
         return userRepository.findUserByEmail(email).orElseThrow {
-            BusinessException(ErrorCode.USER_NOT_FOUND)
+            BusinessException(UserErrorCode.USER_NOT_FOUND)
         }
     }
 
     private fun fetchRequiredFriendRelationship(id: UUID): FriendRelationshipsJpaEntity =
         springDataFriendRelationshipsRepository.findById(id).orElseThrow {
-            throw BusinessException(ErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND)
+            throw BusinessException(FriendErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND)
         }
 }

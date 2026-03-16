@@ -1,6 +1,7 @@
 package com.kdongsu5509.user.adapter.`in`.web.friends
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.kdongsu5509.support.config.QueryDslConfig
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.FriendRequestJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.SpringDataFriendRequestRepository
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepository
@@ -9,7 +10,6 @@ import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
-import com.kdongsu5509.user.support.config.QueryDslConfig
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName

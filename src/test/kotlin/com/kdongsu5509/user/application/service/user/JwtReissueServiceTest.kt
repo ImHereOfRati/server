@@ -1,8 +1,8 @@
 package com.kdongsu5509.user.application.service.user
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.ErrorCode
 import com.kdongsu5509.user.application.dto.ImHereJwt
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName

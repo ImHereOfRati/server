@@ -1,11 +1,11 @@
 package com.kdongsu5509.user.adapter.out.persistence.terms.adapter
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.TermErrorCode
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsVersionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.mapper.TermVersionMapper
 import com.kdongsu5509.user.application.port.out.term.TermsVersionLoadPort
 import com.kdongsu5509.user.domain.terms.TermVersion
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 
@@ -24,7 +24,7 @@ class TermsVersionQueryPersistenceAdapter(
         val queryResult = springDataTermsVersionRepository.findActiveVersion(termDefinitionId)
 
         if (queryResult.isEmpty) {
-            throw BusinessException(ErrorCode.TERM_DEFINITION_NOT_FOUND)
+            throw BusinessException(TermErrorCode.TERM_DEFINITION_NOT_FOUND)
         }
 
         return termVersionMapper.mapToDomainEntity(queryResult.get())

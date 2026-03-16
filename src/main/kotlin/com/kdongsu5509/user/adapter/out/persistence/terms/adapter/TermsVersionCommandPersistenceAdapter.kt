@@ -1,13 +1,13 @@
 package com.kdongsu5509.user.adapter.out.persistence.terms.adapter
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.TermErrorCode
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsDefinitionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsVersionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsDefinitionJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsVersionJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.terms.mapper.TermVersionMapper
 import com.kdongsu5509.user.application.port.out.term.TermsVersionSavePort
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -70,7 +70,7 @@ class TermsVersionCommandPersistenceAdapter(
 
     private fun findProperTermDefinition(termDefinitionId: Long): TermsDefinitionJpaEntity {
         val queriedTermDefinition = springDataTermsDefinitionRepository.findById(termDefinitionId).orElseThrow {
-            throw BusinessException(ErrorCode.TERM_DEFINITION_NOT_FOUND)
+            throw BusinessException(TermErrorCode.TERM_DEFINITION_NOT_FOUND)
         }
         return queriedTermDefinition
     }

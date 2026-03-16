@@ -1,8 +1,8 @@
 package com.kdongsu5509.user.application.dto
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.UserErrorCode
 import com.kdongsu5509.user.domain.user.User
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import java.util.*
 
 data class UserInformation(
@@ -19,7 +19,7 @@ data class UserInformation(
 
         private fun extractIdOrThrowBusinessException(user: User): UUID {
             return user.id ?: let {
-                throw BusinessException(ErrorCode.USER_ID_NULL)
+                throw BusinessException(UserErrorCode.USER_ID_NULL)
             }
         }
     }

@@ -1,11 +1,11 @@
 package com.kdongsu5509.user.adapter.out.auth
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.ErrorCode
 import com.kdongsu5509.user.adapter.out.auth.oauth.KakaoOIDCProperties
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKey
 import com.kdongsu5509.user.application.port.out.user.JwtVerificationPort
 import com.kdongsu5509.user.application.port.out.user.oauth.PublicKeyLoadPort
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jws
 import io.jsonwebtoken.Jwts

@@ -1,5 +1,7 @@
 package com.kdongsu5509.user.application.service.user
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.TermErrorCode
 import com.kdongsu5509.user.adapter.`in`.web.user.dto.UserTermsConsentRequest
 import com.kdongsu5509.user.adapter.`in`.web.user.dto.UserTermsConsentRequest.ConsentDetail
 import com.kdongsu5509.user.application.port.`in`.user.AgreementTermUseCase
@@ -7,8 +9,6 @@ import com.kdongsu5509.user.application.port.out.term.TermsDefinitionLoadPort
 import com.kdongsu5509.user.application.port.out.user.UserAgreementSavePort
 import com.kdongsu5509.user.application.port.out.user.UserUpdatePort
 import com.kdongsu5509.user.domain.terms.TermDefinition
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 
@@ -54,7 +54,7 @@ class UserTermAgreementService(
         val allRequiredTermsAgreed = requiredTerms.all { it.id in agreedTermIds }
 
         if (!allRequiredTermsAgreed) {
-            throw BusinessException(ErrorCode.OBLIGATORY_TERM_NOT_AGREED)
+            throw BusinessException(TermErrorCode.OBLIGATORY_TERM_NOT_AGREED)
         }
     }
 

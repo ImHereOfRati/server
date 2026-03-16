@@ -3,6 +3,6 @@ package com.kdongsu5509.user.adapter.`in`.web.user.dto
 import jakarta.validation.constraints.NotBlank
 
 data class NicknameChangeRequest(
-    @field:NotBlank(message = "새로운 닉네임은 필수입니다")
+    @field:NotBlank(message = "?�로???�네?��? ?�수?�니??)
     val newNickname: String
 )

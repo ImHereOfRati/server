@@ -1,5 +1,7 @@
 package com.kdongsu5509.user.application.service.friend
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.FriendErrorCode
 import com.kdongsu5509.user.application.port.`in`.friend.UpdateFriendRequestUseCase
 import com.kdongsu5509.user.application.port.out.friend.FriendRelationshipSavePort
 import com.kdongsu5509.user.application.port.out.friend.FriendRequestLoadPort
@@ -9,8 +11,6 @@ import com.kdongsu5509.user.domain.friend.FriendRelationship
 import com.kdongsu5509.user.domain.friend.FriendRequest
 import com.kdongsu5509.user.domain.friend.FriendRestriction
 import com.kdongsu5509.user.domain.friend.FriendRestrictionType
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -58,7 +58,7 @@ class FriendRequestUpdateService(
         val friendRequestQueryResult = friendRequestLoadPort.findReceivedRequestByRequestId(friendRequestId)
 
         if (friendRequestQueryResult.receiver.email != userEmail) {
-            throw BusinessException(ErrorCode.FRIENDSHIP_REQUEST_RECEIVER_MISS_MATCH)
+            throw BusinessException(FriendErrorCode.FRIENDSHIP_REQUEST_RECEIVER_MISS_MATCH)
         }
 
         return friendRequestQueryResult

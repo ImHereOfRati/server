@@ -1,13 +1,13 @@
 package com.kdongsu5509.user.adapter.out.auth
 
+import com.kdongsu5509.support.exception.AuthErrorCode
+import com.kdongsu5509.support.exception.BusinessException
 import com.kdongsu5509.user.adapter.out.auth.oauth.KakaoOIDCProperties
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKey
 import com.kdongsu5509.user.application.dto.OIDCDecodePayload
 import com.kdongsu5509.user.application.port.out.user.JwtParserPort
 import com.kdongsu5509.user.application.port.out.user.JwtVerificationPort
 import com.kdongsu5509.user.application.port.out.user.oauth.PublicKeyLoadPort
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jws
 import io.jsonwebtoken.Jwts
@@ -50,7 +50,7 @@ class JjwtParserAdapter(
     private fun getUnsignedToken(token: String): String {
         val splitToken = token.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         if (splitToken.size != 3) {
-            throw BusinessException(ErrorCode.OIDC_INVALID)
+            throw BusinessException(AuthErrorCode.OIDC_INVALID)
         }
         return "${splitToken[0]}.${splitToken[1]}."
     }

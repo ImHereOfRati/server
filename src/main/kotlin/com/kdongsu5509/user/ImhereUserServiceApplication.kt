@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import java.util.*
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = ["com.kdongsu5509"])
 class ImhereUserServiceApplication
 
 @PostConstruct

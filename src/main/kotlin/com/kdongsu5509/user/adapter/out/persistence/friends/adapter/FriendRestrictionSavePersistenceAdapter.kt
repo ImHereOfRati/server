@@ -1,5 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.friends.adapter
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.UserErrorCode
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.FriendRestrictionJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.SpringDataFriendRestrictionRepository
 import com.kdongsu5509.user.adapter.out.persistence.friends.mapper.FriendRestrictionMapper
@@ -9,8 +11,6 @@ import com.kdongsu5509.user.application.port.out.friend.FriendRestrictionSavePor
 import com.kdongsu5509.user.domain.friend.FriendRequestUserInfo
 import com.kdongsu5509.user.domain.friend.FriendRestriction
 import com.kdongsu5509.user.domain.friend.FriendRestrictionType
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.stereotype.Component
 
 @Component
@@ -51,7 +51,7 @@ class FriendRestrictionSavePersistenceAdapter(
     private fun fetchRequiredUsers(vararg emails: String): List<UserJpaEntity> {
         val users = userRepository.findActiveUsersByEmails(emails[0], emails[1])
         if (users.size != emails.size) {
-            throw BusinessException(ErrorCode.USER_NOT_FOUND)
+            throw BusinessException(UserErrorCode.USER_NOT_FOUND)
         }
         return users
     }

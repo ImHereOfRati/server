@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 
 data class AuthenticationRequest(
-    @field:NotNull(message = "OAuth2 제공자는 필수입니다")
+    @field:NotNull(message = "OAuth2 ?�공?�는 ?�수?�니??)
     var provider: OAuth2Provider,
-    @field:NotBlank(message = "idToken은 필수입니다.")
+    @field:NotBlank(message = "idToken?� ?�수?�니??")
     val idToken: String,
 )

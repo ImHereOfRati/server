@@ -1,13 +1,13 @@
 package com.kdongsu5509.user.adapter.out.persistence.user.adapter
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.ErrorCode
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.user.mapper.UserMapper
 import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName

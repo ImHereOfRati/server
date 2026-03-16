@@ -1,5 +1,7 @@
 package com.kdongsu5509.user.application.service.user
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.ErrorCode
 import com.kdongsu5509.user.adapter.`in`.web.user.dto.UserTermsConsentRequest
 import com.kdongsu5509.user.adapter.`in`.web.user.dto.UserTermsConsentRequest.ConsentDetail
 import com.kdongsu5509.user.application.port.out.term.TermsDefinitionLoadPort
@@ -7,8 +9,6 @@ import com.kdongsu5509.user.application.port.out.user.UserAgreementSavePort
 import com.kdongsu5509.user.application.port.out.user.UserUpdatePort
 import com.kdongsu5509.user.domain.terms.TermDefinition
 import com.kdongsu5509.user.domain.terms.TermsTypes
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

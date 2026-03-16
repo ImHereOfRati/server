@@ -1,5 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.friends.adapter
 
+import com.kdongsu5509.support.config.QueryDslConfig
+import com.kdongsu5509.support.exception.BusinessException
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.FriendRelationshipsJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.SpringDataFriendRelationshipsRepository
 import com.kdongsu5509.user.adapter.out.persistence.friends.mapper.FriendRelationshipMapper
@@ -8,8 +10,6 @@ import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
-import com.kdongsu5509.user.support.config.QueryDslConfig
-import com.kdongsu5509.user.support.exception.BusinessException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.DisplayName

@@ -1,10 +1,10 @@
 package com.kdongsu5509.user.adapter.out.auth
 
+import com.kdongsu5509.support.exception.AuthErrorCode
+import com.kdongsu5509.support.exception.BusinessException
 import com.kdongsu5509.user.adapter.out.auth.oauth.KakaoOIDCProperties
 import com.kdongsu5509.user.application.dto.OIDCDecodePayload
 import com.kdongsu5509.user.application.port.out.user.JwtVerificationPort
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jws
@@ -40,14 +40,14 @@ class JjwtVerifyAdapter(
                 .build()
                 .parseClaimsJws(token)
         } catch (e: ExpiredJwtException) {
-            throw BusinessException(ErrorCode.OIDC_EXPIRED)
+            throw BusinessException(AuthErrorCode.OIDC_EXPIRED)
         }
     }
 
     private fun verifyIssuer(actualIssuer: String) {
         if (actualIssuer != kakaoOIDCProperties.issuer) {
             throw BusinessException(
-                ErrorCode.OIDC_INVALID,
+                AuthErrorCode.OIDC_INVALID,
                 "토큰의 issuer가 일치하지 않습니다. 토큰 Issuer: $actualIssuer"
             )
         }
@@ -56,7 +56,7 @@ class JjwtVerifyAdapter(
     private fun verifyAudience(actualAudience: String) {
         if (actualAudience != kakaoOIDCProperties.audience) {
             throw BusinessException(
-                ErrorCode.OIDC_INVALID,
+                AuthErrorCode.OIDC_INVALID,
                 "토큰의 audience가 일치하지 않습니다. 토큰 Audience: $actualAudience"
             )
         }
@@ -66,11 +66,11 @@ class JjwtVerifyAdapter(
         try {
             return createKey(modulus, exponent)
         } catch (e: NoSuchAlgorithmException) {
-            throw BusinessException(ErrorCode.ALGORITHM_NOT_FOUND)
+            throw BusinessException(AuthErrorCode.ALGORITHM_NOT_FOUND)
         } catch (e: InvalidKeySpecException) {
-            throw BusinessException(ErrorCode.INVALID_KEY)
+            throw BusinessException(AuthErrorCode.INVALID_KEY)
         } catch (e: IllegalArgumentException) {
-            throw BusinessException(ErrorCode.INVALID_ENCODING)
+            throw BusinessException(AuthErrorCode.INVALID_ENCODING)
         }
     }
 

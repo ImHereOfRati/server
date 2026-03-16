@@ -22,7 +22,7 @@ class TermsAdminController(
     /**
      * Create
      */
-    // ì•½ê´€ ì¢…ë¥˜
+    // ?½ê? ì¢…ë¥˜
     @PostMapping("/definition")
     fun createNewTermDefinition(
         @Validated @RequestBody newTermDefinitionRequest: NewTermDefinitionRequest
@@ -31,7 +31,7 @@ class TermsAdminController(
         return APIResponse.success()
     }
 
-    // ì•½ê´€ ì„¸ë¶€ ë‚´ìš©
+    // ?½ê? ?¸ë? ?´ìš©
     @PostMapping("/version")
     fun createNewTermVersion(
         @Validated @RequestBody newTermVersionRequest: NewTermVersionRequest

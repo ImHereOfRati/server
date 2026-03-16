@@ -1,5 +1,7 @@
 package com.kdongsu5509.user.application.service.friend
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.UserErrorCode
 import com.kdongsu5509.user.application.port.`in`.friend.UpdateFriendsUseCase
 import com.kdongsu5509.user.application.port.out.friend.FriendRelationshipLoadPort
 import com.kdongsu5509.user.application.port.out.friend.FriendRelationshipUpdatePort
@@ -8,8 +10,6 @@ import com.kdongsu5509.user.application.port.out.user.UserLoadPort
 import com.kdongsu5509.user.domain.friend.FriendRelationship
 import com.kdongsu5509.user.domain.friend.FriendRequestUserInfo
 import com.kdongsu5509.user.domain.friend.FriendRestrictionType
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -36,10 +36,10 @@ class FriendRelationshipUpdateService(
         val relationship = friendRelationshipLoadPort.findFriendRelationshipByRelationshipId(friendRelationshipId)
 
         val owner = userLoadPort.findActiveUserByEmailOrNull(userEmail)
-            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+            ?: throw BusinessException(UserErrorCode.USER_NOT_FOUND)
 
         val target = userLoadPort.findActiveUserByEmailOrNull(relationship.friendEmail)
-            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+            ?: throw BusinessException(UserErrorCode.USER_NOT_FOUND)
 
         friendRestrictionSavePort.save(
             FriendRequestUserInfo(

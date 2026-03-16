@@ -1,12 +1,12 @@
 package com.kdongsu5509.user.application.service.term
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.TermErrorCode
 import com.kdongsu5509.user.adapter.`in`.web.terms.dto.NewTermDefinitionRequest
 import com.kdongsu5509.user.application.port.`in`.terms.CreateTermsDefinitionUseCase
 import com.kdongsu5509.user.application.port.out.term.TermsDefinitionLoadPort
 import com.kdongsu5509.user.application.port.out.term.TermsDefinitionSavePort
 import com.kdongsu5509.user.domain.terms.TermsTypes
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -32,7 +32,7 @@ class TermsDefinitionCreateService(
     private fun validateTermsDefinitionUniqueness(termsName: String, termsType: TermsTypes) {
         val checkExistence = termsDefinitionLoadPort.checkExistence(termsName, termsType)
         if (checkExistence) {
-            throw BusinessException(ErrorCode.TERM_DEFINITION_ALREADY_EXIST)
+            throw BusinessException(TermErrorCode.TERM_DEFINITION_ALREADY_EXIST)
         }
     }
 }

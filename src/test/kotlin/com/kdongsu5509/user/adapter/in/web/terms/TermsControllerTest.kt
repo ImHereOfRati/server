@@ -5,7 +5,7 @@ import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsVer
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsDefinitionJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsVersionJpaEntity
 import com.kdongsu5509.user.domain.terms.TermsTypes
-import com.kdongsu5509.user.support.ControllerTestSupport
+import com.kdongsu5509.user.testSupport.ControllerTestSupport
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

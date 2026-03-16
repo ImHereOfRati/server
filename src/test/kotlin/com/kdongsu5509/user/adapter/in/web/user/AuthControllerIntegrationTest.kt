@@ -1,6 +1,7 @@
 package com.kdongsu5509.user.adapter.`in`.web.user
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.kdongsu5509.support.exception.ErrorCode
 import com.kdongsu5509.user.adapter.out.auth.oauth.KakaoOauthClient
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKey
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKeyResponse
@@ -9,7 +10,6 @@ import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.User
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
-import com.kdongsu5509.user.support.exception.ErrorCode
 import com.kdongsu5509.user.testSupport.TestJwtBuilder
 import com.kdongsu5509.user.testSupport.TestRedisContainer
 import org.junit.jupiter.api.BeforeEach

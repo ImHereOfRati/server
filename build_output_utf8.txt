@@ -1,0 +1,254 @@
+﻿Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :checkKotlinGradlePluginConfigurationErrors
+
+> Task :kaptGenerateStubsKotlin
+./gradlew : e: file:/
+//C:/Project/ImHere/I
+mHereServer/src/main/
+kotlin/com/kdongsu550
+9/user/adapter/in/web
+/friends/FriendsReque
+stCommandController.k
+t:45:49 Expecting '"'
+위치 줄:1 문자:1
++ ./gradlew :compileK
+otlin --console=plain
+ > build_output_final
+.txt 2>& ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (e: file   
+ :///C:/P...9 Exp    
+ecting '"':Strin    g
+) [], RemoteExc    ep
+tion
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:45:49 Expe
+cting ','
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:47:18 Unex
+pected type specifica
+tion
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:48:38 Unex
+pected type specifica
+tion
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:49:6 Param
+eter name expected
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:49:47 Expe
+cting comma or ')'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:60:49 Expe
+cting '"'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:60:49 Expe
+cting ','
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:62:18 Unex
+pected type specifica
+tion
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:63:38 Unex
+pected type specifica
+tion
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:64:6 Param
+eter name expected
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/Fri
+endsRequestCommandCon
+troller.kt:64:46 Expe
+cting comma or ')'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/dto
+/CreateFriendRequest.
+kt:13:87 Expecting '"
+'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/friends/dto
+/CreateFriendRequest.
+kt:14:5 Expecting ')'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/UserCo
+ntroller.kt:64:80 Exp
+ecting '"'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/UserCo
+ntroller.kt:65:16 Exp
+ecting an element
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/UserCo
+ntroller.kt:65:24 Exp
+ecting an element
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/UserCo
+ntroller.kt:66:6 Para
+meter name expected
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/UserCo
+ntroller.kt:66:45 Exp
+ecting comma or ')'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/dto/Au
+thenticationRequest.k
+t:8:54 Expecting '"'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/dto/Au
+thenticationRequest.k
+t:9:5 Expecting ')'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/dto/Ni
+cknameChangeRequest.k
+t:6:54 Expecting '"'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/dto/Ni
+cknameChangeRequest.k
+t:7:5 Expecting ')'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/dto/Re
+AuthenticationRespons
+e.kt:6:56 Expecting '
+"'
+e: file:///C:/Project
+/ImHere/ImHereServer/
+src/main/kotlin/com/k
+dongsu5509/user/adapt
+er/in/web/user/dto/Re
+AuthenticationRespons
+e.kt:7:5 Expecting ')
+'
+
+> Task :kaptGenerateStubsKotlin FAILED
+
+FAILURE: Build failed
+ with an exception.
+
+* What went wrong:
+Execution failed for 
+task ':kaptGenerateSt
+ubsKotlin'.
+> A failure occurred 
+while executing org.j
+etbrains.kotlin.compi
+lerRunner.GradleCompi
+lerRunnerWithWorkers$
+GradleKotlinCompilerW
+orkAction
+   > Compilation erro
+r. See log for more d
+etails
+
+* Try:
+> Run with --stacktra
+ce option to get the 
+stack trace.
+> Run with --info or 
+--debug option to get
+ more log output.
+> Run with --scan to 
+get full insights.
+> Get more help at ht
+tps://help.gradle.org
+.
+2 actionable tasks: 2 executed
+
+BUILD FAILED in 27s

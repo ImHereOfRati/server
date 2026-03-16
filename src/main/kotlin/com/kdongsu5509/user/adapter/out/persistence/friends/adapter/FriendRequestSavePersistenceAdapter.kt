@@ -1,5 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.friends.adapter
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.UserErrorCode
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.FriendRequestJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.SpringDataFriendRequestRepository
 import com.kdongsu5509.user.adapter.out.persistence.friends.mapper.FriendRequestMapper
@@ -7,8 +9,6 @@ import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringQueryDSLUserR
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.application.port.out.friend.FriendRequestSavePort
 import com.kdongsu5509.user.domain.friend.FriendRequest
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.springframework.stereotype.Component
 import java.util.*
 
@@ -41,7 +41,7 @@ class FriendRequestSavePersistenceAdapter(
         val queryResult = userRepository.findActiveUsersByEmailAndId(requesterEmail, receiverId)
 
         if (queryResult.size != 2) {
-            throw BusinessException(ErrorCode.USER_NOT_FOUND)
+            throw BusinessException(UserErrorCode.USER_NOT_FOUND)
         }
         return queryResult
     }

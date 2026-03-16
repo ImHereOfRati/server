@@ -1,8 +1,8 @@
 package com.kdongsu5509.user.domain.friend
 
 
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.FriendErrorCode
 import java.time.LocalDateTime
 import java.util.*
 
@@ -15,12 +15,12 @@ data class FriendRequest(
 ) {
     init {
         if (requester.id == receiver.id) {
-            throw BusinessException(ErrorCode.SELF_FRIENDSHIP)
+            throw BusinessException(FriendErrorCode.SELF_FRIENDSHIP)
         }
 
         message?.let {
             if (it.length > 255) {
-                throw BusinessException(ErrorCode.FRIENDSHIP_REQUEST_MESSAGE_OVER)
+                throw BusinessException(FriendErrorCode.FRIENDSHIP_REQUEST_MESSAGE_OVER)
             }
         }
     }

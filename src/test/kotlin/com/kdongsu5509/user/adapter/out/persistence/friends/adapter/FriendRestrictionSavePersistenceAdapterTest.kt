@@ -1,5 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.friends.adapter
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.ErrorCode
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.SpringDataFriendRestrictionRepository
 import com.kdongsu5509.user.adapter.out.persistence.friends.mapper.FriendRestrictionMapper
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringQueryDSLUserRepository
@@ -9,8 +11,6 @@ import com.kdongsu5509.user.domain.friend.FriendRestrictionType
 import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.Assertions.assertEquals

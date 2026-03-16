@@ -56,6 +56,9 @@ dependencies {
     // SOLAPI (Java SDK용)
     implementation 'net.nurigo:sdk:4.3.0'
 
+    //FIREBASE
+    implementation 'com.google.firebase:firebase-admin:9.7.0'
+
     // WEB & VALIDATION
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'

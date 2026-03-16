@@ -1,10 +1,10 @@
 package com.kdongsu5509.user.application.service.friend
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.ErrorCode
 import com.kdongsu5509.user.application.port.out.friend.FriendRequestSavePort
 import com.kdongsu5509.user.domain.friend.FriendRequest
 import com.kdongsu5509.user.domain.friend.FriendRequestUserInfo
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName

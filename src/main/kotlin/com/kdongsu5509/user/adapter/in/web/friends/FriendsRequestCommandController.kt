@@ -20,7 +20,7 @@ class FriendsRequestCommandController(
     private val updateFriendRequestUseCase: UpdateFriendRequestUseCase
 ) {
     /**
-     * 요청 생성
+     * ?�청 ?�성
      */
     @PostMapping
     fun requestFriendship(
@@ -42,7 +42,7 @@ class FriendsRequestCommandController(
     @PostMapping("/accept/{requestId}")
     fun acceptToFriendRequest(
         @Validated
-        @NotNull(message = "requestId는 필수입니다")
+        @NotNull(message = "requestId???�수?�니??)
         @PathVariable
         requestId: Long,
         @AuthenticationPrincipal user: UserDetails,
@@ -57,7 +57,7 @@ class FriendsRequestCommandController(
     @PostMapping("/reject/{requestId}")
     fun rejectToFriendRequest(
         @Validated
-        @NotNull(message = "requestId는 필수입니다")
+        @NotNull(message = "requestId???�수?�니??)
         @PathVariable
         requestId: Long,
         @AuthenticationPrincipal user: UserDetails,

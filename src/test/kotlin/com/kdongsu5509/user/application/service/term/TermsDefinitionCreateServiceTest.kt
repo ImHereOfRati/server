@@ -1,11 +1,11 @@
 package com.kdongsu5509.user.application.service.term
 
+import com.kdongsu5509.support.exception.BusinessException
+import com.kdongsu5509.support.exception.ErrorCode
 import com.kdongsu5509.user.adapter.`in`.web.terms.dto.NewTermDefinitionRequest
 import com.kdongsu5509.user.application.port.out.term.TermsDefinitionLoadPort
 import com.kdongsu5509.user.application.port.out.term.TermsDefinitionSavePort
 import com.kdongsu5509.user.domain.terms.TermsTypes
-import com.kdongsu5509.user.support.exception.BusinessException
-import com.kdongsu5509.user.support.exception.ErrorCode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName

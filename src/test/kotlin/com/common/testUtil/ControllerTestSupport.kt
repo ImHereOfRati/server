@@ -11,11 +11,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
-import org.springframework.restdocs.RestDocumentationContextProvider
 import org.springframework.restdocs.RestDocumentationExtension
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.ActiveProfiles
@@ -33,13 +31,11 @@ import tools.jackson.databind.json.JsonMapper
 @Transactional
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-@AutoConfigureRestDocs
 @Import(
     SpringQueryDSLUserRepository::class,
     QueryDslConfig::class,
     RabbitMQConfig::class
 )
-//@Import(RestDocsConfiguration::class)
 @ExtendWith(RestDocumentationExtension::class)
 abstract class ControllerTestSupport : TestRedisContainer() {
 
@@ -65,13 +61,9 @@ abstract class ControllerTestSupport : TestRedisContainer() {
     @Qualifier("customRedisTemplate")
     protected lateinit var redisTemplate: org.springframework.data.redis.core.RedisTemplate<String, Any>
 
-//    @Autowired
-//    protected lateinit var restDocs: RestDocumentationResultHandler
-
     @BeforeEach
     fun setUp(
-        webApplicationContext: WebApplicationContext,
-        restDocumentationContextProvider: RestDocumentationContextProvider
+        webApplicationContext: WebApplicationContext
     ) {
         redisTemplate.execute { connection ->
             connection.serverCommands().flushDb()
@@ -79,12 +71,8 @@ abstract class ControllerTestSupport : TestRedisContainer() {
         }
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-//            .apply<DefaultMockMvcBuilder>(
-//                MockMvcRestDocumentation.documentationConfiguration(restDocumentationContextProvider)
-//            )
             .apply<DefaultMockMvcBuilder>(springSecurity())
             .alwaysDo<DefaultMockMvcBuilder>(MockMvcResultHandlers.print())
-//            .alwaysDo<DefaultMockMvcBuilder>(restDocs)
             .addFilters<DefaultMockMvcBuilder>(CharacterEncodingFilter("UTF-8", true))
             .build()
     }

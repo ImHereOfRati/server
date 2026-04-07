@@ -20,10 +20,26 @@ class FCMNotificationService(
     private val firebasePort: FirebasePort
 ) : NotificationToUserCasePort {
 
-    override fun send(receiverEmail: String, type: String, body: String) {
+    override fun send(
+        senderNickname: String,
+        senderEmail: String,
+        receiverEmail: String,
+        type: String,
+        body: String
+    ) {
         val fcmToken: FcmToken = findReceiverFcmToken(receiverEmail)
+        val data = mapOf(
+            "senderNickname" to senderNickname,
+            "senderEmail" to senderEmail
+        )
+
         try {
-            firebasePort.send(receiverEmail, convertTypeToMessageTitle(type), body)
+            firebasePort.send(
+                fcmToken.fcmToken,
+                convertTypeToMessageTitle(type),
+                body,
+                data
+            )
         } catch (ex: BusinessException) {
             if (ex.errorCode == FCMErrorCode.FCM_TOKEN_UNREGISTERED) {
                 deleteTokenPort.deleteById(fcmToken.id!!)
@@ -32,15 +48,14 @@ class FCMNotificationService(
     }
 
     fun convertTypeToMessageTitle(type: String): FCMMessageTitle {
-        if (type == NotificationType.FRIEND_REQUEST.name) {
-            return FCMMessageTitle.FRIEND_REQUEST
+        return when (type) {
+            NotificationType.FRIEND_REQUEST.name -> FCMMessageTitle.FRIEND_REQUEST
+            NotificationType.TERMS_UPDATE.name -> FCMMessageTitle.DEFAULT_NOTICE
+            NotificationType.LOCATION_SHARE_RECIPIENT.name -> FCMMessageTitle.LOCATION_SHARE_RECIPIENT
+            NotificationType.ARRIVAL_CONFIRMATION.name -> FCMMessageTitle.ARRIVAL_CONFIRMATION
+            NotificationType.DELIVERY_RESULT_NOTICE.name -> FCMMessageTitle.DELIVERY_RESULT_NOTICE
+            else -> throw BusinessException(FCMErrorCode.FCM_INVALID_ARGUMENT)
         }
-
-        if (type == NotificationType.TERMS_UPDATE.name) {
-            return FCMMessageTitle.DEFAULT_NOTICE
-        }
-
-        throw BusinessException(FCMErrorCode.FCM_INVALID_ARGUMENT)
     }
 
     private fun findReceiverFcmToken(receiverEmail: String): FcmToken {

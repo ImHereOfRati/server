@@ -54,7 +54,9 @@ class FriendNotificationConsumerTest : TestRabbitMQContainer() {
         )
 
         willDoNothing().given(notificationToUserCasePort).send(
-            receiverEmail,
+            senderNickname = senderEmail,
+            senderEmail = senderEmail,
+            receiverEmail = receiverEmail,
             type = NotificationType.FRIEND_REQUEST.name,
             body = body
         )
@@ -62,7 +64,11 @@ class FriendNotificationConsumerTest : TestRabbitMQContainer() {
         consumer.receiveMessage(notificationMessageDto)
 
         then(notificationToUserCasePort).should(times(1)).send(
-            receiverEmail, NotificationType.FRIEND_REQUEST.name, body
+            senderNickname = senderEmail,
+            senderEmail = senderEmail,
+            receiverEmail = receiverEmail,
+            type = NotificationType.FRIEND_REQUEST.name,
+            body = body
         )
     }
 

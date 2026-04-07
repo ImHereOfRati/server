@@ -12,6 +12,15 @@ class FriendNotificationConsumer(
 ) {
     @RabbitListener(queues = [RabbitMQConfig.FRIEND_QUEUE])
     fun receiveMessage(dto: NotificationMessageDto) {
-        notificationToUserCasePort.send(dto.receiverEmail, dto.type.name, dto.message)
+        val senderEmail = dto.senderEmail ?: throw IllegalStateException("친구 요청 메시지의 senderEmail이 null일 수는 없습니다")
+
+        notificationToUserCasePort.send(
+            senderNickname = senderEmail,
+            senderEmail = senderEmail,
+            receiverEmail = dto.receiverEmail,
+            type = dto.type.name,
+            body = dto.message
+        )
+
     }
 }

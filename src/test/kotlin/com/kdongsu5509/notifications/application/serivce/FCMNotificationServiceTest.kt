@@ -36,6 +36,8 @@ class FCMNotificationServiceTest {
     private lateinit var fcmNotificationService: FCMNotificationService
 
     companion object {
+        const val SENDER_NICKNAME = "sender-nick"
+        const val SENDER_EMAIL = "sender@example.com"
         const val RECEIVER_EMAIL = "test@example.com"
         const val BODY = "테스트 알림 내용"
         const val FCM_TOKEN = "sample-fcm-token"
@@ -49,10 +51,11 @@ class FCMNotificationServiceTest {
         `when`(findTokenPort.findByUserEmail(RECEIVER_EMAIL)).thenReturn(fcmToken)
 
         // when
-        fcmNotificationService.send(RECEIVER_EMAIL, NotificationType.FRIEND_REQUEST.name, BODY)
+        fcmNotificationService.send(SENDER_NICKNAME, SENDER_EMAIL, RECEIVER_EMAIL, NotificationType.FRIEND_REQUEST.name, BODY)
 
         // then
-        verify(firebasePort).send(RECEIVER_EMAIL, FCMMessageTitle.FRIEND_REQUEST, BODY)
+        val expectedData = mapOf("senderNickname" to SENDER_NICKNAME, "senderEmail" to SENDER_EMAIL)
+        verify(firebasePort).send(FCM_TOKEN, FCMMessageTitle.FRIEND_REQUEST, BODY, expectedData)
     }
 
     @Test
@@ -63,7 +66,7 @@ class FCMNotificationServiceTest {
 
         // when & then
         val exception = assertThrows<BusinessException> {
-            fcmNotificationService.send(RECEIVER_EMAIL, NotificationType.FRIEND_REQUEST.name, BODY)
+            fcmNotificationService.send(SENDER_NICKNAME, SENDER_EMAIL, RECEIVER_EMAIL, NotificationType.FRIEND_REQUEST.name, BODY)
         }
         assertThat(exception.errorCode).isEqualTo(FCMErrorCode.FCM_TOKEN_NOT_FOUND)
     }
@@ -73,12 +76,13 @@ class FCMNotificationServiceTest {
     fun send_token_unregistered_then_delete() {
         // given
         val fcmToken = FcmToken(1L, RECEIVER_EMAIL, FCM_TOKEN, DeviceType.AOS, LocalDateTime.now())
+        val data = mapOf("senderNickname" to SENDER_NICKNAME, "senderEmail" to SENDER_EMAIL)
         `when`(findTokenPort.findByUserEmail(RECEIVER_EMAIL)).thenReturn(fcmToken)
         `doThrow`(BusinessException(FCMErrorCode.FCM_TOKEN_UNREGISTERED))
-            .`when`(firebasePort).send(RECEIVER_EMAIL, FCMMessageTitle.FRIEND_REQUEST, BODY)
+            .`when`(firebasePort).send(FCM_TOKEN, FCMMessageTitle.FRIEND_REQUEST, BODY, data)
 
         // when
-        fcmNotificationService.send(RECEIVER_EMAIL, NotificationType.FRIEND_REQUEST.name, BODY)
+        fcmNotificationService.send(SENDER_NICKNAME, SENDER_EMAIL, RECEIVER_EMAIL, NotificationType.FRIEND_REQUEST.name, BODY)
 
         // then
         verify(deleteTokenPort).deleteById(1L)
@@ -102,6 +106,36 @@ class FCMNotificationServiceTest {
 
         // then
         assertThat(title).isEqualTo(FCMMessageTitle.DEFAULT_NOTICE)
+    }
+
+    @Test
+    @DisplayName("알림 타입에 따른 메시지 제목 변환 - 위치 알림 대상자 등록")
+    fun convertTypeToMessageTitle_location_share_recipient() {
+        // when
+        val title = fcmNotificationService.convertTypeToMessageTitle(NotificationType.LOCATION_SHARE_RECIPIENT.name)
+
+        // then
+        assertThat(title).isEqualTo(FCMMessageTitle.LOCATION_SHARE_RECIPIENT)
+    }
+
+    @Test
+    @DisplayName("알림 타입에 따른 메시지 제목 변환 - 도착 알림")
+    fun convertTypeToMessageTitle_arrival_confirmation() {
+        // when
+        val title = fcmNotificationService.convertTypeToMessageTitle(NotificationType.ARRIVAL_CONFIRMATION.name)
+
+        // then
+        assertThat(title).isEqualTo(FCMMessageTitle.ARRIVAL_CONFIRMATION)
+    }
+
+    @Test
+    @DisplayName("알림 타입에 따른 메시지 제목 변환 - 전송 결과 안내")
+    fun convertTypeToMessageTitle_delivery_result_notice() {
+        // when
+        val title = fcmNotificationService.convertTypeToMessageTitle(NotificationType.DELIVERY_RESULT_NOTICE.name)
+
+        // then
+        assertThat(title).isEqualTo(FCMMessageTitle.DELIVERY_RESULT_NOTICE)
     }
 
     @Test

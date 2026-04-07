@@ -53,8 +53,11 @@ class TermNotificationConsumerTest : TestRabbitMQContainer() {
             timestamp = LocalDateTime.now()
         )
 
+        val expectedSenderEmail = senderEmail ?: "IMHERE_SERVICE"
         willDoNothing().given(notificationToUserCasePort).send(
-            receiverEmail,
+            senderNickname = "System",
+            senderEmail = expectedSenderEmail,
+            receiverEmail = receiverEmail,
             type = NotificationType.TERMS_UPDATE.name,
             body = body
         )
@@ -62,7 +65,11 @@ class TermNotificationConsumerTest : TestRabbitMQContainer() {
         consumer.receiveMessage(notificationMessageDto)
 
         then(notificationToUserCasePort).should(times(1)).send(
-            receiverEmail, NotificationType.TERMS_UPDATE.name, body
+            senderNickname = "System",
+            senderEmail = senderEmail ?: "IMHERE_SERVICE",
+            receiverEmail = receiverEmail,
+            type = NotificationType.TERMS_UPDATE.name,
+            body = body
         )
     }
 

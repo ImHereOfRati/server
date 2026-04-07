@@ -12,6 +12,14 @@ class TermNotificationConsumer(
 ) {
     @RabbitListener(queues = [RabbitMQConfig.SERVICE_QUEUE])
     fun receiveMessage(dto: NotificationMessageDto) {
-        notificationToUserCasePort.send(dto.receiverEmail, dto.type.name, dto.message)
+        val senderEmail = dto.senderEmail ?: "IMHERE_SERVICE"
+
+        notificationToUserCasePort.send(
+            senderNickname = "System",
+            senderEmail = senderEmail,
+            receiverEmail = dto.receiverEmail,
+            type = dto.type.name,
+            body = dto.message
+        )
     }
 }

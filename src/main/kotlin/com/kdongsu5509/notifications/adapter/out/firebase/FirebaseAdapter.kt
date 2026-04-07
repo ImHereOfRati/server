@@ -14,10 +14,10 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
     private val log = LoggerFactory.getLogger(this::class.java)
 
     @Retryable(value = [RetryableFcmException::class], delay = 1000, multiplier = 2.0)
-    override fun send(fcmToken: String, title: FCMMessageTitle, body: String) {
+    override fun send(fcmToken: String, title: FCMMessageTitle, body: String, data: Map<String, String>) {
         if (fcmToken.isBlank()) return log.warn("FCM 토큰 공백으로 전송 중단")
         try {
-            firebaseMessaging.send(createFcmMessage(fcmToken, title, body))
+            firebaseMessaging.send(createFcmMessage(fcmToken, title, body, data))
         } catch (ex: FirebaseMessagingException) {
             processFcmException(ex)
         }
@@ -50,9 +50,11 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
         else -> Unit
     }
 
-    private fun createFcmMessage(token: String, title: FCMMessageTitle, body: String) = Message.builder()
-        .setNotification(Notification.builder().setTitle(title.content).setBody(body).build())
-        .setToken(token).build()
+    private fun createFcmMessage(token: String, title: FCMMessageTitle, body: String, data: Map<String, String>) =
+        Message.builder()
+            .setNotification(Notification.builder().setTitle(title.content).setBody(body).build())
+            .putAllData(data)
+            .setToken(token).build()
 
     private fun logAndThrow(err: FCMErrorCode, msg: String, ex: Exception): Nothing {
         log.error("[$err] $msg", ex)

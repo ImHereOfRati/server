@@ -16,17 +16,34 @@ class FcmOrUpdateTokenPersistenceAdapter(
     override fun saveOrUpdate(userEmail: String, fcmToken: String, deviceType: DeviceType) {
         val existingEntity = springDataFcmTokenRepository.findByUserEmail(userEmail)
 
+
         if (existingEntity != null) {
-            if (existingEntity.token != fcmToken) {
-                existingEntity.updateToken(fcmToken)
-            }
-        } else {
-            val newEntity = FcmTokenJpaEntity(
+            updateFcmTokenIfChanged(existingEntity, fcmToken)
+            return;
+        }
+        saveNewFcmToken(fcmToken, userEmail, deviceType)
+    }
+
+    private fun saveNewFcmToken(
+        fcmToken: String,
+        userEmail: String,
+        deviceType: DeviceType
+    ) {
+        springDataFcmTokenRepository.save(
+            FcmTokenJpaEntity(
                 token = fcmToken,
                 userEmail = userEmail,
                 deviceType = deviceType
             )
-            springDataFcmTokenRepository.save(newEntity)
+        )
+    }
+
+    private fun updateFcmTokenIfChanged(
+        existingEntity: FcmTokenJpaEntity,
+        fcmToken: String
+    ) {
+        if (existingEntity.token != fcmToken) {
+            existingEntity.updateToken(fcmToken)
         }
     }
 

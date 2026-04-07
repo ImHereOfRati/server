@@ -1,38 +1,37 @@
 package com.kdongsu5509.notifications.adapter.out.persistence
 
 import com.kdongsu5509.notifications.domain.DeviceType
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class FcmTokenMapperTest {
 
-    private val mapper = FcmTokenMapper()
+    private val fcmTokenMapper = FcmTokenMapper()
 
     @Test
-    @DisplayName("JPA 엔티티의 모든 필드가 도메인 엔티티로 정확히 매핑되어야 한다")
-    fun mapToDomainEntity_Success() {
+    @DisplayName("JpaEntity를 DomainEntity로 올바르게 매핑")
+    fun mapToDomainEntity_success() {
         // given
-        val now = LocalDateTime.now()
+        val updatedAt = LocalDateTime.now()
         val jpaEntity = FcmTokenJpaEntity(
-            userEmail = "rati@example.com",
-            token = "fcm_token_value",
-            deviceType = DeviceType.AOS,
-        )
-        jpaEntity.apply {
-            id = 999L
-            updatedAt = LocalDateTime.now()
+            token = "sample-token",
+            userEmail = "user@example.com",
+            deviceType = DeviceType.AOS
+        ).apply {
+            this.id = 1L
+            this.updatedAt = updatedAt
         }
 
         // when
-        val domain = mapper.mapToDomainEntity(jpaEntity)
+        val domainEntity = fcmTokenMapper.mapToDomainEntity(jpaEntity)
 
         // then
-        assertEquals(jpaEntity.id, domain.id)
-        assertEquals(jpaEntity.userEmail, domain.userEmail)
-        assertEquals(jpaEntity.token, domain.fcmToken)
-        assertEquals(jpaEntity.deviceType, domain.deviceType)
-        assertEquals(jpaEntity.updatedAt, domain.updatedAt)
+        assertThat(domainEntity.id).isEqualTo(jpaEntity.id)
+        assertThat(domainEntity.fcmToken).isEqualTo(jpaEntity.token)
+        assertThat(domainEntity.userEmail).isEqualTo(jpaEntity.userEmail)
+        assertThat(domainEntity.deviceType).isEqualTo(jpaEntity.deviceType)
+        assertThat(domainEntity.updatedAt).isEqualTo(jpaEntity.updatedAt)
     }
 }

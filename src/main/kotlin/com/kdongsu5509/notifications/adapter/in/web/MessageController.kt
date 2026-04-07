@@ -1,7 +1,7 @@
-package com.kdongsu5509.notifications.adapter.`in`
+package com.kdongsu5509.notifications.adapter.`in`.web
 
-import com.kdongsu5509.notifications.adapter.`in`.dto.MessageSendRequest
-import com.kdongsu5509.notifications.adapter.`in`.dto.MultiMessageSendRequest
+import com.kdongsu5509.notifications.adapter.`in`.web.dto.MessageSendRequest
+import com.kdongsu5509.notifications.adapter.`in`.web.dto.MultiMessageSendRequest
 import com.kdongsu5509.notifications.application.port.`in`.MessageSendUseCasePort
 import com.kdongsu5509.user.application.service.user.SimpleTokenUserDetails
 import org.springframework.security.core.annotation.AuthenticationPrincipal

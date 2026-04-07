@@ -3,7 +3,10 @@ package com.common.testUtil
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import com.kdongsu5509.support.config.QueryDslConfig
+import com.kdongsu5509.support.config.RabbitMQConfig
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringQueryDSLUserRepository
+import com.kdongsu5509.user.application.port.out.noti.FriendAlertPort
+import com.kdongsu5509.user.application.port.out.noti.TermAlertPort
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,10 +37,17 @@ import tools.jackson.databind.json.JsonMapper
 @Import(
     SpringQueryDSLUserRepository::class,
     QueryDslConfig::class,
+    RabbitMQConfig::class
 )
 //@Import(RestDocsConfiguration::class)
 @ExtendWith(RestDocumentationExtension::class)
 abstract class ControllerTestSupport : TestRedisContainer() {
+
+    @MockitoBean
+    protected lateinit var friendAlertPort: FriendAlertPort
+
+    @MockitoBean
+    protected lateinit var termAlertPort: TermAlertPort
 
     @MockitoBean
     protected lateinit var firebaseMessaging: FirebaseMessaging
@@ -63,9 +73,9 @@ abstract class ControllerTestSupport : TestRedisContainer() {
         webApplicationContext: WebApplicationContext,
         restDocumentationContextProvider: RestDocumentationContextProvider
     ) {
-        redisTemplate.execute { connection -> 
+        redisTemplate.execute { connection ->
             connection.serverCommands().flushDb()
-            null 
+            null
         }
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)

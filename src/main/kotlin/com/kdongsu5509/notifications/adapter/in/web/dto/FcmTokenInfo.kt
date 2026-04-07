@@ -1,4 +1,4 @@
-package com.kdongsu5509.notifications.adapter.`in`.dto
+package com.kdongsu5509.notifications.adapter.`in`.web.dto
 
 import com.kdongsu5509.notifications.domain.DeviceType
 

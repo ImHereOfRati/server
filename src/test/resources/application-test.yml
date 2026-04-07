@@ -29,6 +29,13 @@ spring:
         default_batch_fetch_size: 100
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  rabbitmq:
+    host: host.docker.internal
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /main
+
 jwt:
   secret: testSecretKeyForJwtAuthenticationTesting12345678901234567890
   access-expiration-minutes: 30

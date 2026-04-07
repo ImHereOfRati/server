@@ -1,5 +1,6 @@
 package com.kdongsu5509.notifications.adapter.`in`.dto
 
+import com.kdongsu5509.notifications.adapter.`in`.web.dto.FcmTokenInfo
 import com.kdongsu5509.notifications.domain.DeviceType
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow

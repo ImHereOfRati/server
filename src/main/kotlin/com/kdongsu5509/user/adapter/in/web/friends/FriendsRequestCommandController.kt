@@ -7,6 +7,7 @@ import com.kdongsu5509.user.adapter.`in`.web.friends.dto.FriendRelationshipRespo
 import com.kdongsu5509.user.adapter.`in`.web.friends.dto.FriendRestrictionResponse
 import com.kdongsu5509.user.application.port.`in`.friend.CreateFriendRequestUseCase
 import com.kdongsu5509.user.application.port.`in`.friend.UpdateFriendRequestUseCase
+import com.kdongsu5509.user.application.service.user.SimpleTokenUserDetails
 import jakarta.validation.constraints.NotNull
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
@@ -24,13 +25,15 @@ class FriendsRequestCommandController(
      */
     @PostMapping
     fun requestFriendship(
-        @AuthenticationPrincipal user: UserDetails,
+        @AuthenticationPrincipal user: SimpleTokenUserDetails,
         @Validated @RequestBody createFriendRequest: CreateFriendRequest
     ): APIResponse<CreateFriendRequestResponse> {
 
         val result = createFriendRequestUseCase.request(
             user.username,
+            user.nickname,
             createFriendRequest.receiverId,
+            createFriendRequest.receiverEmail,
             createFriendRequest.message
         )
 

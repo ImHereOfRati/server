@@ -5,6 +5,7 @@ import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.FriendRequestJpa
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.SpringDataFriendRequestRepository
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
+import com.kdongsu5509.user.application.service.user.SimpleTokenUserDetails
 import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
@@ -46,16 +47,31 @@ class FriendsRequestCommandControllerIntegrationTest : ControllerTestSupport() {
     }
 
     @Test
-    @WithMockUser(REQ_EMAIL)
+    @WithMockUser(username = REQ_EMAIL)
     @DisplayName("친구 요청 API 호출 시 DB 저장까지 성공한다")
     fun requestFriendship_IntegrationSuccess() {
         val requestDto = mapOf(
             "receiverId" to receiver.id,
+            "receiverEmail" to receiver.email,
             "message" to FRIEND_REQUEST_MESSAGE
         )
 
-        performPost(FRIENDS_REQ_BASE_URL, requester1.email, requestDto)
-            .andExpect(status().isOk)
+        mockMvc.perform(
+            post(FRIENDS_REQ_BASE_URL)
+                .param("v", "1")
+                .with(
+                    user(
+                        SimpleTokenUserDetails(
+                            requester1.email, "rati",
+                            role = "NORMAL",
+                            status = "ACTIVE"
+                        )
+                    )
+                )
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .apply { content(jsonMapper.writeValueAsString(requestDto)) }
+        ).andExpect(status().isOk)
             .andExpect(jsonPath("$.code").value(200))
             .andExpect(jsonPath("$.data.friendRequestId").exists())
 

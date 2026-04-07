@@ -1,6 +1,6 @@
-package com.kdongsu5509.notifications.adapter.`in`
+package com.kdongsu5509.notifications.adapter.`in`.web
 
-import com.kdongsu5509.notifications.adapter.`in`.dto.FcmTokenInfo
+import com.kdongsu5509.notifications.adapter.`in`.web.dto.FcmTokenInfo
 import com.kdongsu5509.notifications.application.port.`in`.ManageFcmTokenUseCasePort
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails

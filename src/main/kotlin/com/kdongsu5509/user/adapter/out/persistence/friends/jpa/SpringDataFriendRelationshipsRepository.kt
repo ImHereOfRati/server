@@ -18,4 +18,6 @@ interface SpringDataFriendRelationshipsRepository : JpaRepository<FriendRelation
         owner: UserJpaEntity,
         friend: UserJpaEntity
     ): Optional<FriendRelationshipsJpaEntity>
+
+    fun deleteByOwnerUserAndFriendUser(owner: UserJpaEntity, friend: UserJpaEntity)
 }

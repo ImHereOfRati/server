@@ -79,6 +79,8 @@ class SecurityConfig(
 
             authorizeHttpRequests {
                 securityConstants.whitelist.forEach { authorize(it, permitAll) }
+                authorize("/api/admin/auth/**", permitAll) // OTT 로그인 엔드포인트
+                authorize("/api/admin/**", hasRole(UserRole.ADMIN.name))
                 authorize(anyRequest, authenticated)
             }
 

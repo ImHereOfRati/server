@@ -14,12 +14,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @PreAuthorize("hasRole('ADMIN')")
-@RequestMapping("/api/user/terms", version = "1")
+@RequestMapping("/api/admin/terms")
 class TermsAdminController(
     private val createTermsDefinitionUseCase: CreateTermsDefinitionUseCase,
     private val createTermVersionUseCase: CreateTermVersionUseCase,
 ) {
-    // 약관의 종류 생성
     @PostMapping("/definition")
     fun createNewTermDefinition(
         @Validated @RequestBody newTermDefinitionRequest: NewTermDefinitionRequest
@@ -28,7 +27,6 @@ class TermsAdminController(
         return APIResponse.success()
     }
 
-    // 약관 추가용
     @PostMapping("/version")
     fun createNewTermVersion(
         @Validated @RequestBody newTermVersionRequest: NewTermVersionRequest

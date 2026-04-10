@@ -38,6 +38,14 @@ class UserJpaEntity(
         this.status = UserStatus.ACTIVE
     }
 
+    fun block() {
+        this.status = UserStatus.BLOCKED
+    }
+
+    fun unblock() {
+        this.status = UserStatus.ACTIVE
+    }
+
     fun changeNickname(newNickname: String) {
         this.nickname = newNickname
     }

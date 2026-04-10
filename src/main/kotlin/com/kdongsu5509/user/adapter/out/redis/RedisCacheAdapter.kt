@@ -26,4 +26,8 @@ class RedisCacheAdapter(
             null
         }
     }
+
+    override fun delete(key: String) {
+        redisTemplate.delete(key)
+    }
 }

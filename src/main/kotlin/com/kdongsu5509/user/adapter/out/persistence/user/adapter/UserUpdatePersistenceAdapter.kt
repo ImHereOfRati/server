@@ -33,6 +33,18 @@ class UserUpdatePersistenceAdapter(
         )
     }
 
+    override fun block(userEmail: String) {
+        val entity = findUserJpaEntity(userEmail)
+        entity.block()
+        springDataUserRepository.save(entity)
+    }
+
+    override fun unblock(userEmail: String) {
+        val entity = findUserJpaEntity(userEmail)
+        entity.unblock()
+        springDataUserRepository.save(entity)
+    }
+
     private fun findUserJpaEntity(userEmail: String): UserJpaEntity {
         return springDataUserRepository.findByEmail(userEmail)
             ?: throw BusinessException(UserErrorCode.USER_NOT_FOUND)

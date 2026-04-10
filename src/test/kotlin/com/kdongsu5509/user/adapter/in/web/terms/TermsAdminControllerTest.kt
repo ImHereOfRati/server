@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 class TermsAdminControllerTest : ControllerTestSupport() {
 
     companion object {
-        const val BASE_URL = "/api/user/terms"
+        const val BASE_URL = "/api/admin/terms"
         const val DEFINITION_URL = "/definition"
         const val VERSION_URL = "/version"
     }

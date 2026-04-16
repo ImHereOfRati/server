@@ -19,6 +19,7 @@ class JwtTokenUtil(private val jwtProperties: JwtProperties) {
     private val zoneID: ZoneId = ZoneId.systemDefault()
     private val secretKey: SecretKey by lazy {
         val keyBytes = jwtProperties.secret.toByteArray(StandardCharsets.UTF_8)
+        print(JwtTokenUtil::class.simpleName + " 의 비밀 키 : " + jwtProperties.secret)
         Keys.hmacShaKeyFor(keyBytes)
     }
 

@@ -4,7 +4,6 @@ import com.common.testUtil.ControllerTestSupport
 import com.common.testUtil.TestJwtBuilder
 import com.epages.restdocs.apispec.ResourceDocumentation.resource
 import com.epages.restdocs.apispec.ResourceSnippetParameters
-import com.kdongsu5509.user.adapter.`in`.web.user.AuthControllerIntegrationTest.Companion.LOGIN_URL
 import com.kdongsu5509.user.adapter.`in`.web.user.dto.UserTermsConsentRequest
 import com.kdongsu5509.user.adapter.out.auth.oauth.KakaoOauthClient
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKey
@@ -92,12 +91,8 @@ class UserAgreementControllerIntegrationTest : ControllerTestSupport() {
     @Test
     @DisplayName("전체 약관 동의 API가 정상적으로 호출된다")
     fun consentAll_success() {
-        val idToken = TestJwtBuilder.buildValidIdToken()
-        val loginResponse = performLogin(idToken).andReturn().response.contentAsString
-        val rootNode = jsonMapper.readTree(loginResponse).path("data")
-
-        val accessToken = rootNode.path("accessToken").asText()
-        val refreshToken = rootNode.path("refreshToken").asText()
+        val refreshToken = TestJwtBuilder.buildImHereRefreshToken(TEST_USER, TEST_NICKNAME)
+        val accessToken = TestJwtBuilder.buildImHereAccessToken(TEST_USER, TEST_NICKNAME)
 
         val redisKey = "refresh:$TEST_USER"
         cachePort.save(redisKey, refreshToken, ofMinutes(30))
@@ -148,12 +143,6 @@ class UserAgreementControllerIntegrationTest : ControllerTestSupport() {
             TermsVersionJpaEntity("1.0", "내용", true, LocalDateTime.now().plusDays(1), testTermDef)
         )
     }
-
-    private fun performLogin(idToken: String) = mockMvc.perform(
-        post(AuthControllerIntegrationTest.BASE_URL + LOGIN_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(jsonMapper.writeValueAsString(mapOf("provider" to "KAKAO", "idToken" to idToken)))
-    )
 
     private fun setMockKakaoPublicKey() {
         val rsaPublicKey = TestJwtBuilder.testPublicKey as RSAPublicKey

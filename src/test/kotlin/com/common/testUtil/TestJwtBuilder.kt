@@ -2,6 +2,8 @@ package com.common.testUtil
 
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.security.Keys
+import java.nio.charset.StandardCharsets
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.time.Instant
@@ -19,25 +21,79 @@ object TestJwtBuilder {
     const val KAKAO_PAYLOAD_EMAIL = "ds.ko@kakao.com"
     const val KAKAO_PAYLOAD_EXP_SECONDS = 3600L
 
+    // application-test.yml 의 jwt.secret 과 동일한 값
+    const val TEST_IMHERE_JWT_SECRET = "testSecretKeyForJwtAuthenticationTesting12345678901234567890"
+
     val keyPair: KeyPair = KeyPairGenerator.getInstance("RSA").apply {
         initialize(2048)  // 최소 2048비트 RSA 키 필요
     }.generateKeyPair()
     val testPublicKey = keyPair.public
     val testPrivateKey = keyPair.private
 
+    private val imHereSecretKey by lazy {
+        Keys.hmacShaKeyFor(TEST_IMHERE_JWT_SECRET.toByteArray(StandardCharsets.UTF_8))
+    }
 
     /**
      * 유효한 카카오 규격의 ID 토큰을 생성하는 빌더 메서드입니다.
      */
     fun buildValidIdToken(): String {
-        return createToken(KAKAO_PAYLOAD_EMAIL)
+        return createKakaoIdToken(KAKAO_PAYLOAD_EMAIL)
     }
 
     fun buildValidIdTokenWithCustomEmail(email: String): String {
-        return createToken(email)
+        return createKakaoIdToken(email)
     }
 
-    private fun createToken(email: String): String {
+    /**
+     * 테스트용 ImHere Access Token을 생성합니다.
+     * application-test.yml 의 jwt.secret 으로 서명하므로 JwtTokenUtil 과 동일한 secret을 사용합니다.
+     */
+    fun buildImHereAccessToken(
+        email: String,
+        nickname: String,
+        role: String = "NORMAL",
+        status: String = "PENDING",
+        uid: UUID = UUID.randomUUID()
+    ): String = createImHereToken("access", email, nickname, role, status, uid, expirationSeconds = 1800L)
+
+    /**
+     * 테스트용 ImHere Refresh Token을 생성합니다.
+     * application-test.yml 의 jwt.secret 으로 서명하므로 JwtTokenUtil 과 동일한 secret을 사용합니다.
+     */
+    fun buildImHereRefreshToken(
+        email: String,
+        nickname: String,
+        role: String = "NORMAL",
+        status: String = "PENDING",
+        uid: UUID = UUID.randomUUID()
+    ): String = createImHereToken("refresh", email, nickname, role, status, uid, expirationSeconds = 604800L)
+
+    private fun createImHereToken(
+        category: String,
+        email: String,
+        nickname: String,
+        role: String,
+        status: String,
+        uid: UUID,
+        expirationSeconds: Long
+    ): String {
+        val now = Instant.now()
+        return Jwts.builder()
+            .setId(UUID.randomUUID().toString())
+            .claim("category", category)
+            .claim("uid", uid.toString())
+            .claim("email", email)
+            .claim("nickname", nickname)
+            .claim("role", "ROLE_$role")
+            .claim("status", status)
+            .setIssuedAt(Date.from(now))
+            .setExpiration(Date.from(now.plusSeconds(expirationSeconds)))
+            .signWith(imHereSecretKey)
+            .compact()
+    }
+
+    private fun createKakaoIdToken(email: String): String {
         val now = Instant.now()
         val issuedAt = Date.from(now)
         val expiration = Date.from(now.plusSeconds(KAKAO_PAYLOAD_EXP_SECONDS))
@@ -53,7 +109,7 @@ object TestJwtBuilder {
             "email" to email
         )
 
-        val testJwt = Jwts.builder()
+        return Jwts.builder()
             .setHeaderParams(
                 mapOf(
                     "typ" to KAKAO_HEADER_TYP,
@@ -64,8 +120,5 @@ object TestJwtBuilder {
             .setClaims(payload)
             .signWith(testPrivateKey, SignatureAlgorithm.RS256)
             .compact()
-
-        println("TEST JWT for $email : $testJwt")
-        return testJwt
     }
 }

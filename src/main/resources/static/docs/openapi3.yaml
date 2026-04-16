@@ -21,7 +21,7 @@ paths:
               $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-friend-clear-relationship:
-                value: userA=adminA%40kakao.com&userB=adminB%40kakao.com&_csrf=gfHwsQ4pB96hVUacpI34UJYWJJJcVU3yFQXFh-tUrjI5-wEH4pCRgWpLNriMYSClwqDMYK53Cao-Y3XfJzz94d9kzVcOzTdl
+                value: userA=adminA%40kakao.com&userB=adminB%40kakao.com&_csrf=_TFanclilPQ1S7xpolCD2UFTJjsImFrrwRkptEqXAeJ_qe6pylU8-K8EpMUYctlQlH236SQxCwI-qz_G-HgfjXmuMtdGz42Q
       responses:
         "200":
           description: "200"
@@ -93,7 +93,7 @@ paths:
               $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-friend-clear-request:
-                value: requester=req%40kakao.com&receiver=rcv%40kakao.com&_csrf=S14EsDkA4Jz1ebq7xhWPoMw7KT0KLGQ6de4xCRx18Nst1AWaeGkx1Qo2gqrYH96P9Di7kfoJBFxoTlEXQ9gBbS9MlrpPsTD5
+                value: requester=req%40kakao.com&receiver=rcv%40kakao.com&_csrf=S4S4Cc63It1KephOITBSUzDnfDaYMGVMRUy9zL0yWrsVoybEeL2KaK2HE-tnGaF2FR1mMlHWUQ_5AlJhIXiO_YkLOdggkBSi
       responses:
         "200":
           description: "200"
@@ -167,7 +167,7 @@ paths:
             examples:
               admin-terms-create-version:
                 value: "{\"termDefinitionId\":2,\"version\":\"v1.0\",\"content\":\"\
-                  테스트 내용\",\"effectiveDate\":\"2026-04-15T13:34:18.5408237\"}"
+                  테스트 내용\",\"effectiveDate\":\"2026-04-16T17:57:19.9563736\"}"
       responses:
         "200":
           description: "200"
@@ -370,10 +370,10 @@ paths:
               $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               auth-login-existing:
-                value: "{\"provider\":\"KAKAO\",\"idToken\":\"eyJ0eXAiOiJKV1QiLCJraWQiOiJ0ZXN0LWtpZCIsImFsZyI6IlJTMjU2In0.eyJpc3MiOiJodHRwczovL2thdXRoLmtha2FvLmNvbSIsImF1ZCI6ImJmMjg0ZjMzYmZlYmE5YmM1OTU3NTcwNmQwZWIwZTljIiwic3ViIjoi7IKs7Jqp7J6Q7ZqM7JuQ67KI7Zi4IiwiaWF0IjoxNzc2MTQxMjYyLCJleHAiOjE3NzYxNDQ4NjIsImF1dGhfdGltZSI6MTc3NjE0MTI2Mjk5OSwibm9uY2UiOiIxNGY4ZDhmNC0wYjk2LTRiN2QtODg3Yi1lMGMwOWU3ZGQ1NTIiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSJ9.leVDbLk81MdhqRbDNe3jQRsFcjHeNcr5o98EEHjN1XsfRTY7h2OsUR1NrLWPjD5gatsK-K-Oq_3hKH0G6Iuj1pbA1NuQqIUlhqwcybkAXHuEmth_v-uKdcjaKsLOl8aS02GvoiVrBfcONKDMkLqOHmaMt7GwdG1EQofxza1q55IoUWFSVZ33QneVyQkAfWjOUPOTZcHQhQeTq-F5c6whqFq85gmFmTMFnIt7zfRv-sN4_-8ghtgeDy8Hfb_3RJEpN9i2Cyh7M88eJqvTkKU4ohncBwrcljeb47t8a2pQkH6SyXXcAjOBV0ubE_gLPLRc-Q9zx1DsjgGWkYkWbMLYmw\"\
+                value: "{\"provider\":\"KAKAO\",\"idToken\":\"eyJ0eXAiOiJKV1QiLCJraWQiOiJ0ZXN0LWtpZCIsImFsZyI6IlJTMjU2In0.eyJpc3MiOiJodHRwczovL2thdXRoLmtha2FvLmNvbSIsImF1ZCI6ImJmMjg0ZjMzYmZlYmE5YmM1OTU3NTcwNmQwZWIwZTljIiwic3ViIjoi7IKs7Jqp7J6Q7ZqM7JuQ67KI7Zi4IiwiaWF0IjoxNzc2MjQzNDQzLCJleHAiOjE3NzYyNDcwNDMsImF1dGhfdGltZSI6MTc3NjI0MzQ0MzI1NSwibm9uY2UiOiIyOWY2ZjViYS1kZWI5LTQ1ODItYTIyYS04ZjY1MDc1Mzg2NzciLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSJ9.Q3Ghb6QKACNeQ-2P-FI8JVNBOs8NIxeGiESzjq_0uLmB8A7riWY8kWSuLy3uDeYTxv1QKHWXKygHdm9PVGZmPsmh_Dk-JRYkfjWTyd8lLRRpgAC1H4Nx1yJhlk7_Wnxn6B8h2l0QLxhMxIGtJUBuIp8s5Q8GTddoYNrtSPk8YXNpAoJQmt7JCmo9XMJ3lD_k-P_iXJWSDWmn2vVSvjI6EJdRSQqmvh2MrEUDVseLaPoiK_xg7vVrKy6nALdMr-neh1lHx5fU9KxnLhIyLnxsrUZF3JXQXm4o5RDYRUeX_Do2dRXwWO7TJk4GjMnmaIrFv7wiPFCDzXusn7qEPRkORA\"\
                   }"
               auth-login-new:
-                value: "{\"provider\":\"KAKAO\",\"idToken\":\"eyJ0eXAiOiJKV1QiLCJraWQiOiJ0ZXN0LWtpZCIsImFsZyI6IlJTMjU2In0.eyJpc3MiOiJodHRwczovL2thdXRoLmtha2FvLmNvbSIsImF1ZCI6ImJmMjg0ZjMzYmZlYmE5YmM1OTU3NTcwNmQwZWIwZTljIiwic3ViIjoi7IKs7Jqp7J6Q7ZqM7JuQ67KI7Zi4IiwiaWF0IjoxNzc2MTQxMjYzLCJleHAiOjE3NzYxNDQ4NjMsImF1dGhfdGltZSI6MTc3NjE0MTI2MzA4Miwibm9uY2UiOiI0ZDhmZTM2OS1kNWZmLTRhYWItYjZhMi04MDFjYTFkODFmNDMiLCJlbWFpbCI6Im5ldy11c2VyQGtha2FvLmNvbSJ9.baS_0yaXRL9l0ABAR3bEIsKdjYauucCxY57SZEDMm0RznzM0dV8Qi3qSMTWeenb66Jk-yv769f7nnaqOLZbK4i7kI9_CXgIHAKXWLlB2h9InrMhoeXcWnVal4y-anTD18vkGtQM3MmPT42rBW9_bX4YuFNVFmHYIE4GDPj93xjOPxSz93TzifuAhISW4lpkBlGtaGX_xs8oGpFr_u7TbMb3jnvWIbrAAV-mUjsFuKj4C2_dtRD6R7baXuuWdxwzriKZ4ymS1zWuuNf6fvEUK56Mr4aWQ2-e4D24-66kP7aJcy-LHWFEYVVjmU7C2djZL6kvkzao_lW-gMJ8AxAi9og\"\
+                value: "{\"provider\":\"KAKAO\",\"idToken\":\"eyJ0eXAiOiJKV1QiLCJraWQiOiJ0ZXN0LWtpZCIsImFsZyI6IlJTMjU2In0.eyJpc3MiOiJodHRwczovL2thdXRoLmtha2FvLmNvbSIsImF1ZCI6ImJmMjg0ZjMzYmZlYmE5YmM1OTU3NTcwNmQwZWIwZTljIiwic3ViIjoi7IKs7Jqp7J6Q7ZqM7JuQ67KI7Zi4IiwiaWF0IjoxNzc2MjQzNDQzLCJleHAiOjE3NzYyNDcwNDMsImF1dGhfdGltZSI6MTc3NjI0MzQ0MzM0OSwibm9uY2UiOiI4NTYzODZmMC1hMzA4LTQzMWMtYmQ1Ni0wMjRhNzgwMjA0ZjEiLCJlbWFpbCI6Im5ldy11c2VyQGtha2FvLmNvbSJ9.VgEEn8SUDZqR7-c27mAuPobvriWW891ETsY6Ex7TQuLM274tpZofhVXAX4FH9x4f2G7JcjmUQMqeMmpGl1qa_SrRz7akqDCq30a8UFYCLQm6RBJ9gW4TWZV8OoIrzxBFgPFq6PGeIyQeyCuhEzFwA5oYmqnTa4LWmzfQYY33QdpXwAKGryUPj2us8NriNstbVZTEnDJ6BBPA7j3iNddD9Ty8d2Z5jTAgidXuENwE_AWVJl6fbGeDJkAbQ97u7AWjgMhA8NqINa8jZyCbWnhzpDVtheeA6n3UTOk6m_ABrnN42Cw6D2uOctAnBrSifJ7KF56J2hK2hEa_5f-48M10gg\"\
                   }"
       responses:
         "200":
@@ -385,8 +385,8 @@ paths:
               examples:
                 auth-login-existing:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"accessToken\"\
-                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiIyNjRjZGEwNS04NDQyLTQ4ODEtOWMxYy04MWUwMDA2OTcwZWMiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6ImU5YTE5YmRmLTRiZDUtNDQxNS05OTNhLTgwOGJiMTFmM2U1ZiIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiLthYzsiqTthLAiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJBQ1RJVkUiLCJpYXQiOjE3NzYxNDEyNjMsImV4cCI6MTc3NjE0MzA2M30.47MqZYTTI58ZHiwmWDqe190_kpB6Eab4QHcD-E5PnOU2wGd6Xxj6hd0iVnn9_J5f\"\
-                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJhNmJiZTZhYS1jN2I0LTRhMTYtODQ5OC04YTk2MzQzNTU2ZGYiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiJlOWExOWJkZi00YmQ1LTQ0MTUtOTkzYS04MDhiYjExZjNlNWYiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoi7YWM7Iqk7YSwIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiQUNUSVZFIiwiaWF0IjoxNzc2MTQxMjYzLCJleHAiOjE3NzY3NDYwNjN9.fxP0qZXGNzIQE56uzqpB9fA0gxvhpCLBSH3TiwMGfBc5iBQsM_ydsyP2ZlzwvbbO\"\
+                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJhYTRjZDFhZS0wMDc5LTRiMDctODQ2OS1kYjFjOTZhMTEwMjEiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6IjAyMGNjM2JlLTYwNTgtNDVhZS05NDVjLTlmZGY3ZjU1ZjE2NSIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiLthYzsiqTthLAiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJBQ1RJVkUiLCJpYXQiOjE3NzYyNDM0NDMsImV4cCI6MTc3NjI0NTI0M30.t-mY8frW0sotz7UY8o79h1HDanA0AFrSnjhSUIWgVnAa-E4WgGfzdZka-QVjZnwh\"\
+                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiIyNGUzNjlhOS0xZjRhLTRhZWYtYTY2Zi0zOWViMzVmMmFmNmIiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiIwMjBjYzNiZS02MDU4LTQ1YWUtOTQ1Yy05ZmRmN2Y1NWYxNjUiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoi7YWM7Iqk7YSwIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiQUNUSVZFIiwiaWF0IjoxNzc2MjQzNDQzLCJleHAiOjE3NzY4NDgyNDN9.n-hgE8uogoFbu9B4ENxX5gVO6xUqoM-oW2BUzjzo8o2EaKv3qfgnGZKOiKRo73_9\"\
                     }}"
         "201":
           description: "201"
@@ -397,8 +397,8 @@ paths:
               examples:
                 auth-login-new:
                   value: "{\"code\":201,\"message\":\"OK\",\"data\":{\"accessToken\"\
-                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiI4MDI1YWNhMS02NjhiLTQ2YjAtYTFmYy03MTk1ZjVjNzZmM2IiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6ImYwYWM2OTRmLTA1NDYtNDljNS1hYTQxLTM5OTgzYzBkZWUyOCIsImVtYWlsIjoibmV3LXVzZXJAa2FrYW8uY29tIiwibmlja25hbWUiOiIiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJQRU5ESU5HIiwiaWF0IjoxNzc2MTQxMjYzLCJleHAiOjE3NzYxNDMwNjN9.EFBT2qtVFp8GyO6zDL8WyeVCYKqqf5H5K73dsmKzlQXvPxNjE8IbFUjKBcfFIGy4\"\
-                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJmZTM5N2U5My04OWVjLTRjMzItYjM3Mi04ZjY1Yjk0ZjkzMGMiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiJmMGFjNjk0Zi0wNTQ2LTQ5YzUtYWE0MS0zOTk4M2MwZGVlMjgiLCJlbWFpbCI6Im5ldy11c2VyQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjE0MTI2MywiZXhwIjoxNzc2NzQ2MDYzfQ.VcWNg0g4Lq8aHRLWORdRgdcrSv0YdR4dOW--JH4Qcbcee9ZYNpuGPUK18VfNTGuZ\"\
+                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJkZWExMDBmNy00MGFiLTRkNjQtODJjMS05OWM3NGZkN2ZhZDgiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6IjdhZTFlY2M2LWExZWUtNDI1Ny04Y2E5LWEyZjUyMDdkZGU4MyIsImVtYWlsIjoibmV3LXVzZXJAa2FrYW8uY29tIiwibmlja25hbWUiOiIiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJQRU5ESU5HIiwiaWF0IjoxNzc2MjQzNDQzLCJleHAiOjE3NzYyNDUyNDN9.NjQM0F4P7JEgpFKlNbZuHodIlxNjzHSp6b_dr8d8eEyxB5oooauhIDZivwlnMUTG\"\
+                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJhOTQ4MjkyOC1jZTEwLTRhZWUtOTFmNi1jNWQ1MTU5ODc1ODMiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiI3YWUxZWNjNi1hMWVlLTQyNTctOGNhOS1hMmY1MjA3ZGRlODMiLCJlbWFpbCI6Im5ldy11c2VyQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjI0MzQ0MywiZXhwIjoxNzc2ODQ4MjQzfQ.WaRIURGjzfB7nhlN4HNMZYBbmTSLv69qPYWLxWRWAPpNAunu1CgwdBKiqFnUmzhF\"\
                     }}"
   /api/user/auth/reissue:
     post:
@@ -414,7 +414,7 @@ paths:
               $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               auth-reissue:
-                value: "{\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJkYWQ0YmYzZS1jM2U1LTRhM2MtOTI3Ny1hMTljM2M5YzZlZTAiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiIzYjhiYzBhNC05OWY2LTQ0N2UtOThmMi00NDQ5NmRmMWM5ODMiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjE0MTI2MiwiZXhwIjoxNzc2NzQ2MDYyfQ.iybZzRnXPVeIriuelj3I1bDYUYNVEr_A5Gpd6bnfwHLIOwd2RvF_ZmxBKMlbzKzQ\"\
+                value: "{\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiI5YTdiZTY4Yi1hNGU1LTQyMjAtYmZiMy0yN2FlMTQ4YmU4YTgiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiJjNmQwZjBlYy0yOGIwLTRjMGUtOTZhZS1jZDZmODUyZjYwN2YiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjI0MzQ0MywiZXhwIjoxNzc2ODQ4MjQzfQ.Uf3r-VvulN7Le05SmX2-y0_PIFYwKRpM8_HoZU5mIWSmCqnShJu7_5yX1w5VRB-s\"\
                   }"
       responses:
         "200":
@@ -426,8 +426,8 @@ paths:
               examples:
                 auth-reissue:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"accessToken\"\
-                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJlNjZjMTVlOS1jMzI5LTRjOTQtYmNiZS0xYjliZDYwM2FmZGQiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6IjNiOGJjMGE0LTk5ZjYtNDQ3ZS05OGYyLTQ0NDk2ZGYxYzk4MyIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiIiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJQRU5ESU5HIiwiaWF0IjoxNzc2MTQxMjYyLCJleHAiOjE3NzYxNDMwNjJ9.iV0SKwi_QmpHfBrjLfX2UGJfX97NDLhcuNav9xdq-QP7B3QuNL4CMBb43FBz4JAe\"\
-                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJiYTE3NWY4Mi1lZWI3LTQyYWYtYTY2NS1mNmM0ZDJmNTYyMGEiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiIzYjhiYzBhNC05OWY2LTQ0N2UtOThmMi00NDQ5NmRmMWM5ODMiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjE0MTI2MiwiZXhwIjoxNzc2NzQ2MDYyfQ.oJkLQiz6_3hy3lYDJAjGnUZq7RgU6e4OhaSoD9-LqZ0m_g-tTTa37bGP-VSKOXf1\"\
+                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiI5MmQyYmVlYS1kOTVmLTRkODQtYjVmYi04MzM2YTIzODE2YjgiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6ImM2ZDBmMGVjLTI4YjAtNGMwZS05NmFlLWNkNmY4NTJmNjA3ZiIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiIiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJQRU5ESU5HIiwiaWF0IjoxNzc2MjQzNDQzLCJleHAiOjE3NzYyNDUyNDN9.BVobvm97ZCqBId-HayQjaKNvbJHLbTGuns9U4PqHvvRMvswTIbF-aH6meT040tkW\"\
+                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiI0NWVmZTlkOC0xYjU1LTQwOWEtOGE4MC0zZTYxYzY5ZWFmZjUiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiJjNmQwZjBlYy0yOGIwLTRjMGUtOTZhZS1jZDZmODUyZjYwN2YiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjI0MzQ0MywiZXhwIjoxNzc2ODQ4MjQzfQ.yXoho3oqMIXY6Eij4_0F5VcGsMxwdtK8oIAQ4kqeVKDuF_Q4gyBdkGNnXPkPKMTt\"\
                     }}"
   /api/user/info/me:
     get:
@@ -490,7 +490,7 @@ paths:
               examples:
                 user-search-by-nickname:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":[{\"userId\":\"\
-                    34b2ad30-5b42-490b-a2eb-fa6d334735cc\",\"userEmail\":\"exist@test.com\"\
+                    5d966d97-2bda-486c-916f-fefe71133ed9\",\"userEmail\":\"exist@test.com\"\
                     ,\"userNickname\":\"tester\"}]}"
   /api/user/terms/consent:
     post:
@@ -522,8 +522,8 @@ paths:
               examples:
                 terms-consent-all:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"accessToken\"\
-                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJjMzczYjY2My0xNDQ1LTRiNDgtOTdlOS01MzYxZTBkY2UwYTIiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6ImFlNGU3ZmRhLWM1YTUtNGQ5OC1hYWQ2LTg1Yjc5MmNhOGEyMiIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiJyYXRpIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjE0MTI2NCwiZXhwIjoxNzc2MTQzMDY0fQ.FFWXVsp1RZeaNV6e4Q93o3Ej5-a3tr33aE1Jj4wGJXbW7vDUNUOGnSF2rfsJrs1K\"\
-                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiIxNmNjOTMyOS1kYzlmLTQyY2MtOTIyZi0yYWYxYjhkMWRhODYiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiJhZTRlN2ZkYS1jNWE1LTRkOTgtYWFkNi04NWI3OTJjYThhMjIiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoicmF0aSIsInJvbGUiOiJST0xFX05PUk1BTCIsInN0YXR1cyI6IlBFTkRJTkciLCJpYXQiOjE3NzYxNDEyNjQsImV4cCI6MTc3Njc0NjA2NH0.0wvxXsw7vSpYa88lmmO9k8kMAIM2uBm9r1a_bjJplpPc1dxwInTJThWYt-n7AUcu\"\
+                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiIxNGFhZDBjNC0yNmNhLTQ0YTctODYxMC05ZGE3YWRkYTAzYzYiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6IjI0YWZhNDExLWI0YjMtNDI0Ni05OTgwLWI5MzY3YzFhOWQ1ZCIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiJyYXRpIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjI0NTYxMCwiZXhwIjoxNzc2MjQ3NDEwfQ.3Sn6nnGlubgUtVN-qAx3zMlVvpCkklFjR6JXWD6BSRiSU_y4P932agDCWlRMyDi8\"\
+                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJkN2VlN2I0My04YWU3LTQ0YmQtOTYzZi1hZWE5OWRhYzRiMDIiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiIyNGFmYTQxMS1iNGIzLTQyNDYtOTk4MC1iOTM2N2MxYTlkNWQiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoicmF0aSIsInJvbGUiOiJST0xFX05PUk1BTCIsInN0YXR1cyI6IlBFTkRJTkciLCJpYXQiOjE3NzYyNDU2MTAsImV4cCI6MTc3Njg1MDQxMH0.zt4egnKjoVIB_1WcD7sa-pHWwVjBn4yrLrPTk2OHl2zLrJ8H3MUkndF3ftGvv9pS\"\
                     }}"
       security:
       - bearerAuthJWT: []
@@ -559,7 +559,7 @@ paths:
               $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-dlq-purge:
-                value: _csrf=R_QejjQeSwAXKhtNBNrhJv_8RlctVj4XsqS4bpjLDQYTJO6Dcpcu71B8KjE6SC94ZvfVH8rKa29PN1w61pOOWK-tO2UiFo_i
+                value: _csrf=0IkmrcpTWQcH6_ug9Sb0vm6TjI5U17lDy0ME-K0lUiDol50h6eoRyK82bzQqiMOSkAvA2Auroe9m4Y5u83E0zZ9GakHf8q8W
       responses:
         "200":
           description: "200"
@@ -591,7 +591,7 @@ paths:
               $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-user-block:
-                value: _csrf=mnX2ngBVWhLhiH2f0WQoJsVsvOYK4Iz59hXqFBSxzVi5LGS-r0eXrjJkbnPMu0v65UkcE_FUkYQ82L3UwCTcJSTV_jnbT1WJ
+                value: _csrf=2AmvKMbgDu8BZCLvjTswd7qWkb7NK_6ZI9J7cOSdPXqdah2P7WiXHKeBO9YsVBHe7BYEQYqvvIb0Hc-0G7EfQ9X4C0ikX3vr
       responses:
         "200":
           description: "200"
@@ -622,7 +622,7 @@ paths:
               $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-user-unblock:
-                value: _csrf=o-T1biT3TmFtbPndF6i10zLc21mq5fDiBj1PTVc8S_6ucKAaltfECxyVflBAD8m5IoWB6wHs9mCf1ZbPYA98emVees7KR8Yr
+                value: _csrf=sHHrRv7qxAceu-pumdmFEctdor_eI0kAlKTtABKnMlJlhVrEg0nYJM7d9WQziN9arPSxIvtoj93sFH4t8MWMMCSfBzFXtG_2
       responses:
         "200":
           description: "200"
@@ -654,7 +654,7 @@ paths:
               $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-user-force-logout:
-                value: _csrf=8Th-43GrCqVArXzbGWwcgka4KK9VlF9z1gZIKSMYQUkxpormwQxL0UfJPJNtzB6_LkEotXHeBc1s9m5etWRxSBUgJXlVxOze
+                value: _csrf=RfBMmk8ZE_6YwBADs45XoRjYUGSWKgFYT34-x_X1eR0tJKoPcsgprSwoJJu1pXEwi6NjlSi6fVyvEzh1ekYM98PDGHkbR585
       responses:
         "200":
           description: "200"
@@ -708,7 +708,7 @@ paths:
               examples:
                 terms-version-detail:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"version\":\"\
-                    v1.0\",\"content\":\"약관 내용\",\"effectiveDate\":\"2026-04-14T13:34:18.8320119\"\
+                    v1.0\",\"content\":\"약관 내용\",\"effectiveDate\":\"2026-04-15T17:57:20.0500659\"\
                     }}"
   /api/admin/rabbitmq/dlq/noti.queue.friend.dlq/replay:
     post:
@@ -724,9 +724,9 @@ paths:
               $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-dlq-replay-all:
-                value: _csrf=klZIHDP0O-kf489kkxDEPxZvmkkbb--KbbvG-SfpjeqMbTk9pjV_f1aXC98y1asCoj3wXiZatyssDNanX4yimhKP697oXg8E
+                value: _csrf=TD4UAmJhFG3Btp4kwem4oFJxk0iaEi5ppP9dcCxqaLNf75-OfQolO1sDLFzsga8QpcSMmTEXvnGuI0pEws9uRRVfXNdo3P64
               admin-dlq-replay-limited:
-                value: count=2&_csrf=8NvSy_eEsfmEHtZ9I6syvR87d8k17ojR9SogG8cmsJg5zCAGlrrjrpLmhMGpfeRFE4YGjHsCWqsNjLz8whtCLfMWh6pbr0Mz
+                value: count=2&_csrf=OsdVFdx8kLR5cW4R852lbSCSVifXlKFq4h5eUi9CHWrE6mALC6VmdLhNptVUElp0kbCRVESgex-2p5RH0Xg4a0t1f12ijgM7
       responses:
         "200":
           description: "200"

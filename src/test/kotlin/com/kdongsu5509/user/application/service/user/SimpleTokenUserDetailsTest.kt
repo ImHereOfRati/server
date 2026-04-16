@@ -17,6 +17,7 @@ class SimpleTokenUserDetailsTest {
         const val TEST_NICKNAME = "라티"
         const val ACTIVE_STATUS = "ACTIVE"
         const val PENDING_STATUS = "PENDING"
+        const val BLOCKED_STATUS = "BLOCKED"
     }
 
     @Test
@@ -35,23 +36,22 @@ class SimpleTokenUserDetailsTest {
     @Nested
     inner class IsAccountNonLockedTest {
         @Test
-        @DisplayName("계정 상태가 PENDING이 아니면 잠기지 않았다고 반환한다")
+        @DisplayName("계정 상태가 BLOCKED가 아니면 잠기지 않았다고 반환한다")
         fun isAccountNonLocked_returnsTrue() {
             // given
-            val userDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, ACTIVE_STATUS)
+            val activeDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, ACTIVE_STATUS)
+            val pendingDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, PENDING_STATUS)
 
-            // when
-            val result = userDetails.isAccountNonLocked
-
-            // then
-            assertThat(result).isTrue()
+            // when & then
+            assertThat(activeDetails.isAccountNonLocked).isTrue()
+            assertThat(pendingDetails.isAccountNonLocked).isTrue()
         }
 
         @Test
-        @DisplayName("계정 상태가 PENDING이면 잠겼다는 false를 반환한다")
+        @DisplayName("계정 상태가 BLOCKED이면 잠겼다는 false를 반환한다")
         fun isAccountNonLocked_returnsFalse() {
             // given
-            val userDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, PENDING_STATUS)
+            val userDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, BLOCKED_STATUS)
 
             // when
             val result = userDetails.isAccountNonLocked
@@ -64,23 +64,22 @@ class SimpleTokenUserDetailsTest {
     @Nested
     inner class IsEnabledTest {
         @Test
-        @DisplayName("ACTIVE면 계정이 활성화되어 있다고 반환한다")
+        @DisplayName("BLOCKED가 아니면 계정이 활성화되어 있다고 반환한다")
         fun isEnabled_returnsTrue() {
             // given
-            val userDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, ACTIVE_STATUS)
+            val activeDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, ACTIVE_STATUS)
+            val pendingDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, PENDING_STATUS)
 
-            // when
-            val result = userDetails.isEnabled
-
-            // then
-            assertThat(result).isTrue()
+            // when & then
+            assertThat(activeDetails.isEnabled).isTrue()
+            assertThat(pendingDetails.isEnabled).isTrue()
         }
 
         @Test
-        @DisplayName("ACTIVE가 아니면 계정이 활성화되어 있지 있다고 반환한다")
+        @DisplayName("BLOCKED이면 계정이 비활성화되어 있다고 반환한다")
         fun isEnabled_returnsFalse() {
             // given
-            val userDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, PENDING_STATUS)
+            val userDetails = SimpleTokenUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, BLOCKED_STATUS)
 
             // when
             val result = userDetails.isEnabled

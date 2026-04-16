@@ -19,7 +19,7 @@ class SimpleTokenUserDetails(
     override fun getUsername(): String = email
     override fun getPassword(): String? = null
     override fun isAccountNonExpired(): Boolean = true
-    override fun isAccountNonLocked(): Boolean = (status != UserStatus.PENDING.name)
+    override fun isAccountNonLocked(): Boolean = (status != UserStatus.BLOCKED.name)
     override fun isCredentialsNonExpired(): Boolean = true
-    override fun isEnabled(): Boolean = (status == UserStatus.ACTIVE.name)
+    override fun isEnabled(): Boolean = (status != UserStatus.BLOCKED.name)
 }

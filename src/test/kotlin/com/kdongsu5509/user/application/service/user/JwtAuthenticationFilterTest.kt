@@ -82,26 +82,6 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("PENDING 상태인 유저의 토큰은 403 응답을 반환한다")
-    fun doFilterInternal_pendingUser_returns403() {
-        // given
-        `when`(request.getHeader("Authorization")).thenReturn(bearerToken)
-        `when`(jwtTokenUtil.validateToken(VALID_TOKEN)).thenReturn(true)
-        `when`(jwtTokenUtil.getUserEmailFromToken(VALID_TOKEN)).thenReturn(TEST_EMAIL)
-        `when`(jwtTokenUtil.getRoleFromToken(VALID_TOKEN)).thenReturn(NORMAL_ROLE)
-        `when`(jwtTokenUtil.getUserNicknameFromToken(VALID_TOKEN)).thenReturn(NICKNAME)
-        `when`(jwtTokenUtil.getStatusFromToken(VALID_TOKEN)).thenReturn(PENDING_STATUS) // PENDING 설정
-
-        `when`(response.writer).thenReturn(PrintWriter(StringWriter()))
-
-        // when
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)
-
-        // then
-        verify(response).status = 403
-    }
-
-    @Test
     @DisplayName("토큰이 없으면 필터를 통과한다")
     fun doFilterInternal_noToken_passesThrough() {
         // given
@@ -149,7 +129,7 @@ class JwtAuthenticationFilterTest {
         verify(response).contentType = "application/json;charset=UTF-8"
         verify(filterChain, Mockito.never()).doFilter(request, response)
     }
-    
+
     @Test
     @DisplayName("이미 인증된 사용자가 있으면 새로운 인증을 설정하지 않는다")
     fun doFilterInternal_alreadyAuthenticated_doesNotSetNewAuthentication() {

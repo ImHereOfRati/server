@@ -12,7 +12,7 @@ class ImhereUserServiceApplication
 
 @PostConstruct
 fun started() {
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"))
 }
 
 fun main(args: Array<String>) {

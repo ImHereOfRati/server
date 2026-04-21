@@ -121,7 +121,7 @@ class FriendNotificationConsumerTest : TestRabbitMQContainer() {
 
         consumer.receiveMessage(dto)
 
-        then(notificationToUserCasePort).should(never()).send(any(), any(), any(), any(), any())
+        then(notificationToUserCasePort).should(never()).send(any(), any(), any(), any(), any(), any())
         then(messageIdempotencyService).should(never()).markAsProcessed(any())
     }
 }

@@ -10,9 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-/**
- * Controller for Transmission result notice notifications (NOTI-007).
- */
 @RestController
 @RequestMapping("/api/notification/fcm/delivery-result", version = "1")
 class DeliveryResultNotificationController(

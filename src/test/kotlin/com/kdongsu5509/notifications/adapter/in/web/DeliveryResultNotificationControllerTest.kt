@@ -80,11 +80,11 @@ class DeliveryResultNotificationControllerTest {
     }
 
     @Test
-    @DisplayName("전송 결과 안내 FCM 알림 전송 (NOTI-007) - 본인에게 전송")
+    @DisplayName("전송 결과 안내 FCM 알림 전송 - 본인에게 전송")
     fun send_delivery_result_notification() {
         val request = FcmNotificationRequest(
             receiverEmail = "any-receiver@example.com", // This should be ignored
-            type = "ANY_TYPE",
+            type = "DELIVERY_RESULT_NOTICE",
             body = "요청하신 알림이 성공적으로 전송되었습니다."
         )
         val userDetails = SimpleTokenUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")

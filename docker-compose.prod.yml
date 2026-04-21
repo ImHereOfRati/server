@@ -18,9 +18,7 @@ services:
       - "8080:8080"
       - "127.0.0.1:4861:4861"
     volumes:
-      # Spring Boot가 /app/config/ 에서 외부 설정 파일 자동 탐색 (spring.profiles.include 적용)
       - ./config:/app/config:ro
-      # Firebase 서비스 계정 키 (classpath 외부 마운트)
       - ./secrets/imhereFirebaseKey.json:/app/secrets/imhereFirebaseKey.json:ro
     environment:
       - SPRING_DATA_REDIS_HOST=${INFRA_HOST}

@@ -31,7 +31,8 @@ class TermNotificationConsumer(
             senderEmail = senderEmail,
             receiverEmail = dto.receiverEmail,
             type = dto.type.name,
-            body = dto.message
+            body = dto.message,
+            extraData = dto.data ?: emptyMap()
         )
 
         messageIdempotencyService.markAsProcessed(messageId)

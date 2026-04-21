@@ -44,7 +44,7 @@ class FCMNotificationServiceTest {
     }
 
     @Test
-    @DisplayName("알림 전송 성공")
+    @DisplayName("알림 전송 성공 - data에 type/path 포함")
     fun send_success() {
         // given
         val fcmToken = FcmToken(1L, RECEIVER_EMAIL, FCM_TOKEN, DeviceType.AOS, LocalDateTime.now())
@@ -54,8 +54,62 @@ class FCMNotificationServiceTest {
         fcmNotificationService.send(SENDER_NICKNAME, SENDER_EMAIL, RECEIVER_EMAIL, NotificationType.FRIEND_REQUEST.name, BODY)
 
         // then
-        val expectedData = mapOf("senderNickname" to SENDER_NICKNAME, "senderEmail" to SENDER_EMAIL)
+        val expectedData = mapOf(
+            "senderNickname" to SENDER_NICKNAME,
+            "senderEmail" to SENDER_EMAIL,
+            "type" to NotificationType.FRIEND_REQUEST.name,
+            "path" to "/contact/requests"
+        )
         verify(firebasePort).send(FCM_TOKEN, FCMMessageTitle.FRIEND_REQUEST, BODY, expectedData)
+    }
+
+    @Test
+    @DisplayName("TERMS_UPDATE는 extraData의 termId로 path를 치환한다")
+    fun send_terms_update_resolves_termId_in_path() {
+        // given
+        val fcmToken = FcmToken(1L, RECEIVER_EMAIL, FCM_TOKEN, DeviceType.AOS, LocalDateTime.now())
+        `when`(findTokenPort.findByUserEmail(RECEIVER_EMAIL)).thenReturn(fcmToken)
+
+        // when
+        fcmNotificationService.send(
+            SENDER_NICKNAME,
+            SENDER_EMAIL,
+            RECEIVER_EMAIL,
+            NotificationType.TERMS_UPDATE.name,
+            BODY,
+            mapOf("termId" to "5")
+        )
+
+        // then
+        val expectedData = mapOf(
+            "termId" to "5",
+            "senderNickname" to SENDER_NICKNAME,
+            "senderEmail" to SENDER_EMAIL,
+            "type" to NotificationType.TERMS_UPDATE.name,
+            "path" to "/terms-detail/5"
+        )
+        verify(firebasePort).send(FCM_TOKEN, FCMMessageTitle.DEFAULT_NOTICE, BODY, expectedData)
+    }
+
+    @Test
+    @DisplayName("TERMS_UPDATE인데 termId가 없으면 FCM_INVALID_ARGUMENT 예외")
+    fun send_terms_update_missing_termId_throws() {
+        // given
+        val fcmToken = FcmToken(1L, RECEIVER_EMAIL, FCM_TOKEN, DeviceType.AOS, LocalDateTime.now())
+        `when`(findTokenPort.findByUserEmail(RECEIVER_EMAIL)).thenReturn(fcmToken)
+
+        // when & then
+        val ex = assertThrows<BusinessException> {
+            fcmNotificationService.send(
+                SENDER_NICKNAME,
+                SENDER_EMAIL,
+                RECEIVER_EMAIL,
+                NotificationType.TERMS_UPDATE.name,
+                BODY
+            )
+        }
+        assertThat(ex.errorCode).isEqualTo(FCMErrorCode.FCM_INVALID_ARGUMENT)
+        verifyNoInteractions(firebasePort)
     }
 
     @Test
@@ -76,7 +130,12 @@ class FCMNotificationServiceTest {
     fun send_token_unregistered_then_delete() {
         // given
         val fcmToken = FcmToken(1L, RECEIVER_EMAIL, FCM_TOKEN, DeviceType.AOS, LocalDateTime.now())
-        val data = mapOf("senderNickname" to SENDER_NICKNAME, "senderEmail" to SENDER_EMAIL)
+        val data = mapOf(
+            "senderNickname" to SENDER_NICKNAME,
+            "senderEmail" to SENDER_EMAIL,
+            "type" to NotificationType.FRIEND_REQUEST.name,
+            "path" to "/contact/requests"
+        )
         `when`(findTokenPort.findByUserEmail(RECEIVER_EMAIL)).thenReturn(fcmToken)
         `doThrow`(BusinessException(FCMErrorCode.FCM_TOKEN_UNREGISTERED))
             .`when`(firebasePort).send(FCM_TOKEN, FCMMessageTitle.FRIEND_REQUEST, BODY, data)

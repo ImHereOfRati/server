@@ -6,6 +6,7 @@ interface NotificationToUserCasePort {
         senderEmail: String,
         receiverEmail: String,
         type: String,
-        body: String
+        body: String,
+        extraData: Map<String, String> = emptyMap()
     )
 }

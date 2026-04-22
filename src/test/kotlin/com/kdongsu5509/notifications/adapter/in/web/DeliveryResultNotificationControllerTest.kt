@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -114,7 +115,8 @@ class DeliveryResultNotificationControllerTest {
             eq("sender@example.com"),
             eq("sender@example.com"), // Verified that it's sent to oneself
             eq("DELIVERY_RESULT_NOTICE"),
-            eq("요청하신 알림이 성공적으로 전송되었습니다.")
+            eq("요청하신 알림이 성공적으로 전송되었습니다."),
+            anyMap()
         )
     }
 

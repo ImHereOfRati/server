@@ -6,12 +6,13 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
+import org.springframework.test.context.ActiveProfiles
 
+@ActiveProfiles("test")
 @DataJpaTest
 class SpringDataTermsDefinitionRepositoryTest @Autowired constructor(
     private val repository: SpringDataTermsDefinitionRepository
 ) {
-
     @Test
     @DisplayName("약관 제목과 타입이 일치하는 데이터가 있으면 true를 반환한다.")
     fun existsByTermsTitleAndTermsType_ReturnTrue() {

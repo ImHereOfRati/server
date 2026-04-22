@@ -23,9 +23,10 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.ActiveProfiles
 import java.util.*
 
-
+@ActiveProfiles("test")
 @DataJpaTest
 @Import(
     FriendRestrictionSavePersistenceAdapter::class,

@@ -22,8 +22,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDateTime
 
+@ActiveProfiles("test")
 @DataJpaTest
 @Import(UserAgreementSavePersistenceAdapter::class)
 class UserAgreementSavePersistenceAdapterTest @Autowired constructor(

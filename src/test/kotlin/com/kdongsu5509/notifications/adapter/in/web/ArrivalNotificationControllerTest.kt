@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -114,7 +115,8 @@ class ArrivalNotificationControllerTest {
             eq("sender@example.com"),
             eq("receiver@example.com"),
             eq("ARRIVAL_CONFIRMATION"),
-            eq("목적지에 도착했습니다.")
+            eq("목적지에 도착했습니다."),
+            anyMap()
         )
     }
 

@@ -43,7 +43,7 @@ configurations {
 }
 
 dependencies {
-    implementation platform("org.springframework.boot:spring-boot-dependencies:4.0.4")
+    implementation platform("org.springframework.boot:spring-boot-dependencies:4.0.5")
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor:4.0.0'
 
     // KOTLIN
@@ -96,8 +96,6 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:testcontainers'
     testImplementation 'org.testcontainers:postgresql'
-
-    // Swagger UI — served via static/swagger-ui/index.html (CDN)
 
     // TEST Docs
     testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.20.0'

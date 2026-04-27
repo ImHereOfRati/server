@@ -18,17 +18,17 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-friend-clear-relationship:
-                value: userA=adminA%40kakao.com&userB=adminB%40kakao.com&_csrf=zOg7IbkJtF5nvqU_zmoWtR9CUK7qmiWUfYdyopZZDtKuzswLrdpfEY0_1z9KiJJe_Uci030kfZfcqBG5T-RBxKBsaOGe_P49
+                value: userA=adminA%40kakao.com&userB=adminB%40kakao.com&_csrf=NQwz5FF57R_m6ttHGwVszr5U-lUJN904yv_aOq0G30MwCr6EADgKhWBM2SjL2OJwfyhY_o82121sVesV-Zq-Apo_5iJVO4i0
       responses:
         "200":
           description: "200"
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-friend-clear-relationship:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":null}"
@@ -43,7 +43,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               fcm-enroll/success_aos:
                 value: "{\"fcmToken\":\"valid-fcm-token\",\"deviceType\":\"AOS\"}"
@@ -66,11 +66,11 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friends-list:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":[{\"friendRelationshipId\"\
-                    :\"3d4bce5a-dfa0-40f9-8377-11b015541f8f\",\"friendEmail\":\"friend@test.com\"\
+                    :\"a757f611-fca1-49bb-a4bf-7e6eeb21f415\",\"friendEmail\":\"friend@test.com\"\
                     ,\"friendAlias\":\"베프\"}]}"
   /api/user/terms:
     get:
@@ -85,7 +85,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 terms-list:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"content\":[{\"\
@@ -109,17 +109,17 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-friend-clear-request:
-                value: requester=req%40kakao.com&receiver=rcv%40kakao.com&_csrf=_l6EUL9c7sg17hTzPMJQMO8Sq58sSqgDnAiiIUx_W9JqrysUnzziZY4_jawY23WRBe9kCdshhqYaK54u_m3GFyobPuYMyx0s
+                value: requester=req%40kakao.com&receiver=rcv%40kakao.com&_csrf=HHPo8Pv-xCptZd-uXBgYbnIFqqESATT8b0TLS6roX3Wy_mDleBWMkcPO_U9AUbyfazUsD0M9h5h0NFfRXXb9KciMPhODyVLT
       responses:
         "200":
           description: "200"
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-friend-clear-request:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":null}"
@@ -136,7 +136,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-dlq-list:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":[{\"queueName\"\
@@ -154,7 +154,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-terms-create-definition:
                 value: "{\"termsName\":\"위치 정보 이용 약관\",\"termsType\":\"LOCATION\"\
@@ -165,7 +165,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-terms-create-definition:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":null}"
@@ -182,18 +182,18 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-terms-create-version:
                 value: "{\"termDefinitionId\":2,\"version\":\"v1.0\",\"content\":\"\
-                  테스트 내용\",\"effectiveDate\":\"2026-04-23T09:17:53.7413345\"}"
+                  테스트 내용\",\"effectiveDate\":\"2026-04-28T13:33:02.8483415\"}"
       responses:
         "200":
           description: "200"
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-terms-create-version:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":null}"
@@ -208,7 +208,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               arrival-notification/blank-body:
                 value: "{\"receiverEmail\":\"receiver@example.com\",\"type\":\"ANY_TYPE\"\
@@ -221,7 +221,7 @@ paths:
                   ,\"body\":\"목적지에 도착했습니다.\"}"
           application/json:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               arrival-notification/without-auth-request:
                 value: "{\"receiverEmail\":\"receiver@example.com\",\"type\":\"ANY_TYPE\"\
@@ -232,7 +232,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 arrival-notification/blank-body:
                   value: "{\"code\":400,\"message\":\"BAD_REQUEST\",\"data\":{\"code\"\
@@ -255,7 +255,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               delivery-result/empty-body:
                 value: "{\"receiverEmail\":\"receiver@example.com\",\"type\":\"ANY_TYPE\"\
@@ -265,7 +265,7 @@ paths:
                   DELIVERY_RESULT_NOTICE\",\"body\":\"요청하신 알림이 성공적으로 전송되었습니다.\"}"
           application/json:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               delivery-result/without-auth:
                 value: "{\"receiverEmail\":\"any@example.com\",\"type\":\"ANY_TYPE\"\
@@ -276,7 +276,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 delivery-result/empty-body:
                   value: "{\"code\":400,\"message\":\"BAD_REQUEST\",\"data\":{\"code\"\
@@ -296,7 +296,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               target-notification/success:
                 value: "{\"receiverEmail\":\"receiver@example.com\",\"type\":\"ANY_TYPE\"\
@@ -315,7 +315,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               fcm-notification/empty-body:
                 value: "{\"receiverEmail\":\"receiver@example.com\",\"type\":\"FRIEND_REQUEST\"\
@@ -331,7 +331,7 @@ paths:
                   ,\"body\":\"친구 요청이 왔습니다.\"}"
           application/json:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               fcm-notification/without-auth:
                 value: "{\"receiverEmail\":\"receiver@example.com\",\"type\":\"FRIEND_REQUEST\"\
@@ -342,7 +342,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 fcm-notification/empty-body:
                   value: "{\"code\":400,\"message\":\"BAD_REQUEST\",\"data\":{\"code\"\
@@ -368,7 +368,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               single-sms/success:
                 value: "{\"receiverNumber\":\"01012345678\",\"location\":\"판교역\"}"
@@ -386,13 +386,13 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               auth-login-existing:
-                value: "{\"provider\":\"KAKAO\",\"idToken\":\"eyJ0eXAiOiJKV1QiLCJraWQiOiJ0ZXN0LWtpZCIsImFsZyI6IlJTMjU2In0.eyJpc3MiOiJodHRwczovL2thdXRoLmtha2FvLmNvbSIsImF1ZCI6ImJmMjg0ZjMzYmZlYmE5YmM1OTU3NTcwNmQwZWIwZTljIiwic3ViIjoi7IKs7Jqp7J6Q7ZqM7JuQ67KI7Zi4IiwiaWF0IjoxNzc2ODE3MDc5LCJleHAiOjE3NzY4MjA2NzksImF1dGhfdGltZSI6MTc3NjgxNzA3OTc5MCwibm9uY2UiOiI3YzkyNWIzMi00OGZjLTQyOGEtYjAxMi0zYWZlNTIxM2U3OGMiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSJ9.L9Jxhh8TYWa88cqJsvwJYJ8p3-DF9TNz5Xd7Njc-yNaj5NGLu8Kofhi-zLQDQTEUX2D70l9eZrAMGy-HFs1igD2AizK8du9WSzVTN1VIp2oCGCNsIx5YnvM0PUVSOukv0Zv4IBXi1rN-6SGGer-Zq5g3yRnCz7IzBzJIsxI-L9djYohdzXxlJDj5RApNnKICRGq39XezRLCSEDGLljiaENOKlwhwT2EtYr_LdQzO29eyUUOzyWYK2ppbBkzz0wA4MQGhPZW34jVmRiA8MIIhbMupFJuMafbMVNmoTyFnafmyvGENwyFtB5xKBGTd6oXzaHLORQ2bF2mHY-uljD5Jiw\"\
+                value: "{\"provider\":\"KAKAO\",\"idToken\":\"eyJ0eXAiOiJKV1QiLCJraWQiOiJ0ZXN0LWtpZCIsImFsZyI6IlJTMjU2In0.eyJpc3MiOiJodHRwczovL2thdXRoLmtha2FvLmNvbSIsImF1ZCI6ImJmMjg0ZjMzYmZlYmE5YmM1OTU3NTcwNmQwZWIwZTljIiwic3ViIjoi7IKs7Jqp7J6Q7ZqM7JuQ67KI7Zi4IiwiaWF0IjoxNzc3MjY0MzkyLCJleHAiOjE3NzcyNjc5OTIsImF1dGhfdGltZSI6MTc3NzI2NDM5MjA5Niwibm9uY2UiOiIwMDZmYzYwYi1iYWEyLTQzZmUtODk2NS0zNDdlMTc2MzMxOTciLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSJ9.pq6XS6z3B9Ku2j3T8Jdbth3ID1zr1xQ0U6HDs63RRzUlTsKQnpwFaPsi52IooI3bC7YkL1pN1Fta9o7B-sk5ZBn68zigegGFK7WZCP4y85yQLYGY_m0yNXCv5e6ZExHSdw1ploagSqkmYYZ5jiD9sWSSi_zM5U286U6G8F-KTzpqHQN3ChB2r6qgCnXTtApXdgUckYaylRmqOM-q-meJCYVTOFDcILVVYF5v1BK2MruOf03c_qZgvhxhPh_MtsOcuNXPOBEwN8zh6Fg96UUZkPSzo41tiC6z_G74covz44g5P4h6KEbOFgWSdVW1ZZ3dgXp-KL3AzJGiD89XUeKWow\"\
                   }"
               auth-login-new:
-                value: "{\"provider\":\"KAKAO\",\"idToken\":\"eyJ0eXAiOiJKV1QiLCJraWQiOiJ0ZXN0LWtpZCIsImFsZyI6IlJTMjU2In0.eyJpc3MiOiJodHRwczovL2thdXRoLmtha2FvLmNvbSIsImF1ZCI6ImJmMjg0ZjMzYmZlYmE5YmM1OTU3NTcwNmQwZWIwZTljIiwic3ViIjoi7IKs7Jqp7J6Q7ZqM7JuQ67KI7Zi4IiwiaWF0IjoxNzc2ODE3MDc5LCJleHAiOjE3NzY4MjA2NzksImF1dGhfdGltZSI6MTc3NjgxNzA3OTg2MCwibm9uY2UiOiI0ZjA0YWYyMy1iYTU5LTRhN2QtYWI3OS1jMTljY2Q4M2ViNTUiLCJlbWFpbCI6Im5ldy11c2VyQGtha2FvLmNvbSJ9.CIMLZutktt032Icl1Yuz2XHURw-FegYWGgeRTSGqm3odn7u62sp-GkZ2el4uEHZbEeXbQ2uT9tWEJSqgHgShkuUJyjFS9osPCA98_FHDI26gLYSp7t96_8eWtE1P2OJdBXIRYc4Ht_WtKKZSKhKa6OAtFbB-Zb_vSxQqcRanBsS-UoMDozMzvSWky7a7ZdIOgjBu-V_NxCFUrLA8tQ0XN0nknsCRs2J0UV5sJL1ndeTlDw5hGbjY4Lbm7s-gIqilxCbWyyCIkYLteZDpwB4REGuRLMHfSoszEkbW6vukx7pUeHIjFcd_1RR10Wk-m9HBsi43c4vAz27qKdMrwpGtAw\"\
+                value: "{\"provider\":\"KAKAO\",\"idToken\":\"eyJ0eXAiOiJKV1QiLCJraWQiOiJ0ZXN0LWtpZCIsImFsZyI6IlJTMjU2In0.eyJpc3MiOiJodHRwczovL2thdXRoLmtha2FvLmNvbSIsImF1ZCI6ImJmMjg0ZjMzYmZlYmE5YmM1OTU3NTcwNmQwZWIwZTljIiwic3ViIjoi7IKs7Jqp7J6Q7ZqM7JuQ67KI7Zi4IiwiaWF0IjoxNzc3MjY0MzkyLCJleHAiOjE3NzcyNjc5OTIsImF1dGhfdGltZSI6MTc3NzI2NDM5MjUwOCwibm9uY2UiOiIzOGE4Njg0MC1lZDdjLTQ2ZGEtODc2OC1mNmU5ZDUzMWJkZjAiLCJlbWFpbCI6Im5ldy11c2VyQGtha2FvLmNvbSJ9.jI1QY8gPKXG9tlT1ZQRKl9wy8m0RaopOP2Szny1WnsJKm8aiX3XEcHVpmu8qF4O3Suldyvv9JOQzqwxwdFR5bB_F1O3ypL7NJX10PGcgvkHeaK4dtxAlHvsISm1eKeBn3ny8m-PljFiG_lmdBqKHqyxKAc4VNATBmIWBBTrHpbyYBzIMIZ9UQMVXUiMj75_BLVgodaupfkcPejFfw1dRlL3LBYguWWIKf4loo3UQv2WgPF06hFLNjR0NMrLagZO6Hjp2rA9HwnmMGD_BjrYX2flv3ks75jYTji0n-2ikY8X3QeuhD1tQ4mhKwa5fC5H133yvgIYB7PLL2Ym5nQH3gw\"\
                   }"
       responses:
         "200":
@@ -400,24 +400,24 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 auth-login-existing:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"accessToken\"\
-                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJmNTczMmVhMS0wYmMzLTRlY2UtOWIwYi1iMTU5OTlhMjdmNGEiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6Ijk2YTIxYTIyLWZiZmUtNDRhMS04NjY1LThlOGZmMGE3ZDkwZiIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiLthYzsiqTthLAiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJBQ1RJVkUiLCJpYXQiOjE3NzY4MTcwNzksImV4cCI6MTc3NjgxODg3OX0.IfviZnNuFLyG-BCDA2D1kBZ7binDvn8WpexFKxla14dQ3whCBBLOP8K7C7Qo5o6R\"\
-                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiIxMjk2YWY3MS02YWEwLTQ3ZjQtODAzZC04YTNkMjdmOTk0MWMiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiI5NmEyMWEyMi1mYmZlLTQ0YTEtODY2NS04ZThmZjBhN2Q5MGYiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoi7YWM7Iqk7YSwIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiQUNUSVZFIiwiaWF0IjoxNzc2ODE3MDc5LCJleHAiOjE3Nzc0MjE4Nzl9.vpnwM4LqNOkSYx31iHID_dn1mtdtdX2fR5AGQMEcHN6xdM-HfgbQLbYTkB1IO1QY\"\
+                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJkYjUyM2VlMS1iMzk2LTQ0YTctYjVhZC02ODAwNmNjYjFhYzYiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6IjNmYjMzN2E3LWIzMWQtNDBmYy04ODRkLTZlZmJkZmE4NDhlNSIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiLthYzsiqTthLAiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJBQ1RJVkUiLCJpYXQiOjE3NzcyNjQzOTIsImV4cCI6MTc3NzI2NjE5Mn0.w-i7sQZMP-xBrWCEUvNmaQeQCQ0aFc-wCOP48lbQNWMcxV6AzgYmrhPl-VE74g3W\"\
+                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiI2YjgzYzZlYi1kY2ZjLTQxYmItOGNiYi0zZjYwNjlhYjBmMWMiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiIzZmIzMzdhNy1iMzFkLTQwZmMtODg0ZC02ZWZiZGZhODQ4ZTUiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoi7YWM7Iqk7YSwIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiQUNUSVZFIiwiaWF0IjoxNzc3MjY0MzkyLCJleHAiOjE3Nzc4NjkxOTJ9.qgVrFpsAkf1tQq4kZciIkbC_fblgtdp-8LNVcKavlDxbUVOoQaJv-h2uCNl7KB3G\"\
                     }}"
         "201":
           description: "201"
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 auth-login-new:
                   value: "{\"code\":201,\"message\":\"OK\",\"data\":{\"accessToken\"\
-                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJkOGIyNzI0OC1jNTUxLTRmZWMtYjEzYy1mMWNiZTIwODE3MjYiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6ImJjZmI3MDI1LTg5ZDgtNDI1ZS05MGEwLWQwMWFlMWRhOWM5MCIsImVtYWlsIjoibmV3LXVzZXJAa2FrYW8uY29tIiwibmlja25hbWUiOiIiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJQRU5ESU5HIiwiaWF0IjoxNzc2ODE3MDc5LCJleHAiOjE3NzY4MTg4Nzl9.x17gI1rEaKkkFfDen1KtMLBuBTZB_0juY4Le6QPpkt1uipwflHGElxvaLOZgg7z5\"\
-                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJlYmFkNzJhZi1mY2EyLTRjYTAtODQ3MC1mNDVmYWVjMjQxZGEiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiJiY2ZiNzAyNS04OWQ4LTQyNWUtOTBhMC1kMDFhZTFkYTljOTAiLCJlbWFpbCI6Im5ldy11c2VyQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjgxNzA3OSwiZXhwIjoxNzc3NDIxODc5fQ.xxwnxpvHtSW04ExPOBLF2QjqDlWhfyTbXptTNvdR8ub1Wjh4SzJszqHG5nG6GVj0\"\
+                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJjZGFkZWUyMi00MmI0LTQzZmQtYTQ4Zi02Yjg0ZDU3YTQ1YjEiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6ImQ5MjdlMzVjLTYwNTgtNGVlNy1iZTRhLTg5NjJkYTdiY2MwZCIsImVtYWlsIjoibmV3LXVzZXJAa2FrYW8uY29tIiwibmlja25hbWUiOiIiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJQRU5ESU5HIiwiaWF0IjoxNzc3MjY0MzkyLCJleHAiOjE3NzcyNjYxOTJ9.J6SJeI-CHO2BlWIUlCOGJTQlEg988tBUoo_CTWRgBJ3BF7XSCl_VUNG9Ha272ATi\"\
+                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiI1N2FlZjg4MC00MWQ2LTRmM2EtOWFlOS0yNDk4NjVkMDdhMzgiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiJkOTI3ZTM1Yy02MDU4LTRlZTctYmU0YS04OTYyZGE3YmNjMGQiLCJlbWFpbCI6Im5ldy11c2VyQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NzI2NDM5MiwiZXhwIjoxNzc3ODY5MTkyfQ.0zOhcEBZFw13cl82jUR_kHB94zthToO9-0nuWhpc-QfIS4h-XQhRQFbejbOf-t-F\"\
                     }}"
   /api/user/auth/reissue:
     post:
@@ -430,10 +430,10 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               auth-reissue:
-                value: "{\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJiY2M0YjVjYy0zODNjLTQzOTYtYTBhNy1lODMyNDg0Zjk0YWQiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiIzMDAxNWVmYi0xZDJlLTQ5M2MtYWVlMy02ZWFhN2Q1YjdiYTgiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjgxNzA3OSwiZXhwIjoxNzc3NDIxODc5fQ.0wtlkiy_ornTsrL7WMm-nt0ku58r6wAELEOye7meZmPON6rrwi8hxfDbYvfm1E1y\"\
+                value: "{\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJiNTNiOTRiMy0zMDNhLTQxYWMtOTNkYS02MmNhMjc5YjhmOGQiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiI0MmQ1OTIwNS03MGRkLTQwYmEtYThmZS05NjhiYTgyMmRhNGYiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NzI2NDM5MSwiZXhwIjoxNzc3ODY5MTkxfQ.KBOxtMKJpcuV6srwOopsEjPy1xfAnqEB8eEV3T14XpWtmIreh2KEaLtKGEEMH8DW\"\
                   }"
       responses:
         "200":
@@ -441,12 +441,12 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 auth-reissue:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"accessToken\"\
-                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiI3YjY3MTgxNC04ZTk2LTQ3ODQtYjliMi05MzhhYjc1ZDlmZTkiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6IjMwMDE1ZWZiLTFkMmUtNDkzYy1hZWUzLTZlYWE3ZDViN2JhOCIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiIiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJQRU5ESU5HIiwiaWF0IjoxNzc2ODE3MDc5LCJleHAiOjE3NzY4MTg4Nzl9.NWl3g9qrSpRwhWe6bUvckNvzrjcoJIP5gwiAolJaaJ7do7bge50ixYT9a5sSAtIS\"\
-                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiI0YWRmZjMxMi04MjVmLTRiZDctOTVkNi1kMjliNTc3MjIzY2IiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiIzMDAxNWVmYi0xZDJlLTQ5M2MtYWVlMy02ZWFhN2Q1YjdiYTgiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjgxNzA3OSwiZXhwIjoxNzc3NDIxODc5fQ.e3RFJhNtRbm1vej0Y66A0H8zlqN9OUlXOU4ywLpQb-BrIk5YtYzo0QT_b2cvOKii\"\
+                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJmOWM0ZjY5NS1kMWE1LTRiZDUtOTc0MC05Mzc5NjdkNDA3ZjYiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6IjQyZDU5MjA1LTcwZGQtNDBiYS1hOGZlLTk2OGJhODIyZGE0ZiIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiIiLCJyb2xlIjoiUk9MRV9OT1JNQUwiLCJzdGF0dXMiOiJQRU5ESU5HIiwiaWF0IjoxNzc3MjY0MzkxLCJleHAiOjE3NzcyNjYxOTF9.AYqw3urc8WLkb7GSl_Dr0jBQYKLLHUHioPEQqA0OhLmkFEtV44f_T6ZGeb92skjl\"\
+                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiI2NzU0YTEyNy1lNmUyLTQ5OTgtYTI2OC1hMzNmOTJiZmVkMTEiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiI0MmQ1OTIwNS03MGRkLTQwYmEtYThmZS05NjhiYTgyMmRhNGYiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoiIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NzI2NDM5MSwiZXhwIjoxNzc3ODY5MTkxfQ.2CLdR2DytwZdu4U6xZA9nOKNx5VSANZ4bDOzMoaaYANikIKG5mChHF4zyem0l4W4\"\
                     }}"
   /api/user/friends/alias:
     post:
@@ -459,10 +459,10 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               friends-alias-update:
-                value: "{\"friendRelationshipId\":\"b3e32d5a-1715-4573-ba46-8af25fd75348\"\
+                value: "{\"friendRelationshipId\":\"f3962eaa-9680-4539-80e3-7395b6f295b4\"\
                   ,\"newFriendAlias\":\"Bestie\"}"
       responses:
         "200":
@@ -470,11 +470,11 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friends-alias-update:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"friendRelationshipId\"\
-                    :\"b3e32d5a-1715-4573-ba46-8af25fd75348\",\"friendEmail\":\"user@test.com\"\
+                    :\"f3962eaa-9680-4539-80e3-7395b6f295b4\",\"friendEmail\":\"user@test.com\"\
                     ,\"friendAlias\":\"Bestie\"}}"
   /api/user/friends/request:
     get:
@@ -489,7 +489,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friend-request-received-list:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":[{\"friendRequestId\"\
@@ -507,10 +507,10 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               friend-request-create:
-                value: "{\"receiverId\":\"a29c7659-5092-4806-a3cc-c718ea206401\",\"\
+                value: "{\"receiverId\":\"40fcfc56-54cb-48d6-baed-363d36737a72\",\"\
                   receiverEmail\":\"receiver@kakao.com\",\"message\":\"안녕하세요 저는 라티\
                   입니다! 친하게 지내요!\"}"
       responses:
@@ -519,7 +519,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friend-request-create:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"friendRequestId\"\
@@ -537,22 +537,22 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friends-restriction-list:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":[{\"friendRestrictionId\"\
                     :8,\"targetEmail\":\"friend1@test.com\",\"targetNickname\":\"친\
-                    구1\",\"restrictionType\":\"BLOCK\",\"createdAt\":\"2026-04-22T09:17:52.6440093\"\
+                    구1\",\"restrictionType\":\"BLOCK\",\"createdAt\":\"2026-04-27T13:33:01.3960217\"\
                     },{\"friendRestrictionId\":9,\"targetEmail\":\"friend2@test.com\"\
                     ,\"targetNickname\":\"친구2\",\"restrictionType\":\"REJECT\",\"\
-                    createdAt\":\"2026-04-22T09:17:52.651275\"},{\"friendRestrictionId\"\
+                    createdAt\":\"2026-04-27T13:33:01.4276621\"},{\"friendRestrictionId\"\
                     :10,\"targetEmail\":\"friend3@test.com\",\"targetNickname\":\"\
-                    친구3\",\"restrictionType\":\"BLOCK\",\"createdAt\":\"2026-04-22T09:17:52.6556815\"\
+                    친구3\",\"restrictionType\":\"BLOCK\",\"createdAt\":\"2026-04-27T13:33:01.4461192\"\
                     },{\"friendRestrictionId\":11,\"targetEmail\":\"friend4@test.com\"\
                     ,\"targetNickname\":\"친구4\",\"restrictionType\":\"REJECT\",\"\
-                    createdAt\":\"2026-04-22T09:17:52.6617138\"},{\"friendRestrictionId\"\
+                    createdAt\":\"2026-04-27T13:33:01.4638457\"},{\"friendRestrictionId\"\
                     :12,\"targetEmail\":\"friend5@test.com\",\"targetNickname\":\"\
-                    친구5\",\"restrictionType\":\"BLOCK\",\"createdAt\":\"2026-04-22T09:17:52.6676572\"\
+                    친구5\",\"restrictionType\":\"BLOCK\",\"createdAt\":\"2026-04-27T13:33:01.5113233\"\
                     }]}"
   /api/user/friends/{friendRelationshipId}:
     delete:
@@ -572,10 +572,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               friends-delete:
-                value: _csrf=2ycgD8tZkKdUclAjTTyQVf7DfZCNkEDxlMPG3Llyy1LdS9Ho6hYTOPphpJZ5FDQWKBGkZ5z7UKi9oHnc96Xy7NsRqWTvKeXc
+                value: _csrf=ts9holEAkLH5ShaIrybbq8zo_ukzarqrIp3rdnDvJX2GZ4N2gv5XlGlhoYfUfiO6yQvvm63c04gHXtuGG_jeRRSNRkq3BLUS
       responses:
         "200":
           description: "200"
@@ -592,7 +592,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 user-get-me:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"userEmail\"\
@@ -608,7 +608,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               user-change-nickname:
                 value: "{\"newNickname\":\"고동수\"}"
@@ -618,7 +618,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 user-change-nickname:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"userEmail\"\
@@ -636,11 +636,11 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 user-search-by-nickname:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":[{\"userId\":\"\
-                    a13461d1-b961-4d7d-83e2-abad06e9e33a\",\"userEmail\":\"exist@test.com\"\
+                    0945c0a1-e0d6-447c-a3b3-053a7a532a95\",\"userEmail\":\"exist@test.com\"\
                     ,\"userNickname\":\"tester\"}]}"
   /api/user/terms/consent:
     post:
@@ -656,7 +656,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               terms-consent-all:
                 value: "{\"consents\":[{\"termDefinitionId\":1,\"agreed\":true},{\"\
@@ -668,12 +668,12 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 terms-consent-all:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"accessToken\"\
-                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJlZjc4YzM0Yy1iYjk4LTQ2YzEtODgyNi04YzA5ZTFkYWQwYTkiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6IjYxZDYzZjQwLWZmOWQtNDc2Yy05YjlkLTkzMDEzN2QxZDQ5MCIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiJyYXRpIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NjgxNzA4MSwiZXhwIjoxNzc2ODE4ODgxfQ.3ZefUm1m5NFWYuMZZlMKBfsvMvtIyEX-Fxq0NCnLgz0AbwzeCfMAReSOElitczOS\"\
-                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJmZGI0ZWNjYy0wNGExLTRhZTgtYmYxNy02YjhiZWRlZDk2ZjUiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiI2MWQ2M2Y0MC1mZjlkLTQ3NmMtOWI5ZC05MzAxMzdkMWQ0OTAiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoicmF0aSIsInJvbGUiOiJST0xFX05PUk1BTCIsInN0YXR1cyI6IlBFTkRJTkciLCJpYXQiOjE3NzY4MTcwODEsImV4cCI6MTc3NzQyMTg4MX0.j13BKaB2y3WvDfnethhgHRL6Z5zHotTH99K0A8AEAiOTmBepP9WrvQvTgXXs6MsC\"\
+                    :\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJkYjI0ZjM2MS1kOTY4LTQ3MTgtYjQ3Yy05NTlhMDY5NDBkZTkiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6ImY2OGUxZmFhLTlhMjUtNDY1NS05NGI0LThlMjcxNTMwNDkxMiIsImVtYWlsIjoiZHMua29Aa2FrYW8uY29tIiwibmlja25hbWUiOiJyYXRpIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiUEVORElORyIsImlhdCI6MTc3NzI2NDM5NiwiZXhwIjoxNzc3MjY2MTk2fQ.n3hx5hewL-6bieNtlT0GBveqeQRBXpvXcpm9H_QQJsz5Nrhjy_uYyCyGlB0vuAyq\"\
+                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJkODRhOTFkOS04MDk4LTQ5ZDYtOGYwZC0zNjMxNjQ2Mzg1M2MiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiJmNjhlMWZhYS05YTI1LTQ2NTUtOTRiNC04ZTI3MTUzMDQ5MTIiLCJlbWFpbCI6ImRzLmtvQGtha2FvLmNvbSIsIm5pY2tuYW1lIjoicmF0aSIsInJvbGUiOiJST0xFX05PUk1BTCIsInN0YXR1cyI6IlBFTkRJTkciLCJpYXQiOjE3NzcyNjQzOTYsImV4cCI6MTc3Nzg2OTE5Nn0.hoeWo31hslnJYHbZSLkzG8nTkQVg-Zuy-Bc7bBDLlItINCI9Ha9hbqp-W9fbffyR\"\
                     }}"
       security:
       - bearerAuthJWT: []
@@ -690,7 +690,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-dlq-get:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"queueName\"\
@@ -706,17 +706,17 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-dlq-purge:
-                value: _csrf=BQlvARei-t8C_sknEWYCWyuRDPS0jisZ99GRx_X-PWGLWWF0NmwJYnKUze4vyfpEJUs2b0-hIZXSuRM0xrDypsLLCQKyawBF
+                value: _csrf=lzJuHv374Vrv2TtITwR19pCImOqxxXX2FJD0Zia6VV_9xhQcpFYIK8SdhG3C6l5-KilBlKTrtYvQpxPbI_bBVESPZ2zP9CN-
       responses:
         "200":
           description: "200"
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-dlq-purge:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":null}"
@@ -738,17 +738,17 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-user-block:
-                value: _csrf=8rZ-iaILYNg5eyO7v39fDSqL6TMk2ZHHtQZqZfeLAbd96E3Gl4McuJFoWeAUSRKK2lJrOx-6xAtFuvfqhmVaA5a6OI9O2H_x
+                value: _csrf=HOby7ONsjvxzIXdNIMots7XxHGpCq2bR_RMfCzXnEPtRTXsbKoPLidsI7MxeRE4rQ-cZg4fIMQtznV78mCUtalPeJMpidUMi
       responses:
         "200":
           description: "200"
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-user-block:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":null}"
@@ -769,17 +769,17 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-user-unblock:
-                value: _csrf=ENxMhsewL_McaHQ7NlNf5sKpRJgiMJBHRCx_Opu3tVfNuaB9c-x8t_OETsYxUENdD35r1fObaflEUqFqdx5MCK3RhzL8gcMZ
+                value: _csrf=8_v3NfCyHfyKxEQWvypynb2mGutKDGmXLZ1R9WYm1jGTdY2AksvPV5WDKZinoXIligdG_o3CN4l6aF66HK9lkABEsgiqEbqz
       responses:
         "200":
           description: "200"
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-user-unblock:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":null}"
@@ -801,17 +801,17 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-user-force-logout:
-                value: _csrf=_Zu6mt3N_THevsATrt6Ji9cAdoqPyt_Ke8EyAfWbkUYSpNkxya2KrO-sxALz2qN2n_O9ubRkW-vprOjnHvQEN8Oqon9zx-xQ
+                value: _csrf=bxbRHPWwNzaTS3k5j7ZVdDOCNZ2Ts_9vJXJtjPNyuSt2rXySVnPgKpSAAAK-LhwAt5thFVGxGP_ygptCQxMO6sJCgUlPnkXz
       responses:
         "200":
           description: "200"
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-user-force-logout:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":null}"
@@ -826,7 +826,7 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               multiple-sms/success:
                 value: "{\"receiversNumbers\":[\"01011112222\",\"01033334444\"],\"\
@@ -854,10 +854,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               friends-block:
-                value: _csrf=PwQlCnE38AM8qr-DDg2oZYqvOY8nMGVletPJTWm-3V_Jn7CQDDxAOUYBxzcRzobgaiCcAO-dFLcWA1RIT7eselyH7Witp9Km
+                value: _csrf=7aLYDMhflGOCUbhDviCOOKIEqCq9aWi3Pu8FeXoB8iyvZPUP25S6aKxu9lCvZdx6jw26DMQzhROKWl6aX9Y1TRk2wk6fXJM4
       responses:
         "200":
           description: "200"
@@ -874,7 +874,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friend-request-received-detail:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"friendRequestId\"\
@@ -894,7 +894,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friends-restriction-delete-success:
                   value: "{\"code\":201,\"message\":\"OK\",\"data\":{\"targetEmail\"\
@@ -914,7 +914,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friends-restriction-delete-fail-forbidden:
                   value: "{\"code\":400,\"message\":\"BAD_REQUEST\",\"data\":{\"code\"\
@@ -941,7 +941,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 terms-consent-single-fail-not-found:
                   value: "{\"code\":404,\"message\":\"NOT_FOUND\",\"data\":{\"code\"\
@@ -951,7 +951,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 terms-consent-single-success:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":null}"
@@ -975,11 +975,11 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 terms-version-detail:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"version\":\"\
-                    v1.0\",\"content\":\"약관 내용\",\"effectiveDate\":\"2026-04-22T09:17:53.9610209\"\
+                    v1.0\",\"content\":\"약관 내용\",\"effectiveDate\":\"2026-04-27T13:33:03.0502995\"\
                     }}"
   /api/admin/rabbitmq/dlq/noti.queue.friend.dlq/replay:
     post:
@@ -992,19 +992,19 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/api-user-info-tester-33084672"
+              $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
             examples:
               admin-dlq-replay-all:
-                value: _csrf=S_CNbrLwRhJe_ASw86swKLRdX92WcV12GeIXG__RFkxploZXc8i4CNTAf3FzmWCDy4YETdJqcr_wRWVbINp2KMi3cnRQouQy
+                value: _csrf=vmu-Cw04zEhwybjHAuIR8oXPzWpgunwBACKd3EcfrWneck3eh1PcOD9b_HldrI2lO88ll-et4AhRjB8sMBCvuXN-yQy9Sn_u
               admin-dlq-replay-limited:
-                value: count=2&_csrf=jyZgg7M2WOPT2hsj3bcOTJiU3FHivH-yBEKh1L8IsLanNVIJuxJX59UFbND-7n4buJo6f62g8TDUjEmfYHOQsIpqgo6RAGI6
+                value: count=2&_csrf=jiDO9-4Xf0Vawi9nPm8ymNxn0OoQGtYtNPQpPvkzqWB3Lqpqu0X8ltgvTyR3-h8EC0IGrb1U_dImeOQAAs1MCs8KkAZDS55d
       responses:
         "200":
           description: "200"
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 admin-dlq-replay-all:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"queueName\"\
@@ -1025,11 +1025,11 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friend-request-accept:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"friendRelationshipId\"\
-                    :\"c3bd6b92-8c02-48c3-bb1d-cc697a549b56\",\"friendEmail\":\"requester1@kakao.com\"\
+                    :\"fc394967-22ad-4e0f-a3a1-8e88a8992bb6\",\"friendEmail\":\"requester1@kakao.com\"\
                     ,\"friendAlias\":\"요청자\"}}"
   /api/user/friends/request/reject/2:
     post:
@@ -1045,16 +1045,16 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/api-user-info-tester-33084672"
+                $ref: "#/components/schemas/api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672"
               examples:
                 friend-request-reject:
                   value: "{\"code\":200,\"message\":\"OK\",\"data\":{\"friendRestrictionId\"\
                     :2,\"targetEmail\":\"requester1@kakao.com\",\"targetNickname\"\
-                    :\"요청자\",\"restrictionType\":\"REJECT\",\"createdAt\":\"2026-04-22T09:17:51.7489977\"\
+                    :\"요청자\",\"restrictionType\":\"REJECT\",\"createdAt\":\"2026-04-27T13:33:00.0420795\"\
                     }}"
 components:
   schemas:
-    api-user-info-tester-33084672:
+    api-admin-rabbitmq-dlq-noti.queue.friend.dlq-33084672:
       type: object
   securitySchemes:
     bearerAuthJWT:

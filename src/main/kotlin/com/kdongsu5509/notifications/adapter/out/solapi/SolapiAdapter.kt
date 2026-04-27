@@ -56,7 +56,6 @@ class SolapiAdapter(
             }
 
             detailList.map { detail ->
-                // Solapi 성공 코드는 보통 2000, 4000 등이니 라이브러리 스펙 재확인 권장
                 if (detail.statusCode in listOf("200", "2000", "4000")) {
                     SolapiResponse.success()
                 } else {

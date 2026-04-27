@@ -20,7 +20,6 @@ class FriendNotificationConsumer(
         val messageId = dto.messageId.toString()
 
         if (messageIdempotencyService.isAlreadyProcessed(messageId)) {
-            log.info("중복 메시지 감지, 처리 생략 - messageId: {}", messageId)
             return
         }
 

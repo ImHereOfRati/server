@@ -8,11 +8,11 @@ import java.util.*
 
 @SpringBootApplication(scanBasePackages = ["com.kdongsu5509"])
 @EnableResilientMethods
-class ImhereUserServiceApplication
-
-@PostConstruct
-fun started() {
-    TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"))
+class ImhereUserServiceApplication {
+    @PostConstruct
+    fun started() {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"))
+    }
 }
 
 fun main(args: Array<String>) {

@@ -1,14 +1,16 @@
+// epages restdocs-api-spec 0.20.0 plugin이 spring-boot-jackson2를 버전 없이
+// transitive로 의존하므로 buildscript classpath 해소를 위해 force 필요
 buildscript {
     configurations.all {
         resolutionStrategy {
-            force("org.springframework.boot:spring-boot-jackson2:4.0.4")
+            force("org.springframework.boot:spring-boot-jackson2:4.0.5")
         }
     }
 }
 
 plugins {
     //spring
-    id 'org.springframework.boot' version '4.0.3'
+    id 'org.springframework.boot' version '4.0.5'
     //kotlin
     id 'org.jetbrains.kotlin.jvm' version '2.3.20'
     id 'org.jetbrains.kotlin.plugin.spring' version '2.3.20'
@@ -68,7 +70,7 @@ dependencies {
 
     // DB & EXTERNAL
     implementation 'com.mysql:mysql-connector-j'
-    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
+    developmentOnly 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
     implementation 'com.google.firebase:firebase-admin:9.8.0'
     implementation 'com.solapi:sdk:1.1.0'
 

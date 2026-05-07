@@ -75,3 +75,34 @@ prometheus.remote_write "grafana_cloud" {
 		}
 	}
 }
+
+// ---------------------------------------------------------
+// 3. Traces (App → Alloy → Tempo)
+// ---------------------------------------------------------
+
+// 앱에서 OTLP 트레이스를 수신 (gRPC 4317 / HTTP 4318)
+otelcol.receiver.otlp "otlp_receiver" {
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		traces = [otelcol.exporter.otlp.grafanacloud.input]
+	}
+}
+
+// Grafana Cloud Tempo로 push (gRPC OTLP, Basic Auth)
+otelcol.exporter.otlp "grafanacloud" {
+	client {
+		endpoint = sys.env("GRAFANA_CLOUD_TEMPO_ENDPOINT")
+		auth     = otelcol.auth.basic.grafanacloud.handler
+	}
+}
+
+otelcol.auth.basic "grafanacloud" {
+	username = sys.env("GRAFANA_CLOUD_TEMPO_USER")
+	password = sys.env("GRAFANA_CLOUD_TEMPO_API_KEY")
+}

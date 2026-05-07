@@ -53,7 +53,7 @@ class JwtTokenUtilTest {
     ): String {
         val expiredTime = LocalDateTime.now().plusMinutes(expirationMinutes)
         return Jwts.builder()
-            .setId(UUID.randomUUID().toString())
+            .id(UUID.randomUUID().toString())
             .claim(JwtClaimKeys.CLAIM_CATEGORY, JwtClaimKeys.ACCESS_TOKEN)
             .claim(JwtClaimKeys.CLAIM_USER_ID, UUID.randomUUID())
             .claim(JwtClaimKeys.CLAIM_EMAIL, userEmail)
@@ -61,8 +61,8 @@ class JwtTokenUtilTest {
             .claim(JwtClaimKeys.CLAIM_ROLE, "ROLE_${role}")
             .claim(JwtClaimKeys.CLAIM_STATUS, status)
             .claim("role", role)
-            .setIssuedAt(Date.from(Instant.now()))
-            .setExpiration(Date.from(expiredTime.atZone(ZoneId.systemDefault()).toInstant()))
+            .issuedAt(Date.from(Instant.now()))
+            .expiration(Date.from(expiredTime.atZone(ZoneId.systemDefault()).toInstant()))
             .signWith(secretKey)
             .compact()
     }
@@ -87,11 +87,11 @@ class JwtTokenUtilTest {
         // given
         val expiredTime = LocalDateTime.now().minusMinutes(1)
         val token = Jwts.builder()
-            .setId(UUID.randomUUID().toString())
+            .id(UUID.randomUUID().toString())
             .claim("username", "test@example.com")
             .claim("role", "ROLE_USER")
-            .setIssuedAt(Date.from(Instant.now().minusSeconds(3600)))
-            .setExpiration(Date.from(expiredTime.atZone(ZoneId.systemDefault()).toInstant()))
+            .issuedAt(Date.from(Instant.now().minusSeconds(3600)))
+            .expiration(Date.from(expiredTime.atZone(ZoneId.systemDefault()).toInstant()))
             .signWith(secretKey)
             .compact()
 
@@ -110,11 +110,11 @@ class JwtTokenUtilTest {
         val wrongSecretKey =
             Keys.hmacShaKeyFor("wrongSecretKey123456789012345678901234567890".toByteArray(StandardCharsets.UTF_8))
         val token = Jwts.builder()
-            .setId(UUID.randomUUID().toString())
+            .id(UUID.randomUUID().toString())
             .claim("username", "test@example.com")
             .claim("role", "ROLE_USER")
-            .setIssuedAt(Date.from(Instant.now()))
-            .setExpiration(Date.from(LocalDateTime.now().plusMinutes(30).atZone(ZoneId.systemDefault()).toInstant()))
+            .issuedAt(Date.from(Instant.now()))
+            .expiration(Date.from(LocalDateTime.now().plusMinutes(30).atZone(ZoneId.systemDefault()).toInstant()))
             .signWith(wrongSecretKey)
             .compact()
 

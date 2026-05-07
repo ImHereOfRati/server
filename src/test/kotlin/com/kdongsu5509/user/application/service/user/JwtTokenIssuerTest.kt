@@ -53,11 +53,11 @@ class JwtTokenIssuerTest {
 
         // 토큰 파싱하여 검증
         val secretKey = Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray(StandardCharsets.UTF_8))
-        val claims = Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        val claims = Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(accessToken)
-            .body
+            .parseSignedClaims(accessToken)
+            .payload
 
         assertThat(claims[JwtClaimKeys.CLAIM_EMAIL]).isEqualTo(TEST_EMAIL)
         assertThat(claims[JwtClaimKeys.CLAIM_NICKNAME]).isEqualTo(TEST_NICKNAME)
@@ -83,11 +83,11 @@ class JwtTokenIssuerTest {
 
         // 토큰 파싱하여 검증
         val secretKey = Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray(StandardCharsets.UTF_8))
-        val claims = Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        val claims = Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(refreshToken)
-            .body
+            .parseSignedClaims(refreshToken)
+            .payload
 
         assertThat(claims[JwtClaimKeys.CLAIM_EMAIL]).isEqualTo(TEST_EMAIL)
         assertThat(claims[JwtClaimKeys.CLAIM_NICKNAME]).isEqualTo(TEST_NICKNAME)
@@ -112,17 +112,17 @@ class JwtTokenIssuerTest {
         // then
         val secretKey = Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray(StandardCharsets.UTF_8))
 
-        val accessClaims = Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        val accessClaims = Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(accessToken)
-            .body
+            .parseSignedClaims(accessToken)
+            .payload
 
-        val refreshClaims = Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        val refreshClaims = Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(refreshToken)
-            .body
+            .parseSignedClaims(refreshToken)
+            .payload
 
         val accessExpiration = LocalDateTime.ofInstant(accessClaims.expiration.toInstant(), ZoneId.systemDefault())
         val refreshExpiration = LocalDateTime.ofInstant(refreshClaims.expiration.toInstant(), ZoneId.systemDefault())
@@ -141,17 +141,17 @@ class JwtTokenIssuerTest {
         // then
         val secretKey = Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray(StandardCharsets.UTF_8))
 
-        val claims1 = Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        val claims1 = Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(token1)
-            .body
+            .parseSignedClaims(token1)
+            .payload
 
-        val claims2 = Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        val claims2 = Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(token2)
-            .body
+            .parseSignedClaims(token2)
+            .payload
 
         assertThat(claims1.id).isNotEqualTo(claims2.id)
     }

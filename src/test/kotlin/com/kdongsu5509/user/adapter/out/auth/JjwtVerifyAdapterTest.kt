@@ -104,7 +104,7 @@ class JjwtVerifyAdapterTest {
 
         // then
         assertThat(result).isNotNull()
-        assertThat(result.body.subject).isEqualTo("test-sub")
+        assertThat(result.payload.subject).isEqualTo("test-sub")
     }
 
     @Test
@@ -169,11 +169,11 @@ class JjwtVerifyAdapterTest {
 
     private fun createValidJwtToken(): String {
         return Jwts.builder()
-            .setSubject("test-sub")
-            .setIssuer("https://kauth.kakao.com")
-            .setAudience("test-audience")
-            .setIssuedAt(Date())
-            .setExpiration(Date(System.currentTimeMillis() + 3600000)) // 1시간 후
+            .subject("test-sub")
+            .issuer("https://kauth.kakao.com")
+            .audience().add("test-audience").and()
+            .issuedAt(Date())
+            .expiration(Date(System.currentTimeMillis() + 3600000)) // 1시간 후
             .claim("email", "test@example.com")
             .signWith(keyPair.private)
             .compact()
@@ -182,11 +182,11 @@ class JjwtVerifyAdapterTest {
     private fun createExpiredJwtToken(): String {
         val pastDate = Date(System.currentTimeMillis() - 3600000) // 1시간 전
         return Jwts.builder()
-            .setSubject("test-sub")
-            .setIssuer("https://kauth.kakao.com")
-            .setAudience("test-audience")
-            .setIssuedAt(pastDate)
-            .setExpiration(pastDate)
+            .subject("test-sub")
+            .issuer("https://kauth.kakao.com")
+            .audience().add("test-audience").and()
+            .issuedAt(pastDate)
+            .expiration(pastDate)
             .claim("email", "test@example.com")
             .signWith(keyPair.private)
             .compact()

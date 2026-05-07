@@ -1,7 +1,6 @@
 package com.common.testUtil
 
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
 import java.nio.charset.StandardCharsets
 import java.security.KeyPair
@@ -80,15 +79,15 @@ object TestJwtBuilder {
     ): String {
         val now = Instant.now()
         return Jwts.builder()
-            .setId(UUID.randomUUID().toString())
+            .id(UUID.randomUUID().toString())
             .claim("category", category)
             .claim("uid", uid.toString())
             .claim("email", email)
             .claim("nickname", nickname)
             .claim("role", "ROLE_$role")
             .claim("status", status)
-            .setIssuedAt(Date.from(now))
-            .setExpiration(Date.from(now.plusSeconds(expirationSeconds)))
+            .issuedAt(Date.from(now))
+            .expiration(Date.from(now.plusSeconds(expirationSeconds)))
             .signWith(imHereSecretKey)
             .compact()
     }
@@ -98,27 +97,21 @@ object TestJwtBuilder {
         val issuedAt = Date.from(now)
         val expiration = Date.from(now.plusSeconds(KAKAO_PAYLOAD_EXP_SECONDS))
 
-        val payload: Map<String, Any> = mapOf(
-            "iss" to KAKAO_PAYLOAD_ISS,
-            "aud" to KAKAO_PAYLOAD_AUD,
-            "sub" to KAKAO_PAYLOAD_SUB,
-            "iat" to issuedAt,
-            "exp" to expiration,
-            "auth_time" to issuedAt,
-            "nonce" to UUID.randomUUID().toString(),
-            "email" to email
-        )
-
         return Jwts.builder()
-            .setHeaderParams(
-                mapOf(
-                    "typ" to KAKAO_HEADER_TYP,
-                    "kid" to KAKAO_HEADER_KID,
-                    "alg" to KAKAO_HEADER_ALG
-                )
-            )
-            .setClaims(payload)
-            .signWith(testPrivateKey, SignatureAlgorithm.RS256)
+            .header()
+                .add("typ", KAKAO_HEADER_TYP)
+                .add("kid", KAKAO_HEADER_KID)
+                .add("alg", KAKAO_HEADER_ALG)
+                .and()
+            .issuer(KAKAO_PAYLOAD_ISS)
+            .audience().add(KAKAO_PAYLOAD_AUD).and()
+            .subject(KAKAO_PAYLOAD_SUB)
+            .issuedAt(issuedAt)
+            .expiration(expiration)
+            .claim("auth_time", issuedAt)
+            .claim("nonce", UUID.randomUUID().toString())
+            .claim("email", email)
+            .signWith(testPrivateKey, Jwts.SIG.RS256)
             .compact()
     }
 }

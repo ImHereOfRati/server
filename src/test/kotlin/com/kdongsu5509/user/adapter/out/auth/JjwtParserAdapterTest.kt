@@ -227,26 +227,28 @@ class JjwtParserAdapterTest {
 
     private fun createMockJws(email: String, sub: String): Jws<Claims> {
         val claims = Jwts.claims()
-            .setIssuer("https://kauth.kakao.com")
-            .setAudience("test-audience")
-            .setSubject(sub)
-        claims["email"] = email
+            .issuer("https://kauth.kakao.com")
+            .audience().add("test-audience").and()
+            .subject(sub)
+            .add("email", email)
+            .build()
 
         @Suppress("UNCHECKED_CAST")
         val jws: Jws<Claims> = mock(Jws::class.java) as Jws<Claims>
-        `when`(jws.body).thenReturn(claims)
+        `when`(jws.payload).thenReturn(claims)
         return jws
     }
 
     private fun createMockJwsWithoutEmail(sub: String): Jws<Claims> {
         val claims = Jwts.claims()
-            .setIssuer("https://kauth.kakao.com")
-            .setAudience("test-audience")
-            .setSubject(sub)
+            .issuer("https://kauth.kakao.com")
+            .audience().add("test-audience").and()
+            .subject(sub)
+            .build()
 
         @Suppress("UNCHECKED_CAST")
         val jws: Jws<Claims> = mock(Jws::class.java) as Jws<Claims>
-        `when`(jws.body).thenReturn(claims)
+        `when`(jws.payload).thenReturn(claims)
         return jws
     }
 }

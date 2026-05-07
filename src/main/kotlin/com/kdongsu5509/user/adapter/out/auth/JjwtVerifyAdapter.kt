@@ -11,9 +11,9 @@ import io.jsonwebtoken.Jws
 import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Component
 import java.math.BigInteger
-import java.security.Key
 import java.security.KeyFactory
 import java.security.NoSuchAlgorithmException
+import java.security.PublicKey
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.RSAPublicKeySpec
 import java.util.*
@@ -35,10 +35,10 @@ class JjwtVerifyAdapter(
     ): Jws<Claims> {
         return try {
             val publicKey = createRSAPublicKey(modulus, exponent)
-            Jwts.parserBuilder()
-                .setSigningKey(publicKey)
+            Jwts.parser()
+                .verifyWith(publicKey)
                 .build()
-                .parseClaimsJws(token)
+                .parseSignedClaims(token)
         } catch (e: ExpiredJwtException) {
             throw BusinessException(AuthErrorCode.IMHERE_KEY_MISMATCH)
         }
@@ -62,7 +62,7 @@ class JjwtVerifyAdapter(
         }
     }
 
-    private fun createRSAPublicKey(modulus: String, exponent: String): Key {
+    private fun createRSAPublicKey(modulus: String, exponent: String): PublicKey {
         try {
             return createKey(modulus, exponent)
         } catch (e: NoSuchAlgorithmException) {
@@ -74,7 +74,7 @@ class JjwtVerifyAdapter(
         }
     }
 
-    private fun createKey(modulus: String, exponent: String): Key {
+    private fun createKey(modulus: String, exponent: String): PublicKey {
         val keyFactory = KeyFactory.getInstance("RSA")
         val decodeN = Base64.getUrlDecoder().decode(modulus)
         val decodeE = Base64.getUrlDecoder().decode(exponent)

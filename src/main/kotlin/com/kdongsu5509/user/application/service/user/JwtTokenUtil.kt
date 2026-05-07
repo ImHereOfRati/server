@@ -68,10 +68,10 @@ class JwtTokenUtil(private val jwtProperties: JwtProperties) {
     }
 
     private fun parseClaims(token: String): Claims {
-        return Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        return Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(token)
-            .body
+            .parseSignedClaims(token)
+            .payload
     }
 }

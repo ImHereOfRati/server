@@ -1,9 +1,0 @@
-global:
-  scrape_interval: 30s
-  evaluation_interval: 30s
-
-scrape_configs:
-  - job_name: "imhere"
-    metrics_path: "/xCJR4cpW3VSxH8esujE2maQUJaaF6fSsPVBmMgAIcDmW9VUW9wvrrUP6jq8gF8aSVuyKfE7fEvSzkI842FH3NhBFG3UN5Zns8Vw6rz75h7dRgb2R6EMBVT6yMG8a5WDb/prometheus"
-    static_configs:
-      - targets: [ "dsko:4861" ]

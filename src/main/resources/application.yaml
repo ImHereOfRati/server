@@ -17,9 +17,10 @@ spring:
           physical-strategy: org.hibernate.boot.model.naming.CamelToUnderscoresNamingStrategy
 
 logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
   structured:
     format:
-      console: ecs
       file: ecs
   file:
     name: logs/imhere.log
@@ -40,3 +41,15 @@ logging:
     io.lettuce: WARN
     com.google.firebase: WARN
     p6spy: WARN               # SQL logging — enable in dev profile if needed
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1
+    baggage:
+      enabled: true
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces

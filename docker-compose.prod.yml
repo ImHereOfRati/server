@@ -1,7 +1,7 @@
 version: '3.8'
 
 # Production compose — App(Spring) + Nginx(reverse proxy) + Grafana Alloy
-# Observability: Alloy가 logs/metrics를 Grafana Cloud로 push, traces는 App에서 OTLP로 직접 push
+# Observability: App → Alloy → Grafana Cloud (logs/metrics/traces 모두 Alloy 경유)
 # Redis / RabbitMQ / MySQL: 별도 인프라 EC2 (이 compose에는 포함되지 않음)
 #
 # Required .env on EC2 (EC2_DEPLOY_PATH/.env):
@@ -12,10 +12,10 @@ version: '3.8'
 #   DB_USER, DB_PASSWORD
 #   REDIS_PASSWORD
 #   RABBITMQ_USER, RABBITMQ_PASSWORD
-#   # Grafana Cloud (Alloy → Loki/Prometheus, App → Tempo)
+#   # Grafana Cloud (Alloy → Loki/Prometheus/Tempo)
 #   GRAFANA_CLOUD_LOKI_ENDPOINT, GRAFANA_CLOUD_LOKI_USER, GRAFANA_CLOUD_LOKI_API_KEY
 #   GRAFANA_CLOUD_PROM_ENDPOINT, GRAFANA_CLOUD_PROM_USER, GRAFANA_CLOUD_PROM_API_KEY
-#   GRAFANA_CLOUD_TEMPO_ENDPOINT, GRAFANA_CLOUD_TEMPO_AUTH_BASE64
+#   GRAFANA_CLOUD_TEMPO_ENDPOINT, GRAFANA_CLOUD_TEMPO_USER, GRAFANA_CLOUD_TEMPO_API_KEY
 
 services:
   dsko:
@@ -43,10 +43,12 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       # Firebase 키 경로 — ClassPathResource 대신 파일시스템 경로 사용
       - FIREBASE_PATH=file:/app/secrets/imhereFirebaseKey.json
-      # OpenTelemetry → Grafana Cloud Tempo (OTel SDK 표준 env var)
-      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=${GRAFANA_CLOUD_TEMPO_ENDPOINT}
-      - OTEL_EXPORTER_OTLP_TRACES_HEADERS=Authorization=Basic ${GRAFANA_CLOUD_TEMPO_AUTH_BASE64}
+      # OpenTelemetry → Alloy (OTLP HTTP). Alloy가 Tempo로 forward
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - OTEL_SERVICE_NAME=imhere
+      - OTEL_TRACES_SAMPLER=parentbased_traceidratio
+      - OTEL_TRACES_SAMPLER_ARG=0.1
     networks:
       - app-network
     restart: unless-stopped
@@ -67,7 +69,10 @@ services:
     depends_on:
       - dsko
 
-  # Grafana Alloy: Docker 컨테이너 stdout 로그 및 App 메트릭 수집 → Grafana Cloud
+  # Grafana Alloy: 단일 수집 게이트웨이
+  #   - logs:    Docker stdout → Loki
+  #   - metrics: App management 포트 scrape → Prometheus
+  #   - traces:  App OTLP(4317/4318) 수신 → Tempo
   alloy:
     image: grafana/alloy:latest
     container_name: alloy-container
@@ -81,6 +86,9 @@ services:
       - GRAFANA_CLOUD_PROM_ENDPOINT=${GRAFANA_CLOUD_PROM_ENDPOINT}
       - GRAFANA_CLOUD_PROM_USER=${GRAFANA_CLOUD_PROM_USER}
       - GRAFANA_CLOUD_PROM_API_KEY=${GRAFANA_CLOUD_PROM_API_KEY}
+      - GRAFANA_CLOUD_TEMPO_ENDPOINT=${GRAFANA_CLOUD_TEMPO_ENDPOINT}
+      - GRAFANA_CLOUD_TEMPO_USER=${GRAFANA_CLOUD_TEMPO_USER}
+      - GRAFANA_CLOUD_TEMPO_API_KEY=${GRAFANA_CLOUD_TEMPO_API_KEY}
     command: run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345
     networks:
       - app-network

@@ -42,14 +42,4 @@ logging:
     com.google.firebase: WARN
     p6spy: WARN               # SQL logging — enable in dev profile if needed
 
-management:
-  tracing:
-    sampling:
-      probability: 0.1
-    baggage:
-      enabled: true
-  opentelemetry:
-    tracing:
-      export:
-        otlp:
-          endpoint: http://localhost:4318/v1/traces
+# 트레이싱은 OTel Spring Boot Starter 가 OTEL_* 표준 env var로 설정 (docker-compose.prod.yml 참고)

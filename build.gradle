@@ -68,6 +68,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
+    //Tracing — OpenTelemetry SDK + 자동 계측 (Spring Boot Starter)
+    implementation platform('io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.10.0')
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter'
+
     // DB & EXTERNAL
     implementation 'com.mysql:mysql-connector-j'
     developmentOnly 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'

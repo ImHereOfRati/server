@@ -1,7 +1,0 @@
-# Use this workspace to collaborate
-workspace:
-  id: 08efbf03-474f-4192-a253-52c88a6125f7
-
-localResources:
-  specs:
-    - ..\src\main\resources\static\docs\openapi3.yaml

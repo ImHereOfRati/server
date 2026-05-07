@@ -128,6 +128,9 @@ jobs:
           cat << 'EOF' > /tmp/imhere-secrets/config/application-secret.yaml
           ${{ secrets.APP_SECRET_YAML }}
           EOF
+          cat << 'EOF' > /tmp/imhere-secrets/config/application-prod.yaml
+          ${{ secrets.APP_PROD_YAML }}
+          EOF
           cat << 'EOF' > /tmp/imhere-secrets/secrets/imhereFirebaseKey.json
           ${{ secrets.FIREBASE_JSON_KEY }}
           EOF
@@ -141,6 +144,7 @@ jobs:
             /tmp/imhere-secrets/config/application-datasource.yaml \
             /tmp/imhere-secrets/config/application-monitoring.yaml \
             /tmp/imhere-secrets/config/application-secret.yaml \
+            /tmp/imhere-secrets/config/application-prod.yaml \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${EC2_DEPLOY_PATH}/config/"
           scp -i ~/.ssh/deploy_key \
             /tmp/imhere-secrets/secrets/imhereFirebaseKey.json \

@@ -21,6 +21,7 @@ services:
       - ./config:/app/config:ro
       - ./secrets/imhereFirebaseKey.json:/app/secrets/imhereFirebaseKey.json:ro
     environment:
+      - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATA_REDIS_HOST=${INFRA_HOST}
       - SPRING_DATA_REDIS_PORT=6379
       - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}

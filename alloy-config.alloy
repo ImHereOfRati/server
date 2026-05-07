@@ -1,12 +1,16 @@
-// Grafana Alloy 설정 — Docker 컨테이너 stdout 로그를 수집하여 Grafana Cloud Loki로 전송.
+// Grafana Alloy 설정 — Docker 컨테이너 stdout 로그 및 Prometheus 메트릭 수집
 // 시크릿(엔드포인트/계정/API 키)은 환경변수로 주입한다 — EC2의 .env 참고.
 
-// 1) Docker 데몬에서 실행 중인 컨테이너 메타데이터 수집
+// ---------------------------------------------------------
+// 1. Logs (Docker → Loki)
+// ---------------------------------------------------------
+
+// Docker 데몬에서 실행 중인 컨테이너 메타데이터 수집
 discovery.docker "containers" {
 	host = "unix:///var/run/docker.sock"
 }
 
-// 2) 컨테이너 메타데이터를 Loki 라벨로 매핑
+// 컨테이너 메타데이터를 Loki 라벨로 매핑
 discovery.relabel "containers" {
 	targets = discovery.docker.containers.targets
 
@@ -24,7 +28,7 @@ discovery.relabel "containers" {
 	}
 }
 
-// 3) Docker 데몬에서 컨테이너 stdout/stderr를 tail
+// Docker 데몬에서 컨테이너 stdout/stderr를 tail
 loki.source.docker "default" {
 	host       = "unix:///var/run/docker.sock"
 	targets    = discovery.relabel.containers.output
@@ -35,7 +39,7 @@ loki.source.docker "default" {
 	}
 }
 
-// 4) Grafana Cloud Loki로 push (Basic Auth)
+// Grafana Cloud Loki로 push (Basic Auth)
 loki.write "grafana_cloud" {
 	endpoint {
 		url = sys.env("GRAFANA_CLOUD_LOKI_ENDPOINT")
@@ -43,6 +47,31 @@ loki.write "grafana_cloud" {
 		basic_auth {
 			username = sys.env("GRAFANA_CLOUD_LOKI_USER")
 			password = sys.env("GRAFANA_CLOUD_LOKI_API_KEY")
+		}
+	}
+}
+
+// ---------------------------------------------------------
+// 2. Metrics (App → Prometheus Cloud)
+// ---------------------------------------------------------
+
+// Spring Boot App 메트릭 수집 (Scrape)
+prometheus.scrape "imhere" {
+	targets = [{
+		__address__ = "dsko:4861",
+	}]
+	metrics_path = "/xCJR4cpW3VSxH8esujE2maQUJaaF6fSsPVBmMgAIcDmW9VUW9wvrrUP6jq8gF8aSVuyKfE7fEvSzkI842FH3NhBFG3UN5Zns8Vw6rz75h7dRgb2R6EMBVT6yMG8a5WDb/prometheus"
+	forward_to    = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+// Grafana Cloud Prometheus로 push (Remote Write)
+prometheus.remote_write "grafana_cloud" {
+	endpoint {
+		url = sys.env("GRAFANA_CLOUD_PROM_ENDPOINT")
+
+		basic_auth {
+			username = sys.env("GRAFANA_CLOUD_PROM_USER")
+			password = sys.env("GRAFANA_CLOUD_PROM_API_KEY")
 		}
 	}
 }

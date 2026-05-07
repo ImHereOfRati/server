@@ -15,7 +15,7 @@
 | Runtime       | Java 21                                       |
 | Framework     | Spring Boot 4.0.x                             |
 | Architecture  | Hexagonal (Ports & Adapters)                  |
-| DB            | PostgreSQL + Spring Data JPA + QueryDSL (KSP) |
+| DB            | MySQL + Spring Data JPA + QueryDSL (KSP)      |
 | Cache         | Redis                                         |
 | Message Queue | RabbitMQ                                      |
 | Auth          | Kakao OIDC + JJWT + Spring Security           |

@@ -75,7 +75,7 @@ jobs:
 
       # GitHub OIDC로 IAM role을 assume하여 단기 자격증명을 발급받는다.
       # 정적 access key를 Secret에 보관하지 않으므로 키 만료/노출 위험이 없다.
-      # 사전 셋업: deployment.md의 "AWS OIDC 설정" 절차 참고.
+      # 사전 셋업: docs/cicd.md §4 "AWS OIDC 및 IAM 설정" 참고.
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:

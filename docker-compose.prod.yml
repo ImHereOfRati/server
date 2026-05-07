@@ -1,21 +1,29 @@
 version: '3.8'
 
-# Production compose — App(Spring) + Prometheus only
-# Grafana: use Grafana Cloud (remote_write from Prometheus)
-# Redis / RabbitMQ: separate infra server (docker-compose.infra.yml)
+# Production compose — App(Spring) + Nginx(reverse proxy) + Grafana Alloy
+# Observability: Alloy가 logs/metrics를 Grafana Cloud로 push, traces는 App에서 OTLP로 직접 push
+# Redis / RabbitMQ / MySQL: 별도 인프라 EC2 (이 compose에는 포함되지 않음)
 #
 # Required .env on EC2 (EC2_DEPLOY_PATH/.env):
+#   # Image / infra 호스트
 #   ECR_REGISTRY, ECR_REPOSITORY
 #   INFRA_HOST, DB_HOST, DB_NAME
+#   # 데이터스토어 자격증명
 #   DB_USER, DB_PASSWORD
+#   REDIS_PASSWORD
 #   RABBITMQ_USER, RABBITMQ_PASSWORD
+#   # Grafana Cloud (Alloy → Loki/Prometheus, App → Tempo)
+#   GRAFANA_CLOUD_LOKI_ENDPOINT, GRAFANA_CLOUD_LOKI_USER, GRAFANA_CLOUD_LOKI_API_KEY
+#   GRAFANA_CLOUD_PROM_ENDPOINT, GRAFANA_CLOUD_PROM_USER, GRAFANA_CLOUD_PROM_API_KEY
+#   GRAFANA_CLOUD_TEMPO_ENDPOINT, GRAFANA_CLOUD_TEMPO_AUTH_BASE64
 
 services:
   dsko:
     image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
     container_name: iamhere-server-container
+    # Nginx가 리버스 프록시 역할을 하므로 외부 8080 포트는 더 이상 직접 노출하지 않음
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
       - "127.0.0.1:4861:4861"
     volumes:
       - ./config:/app/config:ro
@@ -42,6 +50,22 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+
+  # Nginx Reverse Proxy (HTTPS & CORS)
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-container
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro # 호스트의 Certbot 인증서 공유
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
+      - dsko
 
   # Grafana Alloy: Docker 컨테이너 stdout 로그 및 App 메트릭 수집 → Grafana Cloud
   alloy:

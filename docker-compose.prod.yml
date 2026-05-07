@@ -35,6 +35,10 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       # Firebase 키 경로 — ClassPathResource 대신 파일시스템 경로 사용
       - FIREBASE_PATH=file:/app/secrets/imhereFirebaseKey.json
+      # OpenTelemetry → Grafana Cloud Tempo (OTel SDK 표준 env var)
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=${GRAFANA_CLOUD_TEMPO_ENDPOINT}
+      - OTEL_EXPORTER_OTLP_TRACES_HEADERS=Authorization=Basic ${GRAFANA_CLOUD_TEMPO_AUTH_BASE64}
+      - OTEL_SERVICE_NAME=imhere
     networks:
       - app-network
     restart: unless-stopped
@@ -52,6 +56,22 @@ services:
       - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=15d"
       - "--web.enable-lifecycle"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Grafana Alloy: Docker 컨테이너 stdout 로그 → Grafana Cloud Loki
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy-container
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./alloy-config.alloy:/etc/alloy/config.alloy:ro
+    environment:
+      - GRAFANA_CLOUD_LOKI_ENDPOINT=${GRAFANA_CLOUD_LOKI_ENDPOINT}
+      - GRAFANA_CLOUD_LOKI_USER=${GRAFANA_CLOUD_LOKI_USER}
+      - GRAFANA_CLOUD_LOKI_API_KEY=${GRAFANA_CLOUD_LOKI_API_KEY}
+    command: run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345
     networks:
       - app-network
     restart: unless-stopped

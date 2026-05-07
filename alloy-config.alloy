@@ -1,0 +1,48 @@
+// Grafana Alloy 설정 — Docker 컨테이너 stdout 로그를 수집하여 Grafana Cloud Loki로 전송.
+// 시크릿(엔드포인트/계정/API 키)은 환경변수로 주입한다 — EC2의 .env 참고.
+
+// 1) Docker 데몬에서 실행 중인 컨테이너 메타데이터 수집
+discovery.docker "containers" {
+	host = "unix:///var/run/docker.sock"
+}
+
+// 2) 컨테이너 메타데이터를 Loki 라벨로 매핑
+discovery.relabel "containers" {
+	targets = discovery.docker.containers.targets
+
+	// 컨테이너 이름 → "container" 라벨 (앞의 "/" 제거)
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/?(.*)"
+		target_label  = "container"
+	}
+
+	// stdout/stderr 구분 → "stream" 라벨
+	rule {
+		source_labels = ["__meta_docker_container_log_stream"]
+		target_label  = "stream"
+	}
+}
+
+// 3) Docker 데몬에서 컨테이너 stdout/stderr를 tail
+loki.source.docker "default" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.containers.output
+	forward_to = [loki.write.grafana_cloud.receiver]
+
+	labels = {
+		"job" = "imhere-server",
+	}
+}
+
+// 4) Grafana Cloud Loki로 push (Basic Auth)
+loki.write "grafana_cloud" {
+	endpoint {
+		url = sys.env("GRAFANA_CLOUD_LOKI_ENDPOINT")
+
+		basic_auth {
+			username = sys.env("GRAFANA_CLOUD_LOKI_USER")
+			password = sys.env("GRAFANA_CLOUD_LOKI_API_KEY")
+		}
+	}
+}

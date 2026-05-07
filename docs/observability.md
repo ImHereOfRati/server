@@ -53,9 +53,9 @@ Docker 컨테이너의 구조화된 로그를 수집합니다.
 
 분산 환경에서의 요청 흐름과 지연 시간을 추적합니다.
 
-- **수집 방식**: 앱(`opentelemetry-spring-boot-starter`)이 OTLP로 Alloy(`alloy:4318`, HTTP/protobuf)에 송신 → Alloy가 gRPC OTLP로 Grafana Cloud Tempo에 forward.
-- **앱 설정**: `OTEL_*` 표준 env var (`docker-compose.prod.yml` 참고). Spring Boot의 Micrometer Tracing 설정은 사용하지 않음.
-- **샘플링**: `OTEL_TRACES_SAMPLER=parentbased_traceidratio`, `OTEL_TRACES_SAMPLER_ARG=0.1` (10%).
+- **수집 방식**: 앱(`spring-boot-starter-opentelemetry` — Spring Boot 4 first-party / Micrometer Tracing → OTel bridge)이 OTLP HTTP로 Alloy(`alloy:4318`)에 송신 → Alloy가 gRPC OTLP로 Grafana Cloud Tempo에 forward.
+- **앱 설정**: 엔드포인트는 `MANAGEMENT_OTLP_TRACING_ENDPOINT` env var (`docker-compose.prod.yml`). 샘플링/baggage는 `management.tracing.*` (`application.yaml`).
+- **샘플링**: `management.tracing.sampling.probability: 0.1` (10%).
 
 ---
 
@@ -81,4 +81,4 @@ Docker 컨테이너의 구조화된 로그를 수집합니다.
 |------------|--------------------------------------------------------------------|
 | 로그가 보이지 않음 | `docker logs alloy-container`에서 Loki 전송 실패 여부 확인. Docker 소켓 권한 확인. |
 | 메트릭 누락     | App의 관리 포트(4861) 활성화 여부 및 Alloy의 scrape 설정 확인.                     |
-| 트레이스 연결 끊김 | (1) Alloy `.env`의 `GRAFANA_CLOUD_TEMPO_ENDPOINT` (host:443 형식) / `_USER` / `_API_KEY` 확인. (2) 앱의 `OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318` 도달성 확인. (3) `docker logs alloy-container`에서 OTLP receiver/exporter 에러 확인. |
+| 트레이스 연결 끊김 | (1) Alloy `.env`의 `GRAFANA_CLOUD_TEMPO_ENDPOINT` (host:443 형식) / `_USER` / `_API_KEY` 확인. (2) 앱의 `MANAGEMENT_OTLP_TRACING_ENDPOINT=http://alloy:4318/v1/traces` 도달성 확인. (3) `docker logs alloy-container`에서 OTLP receiver/exporter 에러 확인. |

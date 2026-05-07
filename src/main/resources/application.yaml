@@ -42,4 +42,9 @@ logging:
     com.google.firebase: WARN
     p6spy: WARN               # SQL logging — enable in dev profile if needed
 
-# 트레이싱은 OTel Spring Boot Starter 가 OTEL_* 표준 env var로 설정 (docker-compose.prod.yml 참고)
+management:
+  tracing:
+    sampling:
+      probability: 0.1
+    baggage:
+      enabled: true

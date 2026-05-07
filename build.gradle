@@ -68,9 +68,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
-    //Tracing — OpenTelemetry SDK + 자동 계측 (Spring Boot Starter)
-    implementation platform('io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.10.0')
-    implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter'
+    //Tracing — Spring Boot 4 첫 번째 당사자 OTel 통합 (Micrometer Tracing → OTLP bridge)
+    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
 
     // DB & EXTERNAL
     implementation 'com.mysql:mysql-connector-j'

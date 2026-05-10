@@ -33,7 +33,12 @@ enum class AuthError(
 
     // --- 9xx: Internal Error (500) ---
     KAKAO_OIDC_PUBLIC_KEY_FETCH_FAILED(ErrorReason.INTERNAL_SERVER_ERROR, "AUTH_901", "카카오 서버로부터 공개키를 가져오는데 실패했습니다."),
-    KAKAO_OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED(ErrorReason.INTERNAL_SERVER_ERROR, "AUTH_902", "Redis로부터 공개키를 가져오는데 실패했습니다."),
+    KAKAO_OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED(
+        ErrorReason.INTERNAL_SERVER_ERROR,
+        "AUTH_902",
+        "Redis로부터 공개키를 가져오는데 실패했습니다."
+    ),
     KAKAO_OIDC_PUBLIC_KEY_NOT_FOUND(ErrorReason.INTERNAL_SERVER_ERROR, "AUTH_903", "공개키 목록에서 일치하는 키를 찾을 수 없습니다."),
-    SOCIAL_LOGIN_COMMUNICATION_ERROR(ErrorReason.INTERNAL_SERVER_ERROR, "AUTH_904", "소셜 로그인 서버와의 통신 중 오류가 발생했습니다.")
+    SOCIAL_LOGIN_COMMUNICATION_ERROR(ErrorReason.INTERNAL_SERVER_ERROR, "AUTH_904", "소셜 로그인 서버와의 통신 중 오류가 발생했습니다."),
+    OIDC_KEY_PARSING_ERROR(ErrorReason.INTERNAL_SERVER_ERROR, "AUTH_905", "OIDC 키 파싱 중 오류가 발생했습니다")
 }

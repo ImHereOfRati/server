@@ -1,7 +1,7 @@
 package com.kdongsu5509.user.application.dto
 
 data class AuthenticationProcessResult(
-    val statusCode: Int,
+    val isNewUser: Boolean,
     val accessToken: String,
     val refreshToken: String
 )

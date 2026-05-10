@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.adapter.`in`.web.user.dto
+package com.kdongsu5509.user.adapter.`in`.web.user.dto.response
 
 import java.util.*
 

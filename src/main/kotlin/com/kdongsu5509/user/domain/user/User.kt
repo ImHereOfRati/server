@@ -11,19 +11,8 @@ data class User(
     var status: UserStatus
 ) {
     companion object {
-        fun createPendingUser(
-            email: String,
-            nickname: String,
-            oauthProvider: OAuth2Provider
-        ): User {
-            return User(
-                id = null,
-                email = email,
-                nickname = nickname,
-                oauthProvider = oauthProvider,
-                role = UserRole.NORMAL,
-                status = UserStatus.PENDING
-            )
+        fun createWaitingForAgreementUser(email: String, nickname: String, oauthProvider: OAuth2Provider): User {
+            return User(null, email, nickname, oauthProvider, UserRole.NORMAL, UserStatus.PENDING)
         }
     }
 }

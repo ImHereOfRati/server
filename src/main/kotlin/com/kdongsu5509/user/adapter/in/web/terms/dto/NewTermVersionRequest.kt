@@ -8,16 +8,16 @@ import java.time.LocalDateTime
 
 data class NewTermVersionRequest(
     @field:NotNull(message = "약관 정의 ID는 필수입니다.")
-    @field:Positive(message = "약관 정의 ID는 양수여야 합니다.")
+    @field:Positive(message = "올바른 약관 정의 ID를 입력해주세요.")
     val termDefinitionId: Long,
 
-    @field:NotBlank(message = "버전 정보는 필수입니다.")
+    @field:NotBlank(message = "약관 버전 정보는 필수입니다.")
     val version: String,
 
-    @field:NotBlank(message = "약관 본문 내용은 필수입니다.")
+    @field:NotBlank(message = "약관 내용은 필수입니다.")
     val content: String,
 
-    @field:NotNull(message = "시행일 지정은 필수입니다.")
+    @field:NotNull(message = "약관 시행일은 필수입니다.")
     @field:FutureOrPresent(message = "시행일은 현재 또는 미래 날짜여야 합니다.")
     val effectiveDate: LocalDateTime
 )

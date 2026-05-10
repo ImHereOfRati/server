@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.adapter.`in`.web.friends.dto
+package com.kdongsu5509.user.adapter.`in`.web.friends.dto.response
 
 import com.kdongsu5509.user.domain.friend.FriendRestriction
 

@@ -3,7 +3,6 @@ package com.kdongsu5509.user.adapter.out.auth.jwt
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.application.dto.JwtTokenClaims
 import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenParserPort
-import com.kdongsu5509.user.application.service.user.auth.JwtClaimKeys
 import com.kdongsu5509.user.exception.AuthError
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException

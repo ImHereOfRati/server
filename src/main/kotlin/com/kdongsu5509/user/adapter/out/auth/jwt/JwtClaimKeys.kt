@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.application.service.user
+package com.kdongsu5509.user.adapter.out.auth.jwt
 
 object JwtClaimKeys {
     const val CLAIM_CATEGORY = "category"

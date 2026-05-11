@@ -11,13 +11,13 @@ data class UserResponse(
     val nickname: String
 ) {
     companion object {
-        fun convertToUserResponse(user: User): UserResponse = UserResponse(
-            id = extractIdOrThrowBusinessException(user),
+        fun fromDomain(user: User): UserResponse = UserResponse(
+            id = extractIdOrThrow(user),
             email = user.email,
             nickname = user.nickname
         )
 
-        private fun extractIdOrThrowBusinessException(user: User): UUID {
+        private fun extractIdOrThrow(user: User): UUID {
             return user.id ?: let { UserError.USER_ID_NULL.throwIt() }
         }
     }

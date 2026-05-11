@@ -2,7 +2,6 @@ package com.kdongsu5509.user.adapter.out.auth.jwt
 
 import com.common.testUtil.TestJwtBuilder
 import com.kdongsu5509.support.exception.type.UnauthorizedException
-import com.kdongsu5509.user.application.service.user.auth.JwtClaimKeys
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.assertj.core.api.Assertions.assertThat

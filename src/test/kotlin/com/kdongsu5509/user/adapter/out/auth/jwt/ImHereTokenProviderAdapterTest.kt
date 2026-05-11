@@ -1,7 +1,6 @@
-package com.kdongsu5509.user.application.service.user.auth
+package com.kdongsu5509.user.adapter.out.auth.jwt
 
 import com.kdongsu5509.support.exception.type.UnauthorizedException
-import com.kdongsu5509.user.adapter.out.auth.jwt.ImHereJwtProperties
 import com.kdongsu5509.user.application.dto.JwtTokenClaims
 import com.kdongsu5509.user.application.port.out.user.CachePort
 import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenIssuerPort
@@ -22,7 +21,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
-class ImHereJWTTokenProviderTest {
+class ImHereTokenProviderAdapterTest {
 
     companion object {
         const val USER_EMAIL = "test@example.com"
@@ -34,14 +33,11 @@ class ImHereJWTTokenProviderTest {
         val TEST_UUID: UUID = UUID.randomUUID()
     }
 
-    @Mock
-    private lateinit var tokenIssuer: ImHereTokenIssuerPort
-    @Mock
-    private lateinit var tokenParser: ImHereTokenParserPort
-    @Mock
-    private lateinit var cachePort: CachePort
+    @Mock private lateinit var tokenIssuer: ImHereTokenIssuerPort
+    @Mock private lateinit var tokenParser: ImHereTokenParserPort
+    @Mock private lateinit var cachePort: CachePort
 
-    private lateinit var tokenProvider: ImHereJWTTokenProvider
+    private lateinit var tokenProvider: ImHereTokenProviderAdapter
     private lateinit var jwtTokenClaims: JwtTokenClaims
 
     @BeforeEach
@@ -51,8 +47,8 @@ class ImHereJWTTokenProviderTest {
             accessExpirationMinutes = 60,
             refreshExpirationDays = REFRESH_EXP_DAYS
         )
-
-        tokenProvider = ImHereJWTTokenProvider(tokenIssuer, tokenParser, cachePort, properties)
+        
+        tokenProvider = ImHereTokenProviderAdapter(tokenIssuer, tokenParser, cachePort, properties)
 
         jwtTokenClaims = JwtTokenClaims(
             uid = TEST_UUID,
@@ -164,6 +160,8 @@ class ImHereJWTTokenProviderTest {
             tokenProvider.reissueByEmail(USER_EMAIL)
         }
     }
+
+    // --- Helper Methods ---
 
     private fun givenTokenIssuanceSucceeds() {
         given(tokenIssuer.createAccessToken(jwtTokenClaims)).willReturn(ACCESS_TOKEN)

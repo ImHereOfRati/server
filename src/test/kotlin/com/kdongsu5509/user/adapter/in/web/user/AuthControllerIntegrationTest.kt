@@ -4,7 +4,6 @@ import com.common.testUtil.ControllerTestSupport
 import com.common.testUtil.TestJwtBuilder
 import com.epages.restdocs.apispec.ResourceDocumentation.resource
 import com.epages.restdocs.apispec.ResourceSnippetParameters
-import com.kdongsu5509.support.exception.AuthErrorCode
 import com.kdongsu5509.user.adapter.out.auth.oauth.KakaoOauthClient
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKey
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKeyResponse
@@ -13,6 +12,7 @@ import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.User
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
+import com.kdongsu5509.user.exception.AuthError
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -53,7 +53,7 @@ class AuthControllerIntegrationTest : ControllerTestSupport() {
     }
 
     @Test
-    @DisplayName("신규 유저는 kakao oauth를 통해 201 상태코드로 가입된다")
+    @DisplayName("신규 사용자는 kakao oauth를 통해 201 상태코드로 가입된다")
     fun login_success_new_member() {
         // given
         val idToken = TestJwtBuilder.buildValidIdTokenWithCustomEmail("new-user@kakao.com")
@@ -72,9 +72,9 @@ class AuthControllerIntegrationTest : ControllerTestSupport() {
                             .description(
                                 """
                                 카카오 OIDC ID 토큰으로 로그인합니다.
-                                - 신규 유저: 201 Created, status=PENDING 상태로 가입됩니다.
-                                - PENDING 상태에서 모든 필수 약관에 동의 완료 시 status가 ACTIVE로 전환됩니다.
-                                - 기존 유저: 200 OK, accessToken/refreshToken이 재발급됩니다.
+                                - 신규 사용자: 201 Created, status=PENDING 상태로 가입됩니다.
+                                - PENDING 상태에서 모든 필수 약관에 대한 동의 완료 시 status가 ACTIVE로 전환됩니다.
+                                - 기존 사용자: 200 OK, accessToken/refreshToken이 재발급됩니다.
                                 """.trimIndent()
                             )
                             .build()
@@ -84,7 +84,7 @@ class AuthControllerIntegrationTest : ControllerTestSupport() {
     }
 
     @Test
-    @DisplayName("PENDING인 사용자도 201 상태코드를 반환한다")
+    @DisplayName("PENDING 사용자도 201 상태코드를 반환한다")
     fun login_success_pending_member() {
         // given
         val email = "pending@kakao.com"
@@ -98,7 +98,7 @@ class AuthControllerIntegrationTest : ControllerTestSupport() {
     }
 
     @Test
-    @DisplayName("기존 유저는 kakao oauth를 통해 200 상태코드로 로그인된다")
+    @DisplayName("기존 사용자는 kakao oauth를 통해 200 상태코드로 로그인된다")
     fun login_success_existing_member() {
         // given
         saveUser(DEFAULT_TEST_EMAIL, UserStatus.ACTIVE)
@@ -116,8 +116,8 @@ class AuthControllerIntegrationTest : ControllerTestSupport() {
                     resource(
                         ResourceSnippetParameters.builder()
                             .tag("인증")
-                            .summary("카카오 OAuth 로그인 / 기존 유저")
-                            .description("기존 ACTIVE 유저 로그인. 200 OK와 함께 accessToken/refreshToken이 재발급됩니다.")
+                            .summary("카카오 OAuth 로그인 / 기존 가입")
+                            .description("기존 ACTIVE 사용자 로그인. 200 OK와 함께 accessToken/refreshToken이 재발급됩니다.")
                             .build()
                     )
                 )
@@ -125,22 +125,22 @@ class AuthControllerIntegrationTest : ControllerTestSupport() {
     }
 
     @Test
-    @DisplayName("잘못된 토큰에 대해서는 오류 코드를 반환한다.")
+    @DisplayName("잘못된 토큰에 대해서는 오류 코드를 반환한다")
     fun login_fail_with_invalid_token() {
         // given
         val invalidToken = "invalid_token"
 
         // when & then
         performLogin(invalidToken)
-            .andExpect(status().is4xxClientError)
-            .andExpect(jsonPath("$.code").value(400))
-            .andExpect(jsonPath("$.data.message").value(AuthErrorCode.OIDC_INVALID.message))
+            .andExpect(status().isUnauthorized)
+            .andExpect(jsonPath("$.code").value("GLOBAL-401"))
+            .andExpect(jsonPath("$.message").value("잘못된 토큰 형식입니다."))
     }
 
     @Test
     @WithMockUser(username = DEFAULT_TEST_EMAIL)
-    @DisplayName("정상적인 refreshToken은 잘 통과한다.")
-    fun reissue_okay() {
+    @DisplayName("정상적인 refreshToken은 재발급된다")
+    fun reissue_success() {
         // given
         val refreshToken = obtainRefreshToken()
         val requestBody = jsonMapper.writeValueAsString(
@@ -186,7 +186,7 @@ class AuthControllerIntegrationTest : ControllerTestSupport() {
 
     private fun saveUser(email: String, status: UserStatus) {
         userSavePort.save(
-            User(UUID.randomUUID(), email, "테스터", OAuth2Provider.KAKAO, UserRole.NORMAL, status = status)
+            User(UUID.randomUUID(), email, "테스트", OAuth2Provider.KAKAO, UserRole.NORMAL, status = status)
         )
     }
 
@@ -214,7 +214,7 @@ class AuthControllerIntegrationTest : ControllerTestSupport() {
         )
 
         val mockResponse = OIDCPublicKeyResponse(keys = listOf(mockKey))
-        `when`(kakaoOauthClient.getPublicKeyFromProvider()).thenReturn(mockResponse)
+        `when`(kakaoOauthClient.fetchPublicKey()).thenReturn(mockResponse)
         redisTemplate.opsForValue().set(kakaoCacheKey, mockResponse)
     }
 }

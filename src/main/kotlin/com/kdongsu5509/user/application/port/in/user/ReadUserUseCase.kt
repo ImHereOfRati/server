@@ -1,8 +1,8 @@
 package com.kdongsu5509.user.application.port.`in`.user
 
-import com.kdongsu5509.user.application.dto.UserInformation
+import com.kdongsu5509.user.application.dto.UserResponse
 
 interface ReadUserUseCase {
-    fun searchPotentialFriendsUser(userEmail: String, keyword: String): List<UserInformation>
-    fun searchMe(email: String): UserInformation
+    fun findByEmailAndNickname(userEmail: String, keyword: String): List<UserResponse>
+    fun findByEmail(email: String): UserResponse
 }

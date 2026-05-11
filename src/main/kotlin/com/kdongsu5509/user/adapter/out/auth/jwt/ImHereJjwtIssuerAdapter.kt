@@ -1,7 +1,7 @@
 package com.kdongsu5509.user.adapter.out.auth.jwt
 
 import com.kdongsu5509.user.application.dto.JwtTokenClaims
-import com.kdongsu5509.user.application.port.out.user.auth.TokenIssuerPort
+import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenIssuerPort
 import com.kdongsu5509.user.application.service.user.auth.JwtClaimKeys
 import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Component
@@ -20,7 +20,7 @@ import java.util.*
 class ImHereJjwtIssuerAdapter(
     private val imHereJwtProperties: ImHereJwtProperties,
     private val keyProvider: ImHereJjwtKeyProvider
-) : TokenIssuerPort {
+) : ImHereTokenIssuerPort {
 
     private val zoneID: ZoneId = ZoneId.systemDefault()
 

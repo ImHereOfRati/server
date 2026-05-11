@@ -1,8 +1,10 @@
 package com.kdongsu5509.user.adapter.`in`.web.user
 
-import com.kdongsu5509.support.response.APIResponse
+import com.kdongsu5509.support.response.APIResponseBody
+import com.kdongsu5509.support.response.toOkResponse
 import com.kdongsu5509.user.application.port.`in`.user.ForceLogoutUseCase
 import com.kdongsu5509.user.application.port.`in`.user.ManageUserStatusUseCase
+import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
@@ -14,20 +16,20 @@ class UserAdminController(
     private val manageUserStatusUseCase: ManageUserStatusUseCase
 ) {
     @DeleteMapping("/{email}/token")
-    fun forceLogout(@PathVariable email: String): APIResponse<Unit> {
+    fun forceLogout(@PathVariable email: String): ResponseEntity<APIResponseBody<Unit>> {
         forceLogoutUseCase.forceLogout(email)
-        return APIResponse.success()
+        return Unit.toOkResponse()
     }
 
     @PostMapping("/{email}/block")
-    fun blockUser(@PathVariable email: String): APIResponse<Unit> {
+    fun blockUser(@PathVariable email: String): ResponseEntity<APIResponseBody<Unit>> {
         manageUserStatusUseCase.blockUser(email)
-        return APIResponse.success()
+        return Unit.toOkResponse()
     }
 
     @DeleteMapping("/{email}/block")
-    fun unblockUser(@PathVariable email: String): APIResponse<Unit> {
+    fun unblockUser(@PathVariable email: String): ResponseEntity<APIResponseBody<Unit>> {
         manageUserStatusUseCase.unblockUser(email)
-        return APIResponse.success()
+        return Unit.toOkResponse()
     }
 }

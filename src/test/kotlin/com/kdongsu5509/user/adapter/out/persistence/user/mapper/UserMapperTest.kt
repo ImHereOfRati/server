@@ -17,20 +17,20 @@ class UserMapperTest {
 
     @ParameterizedTest
     @EnumSource(UserStatus::class)
-    @DisplayName("Domain 객체를 JpaEntity로 올바르게 변환해야 한다")
-    fun shouldMapDomainToJpaEntity(userStatus: UserStatus) {
+    @DisplayName("도메인 모델을 JPA 엔티티로 성공적으로 변환한다")
+    fun toJpaEntity_success(userStatus: UserStatus) {
         // given
         val domainUser = User(
             id = UUID.randomUUID(),
             email = "test@example.com",
-            nickname = "동수",
+            nickname = "테스터",
             oauthProvider = OAuth2Provider.KAKAO,
             role = UserRole.NORMAL,
             status = userStatus
         )
 
         // when
-        val jpaEntity = userMapper.mapToJpaEntity(domainUser)
+        val jpaEntity = userMapper.toJpaEntity(domainUser)
 
         // then
         assertThat(jpaEntity.email).isEqualTo(domainUser.email)
@@ -42,19 +42,19 @@ class UserMapperTest {
 
     @ParameterizedTest
     @EnumSource(UserStatus::class)
-    @DisplayName("기본적인 jpaEntity를 Domain 객체로 올바르게 변환해야 한다")
-    fun shouldMapJpaEntityToDomain(userStatus: UserStatus) {
+    @DisplayName("JPA 엔티티를 도메인 모델로 성공적으로 변환한다")
+    fun toDomain_success(userStatus: UserStatus) {
         // given
         val jpaEntity = UserJpaEntity(
             "test@example.com",
-            "동수",
+            "테스터",
             UserRole.NORMAL,
             OAuth2Provider.KAKAO,
             userStatus
         )
 
         // when
-        val domainUser = userMapper.mapToDomainEntity(jpaEntity)
+        val domainUser = userMapper.toDomain(jpaEntity)
 
         // then
         assertThat(domainUser.email).isEqualTo(jpaEntity.email)

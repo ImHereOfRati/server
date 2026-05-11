@@ -5,5 +5,4 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-interface SpringDataUserAgreementRepository : JpaRepository<UserAgreementJpaEntity, UUID> {
-}
+interface SpringDataUserAgreementRepository : JpaRepository<UserAgreementJpaEntity, UUID>

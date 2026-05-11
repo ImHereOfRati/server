@@ -1,7 +1,6 @@
 package com.kdongsu5509.user.adapter.out.persistence.user.adapter
 
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.UserErrorCode
+import com.kdongsu5509.support.exception.type.NotFoundException
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.user.mapper.UserMapper
@@ -28,7 +27,7 @@ class UserUpdatePersistenceAdapter(
     override fun updateNickname(userEmail: String, newNickname: String): User {
         val queryResult = findUserJpaEntity(userEmail)
         queryResult.changeNickname(newNickname)
-        return userMapper.mapToDomainEntity(
+        return userMapper.toDomain(
             springDataUserRepository.save(queryResult)
         )
     }
@@ -47,6 +46,6 @@ class UserUpdatePersistenceAdapter(
 
     private fun findUserJpaEntity(userEmail: String): UserJpaEntity {
         return springDataUserRepository.findByEmail(userEmail)
-            ?: throw BusinessException(UserErrorCode.USER_NOT_FOUND)
+            ?: throw NotFoundException("사용자를 찾을 수 없습니다.")
     }
 }

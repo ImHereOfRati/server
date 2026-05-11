@@ -1,7 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.user.adapter
 
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.UserErrorCode
+import com.kdongsu5509.support.exception.BaseException
+import com.kdongsu5509.support.exception.ErrorReason
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.user.mapper.UserMapper
@@ -26,8 +26,8 @@ class UserUpdatePersistenceAdapterBlockTest @Autowired constructor(
 ) {
 
     @Test
-    @DisplayName("ACTIVE 유저를 BLOCKED로 차단한다")
-    fun block_activeUser_success() {
+    @DisplayName("ACTIVE 사용자를 BLOCKED로 차단한다")
+    fun block_success() {
         // given
         val email = "active@kakao.com"
         springDataUserRepository.save(userEntity(email, UserStatus.ACTIVE))
@@ -41,17 +41,18 @@ class UserUpdatePersistenceAdapterBlockTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("존재하지 않는 유저 차단 시 예외가 발생한다")
-    fun block_userNotFound_throwsException() {
+    @DisplayName("존재하지 않는 사용자 차단 시 예외가 발생한다")
+    fun block_fail_when_user_not_found() {
+        // when & then
         assertThatThrownBy { adapter.block("nobody@kakao.com") }
-            .isInstanceOf(BusinessException::class.java)
-            .extracting("errorCode")
-            .isEqualTo(UserErrorCode.USER_NOT_FOUND)
+            .isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 
     @Test
-    @DisplayName("BLOCKED 유저를 ACTIVE로 차단 해제한다")
-    fun unblock_blockedUser_success() {
+    @DisplayName("BLOCKED 사용자를 ACTIVE로 차단 해제한다")
+    fun unblock_success() {
         // given
         val email = "blocked@kakao.com"
         springDataUserRepository.save(userEntity(email, UserStatus.BLOCKED))
@@ -65,17 +66,18 @@ class UserUpdatePersistenceAdapterBlockTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("존재하지 않는 유저 차단 해제 시 예외가 발생한다")
-    fun unblock_userNotFound_throwsException() {
+    @DisplayName("존재하지 않는 사용자 차단 해제 시 예외가 발생한다")
+    fun unblock_fail_when_user_not_found() {
+        // when & then
         assertThatThrownBy { adapter.unblock("nobody@kakao.com") }
-            .isInstanceOf(BusinessException::class.java)
-            .extracting("errorCode")
-            .isEqualTo(UserErrorCode.USER_NOT_FOUND)
+            .isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 
     private fun userEntity(email: String, status: UserStatus) = UserJpaEntity(
         email = email,
-        nickname = "테스터",
+        nickname = "테스트",
         provider = OAuth2Provider.KAKAO,
         role = UserRole.NORMAL,
         status = status

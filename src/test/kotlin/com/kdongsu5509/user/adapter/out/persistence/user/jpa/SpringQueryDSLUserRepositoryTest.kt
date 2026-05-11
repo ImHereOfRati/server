@@ -1,11 +1,11 @@
 package com.kdongsu5509.user.adapter.out.persistence.user.jpa
 
+import com.kdongsu5509.support.config.QueryDslConfig
 import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
-import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
-import org.junit.jupiter.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -13,15 +13,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import java.util.*
 
 @ActiveProfiles("test")
 @DataJpaTest
-@Import(SpringQueryDSLUserRepositoryTest.TestConfig::class)
+@Import(SpringQueryDSLUserRepository::class, QueryDslConfig::class)
 class SpringQueryDSLUserRepositoryTest @Autowired constructor(
     private val em: EntityManager,
     private val userRepository: SpringQueryDSLUserRepository
@@ -36,16 +34,6 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
         fun nickname(idx: Any) = "$DEFAULT_NICKNAME_PREFIX$idx"
     }
 
-    @TestConfiguration
-    class TestConfig(private val em: EntityManager) {
-        @Bean
-        fun jpaQueryFactory() = JPAQueryFactory(em)
-
-        @Bean
-        fun springQueryDSLUserRepository(jpaQueryFactory: JPAQueryFactory) =
-            SpringQueryDSLUserRepository(jpaQueryFactory)
-    }
-
     @BeforeEach
     fun setUp() {
         createTestOwner()
@@ -54,53 +42,58 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
         saveAll(activeUsers + pendingUsers)
     }
 
-    /**
-     * findUserByEmail
-     */
     @ParameterizedTest
     @ValueSource(ints = [1, 2, 3, 4, 5])
     @DisplayName("상태와 관계없이 email을 사용하여 조회한다")
-    fun findByEmail_success(idx: Int) {
+    fun findUserByEmail_success(idx: Int) {
+        // given
         val targetEmail = email(idx)
+
+        // when
         val result = userRepository.findUserByEmail(targetEmail)
 
-        Assertions.assertNotNull(result)
-        Assertions.assertEquals(targetEmail, result!!.email)
+        // then
+        assertThat(result).isNotNull
+        assertThat(result!!.email).isEqualTo(targetEmail)
     }
 
-    /**
-     * findActiveUserByEmail
-     */
     @ParameterizedTest
     @ValueSource(ints = [1, 2, 3])
     @DisplayName("ACTIVE 상태의 사용자는 이메일로 검색된다")
-    fun findActiveUserByEmail_active(idx: Int) {
+    fun findActiveUserByEmail_success(idx: Int) {
+        // when
         val result = userRepository.findActiveUserByEmail(email(idx))
-        Assertions.assertNotNull(result)
+
+        // then
+        assertThat(result).isNotNull
     }
 
     @ParameterizedTest
     @ValueSource(ints = [4, 5, 999])
     @DisplayName("ACTIVE가 아니거나 존재하지 않으면 검색되지 않는다")
     fun findActiveUserByEmail_fail(idx: Int) {
+        // when
         val result = userRepository.findActiveUserByEmail(email(idx))
-        Assertions.assertNull(result)
+
+        // then
+        assertThat(result).isNull()
     }
 
-    /**
-     * searchNewFriendCandidates
-     */
     @ParameterizedTest
     @DisplayName("키워드(닉네임/이메일)가 활성 사용자와 일치하면 정확히 찾는다")
     @ValueSource(strings = ["테스트2", "test2@kakao.com"])
     fun searchNewFriendCandidates_success(testKeyword: String) {
+        // when
         val result = userRepository.searchNewFriendCandidates(TEST_OWNER_EMAIL, testKeyword)
-        Assertions.assertEquals(1, result.size)
+
+        // then
+        assertThat(result).hasSize(1)
     }
 
     @Test
     @DisplayName("중복된 닉네임이 있는 경우 모두 조회한다")
     fun searchNewFriendCandidates_duplication() {
+        // given
         val dupNickname = "중복닉네임"
         saveAll(
             listOf(
@@ -109,39 +102,40 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
             )
         )
 
+        // when
         val result = userRepository.searchNewFriendCandidates(TEST_OWNER_EMAIL, dupNickname)
-        Assertions.assertEquals(2, result.size)
+
+        // then
+        assertThat(result).hasSize(2)
     }
 
     @Test
     @DisplayName("키워드(이메일/닉네임)가 비어 있거나 일치하는게 없으면 빈 리스트를 반환한다")
-    fun findActiveUsersByEmailOrNickname_empty_or_zero_match() {
-        Assertions.assertTrue(userRepository.searchNewFriendCandidates(TEST_OWNER_EMAIL, "").isEmpty())
-        Assertions.assertTrue(userRepository.searchNewFriendCandidates(TEST_OWNER_EMAIL, "존재하지않음").isEmpty())
+    fun searchNewFriendCandidates_empty_or_zero_match() {
+        // when & then
+        assertThat(userRepository.searchNewFriendCandidates(TEST_OWNER_EMAIL, "")).isEmpty()
+        assertThat(userRepository.searchNewFriendCandidates(TEST_OWNER_EMAIL, "존재하지않음")).isEmpty()
     }
 
-    /**
-     * findUsersByEmails: 이메일 기반 다중 조회
-     */
     @Test
     @DisplayName("활성 사용자와 비활성 사용자 혼합 조회 시 활성 사용자만 결과에 포함한다")
-    fun findActiveUsersByEmails_logic_check() {
+    fun findActiveUsersByEmails_success() {
+        // given
         val (activeIdx, pendingIdx) = 300 to 301
         saveAll(listOf(createTestUser(activeIdx, UserStatus.ACTIVE), createTestUser(pendingIdx, UserStatus.PENDING)))
 
+        // when
         val testResult = userRepository.findActiveUsersByEmails(email(activeIdx), email(pendingIdx))
 
-        Assertions.assertEquals(1, testResult.size)
-        Assertions.assertEquals(email(activeIdx), testResult[0].email)
+        // then
+        assertThat(testResult).hasSize(1)
+        assertThat(testResult[0].email).isEqualTo(email(activeIdx))
     }
 
-    /**
-     * findUsersByEmailAndId : 이메일과 ID 를 바탕으로 통합 조회
-     * 해당 테스트의 경우 ID 주입이 어려워 UUID.randomUUID() 에 의해 존재하지 않는 아이디로 조회합니다.
-     */
     @Test
     @DisplayName("Email과 ID로도 활성 User를 조회한다 - 해당되는 경우에만.")
-    fun findActiveUsersByEmailAndId_logic_check() {
+    fun findActiveUsersByEmailAndId_success() {
+        // given
         val idx1 = 300
         saveAll(
             listOf(
@@ -149,12 +143,14 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
             )
         )
 
+        // when
         val testResult = userRepository.findActiveUsersByEmailAndId(
             email(idx1), UUID.randomUUID()
         )
 
-        Assertions.assertEquals(1, testResult.size)
-        Assertions.assertEquals(email(idx1), testResult[0].email)
+        // then
+        assertThat(testResult).hasSize(1)
+        assertThat(testResult[0].email).isEqualTo(email(idx1))
     }
 
     private fun createTestUser(idx: Int, status: UserStatus, customNickname: String? = null) = UserJpaEntity(

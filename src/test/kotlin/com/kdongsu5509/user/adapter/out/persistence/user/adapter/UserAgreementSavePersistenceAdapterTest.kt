@@ -1,8 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.user.adapter
 
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.TermErrorCode
-import com.kdongsu5509.support.exception.UserErrorCode
+import com.kdongsu5509.support.exception.BaseException
+import com.kdongsu5509.support.exception.ErrorReason
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsDefinitionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsVersionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsDefinitionJpaEntity
@@ -42,15 +41,26 @@ class UserAgreementSavePersistenceAdapterTest @Autowired constructor(
 
     @BeforeEach
     fun setUp() {
-        // 테스트용 유저 저장
         testUser = userRepository.save(
-            UserJpaEntity("test@kakao.com", "테스터", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.PENDING)
+            UserJpaEntity("test@kakao.com", "테스트", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.PENDING)
         )
 
         val testTermDef1 =
-            termsDefinitionRepository.save(TermsDefinitionJpaEntity(termsTitle = "테스트 약관1", TermsTypes.LOCATION, true))
+            termsDefinitionRepository.save(
+                TermsDefinitionJpaEntity(
+                    termsTitle = "테스트 약관1",
+                    TermsTypes.LOCATION,
+                    true
+                )
+            )
         val testTermDef2 =
-            termsDefinitionRepository.save(TermsDefinitionJpaEntity(termsTitle = "테스트 약관2", TermsTypes.PRIVACY, true))
+            termsDefinitionRepository.save(
+                TermsDefinitionJpaEntity(
+                    termsTitle = "테스트 약관2",
+                    TermsTypes.PRIVACY,
+                    true
+                )
+            )
 
         createTestTermVersionEntity(testTermDef1)
         createTestTermVersionEntity(testTermDef2)
@@ -73,9 +83,9 @@ class UserAgreementSavePersistenceAdapterTest @Autowired constructor(
 
     @Test
     @DisplayName("단일 약관 동의 정보를 성공적으로 저장한다")
-    fun save_single_agreement_success() {
+    fun save_success() {
         // when
-        adapter.saveAgreement(testUser.email, termDefId1)
+        adapter.save(testUser.email, termDefId1)
 
         // then
         val results = agreementRepository.findAll()
@@ -86,12 +96,12 @@ class UserAgreementSavePersistenceAdapterTest @Autowired constructor(
 
     @Test
     @DisplayName("여러 개의 약관 동의 정보를 한 번에 저장한다")
-    fun save_multiple_agreements_success() {
+    fun saveAll_success() {
         // given
         val termIds = listOf(termDefId1, termDefId2)
 
         // when
-        adapter.saveAgreements(testUser.email, termIds)
+        adapter.saveAll(testUser.email, termIds)
 
         // then
         val results = agreementRepository.findAll()
@@ -101,22 +111,27 @@ class UserAgreementSavePersistenceAdapterTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("존재하지 않는 유저 이메일로 저장 시 USER_NOT_FOUND 예외가 발생한다")
-    fun save_fail_user_not_found() {
+    @DisplayName("존재하지 않는 사용자 이메일로 저장 시도 시 예외가 발생한다")
+    fun save_fail_when_user_not_found() {
+        // when & then
         assertThatThrownBy {
-            adapter.saveAgreement("wrong@kakao.com", termDefId1)
-        }.isInstanceOf(BusinessException::class.java)
-            .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.USER_NOT_FOUND)
+            adapter.save("wrong@kakao.com", termDefId1)
+        }.isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 
     @Test
-    @DisplayName("존재하지 않는 약관 ID가 포함된 경우 TERM_DEFINITION_NOT_FOUND 예외가 발생한다")
-    fun save_fail_term_not_found() {
+    @DisplayName("존재하지 않는 약관 ID가 포함된 경우 예외가 발생한다")
+    fun saveAll_fail_when_term_not_found() {
+        // given
         val invalidTermIds = listOf(termDefId1, 9999L)
 
+        // when & then
         assertThatThrownBy {
-            adapter.saveAgreements(testUser.email, invalidTermIds)
-        }.isInstanceOf(BusinessException::class.java)
-            .hasFieldOrPropertyWithValue("errorCode", TermErrorCode.TERM_DEFINITION_NOT_FOUND)
+            adapter.saveAll(testUser.email, invalidTermIds)
+        }.isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 }

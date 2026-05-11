@@ -1,7 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.user.adapter
 
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.UserErrorCode
+import com.kdongsu5509.support.exception.BaseException
+import com.kdongsu5509.support.exception.ErrorReason
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.user.mapper.UserMapper
@@ -26,7 +26,7 @@ class UserUpdatePersistenceAdapterTest @Autowired constructor(
 ) {
 
     @Test
-    @DisplayName("PENDING 상태인 사용자를 ACTIVE로 변경한다")
+    @DisplayName("PENDING 상태의 사용자를 ACTIVE로 변경한다")
     fun activate_success() {
         // given
         val email = "pending@kakao.com"
@@ -59,22 +59,22 @@ class UserUpdatePersistenceAdapterTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("활성화 시도 시에 사용자가 없으면 오류가 발생한다")
-    fun activate_with_user_not_exist() {
+    @DisplayName("활성화 시도 시에 사용자가 없으면 예외가 발생한다")
+    fun activate_fail_when_user_not_found() {
         // given
         val notUserEmail = "none@kakao.com"
 
-        // when, then
+        // when & then
         assertThatThrownBy {
             userUpdatePersistenceAdapter.activate(notUserEmail)
-        }.isInstanceOf(BusinessException::class.java)
-            .extracting("errorCode")
-            .isEqualTo(UserErrorCode.USER_NOT_FOUND)
+        }.isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 
     @Test
-    @DisplayName("사용자의 닉네임을 새롭게 잘 변경한다")
-    fun changeNickname_success() {
+    @DisplayName("사용자의 닉네임을 성공적으로 변경한다")
+    fun updateNickname_success() {
         // given
         val email = "testing@kakao.com"
         val testUser = createUserJpaEntity(email, UserStatus.ACTIVE)
@@ -90,23 +90,23 @@ class UserUpdatePersistenceAdapterTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("닉네임 변경 시에 사용자가 없으면 오류가 발생한다")
-    fun changeNickname_with_user_not_exist() {
+    @DisplayName("닉네임 변경 시에 사용자가 없으면 예외가 발생한다")
+    fun updateNickname_fail_when_user_not_found() {
         // given
         val notUserEmail = "none@kakao.com"
         val notNewUserNickname = "notExist"
 
-        // when, then
+        // when & then
         assertThatThrownBy {
             userUpdatePersistenceAdapter.updateNickname(notUserEmail, notNewUserNickname)
-        }.isInstanceOf(BusinessException::class.java)
-            .extracting("errorCode")
-            .isEqualTo(UserErrorCode.USER_NOT_FOUND)
+        }.isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 
     private fun createUserJpaEntity(email: String, status: UserStatus): UserJpaEntity = UserJpaEntity(
         email = email,
-        nickname = "테스터",
+        nickname = "테스트",
         provider = OAuth2Provider.KAKAO,
         role = UserRole.NORMAL,
         status = status

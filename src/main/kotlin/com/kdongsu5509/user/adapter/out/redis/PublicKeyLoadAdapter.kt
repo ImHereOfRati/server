@@ -18,7 +18,7 @@ class PublicKeyLoadAdapter(private val oauthClientPort: OauthClientPort) : Publi
     }
 
     private fun getCachedPublicKeys(): OIDCPublicKeyResponse {
-        return oauthClientPort.getPublicKeyFromProvider()
+        return oauthClientPort.fetchPublicKey()
             ?: AuthError.KAKAO_OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED.throwIt()
     }
 }

@@ -28,7 +28,8 @@ class ImHereJjwtIssuerAdapterTest {
 
     private lateinit var imHereJjwtIssuerAdapter: ImHereJjwtIssuerAdapter
 
-    private val secretKey: SecretKey = Keys.hmacShaKeyFor(TestJwtBuilder.TEST_IMHERE_JWT_SECRET.toByteArray(StandardCharsets.UTF_8))
+    private val secretKey: SecretKey =
+        Keys.hmacShaKeyFor(TestJwtBuilder.TEST_IMHERE_JWT_SECRET.toByteArray(StandardCharsets.UTF_8))
 
     private val claims = JwtTokenClaims(
         uid = UUID.randomUUID(),

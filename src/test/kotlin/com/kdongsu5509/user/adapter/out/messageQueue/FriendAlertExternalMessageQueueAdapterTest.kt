@@ -4,7 +4,7 @@ import com.common.testUtil.TestRabbitMQContainer
 import com.kdongsu5509.support.config.RabbitMQConfig
 import com.kdongsu5509.user.adapter.out.messageQueue.dto.NotificationMessageDto
 import com.kdongsu5509.user.adapter.out.messageQueue.dto.NotificationType
-import com.kdongsu5509.user.application.dto.AlertInformation
+import com.kdongsu5509.user.application.dto.AlertResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -33,9 +33,9 @@ class FriendAlertExternalMessageQueueAdapterTest : TestRabbitMQContainer() {
     fun send_alert_good() {
         val senderNickname = "rati"
         val receiverEmail = "test@example.com"
-        val body = "친구 요청이 왔습니다!"
+        val body = "친구 ?�청???�습?�다!"
 
-        val alertInfo = AlertInformation(
+        val alertInfo = AlertResponse(
             senderNickname = senderNickname,
             receiverEmail = receiverEmail,
             body = body

@@ -15,12 +15,12 @@ class FriendRequestMapperTest {
     private val mapper: FriendRequestMapper = FriendRequestMapper()
 
     @Test
-    @DisplayName("entity를 domain 객체로 잘 변환한다")
+    @DisplayName("entity�?domain 객체�???변?�한??")
     fun mapToDomainEntity_success() {
         //given
         val meEntity = UserJpaEntity(
             email = "ds.ko@kakao.com",
-            nickname = "고동수",
+            nickname = "고동??",
             role = UserRole.NORMAL,
             provider = OAuth2Provider.KAKAO,
             status = UserStatus.ACTIVE
@@ -29,7 +29,7 @@ class FriendRequestMapperTest {
 
         val receiverEntity = UserJpaEntity(
             email = "receiver@kakao.com",
-            nickname = "수신자",
+            nickname = "?�신??",
             role = UserRole.NORMAL,
             provider = OAuth2Provider.KAKAO,
             status = UserStatus.ACTIVE
@@ -37,7 +37,7 @@ class FriendRequestMapperTest {
         receiverEntity.id = UUID.randomUUID()
 
         val testFriendRequestJpaEntity = FriendRequestJpaEntity(
-            meEntity, receiverEntity, "테스트용 메시지"
+            meEntity, receiverEntity, "?�스?�용 메시지"
         )
         testFriendRequestJpaEntity.id = 1L
 

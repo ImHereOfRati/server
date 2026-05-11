@@ -3,7 +3,7 @@ package com.kdongsu5509.user.adapter.out.auth.oauth
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKey
 import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKeyResponse
 import com.kdongsu5509.user.application.port.out.user.oauth.OauthClientPort
-import com.kdongsu5509.user.application.service.user.KakaoPublicKeyScheduler
+import com.kdongsu5509.user.application.service.user.auth.KakaoPublicKeyScheduler
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -70,14 +70,14 @@ class KakaoOauthClientTest {
     private lateinit var oidcCacheManager: CacheManager
 
     @Test
-    @DisplayName("카카오 공개키 요청 시 정상적으로 데이터를 파싱해서 반환한다")
-    fun getPublicKeyFromProvider_success() {
+    @DisplayName("카카??공개???�청 ???�상?�으�??�이?��? ?�싱?�서 반환?�다")
+    fun fetchPublicKey_success() {
         // given
         mockServer.expect(requestTo(KAKAO_URL))
             .andRespond(withSuccess(mockResponseJson, MediaType.APPLICATION_JSON))
 
         // when
-        val result = oauthClientPort.getPublicKeyFromProvider()
+        val result = oauthClientPort.fetchPublicKey()
 
         // then
         assertThat(result).isNotNull

@@ -28,10 +28,10 @@ class TermsDefinitionCommandPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("약관 정의를 성공적으로 저장한다")
+    @DisplayName("?��? ?�의�??�공?�으�??�?�한??")
     fun save_success() {
         // given
-        val termsName = "개인정보 처리방침"
+        val termsName = "개인?�보 처리방침"
         val termType = TermsTypes.PRIVACY
         val isRequired = true
 

@@ -1,7 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.terms.adapter
 
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.TermErrorCode
+import com.kdongsu5509.support.exception.BaseException
+import com.kdongsu5509.support.exception.ErrorReason
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsDefinitionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsVersionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsDefinitionJpaEntity
@@ -24,7 +24,7 @@ import java.util.*
 @ExtendWith(MockitoExtension::class)
 class TermsVersionCommandPersistenceAdapterTest {
 
-    var termVersionMapper: TermVersionMapper = TermVersionMapper()
+    private val termVersionMapper: TermVersionMapper = TermVersionMapper()
 
     @Mock
     lateinit var springDataTermsDefinitionRepository: SpringDataTermsDefinitionRepository
@@ -44,7 +44,7 @@ class TermsVersionCommandPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("정상적인 경우에는 잘 저장한다")
+    @DisplayName("약관 버전을 성공적으로 저장한다")
     fun saveTermVersion_success() {
         // given
         val validTermDefinitionId = 100L
@@ -60,8 +60,6 @@ class TermsVersionCommandPersistenceAdapterTest {
 
         given(springDataTermsDefinitionRepository.findById(validTermDefinitionId))
             .willReturn(Optional.of(termsDefinitionJpaEntity))
-        given(springDataTermsVersionRepository.findActiveVersion(validTermDefinitionId))
-            .willReturn(Optional.empty())
 
         // when & then
         assertDoesNotThrow {
@@ -73,8 +71,8 @@ class TermsVersionCommandPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 약관 ID로 저장 요청 시 TERM_DEFINITION_NOT_FOUND 예외가 발생해야 한다")
-    fun saveTermVersion_fail_definitionNotFound() {
+    @DisplayName("존재하지 않는 약관 ID로 저장 시도 시 예외가 발생한다")
+    fun saveTermVersion_fail_when_definition_not_found() {
         // given
         val invalidId = 999L
         val version = "v1.0"
@@ -87,8 +85,8 @@ class TermsVersionCommandPersistenceAdapterTest {
         // when & then
         assertThatThrownBy {
             adapter.saveTermVersion(invalidId, version, content, effectiveDate)
-        }
-            .isInstanceOf(BusinessException::class.java)
-            .hasFieldOrPropertyWithValue("errorCode", TermErrorCode.TERM_DEFINITION_NOT_FOUND)
+        }.isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 }

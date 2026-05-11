@@ -3,7 +3,7 @@ package com.kdongsu5509.user.adapter.out.persistence.terms.mapper
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsDefinitionJpaEntity
 import com.kdongsu5509.user.domain.terms.TermDefinition
 import com.kdongsu5509.user.domain.terms.TermsTypes
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -15,41 +15,40 @@ class TermDefinitionMapperTest {
         val testTermsType = TermsTypes.LOCATION
     }
 
-    val termDefinitionMapper: TermDefinitionMapper = TermDefinitionMapper()
+    private val termDefinitionMapper: TermDefinitionMapper = TermDefinitionMapper()
 
     @ParameterizedTest
     @ValueSource(booleans = [false, true])
-    @DisplayName("Jpa 엔티티를 잘 만든다.")
+    @DisplayName("도메인 파라미터로 JPA 엔티티를 성공적으로 생성한다")
     fun mapToJpaEntity_success(testIsRequired: Boolean) {
-        //when
+        // when
         val result = termDefinitionMapper.mapToJpaEntity(TERM_TITLE, testTermsType, testIsRequired)
 
-        //then
-        Assertions.assertThat(result::class.java).isEqualTo(TermsDefinitionJpaEntity::class.java)
-        Assertions.assertThat(result.termsTitle).isEqualTo(TERM_TITLE)
-        Assertions.assertThat(result.termsType).isEqualTo(testTermsType)
-        Assertions.assertThat(result.isRequired).isEqualTo(testIsRequired)
+        // then
+        assertThat(result).isInstanceOf(TermsDefinitionJpaEntity::class.java)
+        assertThat(result.termsTitle).isEqualTo(TERM_TITLE)
+        assertThat(result.termsType).isEqualTo(testTermsType)
+        assertThat(result.isRequired).isEqualTo(testIsRequired)
     }
 
     @ParameterizedTest
     @ValueSource(booleans = [false, true])
-    @DisplayName("Jpa 엔티티를 도메인 객체로 잘 만든다.")
+    @DisplayName("JPA 엔티티를 도메인 모델로 성공적으로 변환한다")
     fun mapToDomainEntity_success(testIsRequired: Boolean) {
-        //given
+        // given
         val testJpaEntity = TermsDefinitionJpaEntity(
             TERM_TITLE, testTermsType, testIsRequired
         ).apply {
             id = 999L
         }
 
-        //when
+        // when
         val result = termDefinitionMapper.mapToDomainEntity(testJpaEntity)
 
-        //then
-        Assertions.assertThat(result::class.java).isEqualTo(TermDefinition::class.java)
-        Assertions.assertThat(result.title).isEqualTo(TERM_TITLE)
-        Assertions.assertThat(result.termsTypes).isEqualTo(testTermsType)
-        Assertions.assertThat(result.isRequired).isEqualTo(testIsRequired)
+        // then
+        assertThat(result).isInstanceOf(TermDefinition::class.java)
+        assertThat(result.title).isEqualTo(TERM_TITLE)
+        assertThat(result.termsTypes).isEqualTo(testTermsType)
+        assertThat(result.isRequired).isEqualTo(testIsRequired)
     }
-
 }

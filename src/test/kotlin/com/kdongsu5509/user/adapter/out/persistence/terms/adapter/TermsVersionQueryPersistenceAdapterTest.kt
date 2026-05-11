@@ -1,7 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.terms.adapter
 
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.TermErrorCode
+import com.kdongsu5509.support.exception.BaseException
+import com.kdongsu5509.support.exception.ErrorReason
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsVersionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsDefinitionJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsVersionJpaEntity
@@ -17,7 +17,6 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.LocalDateTime
-import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class TermsVersionQueryPersistenceAdapterTest {
@@ -27,11 +26,11 @@ class TermsVersionQueryPersistenceAdapterTest {
         const val TERM_DEFINITION_TITLE = "테스트 약관"
         val TERM_TYPE = TermsTypes.LOCATION
         const val VERSION = "v1.0"
-        const val CONTENT = "내용"
-        var effectiveDate: LocalDateTime = LocalDateTime.now()
+        const val CONTENT = "약관 내용"
+        val effectiveDate: LocalDateTime = LocalDateTime.now()
     }
 
-    val termVersionMapper = TermVersionMapper()
+    private val termVersionMapper = TermVersionMapper()
 
     @Mock
     lateinit var springDataTermsVersionRepository: SpringDataTermsVersionRepository
@@ -47,18 +46,18 @@ class TermsVersionQueryPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("존재하는 ID 조회 시 도메인 엔티티를 반환한다")
-    fun loadSpecificTermVersion_success() {
+    @DisplayName("활성화된 약관 버전이 존재하면 성공적으로 반환한다")
+    fun loadSpecificActiveTermVersion_success() {
         // given
         val termsDefinitionJpaEntity = TermsDefinitionJpaEntity(
             TERM_DEFINITION_TITLE, TERM_TYPE, true
-        )
-        termsDefinitionJpaEntity.id = TERM_DEFINITION_ID
+        ).apply { id = TERM_DEFINITION_ID }
+
         val jpaEntity = TermsVersionJpaEntity(
             VERSION, CONTENT, true, effectiveDate, termsDefinitionJpaEntity
         )
 
-        given(springDataTermsVersionRepository.findActiveVersion(TERM_DEFINITION_ID)).willReturn(Optional.of(jpaEntity))
+        given(springDataTermsVersionRepository.findActiveVersion(TERM_DEFINITION_ID)).willReturn(jpaEntity)
 
         // when
         val result = adapter.loadSpecificActiveTermVersion(TERM_DEFINITION_ID)
@@ -71,22 +70,17 @@ class TermsVersionQueryPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 약관 ID로 version 조회 요청 시 TERM_DEFINITION_NOT_FOUND 예외가 발생해야 한다")
-    fun loadSpecificTermVersion_fail_not_found() {
+    @DisplayName("활성화된 약관 버전이 존재하지 않으면 예외가 발생한다")
+    fun loadSpecificActiveTermVersion_fail_when_not_found() {
         // given
         val invalidTermDefinitionId = 999L
-        val termsDefinitionJpaEntity = TermsDefinitionJpaEntity(
-            TERM_DEFINITION_TITLE, TERM_TYPE, true
-        )
-        termsDefinitionJpaEntity.id = invalidTermDefinitionId
+        given(springDataTermsVersionRepository.findActiveVersion(invalidTermDefinitionId)).willReturn(null)
 
-        given(springDataTermsVersionRepository.findActiveVersion(invalidTermDefinitionId)).willReturn(Optional.empty())
-
-        // when, then
+        // when & then
         assertThatThrownBy {
             adapter.loadSpecificActiveTermVersion(invalidTermDefinitionId)
-        }
-            .isInstanceOf(BusinessException::class.java)
-            .hasFieldOrPropertyWithValue("errorCode", TermErrorCode.TERM_DEFINITION_NOT_FOUND)
+        }.isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 }

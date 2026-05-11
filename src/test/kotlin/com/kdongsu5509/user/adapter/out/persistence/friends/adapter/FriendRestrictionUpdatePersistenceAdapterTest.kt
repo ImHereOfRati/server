@@ -40,10 +40,10 @@ class FriendRestrictionUpdatePersistenceAdapterTest @Autowired constructor(
     @BeforeEach
     fun setUp() {
         actor = springDataUserRepository.save(
-            UserJpaEntity("requester@kakao.com", "요청자", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
+            UserJpaEntity("requester@kakao.com", "?�청??", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
         )
         target = springDataUserRepository.save(
-            UserJpaEntity("receiver@kakao.com", "수신자", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
+            UserJpaEntity("receiver@kakao.com", "?�신??", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
         )
         friendRestriction = springDataFriendRestrictionRepository.save(
             FriendRestrictionJpaEntity(
@@ -53,10 +53,10 @@ class FriendRestrictionUpdatePersistenceAdapterTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("친구 차단/거절 기록을 잘 지운다")
-    fun delete_success() {
+    @DisplayName("친구 차단/거절 기록????지?�다")
+    fun delete_ById_success() {
         //when
-        friendRestrictionUpdatePersistenceAdapter.delete(friendRestriction.id!!)
+        friendRestrictionUpdatePersistenceAdapter.deleteById(friendRestriction.id!!)
 
         //then
         Assertions.assertThat(
@@ -65,14 +65,14 @@ class FriendRestrictionUpdatePersistenceAdapterTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("요청 시 존재하지 않는 차단/거절 ID를 전달해도 오류가 발생하지 않는다")
+    @DisplayName("?�청 ??존재?��? ?�는 차단/거절 ID�??�달?�도 ?�류가 발생?��? ?�는??")
     fun delete_success_even_though_not_exist() {
         //given
         val notExistRequestId = 10000L
 
         //when, then
         assertDoesNotThrow {
-            friendRestrictionUpdatePersistenceAdapter.delete(notExistRequestId)
+            friendRestrictionUpdatePersistenceAdapter.deleteById(notExistRequestId)
         }
     }
 }

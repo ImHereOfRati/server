@@ -14,8 +14,8 @@ class SpringDataTermsDefinitionRepositoryTest @Autowired constructor(
     private val repository: SpringDataTermsDefinitionRepository
 ) {
     @Test
-    @DisplayName("약관 제목과 타입이 일치하는 데이터가 있으면 true를 반환한다.")
-    fun existsByTermsTitleAndTermsType_ReturnTrue() {
+    @DisplayName("약관 제목과 타입이 일치하는 데이터가 있으면 true를 반환한다")
+    fun existsByTermsTitleAndTermsType_success() {
         // given
         val title = "서비스 이용약관"
         val type = TermsTypes.SERVICE
@@ -30,12 +30,12 @@ class SpringDataTermsDefinitionRepositoryTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("일치하는 약관 제목이 없으면 false를 반환한다.")
-    fun existsByTermsTitleAndTermsType_ReturnFalse_WhenTitleMismatch() {
+    @DisplayName("일치하는 약관 제목이 없으면 false를 반환한다")
+    fun existsByTermsTitleAndTermsType_fail_when_title_mismatch() {
         // given
-        val title = "존재하지 않는 약관"
+        val title = "존재하지 않는 제목"
         val type = TermsTypes.SERVICE
-        repository.save(TermsDefinitionJpaEntity("실제 저장된 약관", type, true))
+        repository.save(TermsDefinitionJpaEntity("실제 저장된 제목", type, true))
 
         // when
         val result = repository.existsByTermsTitleAndTermsType(title, type)
@@ -45,8 +45,8 @@ class SpringDataTermsDefinitionRepositoryTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("일치하는 약관 타입이 없으면 false를 반환한다.")
-    fun existsByTermsTitleAndTermsType_ReturnFalse_WhenTypeMismatch() {
+    @DisplayName("일치하는 약관 타입이 없으면 false를 반환한다")
+    fun existsByTermsTitleAndTermsType_fail_when_type_mismatch() {
         // given
         val title = "서비스 이용약관"
         val type = TermsTypes.SERVICE

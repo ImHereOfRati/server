@@ -1,8 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.friends.adapter
 
 import com.kdongsu5509.support.config.QueryDslConfig
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.UserErrorCode
+import com.kdongsu5509.support.exception.BaseException
 import com.kdongsu5509.user.adapter.out.persistence.friends.jpa.SpringDataFriendRequestRepository
 import com.kdongsu5509.user.adapter.out.persistence.friends.mapper.FriendRequestMapper
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepository
@@ -11,6 +10,7 @@ import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
+import com.kdongsu5509.user.exception.UserError
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -42,18 +42,18 @@ class FriendRequestSavePersistenceAdapterTest @Autowired constructor(
     @BeforeEach
     fun setUp() {
         requester = springDataUserRepository.save(
-            UserJpaEntity("requester@kakao.com", "요청자", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
+            UserJpaEntity("requester@kakao.com", "?�청??", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
         )
         receiver = springDataUserRepository.save(
-            UserJpaEntity("receiver@kakao.com", "수신자", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
+            UserJpaEntity("receiver@kakao.com", "?�신??", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
         )
     }
 
     @Test
-    @DisplayName("친구 요청을 DB에 잘 저장하고 도메인 엔티티를 반환한다")
+    @DisplayName("친구 ?�청??DB?????�?�하�??�메???�티?��? 반환?�다")
     fun save_success() {
         // given
-        val message = "친하게 지내요!"
+        val message = "친하�?지?�요!"
 
         // when
         val result = adapter.save(requester.email, receiver.id!!, message)
@@ -70,15 +70,15 @@ class FriendRequestSavePersistenceAdapterTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("잘못된 수신자 ID(없는 존재)는 오류 발생")
+    @DisplayName("?�못???�신??ID(?�는 존재)???�류 발생")
     fun save_receiver_not_exist() {
         // given
-        val message = "친하게 지내요!"
+        val message = "친하�?지?�요!"
 
         // when, then
         Assertions.assertThatThrownBy {
             adapter.save(requester.email, UUID.randomUUID(), message)
-        }.isInstanceOf(BusinessException::class.java)
-            .hasMessage(UserErrorCode.USER_NOT_FOUND.message)
+        }.isInstanceOf(BaseException::class.java)
+            .hasMessage(UserError.USER_NOT_FOUND.message)
     }
 }

@@ -1,7 +1,7 @@
 package com.kdongsu5509.user.adapter.out.persistence.terms.adapter
 
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.TermErrorCode
+import com.kdongsu5509.support.exception.BaseException
+import com.kdongsu5509.support.exception.ErrorReason
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.SpringDataTermsDefinitionRepository
 import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsDefinitionJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.terms.mapper.TermDefinitionMapper
@@ -9,15 +9,14 @@ import com.kdongsu5509.user.adapter.out.persistence.terms.mapper.TermDefinitionM
 import com.kdongsu5509.user.adapter.out.persistence.terms.mapper.TermDefinitionMapperTest.Companion.testTermsType
 import com.kdongsu5509.user.domain.terms.TermsTypes
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -43,13 +42,13 @@ class TermsDefinitionQueryPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("약관이 존재하는 경우에는 true을 반환한다.")
-    fun checkExistence() {
-        //given
-        val title = "이용약관"
+    @DisplayName("약관 제목과 타입이 일치하는 데이터가 있으면 true를 반환한다")
+    fun checkExistence_success() {
+        // given
+        val title = "서비스 이용약관"
         val type = TermsTypes.SERVICE
-        `when`(springDataTermsDefinitionRepository.existsByTermsTitleAndTermsType(title, type))
-            .thenReturn(true)
+        given(springDataTermsDefinitionRepository.existsByTermsTitleAndTermsType(title, type))
+            .willReturn(true)
 
         // when
         val result = adapter.checkExistence(title, type)
@@ -59,13 +58,13 @@ class TermsDefinitionQueryPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("약관이 존재하지 않으면 false를 반환한다.")
-    fun checkNotExistence() {
-        //given
-        val title = "신규 이용 약관"
+    @DisplayName("일치하는 약관 제목이 없으면 false를 반환한다")
+    fun checkExistence_fail_when_not_exist() {
+        // given
+        val title = "신규 약관"
         val type = TermsTypes.SERVICE
-        `when`(springDataTermsDefinitionRepository.existsByTermsTitleAndTermsType(title, type))
-            .thenReturn(false)
+        given(springDataTermsDefinitionRepository.existsByTermsTitleAndTermsType(title, type))
+            .willReturn(false)
 
         // when
         val result = adapter.checkExistence(title, type)
@@ -75,19 +74,19 @@ class TermsDefinitionQueryPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("약관 상세 조회 시 데이터가 있으면 잘 반환한다.")
-    fun loadTermDefinition() {
+    @DisplayName("ID로 약관 정의를 성공적으로 조회한다")
+    fun loadTermDefinition_success() {
         // given
         val id = 1L
         val testJpaEntity = TermsDefinitionJpaEntity(
             TERM_TITLE, testTermsType, true
-        )
-        testJpaEntity.id = 10L
-        `when`(springDataTermsDefinitionRepository.findById(id)).thenReturn(Optional.of(testJpaEntity))
+        ).apply { this.id = id }
+        given(springDataTermsDefinitionRepository.findById(id)).willReturn(Optional.of(testJpaEntity))
 
         // when
         val result = adapter.loadTermDefinition(id)
 
+        // then
         assertThat(result).isNotNull
         assertThat(result.title).isEqualTo(TERM_TITLE)
         assertThat(result.termsTypes).isEqualTo(testTermsType)
@@ -95,35 +94,31 @@ class TermsDefinitionQueryPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("약관 상세 조회 시 데이터가 없으면 예외가 발생한다")
-    fun loadTermDefinition_notExist() {
+    @DisplayName("존재하지 않는 ID로 조회 시 예외가 발생한다")
+    fun loadTermDefinition_fail_when_not_exist() {
         // given
         val id = 1L
-        `when`(springDataTermsDefinitionRepository.findById(id)).thenReturn(Optional.empty())
+        given(springDataTermsDefinitionRepository.findById(id)).willReturn(Optional.empty())
 
         // when & then
-        assertThrows<BusinessException> {
+        assertThatThrownBy {
             adapter.loadTermDefinition(id)
-        }.also {
-            assertThat(it.errorCode).isEqualTo(TermErrorCode.TERM_DEFINITION_NOT_FOUND)
-        }
+        }.isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 
     @Test
-    @DisplayName("약관 목록 조회 시 페이징된 결과를 반환한다")
+    @DisplayName("약관 목록을 페이징하여 성공적으로 조회한다")
     fun loadAllTermsDefinitions_success() {
         // given
         val pageable = PageRequest.of(0, 10)
-        val testDefinitionOne = TermsDefinitionJpaEntity("약관1", TermsTypes.SERVICE, true)
-        val testDefinitionTwo = TermsDefinitionJpaEntity("약관2", TermsTypes.PRIVACY, true)
-        testDefinitionOne.id = 1L
-        testDefinitionTwo.id = 2L
-        val jpaEntities = listOf(
-            testDefinitionOne, testDefinitionTwo
-        )
+        val testDefinitionOne = TermsDefinitionJpaEntity("약관1", TermsTypes.SERVICE, true).apply { id = 1L }
+        val testDefinitionTwo = TermsDefinitionJpaEntity("약관2", TermsTypes.PRIVACY, true).apply { id = 2L }
+        val jpaEntities = listOf(testDefinitionOne, testDefinitionTwo)
         val page = PageImpl(jpaEntities, pageable, jpaEntities.size.toLong())
 
-        `when`(springDataTermsDefinitionRepository.findAll(pageable)).thenReturn(page)
+        given(springDataTermsDefinitionRepository.findAll(pageable)).willReturn(page)
 
         // when
         val result = adapter.loadAllTermsDefinitions(pageable)
@@ -135,8 +130,8 @@ class TermsDefinitionQueryPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("약관 목록 조회 시 데이터가 없으면 빈 페이지를 반환한다")
-    fun loadAllTermsDefinitions_success_if_not_exist() {
+    @DisplayName("약관 목록이 없으면 빈 페이징 결과를 반환한다")
+    fun loadAllTermsDefinitions_success_when_empty() {
         // given
         val pageable = PageRequest.of(0, 10)
         given(springDataTermsDefinitionRepository.findAll(pageable))

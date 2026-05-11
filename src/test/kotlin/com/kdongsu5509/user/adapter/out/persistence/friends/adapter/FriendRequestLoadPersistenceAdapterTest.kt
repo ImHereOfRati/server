@@ -1,8 +1,8 @@
 package com.kdongsu5509.user.adapter.out.persistence.friends.adapter
 
 import com.kdongsu5509.support.config.QueryDslConfig
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.FriendErrorCode
+import com.kdongsu5509.support.exception.BaseException
+import com.kdongsu5509.support.exception.ErrorReason
 import com.kdongsu5509.user.adapter.out.persistence.friends.mapper.FriendRequestMapper
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringQueryDSLUserRepository
@@ -10,8 +10,8 @@ import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -60,8 +60,8 @@ class FriendRequestLoadPersistenceAdapterTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("특정 이메일에 온 친구 요청들을 잘 찾는다.")
-    fun findReceivedRequestByRequestIdRequestsAll_ByEmail_success() {
+    @DisplayName("특정 이메일에 온 친구 요청들을 모두 찾는다")
+    fun findReceivedRequestsAllByEmail_success() {
         // given
         val message = "친하게 지내요!"
 
@@ -73,33 +73,27 @@ class FriendRequestLoadPersistenceAdapterTest @Autowired constructor(
         val result = loadAdapter.findReceivedRequestsAllByEmail(receiver.email)
 
         // then
-        assertThat(result).isNotEmpty
         assertThat(result).hasSize(3)
 
-        val requestsEmail = listOf("requester1@kakao.com", "requester2@kakao.com", "requester3@kakao.com")
-
-        assertThat(requestsEmail.contains(result[0].requester.email)).isTrue
-        assertThat(requestsEmail.contains(result[1].requester.email)).isTrue
-        assertThat(requestsEmail.contains(result[2].requester.email)).isTrue
+        val requestsEmail = listOf(REQUESTER_EMAIL1, REQUESTER_EMAIL2, REQUESTER_EMAIL3)
+        assertThat(result.map { it.requester.email }).containsExactlyInAnyOrderElementsOf(requestsEmail)
     }
 
     @Test
-    @DisplayName("특정 이메일에 온 친구 요청이 없으면 빈 리스트를 반환한다.")
-    fun findReceivedRequestByRequestIdRequestsAll_ByEmail_success_empty() {
+    @DisplayName("특정 이메일에 온 친구 요청이 없으면 빈 리스트를 반환한다")
+    fun findReceivedRequestsAllByEmail_success_empty() {
         // when
         val result = loadAdapter.findReceivedRequestsAllByEmail("none@kakao.com")
 
         // then
         assertThat(result).isEmpty()
-        assertThat(result).hasSize(0)
     }
 
     @Test
-    @DisplayName("특정 친구 요청을 잘 찾는다.")
-    fun findReceived_RequestByRequestId_success() {
+    @DisplayName("특정 친구 요청을 성공적으로 찾는다")
+    fun findReceivedRequestByRequestId_success() {
         // given
         val message = "친하게 지내요!"
-
         val savedFriendRequest = saveAdapter.save(requester1.email, receiver.id!!, message)
 
         // when
@@ -113,13 +107,14 @@ class FriendRequestLoadPersistenceAdapterTest @Autowired constructor(
     }
 
     @Test
-    @DisplayName("특정 친구 요청의 ID 가 없으면 오류가 발생한다")
-    fun findReceived_RequestByRequestId_fail_id_not_exist() {
-        // when, then
-        Assertions.assertThatThrownBy {
-            loadAdapter.findReceivedRequestByRequestId(1L)
-        }.isInstanceOf(BusinessException::class.java)
-            .hasMessage(FriendErrorCode.FRIENDSHIP_REQUEST_NOT_FOUND.message)
+    @DisplayName("특정 친구 요청 ID가 없으면 예외가 발생한다")
+    fun findReceivedRequestByRequestId_fail_when_id_not_exist() {
+        // when & then
+        assertThatThrownBy {
+            loadAdapter.findReceivedRequestByRequestId(999L)
+        }.isInstanceOf(BaseException::class.java)
+            .extracting("errorCategory")
+            .isEqualTo(ErrorReason.NOT_FOUND)
     }
 
     private fun saveUserInDatabase(email: String, nickname: String): UserJpaEntity = springDataUserRepository.save(

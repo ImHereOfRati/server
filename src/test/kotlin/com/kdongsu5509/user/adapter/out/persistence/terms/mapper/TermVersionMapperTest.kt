@@ -11,17 +11,17 @@ import java.time.LocalDateTime
 class TermVersionMapperTest {
 
     companion object {
-        const val TERM_TITLE = "테스트용 약관"
+        const val TERM_TITLE = "?�스?�용 ?��?"
         val testTermType = TermsTypes.LOCATION
         const val VERSION = "v1.0"
-        const val CONTENT = "약관 내용입니다."
+        const val CONTENT = "?��? ?�용?�니??"
         val EFFECTIVE_DATE: LocalDateTime? = LocalDateTime.now()
     }
 
     private val termVersionMapper = TermVersionMapper()
 
     @Test
-    @DisplayName("입력 데이터들을 바탕으로 TermsVersionJpaEntity로 올바르게 변환해야 한다")
+    @DisplayName("?�력 ?�이?�들??바탕?�로 TermsVersionJpaEntity�??�바르게 변?�해???�다")
     fun shouldMapToJpaEntity() {
         // given
         val termDefinition = TermsDefinitionJpaEntity(TERM_TITLE, testTermType, true)
@@ -34,32 +34,32 @@ class TermVersionMapperTest {
         assertThat(jpaEntity.termVersionContent).isEqualTo(CONTENT)
         assertThat(jpaEntity.effectiveDate).isEqualTo(EFFECTIVE_DATE)
         assertThat(jpaEntity.terms).isEqualTo(termDefinition)
-        assertThat(jpaEntity.isActive).isTrue() // 매퍼에서 true로 고정 설정됨
-    }
+        assertThat(jpaEntity.isActive).isTrue() // 매퍼?�서 true�?고정 ?�정??    }
 
-    @Test
-    @DisplayName("TermsVersionJpaEntity를 Domain 객체인 TermVersion으로 올바르게 변환해야 한다")
-    fun shouldMapToDomainEntity() {
-        // given
-        val termDefinition = TermsDefinitionJpaEntity(TERM_TITLE, testTermType, true)
-        termDefinition.apply {
-            id = 1L
+        @Test
+        @DisplayName("TermsVersionJpaEntity�?Domain 객체??TermVersion?�로 ?�바르게 변?�해???�다")
+        fun shouldMapToDomainEntity() {
+            // given
+            val termDefinition = TermsDefinitionJpaEntity(TERM_TITLE, testTermType, true)
+            termDefinition.apply {
+                id = 1L
+            }
+            val jpaEntity = TermsVersionJpaEntity(
+                version = "v2.0",
+                termVersionContent = "?�데?�트???�용",
+                isActive = true,
+                effectiveDate = LocalDateTime.of(2026, 2, 6, 0, 0),
+                terms = termDefinition
+            )
+
+            // when
+            val domainTermVersion = termVersionMapper.mapToDomainEntity(jpaEntity)
+
+            // then
+            assertThat(domainTermVersion.termDefinitionId).isEqualTo(jpaEntity.terms.id)
+            assertThat(domainTermVersion.version).isEqualTo(jpaEntity.version)
+            assertThat(domainTermVersion.content).isEqualTo(jpaEntity.termVersionContent)
+            assertThat(domainTermVersion.effectiveDate).isEqualTo(jpaEntity.effectiveDate)
         }
-        val jpaEntity = TermsVersionJpaEntity(
-            version = "v2.0",
-            termVersionContent = "업데이트된 내용",
-            isActive = true,
-            effectiveDate = LocalDateTime.of(2026, 2, 6, 0, 0),
-            terms = termDefinition
-        )
-
-        // when
-        val domainTermVersion = termVersionMapper.mapToDomainEntity(jpaEntity)
-
-        // then
-        assertThat(domainTermVersion.termDefinitionId).isEqualTo(jpaEntity.terms.id)
-        assertThat(domainTermVersion.version).isEqualTo(jpaEntity.version)
-        assertThat(domainTermVersion.content).isEqualTo(jpaEntity.termVersionContent)
-        assertThat(domainTermVersion.effectiveDate).isEqualTo(jpaEntity.effectiveDate)
     }
 }

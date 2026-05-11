@@ -9,7 +9,7 @@ import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.domain.user.OAuth2Provider
 import com.kdongsu5509.user.domain.user.UserRole
 import com.kdongsu5509.user.domain.user.UserStatus
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -45,30 +45,28 @@ class FriendRequestUpdatePersistenceAdapterTest @Autowired constructor(
         )
         friendRequest = springDataFriendRequestRepository.save(
             FriendRequestJpaEntity(
-                requester, receiver, "친하게 지내요"
+                requester, receiver, "친하게지내요"
             )
         )
     }
 
     @Test
-    @DisplayName("친구 요청을 잘 지운다")
+    @DisplayName("친구 요청이 삭제된다")
     fun delete_success() {
-        //when
+        // when
         friendRequestUpdatePersistenceAdapter.delete(friendRequest.id!!)
 
-        //then
-        Assertions.assertThat(
-            springDataFriendRequestRepository.findById(friendRequest.id!!).isEmpty
-        ).isTrue
+        // then
+        assertThat(springDataFriendRequestRepository.findById(friendRequest.id!!)).isEmpty
     }
 
     @Test
     @DisplayName("요청 시 존재하지 않는 친구 요청 ID를 전달해도 오류가 발생하지 않는다")
     fun delete_success_even_though_not_exist() {
-        //given
+        // given
         val notExistRequestId = 10000L
 
-        //when, then
+        // when & then
         assertDoesNotThrow {
             friendRequestUpdatePersistenceAdapter.delete(notExistRequestId)
         }

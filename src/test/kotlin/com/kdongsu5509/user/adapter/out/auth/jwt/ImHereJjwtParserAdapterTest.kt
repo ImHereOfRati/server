@@ -27,7 +27,8 @@ class ImHereJjwtParserAdapterTest {
 
     private lateinit var imHereJjwtParserAdapter: ImHereJjwtParserAdapter
 
-    private val secretKey: SecretKey = Keys.hmacShaKeyFor(TestJwtBuilder.TEST_IMHERE_JWT_SECRET.toByteArray(StandardCharsets.UTF_8))
+    private val secretKey: SecretKey =
+        Keys.hmacShaKeyFor(TestJwtBuilder.TEST_IMHERE_JWT_SECRET.toByteArray(StandardCharsets.UTF_8))
 
     @BeforeEach
     fun setUp() {
@@ -99,7 +100,8 @@ class ImHereJjwtParserAdapterTest {
     @DisplayName("서명이 일치하지 않는 유효하지 않은 토큰인 경우 UnauthorizedException(TOKEN_002)을 발생시킨다")
     fun validate_invalidSignature_throwsException() {
         // given
-        val otherSecretKey = Keys.hmacShaKeyFor("differentSecretKeyForTestingPurpose123456".toByteArray(StandardCharsets.UTF_8))
+        val otherSecretKey =
+            Keys.hmacShaKeyFor("differentSecretKeyForTestingPurpose123456".toByteArray(StandardCharsets.UTF_8))
         val invalidToken = Jwts.builder()
             .subject("test")
             .signWith(otherSecretKey)

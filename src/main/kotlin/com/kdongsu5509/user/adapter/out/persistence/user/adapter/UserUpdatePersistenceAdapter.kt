@@ -1,12 +1,13 @@
 package com.kdongsu5509.user.adapter.out.persistence.user.adapter
 
-import com.kdongsu5509.support.exception.type.NotFoundException
+import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.user.mapper.UserMapper
 import com.kdongsu5509.user.application.port.out.user.UserUpdatePort
 import com.kdongsu5509.user.domain.user.User
 import com.kdongsu5509.user.domain.user.UserStatus
+import com.kdongsu5509.user.exception.UserError
 import org.springframework.stereotype.Component
 
 @Component
@@ -45,7 +46,6 @@ class UserUpdatePersistenceAdapter(
     }
 
     private fun findUserJpaEntity(userEmail: String): UserJpaEntity {
-        return springDataUserRepository.findByEmail(userEmail)
-            ?: throw NotFoundException("사용자를 찾을 수 없습니다.")
+        return springDataUserRepository.findByEmail(userEmail) ?: UserError.USER_NOT_FOUND.throwIt()
     }
 }

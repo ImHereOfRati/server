@@ -19,15 +19,16 @@ object APIResponseSerializers {
     fun writeErrorResponse(
         response: HttpServletResponse,
         status: HttpStatus,
-        globalCode: String,
-        message: String,
-        businessCode: String? = null
+        imhereErrorCode: String,
+        errorMessage: String
     ) {
         response.status = status.value()
         response.contentType = "application/json;charset=UTF-8"
 
-        val metadata = businessCode?.let { mapOf("businessCode" to it) }
-        val body = APIResponseBody.fail(globalCode, message, metadata)
+        val body = ApiResponse.fail<Any>(
+            imhereErrorCode = imhereErrorCode,
+            errorMessage = errorMessage
+        )
 
         response.writer.write(jsonMapper.writeValueAsString(body))
     }

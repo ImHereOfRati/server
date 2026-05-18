@@ -9,9 +9,5 @@ interface OIDCIdTokenVerifyPort {
 
     fun verifyPayLoad(payload: OIDCDecodePayload)
 
-    fun verifySignature(
-        token: String,
-        modulus: String,
-        exponent: String
-    ): Jws<Claims>
+    fun verifySignature(token: String, modulus: String, exponent: String): Jws<Claims>
 }

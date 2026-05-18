@@ -2,11 +2,11 @@ package com.kdongsu5509.auth.adapter.out.jwt
 
 
 import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.CachePort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.support.exception.type.UnauthorizedException
-import com.kdongsu5509.user.application.dto.JwtTokenClaims
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName

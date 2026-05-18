@@ -1,7 +1,7 @@
 package com.kdongsu5509.auth.adapter.out.jwt
 
 import com.common.testsupport.jwt.ImHereTestJwtProvider
-import com.kdongsu5509.user.application.dto.JwtTokenClaims
+import com.kdongsu5509.auth.application.JwtTokenClaims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.assertj.core.api.Assertions.assertThat

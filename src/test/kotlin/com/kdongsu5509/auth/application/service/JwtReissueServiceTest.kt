@@ -1,7 +1,7 @@
-package com.kdongsu5509.user.application.service.user.auth
+package com.kdongsu5509.auth.application.service
 
-import com.kdongsu5509.user.application.dto.ImHereJwt
-import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenProviderPort
+import com.kdongsu5509.auth.application.ImHereJwtToken
+import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -25,7 +25,7 @@ class JwtReissueServiceTest {
     fun reissueByRefreshToken_success() {
         // given
         val refreshToken = "test-refresh-token"
-        val expectedJwt = ImHereJwt("access", "refresh")
+        val expectedJwt = ImHereJwtToken("access", "refresh")
         given(tokenProvider.reissueByRefreshToken(refreshToken)).willReturn(expectedJwt)
 
         // when
@@ -40,7 +40,7 @@ class JwtReissueServiceTest {
     fun reissueByUserEmail_success() {
         // given
         val email = "test@example.com"
-        val expectedJwt = ImHereJwt("access", "refresh")
+        val expectedJwt = ImHereJwtToken("access", "refresh")
         given(tokenProvider.reissueByEmail(email)).willReturn(expectedJwt)
 
         // when

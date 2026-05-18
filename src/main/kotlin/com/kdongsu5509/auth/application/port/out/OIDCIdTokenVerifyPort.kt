@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.application.port.out.user.oauth
+package com.kdongsu5509.auth.application.port.out
 
 import com.kdongsu5509.user.application.dto.OIDCDecodePayload
 import io.jsonwebtoken.Claims

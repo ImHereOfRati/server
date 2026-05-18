@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.application.service.user.auth
+package com.kdongsu5509.auth.application.service
 
 import jakarta.annotation.PostConstruct
 import org.springframework.scheduling.annotation.Scheduled

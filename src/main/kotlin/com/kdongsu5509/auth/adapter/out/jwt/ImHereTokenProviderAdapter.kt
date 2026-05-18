@@ -1,13 +1,13 @@
 package com.kdongsu5509.auth.adapter.out.jwt
 
 import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.auth.application.ImHereJwtToken
+import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.CachePort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.application.dto.ImHereJwt
-import com.kdongsu5509.user.application.dto.JwtTokenClaims
 import org.springframework.stereotype.Component
 import java.time.Duration
 
@@ -19,17 +19,17 @@ class ImHereTokenProviderAdapter(
     private val imHereJwtProperties: ImHereJwtProperties
 ) : ImHereTokenProviderPort {
 
-    override fun issue(claims: JwtTokenClaims): ImHereJwt {
+    override fun issue(claims: JwtTokenClaims): ImHereJwtToken {
         val accessToken = tokenIssuer.createAccessToken(claims)
         val refreshToken = tokenIssuer.createRefreshToken(claims)
 
         val redisKey = getTokenRedisKey(claims.email)
         cachePort.save(redisKey, refreshToken, Duration.ofDays(imHereJwtProperties.refreshExpirationDays))
 
-        return ImHereJwt(accessToken, refreshToken)
+        return ImHereJwtToken(accessToken, refreshToken)
     }
 
-    override fun reissueByRefreshToken(refreshToken: String): ImHereJwt {
+    override fun reissueByRefreshToken(refreshToken: String): ImHereJwtToken {
         tokenParser.validate(refreshToken)
 
         val claims = tokenParser.parse(refreshToken)
@@ -40,7 +40,7 @@ class ImHereTokenProviderAdapter(
         return issue(claims)
     }
 
-    override fun reissueByEmail(email: String): ImHereJwt {
+    override fun reissueByEmail(email: String): ImHereJwtToken {
         val refreshTokenFromRedis = findTokenFromRedisWithUserEmail(email)
         val claims = tokenParser.parse(refreshTokenFromRedis)
 

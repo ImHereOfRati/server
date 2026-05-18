@@ -1,7 +1,7 @@
 package com.kdongsu5509.auth.adapter.out.jwt
 
+import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
-import com.kdongsu5509.user.application.dto.JwtTokenClaims
 import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Component
 import java.time.Instant

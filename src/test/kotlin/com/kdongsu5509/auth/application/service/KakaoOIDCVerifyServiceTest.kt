@@ -1,10 +1,11 @@
-package com.kdongsu5509.user.application.service.user.auth
+package com.kdongsu5509.auth.application.service
 
+import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKey
+import com.kdongsu5509.auth.application.port.out.OIDCIdTokenVerifyPort
+import com.kdongsu5509.auth.application.port.out.PublicKeyLoadPort
+import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.type.UnauthorizedException
-import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKey
-import com.kdongsu5509.user.application.port.out.user.oauth.OIDCIdTokenVerifyPort
-import com.kdongsu5509.user.application.port.out.user.oauth.PublicKeyLoadPort
-import com.kdongsu5509.user.exception.AuthError
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jws
 import org.assertj.core.api.Assertions.assertThat
@@ -54,7 +55,7 @@ class KakaoOIDCVerifyServiceTest {
         givenTokenVerificationSucceeds()
 
         // when
-        val result = verifyService.verify(ID_TOKEN)
+        val result = verifyService.verify(OAuth2Provider.KAKAO, ID_TOKEN)
 
         // then
         assertThat(result.email).isEqualTo(EMAIL)
@@ -72,20 +73,21 @@ class KakaoOIDCVerifyServiceTest {
 
         // when & then
         assertUnauthorizedException("ID 토큰에 이메일 정보가 없습니다.") {
-            verifyService.verify(ID_TOKEN)
+            verifyService.verify(OAuth2Provider.KAKAO, ID_TOKEN)
         }
     }
 
     @Test
     @DisplayName("공개키를 찾을 수 없으면 예외가 발생한다")
     fun verify_fail_public_key_not_found() {
+
         // given
         given(oidcIdTokenVerifyPort.getKid(ID_TOKEN)).willReturn(KID)
-        given(publicKeyLoadPort.loadPublicKey(KID)).willThrow(UnauthorizedException(AuthError.IMHERE_KEY_NOT_FOUND_IN_REDIS.message!!))
+        given(publicKeyLoadPort.findByKeyId(KID)).willThrow(UnauthorizedException(AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.errorMessage))
 
         // when & then
-        assertUnauthorizedException(AuthError.IMHERE_KEY_NOT_FOUND_IN_REDIS.message!!) {
-            verifyService.verify(ID_TOKEN)
+        assertUnauthorizedException(AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.errorMessage) {
+            verifyService.verify(OAuth2Provider.KAKAO, ID_TOKEN)
         }
     }
 
@@ -101,7 +103,7 @@ class KakaoOIDCVerifyServiceTest {
     private fun givenTokenSignatureVerificationSucceeds() {
         val mockJws = mock(Jws::class.java) as Jws<Claims>
         given(oidcIdTokenVerifyPort.getKid(ID_TOKEN)).willReturn(KID)
-        given(publicKeyLoadPort.loadPublicKey(KID)).willReturn(PUBLIC_KEY)
+        given(publicKeyLoadPort.findByKeyId(KID)).willReturn(PUBLIC_KEY)
         given(oidcIdTokenVerifyPort.verifySignature(ID_TOKEN, MODULUS, EXPONENT)).willReturn(mockJws)
     }
 

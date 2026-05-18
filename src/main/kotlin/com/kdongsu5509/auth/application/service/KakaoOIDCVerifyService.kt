@@ -1,12 +1,13 @@
-package com.kdongsu5509.user.application.service.user.auth
+package com.kdongsu5509.auth.application.service
 
+import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.auth.application.port.out.OIDCIdTokenVerifyPort
+import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
+import com.kdongsu5509.auth.application.port.out.PublicKeyLoadPort
+import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.application.dto.OIDCDecodePayload
 import com.kdongsu5509.user.application.dto.OIDCUserInfo
-import com.kdongsu5509.user.application.port.out.user.oauth.OIDCIdTokenVerifyPort
-import com.kdongsu5509.user.application.port.out.user.oauth.OIDCVerifyPort
-import com.kdongsu5509.user.application.port.out.user.oauth.PublicKeyLoadPort
-import com.kdongsu5509.user.exception.AuthError
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -17,9 +18,9 @@ class KakaoOIDCVerifyService(
     private val publicKeyLoadPort: PublicKeyLoadPort,
 ) : OIDCVerifyPort {
 
-    override fun verify(idToken: String): OIDCUserInfo {
+    override fun verify(provider: OAuth2Provider, idToken: String): OIDCUserInfo {
         val kid = oidcIdTokenVerifyPort.getKid(idToken)
-        val publicKey = publicKeyLoadPort.loadPublicKey(kid)
+        val publicKey = publicKeyLoadPort.findByKeyId(kid)
 
         val jws = oidcIdTokenVerifyPort.verifySignature(idToken, publicKey.n, publicKey.e)
 
@@ -34,7 +35,8 @@ class KakaoOIDCVerifyService(
         oidcIdTokenVerifyPort.verifyPayLoad(payload)
 
         return OIDCUserInfo(
-            email = payload.email ?: AuthError.OIDC_INVALID.throwIt(customMessage = "ID 토큰에 이메일 정보가 없습니다."),
+            email = payload.email
+                ?: AuthException.OIDC_MISSING_EMAIL.throwIt(customMessage = "ID 토큰에 이메일 정보가 없습니다."),
             nickname = payload.nickname.orEmpty()
         )
     }

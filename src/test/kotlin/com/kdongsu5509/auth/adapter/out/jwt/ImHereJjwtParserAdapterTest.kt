@@ -1,6 +1,7 @@
-package com.kdongsu5509.user.adapter.out.auth.jwt
+package com.kdongsu5509.auth.adapter.out.jwt
 
-import com.common.testUtil.TestJwtBuilder
+import com.common.testsupport.TestJwtBuilder
+import com.common.testsupport.jwt.ImHereTestJwtProvider
 import com.kdongsu5509.support.exception.type.UnauthorizedException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
@@ -22,12 +23,12 @@ import javax.crypto.SecretKey
 class ImHereJjwtParserAdapterTest {
 
     @Mock
-    private lateinit var keyProvider: ImHereJjwtKeyProvider
+    private lateinit var keyProvider: ImHereJjwtSecretKeyProvider
 
     private lateinit var imHereJjwtParserAdapter: ImHereJjwtParserAdapter
 
     private val secretKey: SecretKey =
-        Keys.hmacShaKeyFor(TestJwtBuilder.TEST_IMHERE_JWT_SECRET.toByteArray(StandardCharsets.UTF_8))
+        Keys.hmacShaKeyFor(ImHereTestJwtProvider.TEST_IMHERE_JWT_SECRET.toByteArray(StandardCharsets.UTF_8))
 
     @BeforeEach
     fun setUp() {
@@ -36,7 +37,7 @@ class ImHereJjwtParserAdapterTest {
     }
 
     @Test
-    @DisplayName("유효한 ImHere Access Token을 성공적으로 파싱하여 클레임을 반환한다")
+    @DisplayName("유효한 ImHere Token은 성공적으로 파싱하여 클레임을 반환한다")
     fun parse_success() {
         // given
         val email = "test@example.com"
@@ -110,12 +111,12 @@ class ImHereJjwtParserAdapterTest {
         assertThrows<UnauthorizedException> {
             imHereJjwtParserAdapter.validate(invalidToken)
         }.also {
-            assertThat(it.message).contains("유효하지 않은 토큰입니다.")
+            assertThat(it.message).contains("토큰의 서명 정보가 일치하지 않습니다.")
         }
     }
 
     @Test
-    @DisplayName("형식이 잘못된 토큰인 경우 UnauthorizedException(TOKEN_002)을 발생시킨다")
+    @DisplayName("형식이 잘못된 토큰인 경우 UnauthorizedException을 발생시킨다")
     fun validate_malformedToken_throwsException() {
         // given
         val malformedToken = "not.a.jwt.token"

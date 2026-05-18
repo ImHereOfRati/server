@@ -1,13 +1,13 @@
-package com.kdongsu5509.user.adapter.out.auth.jwt
+package com.kdongsu5509.auth.adapter.out.jwt
 
+import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.auth.application.port.out.CachePort
+import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
+import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
+import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.application.dto.ImHereJwt
 import com.kdongsu5509.user.application.dto.JwtTokenClaims
-import com.kdongsu5509.user.application.port.out.user.CachePort
-import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenIssuerPort
-import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenParserPort
-import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenProviderPort
-import com.kdongsu5509.user.exception.AuthError
 import org.springframework.stereotype.Component
 import java.time.Duration
 
@@ -35,7 +35,7 @@ class ImHereTokenProviderAdapter(
         val claims = tokenParser.parse(refreshToken)
         val refreshTokenSavedAtRedis = findTokenFromRedisWithUserEmail(claims.email)
 
-        if (refreshTokenSavedAtRedis != refreshToken) AuthError.IMHERE_INVALID_TOKEN.throwIt()
+        if (refreshTokenSavedAtRedis != refreshToken) AuthException.IMHERE_INVALID_TOKEN.throwIt()
 
         return issue(claims)
     }
@@ -49,12 +49,9 @@ class ImHereTokenProviderAdapter(
 
     private fun findTokenFromRedisWithUserEmail(email: String): String {
         val redisKey = getTokenRedisKey(email)
-
-        val refreshTokenFromRedis = cachePort.find(redisKey, String::class.java)
-            ?: AuthError.IMHERE_KEY_NOT_FOUND_IN_REDIS.throwIt()
-
-        return refreshTokenFromRedis
+        return cachePort.find(redisKey, String::class.java) ?: AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.throwIt()
     }
 
     private fun getTokenRedisKey(userEmail: String): String = "refresh:$userEmail"
 }
+

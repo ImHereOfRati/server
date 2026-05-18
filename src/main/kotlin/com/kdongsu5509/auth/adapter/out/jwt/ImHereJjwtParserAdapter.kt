@@ -1,26 +1,21 @@
-package com.kdongsu5509.user.adapter.out.auth.jwt
+package com.kdongsu5509.auth.adapter.out.jwt
 
+import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.application.dto.JwtTokenClaims
-import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenParserPort
-import com.kdongsu5509.user.exception.AuthError
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.MalformedJwtException
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-/**
- * 우리 서비스 전용 자체 JWT 토큰을 파싱하고 유효성을 검증하는 어댑터입니다.
- *
- * 전달받은 토큰이 우리 서버의 SecretKey로 서명된 것이 맞는지 확인하고,
- * 토큰 내부의 클레임 데이터를 [JwtTokenClaims] 객체로 변환하여 반환합니다.
- */
 @Component
 class ImHereJjwtParserAdapter(
-    private val keyProvider: ImHereJjwtKeyProvider
+    private val keyProvider: ImHereJjwtSecretKeyProvider
 ) : ImHereTokenParserPort {
 
     private val zoneID: ZoneId = ZoneId.systemDefault()
@@ -42,9 +37,13 @@ class ImHereJjwtParserAdapter(
             parseClaims(token)
             true
         } catch (e: ExpiredJwtException) {
-            AuthError.IMHERE_EXPIRED_TOKEN.throwIt(cause = e)
+            AuthException.IMHERE_EXPIRED_TOKEN.throwIt(cause = e)
+        } catch (e: MalformedJwtException) {
+            AuthException.IMHERE_INVALID_TOKEN.throwIt(cause = e)
+        } catch (e: io.jsonwebtoken.security.SignatureException) {
+            AuthException.IMHERE_INVALID_TOKEN_SIG.throwIt(cause = e)
         } catch (e: Exception) {
-            AuthError.IMHERE_INVALID_TOKEN.throwIt(cause = e)
+            AuthException.IMHERE_KEY_EXCEPTION.throwIt(cause = e)
         }
     }
 
@@ -56,3 +55,4 @@ class ImHereJjwtParserAdapter(
             .payload
     }
 }
+

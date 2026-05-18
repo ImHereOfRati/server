@@ -1,11 +1,12 @@
-package com.kdongsu5509.user.adapter.out.auth.jwt
+package com.kdongsu5509.auth.adapter.out.jwt
 
+
+import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.auth.application.port.out.CachePort
+import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
+import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.support.exception.type.UnauthorizedException
 import com.kdongsu5509.user.application.dto.JwtTokenClaims
-import com.kdongsu5509.user.application.port.out.user.CachePort
-import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenIssuerPort
-import com.kdongsu5509.user.application.port.out.user.auth.ImHereTokenParserPort
-import com.kdongsu5509.user.exception.AuthError
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -33,9 +34,14 @@ class ImHereTokenProviderAdapterTest {
         val TEST_UUID: UUID = UUID.randomUUID()
     }
 
-    @Mock private lateinit var tokenIssuer: ImHereTokenIssuerPort
-    @Mock private lateinit var tokenParser: ImHereTokenParserPort
-    @Mock private lateinit var cachePort: CachePort
+    @Mock
+    private lateinit var tokenIssuer: ImHereTokenIssuerPort
+
+    @Mock
+    private lateinit var tokenParser: ImHereTokenParserPort
+
+    @Mock
+    private lateinit var cachePort: CachePort
 
     private lateinit var tokenProvider: ImHereTokenProviderAdapter
     private lateinit var jwtTokenClaims: JwtTokenClaims
@@ -44,16 +50,16 @@ class ImHereTokenProviderAdapterTest {
     fun setUp() {
         val properties = ImHereJwtProperties(
             secret = "test-secret-key-at-least-32-characters-long",
-            accessExpirationMinutes = 60,
+            accessExpirationDays = 60,
             refreshExpirationDays = REFRESH_EXP_DAYS
         )
-        
+
         tokenProvider = ImHereTokenProviderAdapter(tokenIssuer, tokenParser, cachePort, properties)
 
         jwtTokenClaims = JwtTokenClaims(
             uid = TEST_UUID,
             email = USER_EMAIL,
-            nickname = "테스티",
+            nickname = "테스트",
             role = "USER",
             status = "ACTIVE",
             expiration = LocalDateTime.now().plusDays(7)
@@ -64,7 +70,8 @@ class ImHereTokenProviderAdapterTest {
     @DisplayName("JWT 인증 토큰을 성공적으로 발급한다")
     fun issue_success() {
         // given
-        givenTokenIssuanceSucceeds()
+        given(tokenIssuer.createAccessToken(jwtTokenClaims)).willReturn(ACCESS_TOKEN)
+        given(tokenIssuer.createRefreshToken(jwtTokenClaims)).willReturn(REFRESH_TOKEN)
 
         // when
         val result = tokenProvider.issue(jwtTokenClaims)
@@ -82,7 +89,8 @@ class ImHereTokenProviderAdapterTest {
         // given
         given(tokenParser.parse(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
         given(cachePort.find(REDIS_KEY, String::class.java)).willReturn(REFRESH_TOKEN)
-        givenTokenIssuanceSucceeds()
+        given(tokenIssuer.createAccessToken(jwtTokenClaims)).willReturn(ACCESS_TOKEN)
+        given(tokenIssuer.createRefreshToken(jwtTokenClaims)).willReturn(REFRESH_TOKEN)
 
         // when
         val result = tokenProvider.reissueByRefreshToken(REFRESH_TOKEN)
@@ -99,10 +107,10 @@ class ImHereTokenProviderAdapterTest {
     fun reissue_invalidRefreshToken_throwsException() {
         // given
         val invalidToken = "invalid-token"
-        given(tokenParser.validate(invalidToken)).willThrow(UnauthorizedException(AuthError.IMHERE_INVALID_TOKEN.message!!))
+        given(tokenParser.validate(invalidToken)).willThrow(UnauthorizedException(AuthException.IMHERE_INVALID_TOKEN.errorMessage))
 
         // when & then
-        assertAuthError(AuthError.IMHERE_INVALID_TOKEN) {
+        assertAuthError(AuthException.IMHERE_INVALID_TOKEN) {
             tokenProvider.reissueByRefreshToken(invalidToken)
         }
     }
@@ -111,24 +119,26 @@ class ImHereTokenProviderAdapterTest {
     @DisplayName("Redis에 저장된 토큰이 없는 경우 재발급 시 예외가 발생한다")
     fun reissue_refreshTokenNotFound_throwsException() {
         // given
-        given(tokenParser.parse(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
-        given(cachePort.find(REDIS_KEY, String::class.java)).willReturn(null)
+        given(cachePort.find(REDIS_KEY, String::class.java))
+            .willReturn(null)
 
         // when & then
-        assertAuthError(AuthError.IMHERE_KEY_NOT_FOUND_IN_REDIS) {
-            tokenProvider.reissueByRefreshToken(REFRESH_TOKEN)
+        assertThrows<UnauthorizedException> {
+            tokenProvider.reissueByEmail(USER_EMAIL)
+        }.also {
+            assertThat(it.message).isEqualTo(AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.errorMessage)
         }
     }
 
     @Test
-    @DisplayName("Redis에 저장된 토큰과 일치하지 않는 리프레시 토큰으로 재발급 시 예외가 발생한다")
+    @DisplayName("Redis에 저장된 토큰과 일치하지 않는 리프시 토큰으로 재발급 시 예외가 발생한다")
     fun reissue_mismatchedRefreshToken_throwsException() {
         // given
         given(tokenParser.parse(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
         given(cachePort.find(REDIS_KEY, String::class.java)).willReturn("different-token")
 
         // when & then
-        assertAuthError(AuthError.IMHERE_INVALID_TOKEN) {
+        assertAuthError(AuthException.IMHERE_INVALID_TOKEN) {
             tokenProvider.reissueByRefreshToken(REFRESH_TOKEN)
         }
     }
@@ -139,7 +149,8 @@ class ImHereTokenProviderAdapterTest {
         // given
         given(cachePort.find(REDIS_KEY, String::class.java)).willReturn(REFRESH_TOKEN)
         given(tokenParser.parse(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
-        givenTokenIssuanceSucceeds()
+        given(tokenIssuer.createAccessToken(jwtTokenClaims)).willReturn(ACCESS_TOKEN)
+        given(tokenIssuer.createRefreshToken(jwtTokenClaims)).willReturn(REFRESH_TOKEN)
 
         // when
         val result = tokenProvider.reissueByEmail(USER_EMAIL)
@@ -153,23 +164,20 @@ class ImHereTokenProviderAdapterTest {
     @DisplayName("이메일로 재발급 시 Redis에 토큰이 없으면 예외가 발생한다")
     fun reissue_by_email_notFound_throwsException() {
         // given
-        given(cachePort.find(REDIS_KEY, String::class.java)).willReturn(null)
+        given(
+            cachePort.find(REDIS_KEY, String::class.java)
+        ).willReturn(null)
 
         // when & then
-        assertAuthError(AuthError.IMHERE_KEY_NOT_FOUND_IN_REDIS) {
+        assertThrows<UnauthorizedException> {
             tokenProvider.reissueByEmail(USER_EMAIL)
+        }.also {
+            assertThat(it.message).isEqualTo(AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.errorMessage)
         }
     }
 
-    // --- Helper Methods ---
-
-    private fun givenTokenIssuanceSucceeds() {
-        given(tokenIssuer.createAccessToken(jwtTokenClaims)).willReturn(ACCESS_TOKEN)
-        given(tokenIssuer.createRefreshToken(jwtTokenClaims)).willReturn(REFRESH_TOKEN)
-    }
-
-    private fun assertAuthError(expectedError: AuthError, block: () -> Unit) {
+    private fun assertAuthError(expectedError: AuthException, block: () -> Unit) {
         val exception = assertThrows<UnauthorizedException>(block)
-        assertThat(exception.message).isEqualTo(expectedError.message)
+        assertThat(exception.message).isEqualTo(expectedError.errorMessage)
     }
 }

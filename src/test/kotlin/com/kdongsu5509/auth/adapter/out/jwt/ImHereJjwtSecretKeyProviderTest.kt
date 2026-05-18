@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.adapter.out.auth.jwt
+package com.kdongsu5509.auth.adapter.out.jwt
 
 import io.jsonwebtoken.security.Keys
 import org.assertj.core.api.Assertions.assertThat
@@ -12,13 +12,13 @@ import org.mockito.junit.jupiter.MockitoExtension
 import java.nio.charset.StandardCharsets
 
 @ExtendWith(MockitoExtension::class)
-class ImHereJjwtKeyProviderTest {
+class ImHereJjwtSecretKeyProviderTest {
 
     @Mock
     private lateinit var imHereJwtProperties: ImHereJwtProperties
 
     @InjectMocks
-    private lateinit var imHereJjwtKeyProvider: ImHereJjwtKeyProvider
+    private lateinit var imHereJjwtSecretKeyProvider: ImHereJjwtSecretKeyProvider
 
     @Test
     @DisplayName("설정된 시크릿 문자열을 바탕으로 올바른 SecretKey 객체를 생성한다")
@@ -30,7 +30,7 @@ class ImHereJjwtKeyProviderTest {
         val expectedKey = Keys.hmacShaKeyFor(testSecret.toByteArray(StandardCharsets.UTF_8))
 
         // when
-        val actualKey = imHereJjwtKeyProvider.secretKey
+        val actualKey = imHereJjwtSecretKeyProvider.secretKey
 
         // then
         assertThat(actualKey).isNotNull
@@ -46,8 +46,8 @@ class ImHereJjwtKeyProviderTest {
         `when`(imHereJwtProperties.secret).thenReturn(testSecret)
 
         // when
-        val firstCall = imHereJjwtKeyProvider.secretKey
-        val secondCall = imHereJjwtKeyProvider.secretKey
+        val firstCall = imHereJjwtSecretKeyProvider.secretKey
+        val secondCall = imHereJjwtSecretKeyProvider.secretKey
 
         // then
         assertThat(firstCall).isSameAs(secondCall)

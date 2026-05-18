@@ -1,6 +1,6 @@
-package com.kdongsu5509.user.adapter.out.auth.jwt
+package com.kdongsu5509.auth.adapter.out.jwt
 
-import com.common.testUtil.TestJwtBuilder
+import com.common.testsupport.jwt.ImHereTestJwtProvider
 import com.kdongsu5509.user.application.dto.JwtTokenClaims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
@@ -23,12 +23,12 @@ class ImHereJjwtIssuerAdapterTest {
     private lateinit var imHereJwtProperties: ImHereJwtProperties
 
     @Mock
-    private lateinit var keyProvider: ImHereJjwtKeyProvider
+    private lateinit var keyProvider: ImHereJjwtSecretKeyProvider
 
     private lateinit var imHereJjwtIssuerAdapter: ImHereJjwtIssuerAdapter
 
     private val secretKey: SecretKey =
-        Keys.hmacShaKeyFor(TestJwtBuilder.TEST_IMHERE_JWT_SECRET.toByteArray(StandardCharsets.UTF_8))
+        Keys.hmacShaKeyFor(ImHereTestJwtProvider.TEST_IMHERE_JWT_SECRET.toByteArray(StandardCharsets.UTF_8))
 
     private val claims = JwtTokenClaims(
         uid = UUID.randomUUID(),
@@ -48,7 +48,7 @@ class ImHereJjwtIssuerAdapterTest {
     @DisplayName("Access Token을 요청된 규격에 맞게 생성한다")
     fun createAccessToken_success() {
         // given
-        `when`(imHereJwtProperties.accessExpirationMinutes).thenReturn(30L)
+        `when`(imHereJwtProperties.accessExpirationDays).thenReturn(30L)
 
         // when
         val token = imHereJjwtIssuerAdapter.createAccessToken(claims)
@@ -109,3 +109,4 @@ class ImHereJjwtIssuerAdapterTest {
         assertThat(parsedClaims.expiration).isAfter(Date())
     }
 }
+

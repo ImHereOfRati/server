@@ -8,10 +8,7 @@ data class OIDCAuthResponse(
 ) {
     companion object {
         fun fromImHereJwtToken(imhereJwtToken: ImHereJwtToken): OIDCAuthResponse {
-            return OIDCAuthResponse(
-                imhereJwtToken.accessToken,
-                imhereJwtToken.refreshToken
-            )
+            return OIDCAuthResponse(imhereJwtToken.accessToken, imhereJwtToken.refreshToken)
         }
     }
 }

@@ -49,20 +49,12 @@ fun ImHereBaseErrorCode.throwIt(
             errorCode = this
         )
 
-        500 -> if (this.imhereErrorCode == "GLOBAL-900")
-            InfraFailureException(
-                message = finalMessage,
-                contextData = contextData,
-                cause = cause,
-                errorCode = this
-            )
-        else
-            InternalServerException(
-                message = finalMessage,
-                contextData = contextData,
-                cause = cause,
-                errorCode = this
-            )
+        500 -> InternalServerException(
+            message = finalMessage,
+            contextData = contextData,
+            cause = cause,
+            errorCode = this
+        )
 
         else -> ImHereBaseException(
             errorCode = this,

@@ -36,13 +36,11 @@ class GlobalExceptionHandler(
         val errorCode = e.errorCode
         log.warn("[{}] {} (context: {})", errorCode.imhereErrorCode, e.message, e.contextData)
 
-        if (errorCode.isCritical()) {
-            discordUserErrorNotifier.notifyUserError(
-                request,
-                errorCode.imhereErrorCode,
-                e.message ?: errorCode.errorMessage
-            )
-        }
+        discordUserErrorNotifier.notifyUserError(
+            request,
+            errorCode.imhereErrorCode,
+            e.message ?: errorCode.errorMessage
+        )
 
         return e.contextData.toFailResponse(
             status = errorCode.httpStatus,

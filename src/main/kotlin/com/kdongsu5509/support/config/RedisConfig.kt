@@ -2,6 +2,7 @@ package com.kdongsu5509.support.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
+import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -20,7 +21,8 @@ import java.time.Duration
 
 
 @Configuration
-@EnableRedisRepositories(basePackages = ["com.kdongsu5509.user.adapter.out.redis"])
+@EnableCaching
+@EnableRedisRepositories(basePackages = ["com.kdongsu5509.auth.adapter.out.redis"])
 class RedisConfig {
 
     @Value("\${spring.data.redis.host:localhost}")
@@ -29,9 +31,6 @@ class RedisConfig {
     @Value("\${spring.data.redis.port:6379}")
     private var port: String = "6379"
 
-    /**
-     * Jackson 3 기반의 공용 Serializer 설정
-     */
     @Bean
     fun jsonRedisSerializer(): GenericJacksonJsonRedisSerializer {
         return GenericJacksonJsonRedisSerializer(getJsonMapper())

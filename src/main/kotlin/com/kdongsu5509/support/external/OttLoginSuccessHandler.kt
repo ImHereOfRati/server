@@ -1,20 +1,20 @@
 package com.kdongsu5509.support.external
 
-import com.kdongsu5509.user.application.service.user.ImHereJwtTokenElements
-import com.kdongsu5509.user.application.service.user.JwtTokenIssuer
-import com.kdongsu5509.user.domain.user.UserRole
-import com.kdongsu5509.user.domain.user.UserStatus
+import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
+import com.kdongsu5509.auth.domain.UserRole
+import com.kdongsu5509.auth.domain.UserStatus
+import com.kdongsu5509.user.application.dto.JwtTokenClaims
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.Authentication
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.stereotype.Component
-import java.util.UUID
+import java.util.*
 
 @Component
 class OttLoginSuccessHandler(
-    private val jwtTokenIssuer: JwtTokenIssuer,
+    private val tokenIssuer: ImHereTokenIssuerPort,
     @param:Value("\${admin.id}") private val adminId: String,
     @param:Value("\${admin.nickname}") private val adminNickname: String
 ) : AuthenticationSuccessHandler {
@@ -24,15 +24,15 @@ class OttLoginSuccessHandler(
         response: HttpServletResponse,
         authentication: Authentication
     ) {
-        val adminTokenElements = ImHereJwtTokenElements(
+        val adminClaims = JwtTokenClaims(
             uid = UUID.nameUUIDFromBytes(adminId.toByteArray()),
-            userEmail = adminId,
-            userNickname = adminNickname,
+            email = adminId,
+            nickname = adminNickname,
             role = UserRole.ADMIN.name,
             status = UserStatus.ACTIVE.name
         )
 
-        val accessToken = jwtTokenIssuer.createAdminAccessToken(adminTokenElements)
+        val accessToken = tokenIssuer.createAdminAccessToken(adminClaims)
 
         response.status = HttpServletResponse.SC_OK
         response.contentType = "application/json;charset=UTF-8"

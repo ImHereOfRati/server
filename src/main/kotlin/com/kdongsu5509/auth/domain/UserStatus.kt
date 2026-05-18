@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.domain.user
+package com.kdongsu5509.auth.domain
 
 enum class UserStatus {
     PENDING,  // 가입 대기

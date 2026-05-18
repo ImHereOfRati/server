@@ -1,15 +1,13 @@
-package com.kdongsu5509.user.adapter.out.redis
+package com.kdongsu5509.auth.adapter.out.redis
 
-import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.application.port.out.user.CachePort
-import com.kdongsu5509.user.exception.AuthError
+import com.kdongsu5509.auth.application.port.out.CachePort
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
 
 @Component
-class RedisCacheAdapter(
+class AuthRedisCacheAdapter(
     private val redisTemplate: RedisTemplate<String, String>,
     private val mapper: JsonMapper
 ) : CachePort {
@@ -20,13 +18,8 @@ class RedisCacheAdapter(
     }
 
     override fun <T> find(key: String, clazz: Class<T>): T? {
-        val jsonString = redisTemplate.opsForValue().get(key) ?: return null
-
-        return try {
-            mapper.readValue(jsonString, clazz)
-        } catch (e: Exception) {
-            AuthError.OIDC_KEY_PARSING_ERROR.throwIt()
-        }
+        val jsonString = redisTemplate.opsForValue().get(key)
+        return mapper.readValue(jsonString, clazz)
     }
 
     override fun delete(key: String) {

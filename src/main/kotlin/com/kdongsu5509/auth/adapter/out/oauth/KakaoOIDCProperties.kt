@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.adapter.out.auth.oauth
+package com.kdongsu5509.auth.adapter.out.oauth
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component

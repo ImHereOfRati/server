@@ -1,6 +1,6 @@
-package com.kdongsu5509.user.adapter.out.auth.oauth
+package com.kdongsu5509.auth.adapter.out.oauth
 
-import com.kdongsu5509.user.adapter.out.auth.oauth.dto.OIDCPublicKeyResponse
+import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKeyResponse
 import org.springframework.web.service.annotation.GetExchange
 import org.springframework.web.service.annotation.HttpExchange
 

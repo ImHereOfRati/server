@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.adapter.out.auth.oauth.dto
+package com.kdongsu5509.auth.adapter.out.oauth.dto
 
 data class OIDCPublicKeyResponse(
     val keys: List<OIDCPublicKey> = emptyList()

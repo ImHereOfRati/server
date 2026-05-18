@@ -1,6 +1,6 @@
-package com.kdongsu5509.user.application.port.out.user.auth
+package com.kdongsu5509.auth.application.port.out
 
-import com.kdongsu5509.user.application.dto.JwtTokenClaims
+import com.kdongsu5509.auth.application.JwtTokenClaims
 
 interface ImHereTokenIssuerPort {
     fun createAccessToken(claims: JwtTokenClaims): String

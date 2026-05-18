@@ -1,6 +1,6 @@
-package com.kdongsu5509.user.application.dto
+package com.kdongsu5509.auth.application
 
-import com.kdongsu5509.user.domain.user.User
+import com.kdongsu5509.user.domain.User
 import java.time.LocalDateTime
 import java.util.*
 
@@ -13,13 +13,13 @@ data class JwtTokenClaims(
     val expiration: LocalDateTime? = null
 ) {
     companion object {
-        fun from(user: User): JwtTokenClaims {
+        fun fromUser(user: User): JwtTokenClaims {
             return JwtTokenClaims(
                 uid = user.id!!,
                 email = user.email,
                 nickname = user.nickname,
-                role = user.role.name,
-                status = user.status.name
+                role = user.roleName(),
+                status = user.statusName()
             )
         }
     }

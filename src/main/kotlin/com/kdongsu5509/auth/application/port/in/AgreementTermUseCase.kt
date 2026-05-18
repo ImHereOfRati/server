@@ -1,6 +1,6 @@
-package com.kdongsu5509.user.application.port.`in`.user
+package com.kdongsu5509.auth.application.port.`in`
 
-import com.kdongsu5509.user.adapter.`in`.web.user.dto.request.UserTermsConsentRequest
+import com.kdongsu5509.user.adapter.`in`.web.dto.request.UserTermsConsentRequest
 
 interface AgreementTermUseCase {
     fun consentAll(

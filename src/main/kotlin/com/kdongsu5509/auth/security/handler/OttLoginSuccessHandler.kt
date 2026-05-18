@@ -1,9 +1,10 @@
-package com.kdongsu5509.support.external
+package com.kdongsu5509.auth.security.handler
 
+import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
-import com.kdongsu5509.user.application.dto.JwtTokenClaims
+import com.kdongsu5509.support.response.APIResponseSerializers
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
@@ -34,8 +35,9 @@ class OttLoginSuccessHandler(
 
         val accessToken = tokenIssuer.createAdminAccessToken(adminClaims)
 
-        response.status = HttpServletResponse.SC_OK
-        response.contentType = "application/json;charset=UTF-8"
-        response.writer.write("""{"accessToken":"$accessToken"}""")
+        APIResponseSerializers.writeSuccessResponse(
+            response = response,
+            data = mapOf("accessToken" to accessToken)
+        )
     }
 }

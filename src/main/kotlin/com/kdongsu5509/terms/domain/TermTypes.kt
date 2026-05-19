@@ -1,6 +1,6 @@
 package com.kdongsu5509.terms.domain
 
-enum class TermsTypes {
+enum class TermTypes {
     SERVICE, //서비스 이용 약관
     PRIVACY, //개인정보 처리 방침
     LOCATION, //위치정보 이용약관

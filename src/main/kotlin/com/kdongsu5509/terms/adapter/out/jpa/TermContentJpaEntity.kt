@@ -1,29 +1,29 @@
-package com.kdongsu5509.user.adapter.out.persistence.terms.jpa
+package com.kdongsu5509.terms.adapter.out.jpa
 
 import com.kdongsu5509.user.adapter.out.persistence.common.BaseEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "terms_versions")
-class TermsVersionJpaEntity(
+@Table(name = "term_content")
+class TermContentJpaEntity(
     @Column(nullable = false)
     var version: String,
 
     @Column(columnDefinition = "TEXT", nullable = false)
-    var termVersionContent: String,
-
-    @Column(nullable = false)
-    var isActive: Boolean = false,
+    var content: String,
 
     @Column(nullable = false)
     var effectiveDate: LocalDateTime,
 
+    @Column(nullable = false)
+    var isActive: Boolean = false,
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "terms_id")
-    var terms: TermsDefinitionJpaEntity // 어떤 약관의 버전인지 명시
+    @JoinColumn(name = "term_policy_id")
+    var termPolicy: TermPolicyJpaEntity
 ) : BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val versionId: Long? = null
+    val id: Long? = null
 }

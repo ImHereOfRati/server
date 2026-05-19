@@ -20,6 +20,8 @@ enum class AuthException(
     OIDC_MISSING_EMAIL(CommonErrorCode.UNAUTHORIZED, "AUTH-103", "OIDC ID 토큰에 필수 정보(이메일)가 없습니다."),
     USER_NOT_REGISTER(CommonErrorCode.UNAUTHORIZED, "AUTH-104", "사용자 정보를 찾을 수 없습니다."),
     INVALID_OTT(CommonErrorCode.UNAUTHORIZED, "AUTH-105", "유효하지 않은 일회용 토큰입니다."),
+    USER_DISABLED(CommonErrorCode.UNAUTHORIZED, "AUTH-106", "비활성화된 계정입니다."),
+    USER_LOCKED(CommonErrorCode.UNAUTHORIZED, "AUTH-107", "잠긴 계정입니다."),
     IMHERE_EXPIRED_TOKEN(CommonErrorCode.UNAUTHORIZED, "TOKEN-100", "만료된 토큰입니다."),
     IMHERE_INVALID_TOKEN(CommonErrorCode.UNAUTHORIZED, "TOKEN-101", "유효하지 않은 토큰입니다."),
     IMHERE_INVALID_TOKEN_SIG(CommonErrorCode.UNAUTHORIZED, "TOKEN-102", "토큰의 서명 정보가 일치하지 않습니다."),

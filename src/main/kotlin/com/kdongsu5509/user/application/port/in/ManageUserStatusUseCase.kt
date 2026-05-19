@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.application.port.`in`
+package com.kdongsu5509.user.application.port.`in`
 
 interface ManageUserStatusUseCase {
     fun block(userEmail: String)

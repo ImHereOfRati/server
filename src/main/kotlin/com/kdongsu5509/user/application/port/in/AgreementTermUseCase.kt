@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.application.port.`in`
+package com.kdongsu5509.user.application.port.`in`
 
 import com.kdongsu5509.user.adapter.`in`.web.dto.request.UserTermsConsentRequest
 

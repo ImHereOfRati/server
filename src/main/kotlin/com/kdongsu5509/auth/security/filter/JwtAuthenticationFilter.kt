@@ -2,8 +2,9 @@ package com.kdongsu5509.auth.security.filter
 
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
+import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
-import com.kdongsu5509.auth.security.SimpleTokenUserDetails
+import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.response.APIResponseSerializers
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -47,7 +48,9 @@ class JwtAuthenticationFilter(
             try {
                 val authentication = createAuthentication(jwt, request)
                 SecurityContextHolder.getContext().authentication = authentication
-            } catch (e: IllegalStateException) {
+            } catch (e: ImHereBaseException) {
+                return sendErrorResponse(response, e.errorCode as AuthException)
+            } catch (e: Exception) {
                 return sendErrorResponse(response, AuthException.IMHERE_ACCESS_DENIED, e.message)
             }
         }
@@ -64,7 +67,7 @@ class JwtAuthenticationFilter(
 
     private fun createAuthentication(jwt: String, request: HttpServletRequest): UsernamePasswordAuthenticationToken {
         val claims = tokenParser.parse(jwt)
-        val userDetails = SimpleTokenUserDetails(
+        val userDetails = ImHereUserDetails(
             email = claims.email,
             nickname = claims.nickname,
             role = claims.role,
@@ -78,21 +81,21 @@ class JwtAuthenticationFilter(
         }
     }
 
-    private fun validateUserStatus(userDetails: SimpleTokenUserDetails) {
-        if (!userDetails.isEnabled) throw IllegalStateException("This account is disabled.")
-        if (!userDetails.isAccountNonLocked) throw IllegalStateException("This account is locked.")
+    private fun validateUserStatus(userDetails: ImHereUserDetails) {
+        if (!userDetails.isEnabled) throw ImHereBaseException(AuthException.USER_DISABLED)
+        if (!userDetails.isAccountNonLocked) throw ImHereBaseException(AuthException.USER_LOCKED)
     }
 
     private fun sendErrorResponse(
         response: HttpServletResponse,
-        AuthErrorCode: AuthException,
+        authException: AuthException,
         customMessage: String? = null
     ) {
         APIResponseSerializers.writeErrorResponse(
             response = response,
-            status = AuthErrorCode.httpStatus,
-            imhereErrorCode = AuthErrorCode.imhereErrorCode,
-            errorMessage = customMessage ?: AuthErrorCode.errorMessage
+            status = authException.httpStatus,
+            imhereErrorCode = authException.imhereErrorCode,
+            errorMessage = customMessage ?: authException.errorMessage
         )
     }
 }

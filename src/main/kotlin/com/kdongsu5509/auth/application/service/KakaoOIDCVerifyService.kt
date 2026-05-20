@@ -1,13 +1,13 @@
 package com.kdongsu5509.auth.application.service
 
 import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.auth.application.OIDCDecodePayload
+import com.kdongsu5509.auth.application.OIDCUserInfo
 import com.kdongsu5509.auth.application.port.out.OIDCIdTokenVerifyPort
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.application.port.out.PublicKeyLoadPort
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.application.dto.OIDCDecodePayload
-import com.kdongsu5509.user.application.dto.OIDCUserInfo
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

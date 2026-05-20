@@ -2,9 +2,9 @@ package com.kdongsu5509.auth.adapter.out.jwt
 
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.adapter.out.oauth.KakaoOIDCProperties
+import com.kdongsu5509.auth.application.OIDCDecodePayload
 import com.kdongsu5509.auth.application.port.out.OIDCIdTokenVerifyPort
 import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.application.dto.OIDCDecodePayload
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jws

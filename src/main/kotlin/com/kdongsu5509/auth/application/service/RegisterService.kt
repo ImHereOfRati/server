@@ -2,20 +2,20 @@ package com.kdongsu5509.auth.application.service
 
 import com.kdongsu5509.auth.application.ImHereJwtToken
 import com.kdongsu5509.auth.application.JwtTokenClaims
+import com.kdongsu5509.auth.application.OIDCUserInfo
 import com.kdongsu5509.auth.application.port.`in`.RegisterUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.user.application.dto.OIDCUserInfo
-import com.kdongsu5509.user.application.port.out.UserSavePort
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.repository.UserDao
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class RegisterService(
     private val oidcVerifyPort: OIDCVerifyPort,
-    private val userSavePort: UserSavePort,
+    private val userDao: UserDao,
     private val tokenProviderPort: ImHereTokenProviderPort
 ) : RegisterUseCase {
 
@@ -34,6 +34,6 @@ class RegisterService(
 
     private fun saveNewUser(email: String, nickname: String, provider: OAuth2Provider): User {
         val newUser = User.createWithPendingStatus(email, nickname, provider)
-        return userSavePort.save(newUser)
+        return userDao.save(newUser)
     }
 }

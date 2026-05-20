@@ -12,7 +12,13 @@ data class ImHereUserDetails(
     val status: String
 ) : UserDetails {
     override fun getAuthorities(): Collection<GrantedAuthority> {
-        return listOf(SimpleGrantedAuthority("ROLE_$role"))
+        val authorities = mutableListOf(SimpleGrantedAuthority("ROLE_$role"))
+
+        if (status == UserStatus.PENDING.name) {
+            authorities.add(SimpleGrantedAuthority(UserStatus.PENDING.name))
+        }
+
+        return authorities
     }
 
     override fun getPassword(): String? = null
@@ -28,6 +34,6 @@ data class ImHereUserDetails(
     override fun isCredentialsNonExpired(): Boolean = true
 
     override fun isEnabled(): Boolean {
-        return status == UserStatus.ACTIVE.name && status != UserStatus.PENDING.name
+        return status == UserStatus.ACTIVE.name || status == UserStatus.PENDING.name
     }
 }

@@ -1,29 +1,37 @@
-package com.kdongsu5509.user.adapter.out.persistence.user.jpa
+package com.kdongsu5509.user.repository
 
-import com.kdongsu5509.user.adapter.out.persistence.common.BaseTimeEntity
-import com.kdongsu5509.user.domain.user.OAuth2Provider
-import com.kdongsu5509.user.domain.user.UserRole
-import com.kdongsu5509.user.domain.user.UserStatus
+import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.auth.domain.UserRole
+import com.kdongsu5509.auth.domain.UserStatus
+import com.kdongsu5509.shared.BaseTimeEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import java.util.*
 
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    indexes = [
+        Index(
+            name = "idx_users_nickname",
+            columnList = "nickname"
+        )
+    ]
+)
 class UserJpaEntity(
     @Column(unique = true, nullable = false)
-    var email: String,
+    val email: String,
 
     @Column(nullable = false)
     var nickname: String,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var role: UserRole = UserRole.NORMAL,
+    val role: UserRole = UserRole.NORMAL,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var provider: OAuth2Provider,
+    val provider: OAuth2Provider,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

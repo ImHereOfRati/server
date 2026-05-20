@@ -1,7 +1,7 @@
-package com.kdongsu5509.user.adapter.out.jpa
+package com.kdongsu5509.user.repository
 
+import com.kdongsu5509.shared.BaseTimeEntity
 import com.kdongsu5509.terms.adapter.out.TermJpaEntity
-import com.kdongsu5509.user.adapter.out.persistence.common.BaseTimeEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import java.util.*
@@ -15,7 +15,7 @@ class UserAgreementJpaEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "terms_version_id", nullable = false)
-    val termsVersion: TermJpaEntity
+    val term: TermJpaEntity
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue

@@ -1,27 +1,25 @@
-package com.kdongsu5509.user.adapter.out.adapter
+package com.kdongsu5509.user.repository
 
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.adapter.out.TermMapper
 import com.kdongsu5509.terms.adapter.out.TermPersistenceAdapter
-import com.kdongsu5509.user.adapter.out.jpa.SpringDataUserAgreementRepository
-import com.kdongsu5509.user.adapter.out.jpa.SpringDataUserRepository
-import com.kdongsu5509.user.adapter.out.jpa.UserAgreementJpaEntity
-import com.kdongsu5509.user.adapter.out.jpa.UserJpaEntity
-import com.kdongsu5509.user.application.port.out.UserAgreementPort
 import com.kdongsu5509.user.exception.UserException
 import org.springframework.stereotype.Component
+import java.util.*
 
 @Component
-class UserAgreementPersistenceAdapter(
+class UserAgreementDaoImpl(
     private val userRepository: SpringDataUserRepository,
     private val termPersistenceAdapter: TermPersistenceAdapter,
     private val termMapper: TermMapper,
     private val userAgreementRepository: SpringDataUserAgreementRepository
-) : UserAgreementPort {
+) : UserAgreementDao {
 
-    override fun save(email: String, id: Long) {
-        val userEntity = findUserByEmail(email)
+    override fun save(userId: UUID, id: Long) {
+        val userEntity = userRepository.findById(userId).orElseThrow {
+            UserException.USER_NOT_FOUND.throwIt()
+        }
         val term = termPersistenceAdapter.findById(id) ?: TermException.TERM_NOT_FOUND.throwIt()
 
         userAgreementRepository.save(
@@ -29,8 +27,10 @@ class UserAgreementPersistenceAdapter(
         )
     }
 
-    override fun saveAll(email: String, ids: List<Long>) {
-        val userEntity = findUserByEmail(email)
+    override fun saveAll(userId: UUID, ids: List<Long>) {
+        val userEntity = userRepository.findById(userId).orElseThrow {
+            UserException.USER_NOT_FOUND.throwIt()
+        }
         val latestTerms = termPersistenceAdapter.findActiveAll()
 
         userAgreementRepository.saveAll(
@@ -39,7 +39,4 @@ class UserAgreementPersistenceAdapter(
             }
         )
     }
-
-    private fun findUserByEmail(userEmail: String): UserJpaEntity =
-        userRepository.findByEmail(userEmail) ?: UserException.USER_NOT_FOUND.throwIt()
 }

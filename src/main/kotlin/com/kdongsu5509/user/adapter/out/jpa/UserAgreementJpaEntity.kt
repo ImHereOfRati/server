@@ -1,7 +1,7 @@
-package com.kdongsu5509.user.adapter.out.persistence.user.jpa
+package com.kdongsu5509.user.adapter.out.jpa
 
+import com.kdongsu5509.terms.adapter.out.TermJpaEntity
 import com.kdongsu5509.user.adapter.out.persistence.common.BaseTimeEntity
-import com.kdongsu5509.user.adapter.out.persistence.terms.jpa.TermsVersionJpaEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import java.util.*
@@ -14,11 +14,11 @@ class UserAgreementJpaEntity(
     val user: UserJpaEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "version_id", nullable = false)
-    val termsVersion: TermsVersionJpaEntity,
+    @JoinColumn(name = "terms_version_id", nullable = false)
+    val termsVersion: TermJpaEntity
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue
     @UuidGenerator
-    val agreementId: UUID? = null
+    val id: UUID? = null
 }

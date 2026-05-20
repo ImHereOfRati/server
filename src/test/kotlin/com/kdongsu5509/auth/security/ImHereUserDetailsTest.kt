@@ -10,9 +10,7 @@ class ImHereUserDetailsTest {
 
     companion object {
         const val TEST_EMAIL = "test@kakao.com"
-        const val ROLE_ADMIN = "ADMIN"
         const val ROLE_NORMAL = "NORMAL"
-        const val EXPECTED_ROLE_ADMIN = "ROLE_ADMIN"
         const val EXPECTED_ROLE_NORMAL = "ROLE_NORMAL"
         const val TEST_NICKNAME = "테스티"
         const val ACTIVE_STATUS = "ACTIVE"
@@ -65,7 +63,7 @@ class ImHereUserDetailsTest {
     @Nested
     inner class IsEnabledTest {
         @Test
-        @DisplayName("DEACTIVATED나 PENDING이 아니면 활성화되어 있다고 반환한다")
+        @DisplayName("ACTIVE이면 활성화되어 있다고 반환한다")
         fun isEnabled_returnsTrue() {
             // given
             val activeDetails = ImHereUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, ACTIVE_STATUS)
@@ -75,15 +73,23 @@ class ImHereUserDetailsTest {
         }
 
         @Test
-        @DisplayName("DEACTIVATED나 PENDING이면 비활성화되어 있다고 반환한다")
+        @DisplayName("pending이면 활성화되어 있다고 반환한다")
+        fun isEnabled_returnTure_when_Pending() {
+            // given
+            val pendingDetails = ImHereUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, PENDING_STATUS)
+
+            // when && then
+            assertThat(pendingDetails.isEnabled).isTrue()
+        }
+
+        @Test
+        @DisplayName("DEACTIVATED이면 비활성화되어 있다고 반환한다")
         fun isEnabled_returnsFalse() {
             // given
             val deactivatedDetails = ImHereUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, DEACTIVATED_STATUS)
-            val pendingDetails = ImHereUserDetails(TEST_EMAIL, TEST_NICKNAME, ROLE_NORMAL, PENDING_STATUS)
 
             // when & then
             assertThat(deactivatedDetails.isEnabled).isFalse()
-            assertThat(pendingDetails.isEnabled).isFalse()
         }
     }
 }

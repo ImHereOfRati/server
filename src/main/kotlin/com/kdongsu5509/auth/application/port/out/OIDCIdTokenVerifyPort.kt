@@ -1,6 +1,6 @@
 package com.kdongsu5509.auth.application.port.out
 
-import com.kdongsu5509.user.application.dto.OIDCDecodePayload
+import com.kdongsu5509.auth.application.OIDCDecodePayload
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jws
 

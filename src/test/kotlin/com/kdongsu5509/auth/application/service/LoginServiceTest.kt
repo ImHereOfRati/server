@@ -2,15 +2,15 @@ package com.kdongsu5509.auth.application.service
 
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.ImHereJwtToken
+import com.kdongsu5509.auth.application.OIDCUserInfo
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.support.exception.ImHereBaseException
-import com.kdongsu5509.user.application.dto.OIDCUserInfo
-import com.kdongsu5509.user.application.port.out.UserLoadPort
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.repository.UserDao
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -29,13 +29,13 @@ class LoginServiceTest {
 
     companion object {
         const val TEST_ID_TOKEN = "idToken"
-        const val TEST_EMAIL = "test@test.com"
-        const val TEST_NICKNAME = "홍길동"
         const val TEST_ACCESS_TOKEN = "accessToken"
         const val TEST_REFRESH_TOKEN = "refreshToken"
-
+        const val TEST_EMAIL = "ds.ko@kakao.com"
+        const val TEST_NICKNAME = "고동수"
         val TEST_OAUTH_PROVIDER = OAuth2Provider.KAKAO
-        val TEST_OIDC_USER_INFO = OIDCUserInfo(email = TEST_EMAIL, nickname = TEST_NICKNAME)
+
+        val TEST_OIDC_USER_INFO = OIDCUserInfo(TEST_EMAIL, TEST_NICKNAME)
         val TEST_USER = User(
             id = UUID.randomUUID(),
             email = TEST_EMAIL,
@@ -50,7 +50,7 @@ class LoginServiceTest {
     lateinit var oidcVerifyPort: OIDCVerifyPort
 
     @Mock
-    lateinit var userLoadPort: UserLoadPort
+    lateinit var userDao: UserDao
 
     @Mock
     lateinit var tokenProviderPort: ImHereTokenProviderPort
@@ -63,7 +63,7 @@ class LoginServiceTest {
     fun login_success() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userLoadPort.findByEmail(TEST_EMAIL)).willReturn(TEST_USER)
+        given(userDao.findByEmail(TEST_EMAIL)).willReturn(TEST_USER)
         given(tokenProviderPort.issue(any())).willReturn(ImHereJwtToken(TEST_ACCESS_TOKEN, TEST_REFRESH_TOKEN))
 
         // when
@@ -74,7 +74,7 @@ class LoginServiceTest {
         assertThat(result.refreshToken).isEqualTo(TEST_REFRESH_TOKEN)
 
         then(oidcVerifyPort).should().verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)
-        then(userLoadPort).should().findByEmail(TEST_EMAIL)
+        then(userDao).should().findByEmail(TEST_EMAIL)
         then(tokenProviderPort).should().issue(any())
     }
 
@@ -83,7 +83,7 @@ class LoginServiceTest {
     fun login_fail_user_not_registered() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userLoadPort.findByEmail(TEST_EMAIL)).willReturn(null)
+        given(userDao.findByEmail(TEST_EMAIL)).willReturn(null)
 
         // when & then
         val exception = assertThrows<ImHereBaseException> {
@@ -92,7 +92,7 @@ class LoginServiceTest {
 
         assertThat(exception.errorCode).isEqualTo(AuthException.USER_NOT_REGISTER)
         then(oidcVerifyPort).should().verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)
-        then(userLoadPort).should().findByEmail(TEST_EMAIL)
+        then(userDao).should().findByEmail(TEST_EMAIL)
         then(tokenProviderPort).shouldHaveNoInteractions()
     }
 }

@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.repository
+package com.kdongsu5509.user.repository.jpa
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository

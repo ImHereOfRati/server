@@ -5,6 +5,9 @@ import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.adapter.out.TermMapper
 import com.kdongsu5509.terms.adapter.out.TermPersistenceAdapter
 import com.kdongsu5509.user.exception.UserException
+import com.kdongsu5509.user.repository.jpa.SpringDataUserAgreementRepository
+import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
+import com.kdongsu5509.user.repository.jpa.UserAgreementJpaEntity
 import org.springframework.stereotype.Component
 import java.util.*
 

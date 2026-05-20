@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.repository
+package com.kdongsu5509.user.repository.jpa
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole

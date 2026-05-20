@@ -1,6 +1,7 @@
 package com.kdongsu5509.user.repository
 
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.springframework.stereotype.Component
 
 @Component

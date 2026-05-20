@@ -11,6 +11,10 @@ import com.kdongsu5509.terms.adapter.out.TermPersistenceAdapter
 import com.kdongsu5509.terms.domain.Term
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.user.exception.UserException
+import com.kdongsu5509.user.repository.jpa.SpringDataUserAgreementRepository
+import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
+import com.kdongsu5509.user.repository.jpa.UserAgreementJpaEntity
+import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

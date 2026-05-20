@@ -1,4 +1,4 @@
-package com.kdongsu5509.user.repository
+package com.kdongsu5509.user.repository.jpa
 
 import com.kdongsu5509.shared.BaseTimeEntity
 import com.kdongsu5509.terms.adapter.out.TermJpaEntity

@@ -4,6 +4,9 @@ import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.terms.adapter.out.TermJpaEntity
 import com.kdongsu5509.terms.domain.TermTypes
+import com.kdongsu5509.user.repository.jpa.SpringDataUserAgreementRepository
+import com.kdongsu5509.user.repository.jpa.UserAgreementJpaEntity
+import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName

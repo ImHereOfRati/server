@@ -6,6 +6,9 @@ import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.exception.UserException
+import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
+import com.kdongsu5509.user.repository.jpa.SpringQueryDSLUserRepository
+import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName

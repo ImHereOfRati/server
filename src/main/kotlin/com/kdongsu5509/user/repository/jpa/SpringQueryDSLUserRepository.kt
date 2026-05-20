@@ -1,11 +1,13 @@
-package com.kdongsu5509.user.repository
+package com.kdongsu5509.user.repository.jpa
 
 import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.friends.adapter.out.jpa.QFriendRelationshipsJpaEntity
 import com.kdongsu5509.friends.adapter.out.jpa.QFriendRequestJpaEntity
 import com.kdongsu5509.friends.adapter.out.jpa.QFriendRestrictionJpaEntity
+import com.kdongsu5509.user.repository.QUserJpaEntity
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.domain.SliceImpl
@@ -15,7 +17,7 @@ import java.util.*
 @Repository
 class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
 
-    private val user = QUserJpaEntity.userJpaEntity
+    private val user = QUserJpaEntity.Companion.userJpaEntity
 
     fun findUserByEmail(email: String): UserJpaEntity? =
         queryFactory.selectFrom(user)
@@ -52,7 +54,7 @@ class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
     fun findAllActiveByEmailAndKeyword(
         userEmail: String,
         keyword: String,
-        pageable: Pageable = org.springframework.data.domain.PageRequest.of(0, 20)
+        pageable: Pageable = PageRequest.of(0, 20)
     ): Slice<UserJpaEntity> {
         val currentUserId = findCurrentUserId(userEmail) ?: return SliceImpl(emptyList(), pageable, false)
         val excludedUserIds = fetchExcludedUserIds(currentUserId)

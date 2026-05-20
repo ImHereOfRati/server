@@ -2,6 +2,8 @@ package com.kdongsu5509.user.repository
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserStatus
+import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
+import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

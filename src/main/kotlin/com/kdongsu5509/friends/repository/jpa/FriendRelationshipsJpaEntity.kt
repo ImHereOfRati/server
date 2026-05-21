@@ -1,7 +1,7 @@
-package com.kdongsu5509.user.adapter.out.persistence.friends.jpa
+package com.kdongsu5509.friends.repository.jpa
 
-import com.kdongsu5509.user.adapter.out.persistence.common.BaseTimeEntity
-import com.kdongsu5509.user.adapter.out.persistence.user.jpa.UserJpaEntity
+import com.kdongsu5509.shared.BaseTimeEntity
+import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import java.util.*

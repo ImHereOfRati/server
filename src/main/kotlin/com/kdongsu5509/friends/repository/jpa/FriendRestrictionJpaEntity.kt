@@ -32,7 +32,7 @@ class FriendRestrictionJpaEntity(
     var id: UUID? = null
 
     companion object {
-        fun createFromRejection(
+        fun createRejectionType(
             actor: UserJpaEntity,
             target: UserJpaEntity
         ): FriendRestrictionJpaEntity {

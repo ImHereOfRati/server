@@ -10,7 +10,7 @@ data class FriendRequest(
     val id: UUID? = null,
     val requester: User,
     val receiver: User,
-    val message: String?,
+    val message: String,
     val createdAt: LocalDateTime? = null,
     val updatedAt: LocalDateTime? = null
 ) {

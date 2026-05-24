@@ -15,12 +15,12 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.kotlin.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.util.ReflectionTestUtils
@@ -71,7 +71,7 @@ class FriendshipRepositoryImplTest {
                 createTestUserEntity(UUID.randomUUID()),
                 "alias"
             ).apply { ReflectionTestUtils.setField(this, "id", id) }
-            
+
             val domain = Friendship(
                 id = id,
                 owner = createTestUser(UUID.randomUUID()),
@@ -110,7 +110,7 @@ class FriendshipRepositoryImplTest {
         fun success() {
             val email = "owner@test.com"
             val pageable = PageRequest.of(0, 10)
-            
+
             val entity = FriendshipJpaEntity.create(
                 createTestUserEntity(UUID.randomUUID()),
                 createTestUserEntity(UUID.randomUUID()),
@@ -143,7 +143,7 @@ class FriendshipRepositoryImplTest {
         @DisplayName("전체 친구 관계 슬라이스를 조회한다")
         fun success() {
             val pageable = PageRequest.of(0, 10)
-            
+
             val entity = FriendshipJpaEntity.create(
                 createTestUserEntity(UUID.randomUUID()),
                 createTestUserEntity(UUID.randomUUID()),
@@ -192,7 +192,9 @@ class FriendshipRepositoryImplTest {
                 updatedAt = LocalDateTime.now()
             )
 
-            `when`(springDataFriendshipRepository.findByOwnerUserEmailAndFriendUserId(ownerEmail, friendId)).thenReturn(Optional.of(entity))
+            `when`(springDataFriendshipRepository.findByOwnerUserEmailAndFriendUserId(ownerEmail, friendId)).thenReturn(
+                Optional.of(entity)
+            )
             `when`(friendshipMapper.toDomain(entity)).thenReturn(domain)
 
             val result = friendshipRepositoryImpl.findByOwnerEmailAndFriendId(ownerEmail, friendId)
@@ -206,7 +208,9 @@ class FriendshipRepositoryImplTest {
             val ownerEmail = "owner@test.com"
             val friendId = UUID.randomUUID()
 
-            `when`(springDataFriendshipRepository.findByOwnerUserEmailAndFriendUserId(ownerEmail, friendId)).thenReturn(Optional.empty())
+            `when`(springDataFriendshipRepository.findByOwnerUserEmailAndFriendUserId(ownerEmail, friendId)).thenReturn(
+                Optional.empty()
+            )
 
             val result = friendshipRepositoryImpl.findByOwnerEmailAndFriendId(ownerEmail, friendId)
 
@@ -244,7 +248,7 @@ class FriendshipRepositoryImplTest {
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now()
             )
-            
+
             val entity = FriendshipJpaEntity.create(
                 createTestUserEntity(UUID.randomUUID()),
                 createTestUserEntity(UUID.randomUUID()),
@@ -272,7 +276,7 @@ class FriendshipRepositoryImplTest {
 
             val owner = createTestUser(ownerId)
             val friend = createTestUser(friendId)
-            
+
             val ownerEntity = createTestUserEntity(ownerId)
             val friendEntity = createTestUserEntity(friendId)
 
@@ -284,7 +288,7 @@ class FriendshipRepositoryImplTest {
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now()
             )
-            
+
             val entity = FriendshipJpaEntity.create(ownerEntity, friendEntity, "alias")
 
             `when`(entityManager.getReference(UserJpaEntity::class.java, ownerId)).thenReturn(ownerEntity)
@@ -297,5 +301,18 @@ class FriendshipRepositoryImplTest {
             assertThat(result).isEqualTo(domain)
             verify(springDataFriendshipRepository).save(any())
         }
+    }
+
+    @Test
+    @DisplayName("친구 관계 존재 여부를 성공적으로 조회한다")
+    fun success() {
+        val ownerId = UUID.randomUUID()
+        val friendId = UUID.randomUUID()
+
+        `when`(springDataFriendshipRepository.existsByOwnerUserIdAndFriendUserId(any(), any())).thenReturn(true)
+
+        friendshipRepositoryImpl.existsByOwnerUserIdAndFriendUserId(ownerId, friendId)
+
+        verify(springDataFriendshipRepository).existsByOwnerUserIdAndFriendUserId(any(), any())
     }
 }

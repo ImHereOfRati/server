@@ -22,6 +22,7 @@ class TermMapper {
 
     fun toEntity(term: Term): TermJpaEntity {
         return TermJpaEntity(
+            id = term.id,
             version = term.version,
             type = term.type,
             title = term.title,

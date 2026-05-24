@@ -10,7 +10,7 @@ import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.user.domain.User
-import com.kdongsu5509.user.repository.UserDao
+import com.kdongsu5509.user.repository.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -50,7 +50,7 @@ class LoginServiceTest {
     lateinit var oidcVerifyPort: OIDCVerifyPort
 
     @Mock
-    lateinit var userDao: UserDao
+    lateinit var userRepository: UserRepository
 
     @Mock
     lateinit var tokenProviderPort: ImHereTokenProviderPort
@@ -63,7 +63,7 @@ class LoginServiceTest {
     fun login_success() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userDao.findByEmail(TEST_EMAIL)).willReturn(TEST_USER)
+        given(userRepository.findByEmail(TEST_EMAIL)).willReturn(TEST_USER)
         given(tokenProviderPort.issue(any())).willReturn(ImHereJwtToken(TEST_ACCESS_TOKEN, TEST_REFRESH_TOKEN))
 
         // when
@@ -74,7 +74,7 @@ class LoginServiceTest {
         assertThat(result.refreshToken).isEqualTo(TEST_REFRESH_TOKEN)
 
         then(oidcVerifyPort).should().verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)
-        then(userDao).should().findByEmail(TEST_EMAIL)
+        then(userRepository).should().findByEmail(TEST_EMAIL)
         then(tokenProviderPort).should().issue(any())
     }
 
@@ -83,7 +83,7 @@ class LoginServiceTest {
     fun login_fail_user_not_registered() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userDao.findByEmail(TEST_EMAIL)).willReturn(null)
+        given(userRepository.findByEmail(TEST_EMAIL)).willReturn(null)
 
         // when & then
         val exception = assertThrows<ImHereBaseException> {
@@ -92,7 +92,7 @@ class LoginServiceTest {
 
         assertThat(exception.errorCode).isEqualTo(AuthException.USER_NOT_REGISTER)
         then(oidcVerifyPort).should().verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)
-        then(userDao).should().findByEmail(TEST_EMAIL)
+        then(userRepository).should().findByEmail(TEST_EMAIL)
         then(tokenProviderPort).shouldHaveNoInteractions()
     }
 }

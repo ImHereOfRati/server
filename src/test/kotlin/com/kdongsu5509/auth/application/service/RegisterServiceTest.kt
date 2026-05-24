@@ -8,7 +8,7 @@ import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.user.domain.User
-import com.kdongsu5509.user.repository.UserDao
+import com.kdongsu5509.user.repository.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -56,7 +56,7 @@ class RegisterServiceTest {
     lateinit var oidcVerifyPort: OIDCVerifyPort
 
     @Mock
-    lateinit var userDao: UserDao
+    lateinit var userRepository: UserRepository
 
     @Mock
     lateinit var tokenProviderPort: ImHereTokenProviderPort
@@ -69,7 +69,7 @@ class RegisterServiceTest {
     fun register_success() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userDao.save(TEST_NO_ID_USER)).willReturn(TEST_WITH_ID_USER)
+        given(userRepository.save(TEST_NO_ID_USER)).willReturn(TEST_WITH_ID_USER)
         given(tokenProviderPort.issue(any())).willReturn(ImHereJwtToken(TEST_ACCESS_TOKEN, TEST_REFRESH_TOKEN))
 
         // when
@@ -77,7 +77,7 @@ class RegisterServiceTest {
 
         // then
         then(oidcVerifyPort).should().verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)
-        then(userDao).should().save(TEST_NO_ID_USER)
+        then(userRepository).should().save(TEST_NO_ID_USER)
         then(tokenProviderPort).should().issue(any())
     }
 
@@ -94,7 +94,7 @@ class RegisterServiceTest {
         }
 
         assertThat(exception.message).isEqualTo("OIDC Verification Failed")
-        then(userDao).shouldHaveNoInteractions()
+        then(userRepository).shouldHaveNoInteractions()
         then(tokenProviderPort).shouldHaveNoInteractions()
     }
 
@@ -103,7 +103,7 @@ class RegisterServiceTest {
     fun register_fail_user_save() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userDao.save(TEST_NO_ID_USER)).willThrow(RuntimeException("Persistence Failed"))
+        given(userRepository.save(TEST_NO_ID_USER)).willThrow(RuntimeException("Persistence Failed"))
 
         // when & then
         val exception = org.junit.jupiter.api.assertThrows<RuntimeException> {
@@ -119,7 +119,7 @@ class RegisterServiceTest {
     fun register_fail_token_issue() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userDao.save(TEST_NO_ID_USER)).willReturn(TEST_WITH_ID_USER)
+        given(userRepository.save(TEST_NO_ID_USER)).willReturn(TEST_WITH_ID_USER)
         given(tokenProviderPort.issue(any())).willThrow(RuntimeException("Token Issue Failed"))
 
         // when & then

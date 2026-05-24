@@ -6,9 +6,9 @@ import com.kdongsu5509.friends.repository.jpa.SpringDataFriendRequestRepository
 import com.kdongsu5509.friends.repository.mapper.FriendRequestMapper
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import jakarta.persistence.EntityManager
-import org.springframework.stereotype.Repository
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
+import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
@@ -53,4 +53,7 @@ class FriendRequestRepositoryImpl(
         springDataFriendRequestRepository.deleteByRequesterAndReceiver(u1, u2)
         springDataFriendRequestRepository.deleteByRequesterAndReceiver(u2, u1)
     }
+
+    override fun existsByRequesterIdAndReceiverId(requesterId: UUID, receiverId: UUID): Boolean =
+        springDataFriendRequestRepository.existsByRequesterIdAndReceiverId(requesterId, receiverId)
 }

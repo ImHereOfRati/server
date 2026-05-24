@@ -3,7 +3,6 @@ package com.kdongsu5509.friends.service
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
-import com.kdongsu5509.friends.FriendException
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.friends.repository.FriendRequestRepository
@@ -11,7 +10,7 @@ import com.kdongsu5509.friends.repository.FriendRestrictionRepository
 import com.kdongsu5509.friends.repository.FriendshipRepository
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.user.domain.User
-import com.kdongsu5509.user.repository.UserDao
+import com.kdongsu5509.user.repository.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -24,7 +23,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import java.time.LocalDateTime
@@ -37,7 +35,7 @@ class FriendRestrictionServiceImplTest {
     lateinit var friendRestrictionRepository: FriendRestrictionRepository
 
     @Mock
-    lateinit var userDao: UserDao
+    lateinit var userRepository: UserRepository
 
     @Mock
     lateinit var friendshipRepository: FriendshipRepository
@@ -189,13 +187,13 @@ class FriendRestrictionServiceImplTest {
             val restrictorId = UUID.randomUUID()
             val restrictedId = UUID.randomUUID()
             val restrictorEmail = "actor@test.com"
-            
+
             val restrictor = createTestUser(id = restrictorId, email = restrictorEmail)
             val restricted = createTestUser(id = restrictedId)
             val restriction = createTestRestriction(restrictor = restrictor, restricted = restricted)
 
-            `when`(userDao.findByEmail(restrictorEmail)).thenReturn(restrictor)
-            `when`(userDao.findById(restrictedId)).thenReturn(restricted)
+            `when`(userRepository.findByEmail(restrictorEmail)).thenReturn(restrictor)
+            `when`(userRepository.findById(restrictedId)).thenReturn(restricted)
             `when`(friendRestrictionRepository.save(any())).thenReturn(restriction)
 
             val result = friendRestrictionServiceImpl.restrictUser(restrictorEmail, restrictedId)
@@ -209,7 +207,7 @@ class FriendRestrictionServiceImplTest {
         @Test
         @DisplayName("차단하는 사용자를 찾을 수 없으면 예외를 발생시킨다")
         fun restrictorNotFound() {
-            `when`(userDao.findByEmail("test@test.com")).thenReturn(null)
+            `when`(userRepository.findByEmail("test@test.com")).thenReturn(null)
 
             assertThrows<ImHereBaseException> {
                 friendRestrictionServiceImpl.restrictUser("test@test.com", UUID.randomUUID())
@@ -220,8 +218,8 @@ class FriendRestrictionServiceImplTest {
         @DisplayName("차단 당할 사용자를 찾을 수 없으면 예외를 발생시킨다")
         fun restrictedNotFound() {
             val restrictor = createTestUser()
-            `when`(userDao.findByEmail("test@test.com")).thenReturn(restrictor)
-            `when`(userDao.findById(any())).thenReturn(null)
+            `when`(userRepository.findByEmail("test@test.com")).thenReturn(restrictor)
+            `when`(userRepository.findById(any())).thenReturn(null)
 
             assertThrows<ImHereBaseException> {
                 friendRestrictionServiceImpl.restrictUser("test@test.com", UUID.randomUUID())
@@ -240,7 +238,7 @@ class FriendRestrictionServiceImplTest {
             val targetEmail = "target@test.com"
             val targetUser = createTestUser(id = targetId, email = targetEmail)
 
-            `when`(userDao.findById(targetId)).thenReturn(targetUser)
+            `when`(userRepository.findById(targetId)).thenReturn(targetUser)
             `when`(friendRestrictionRepository.existsRestriction(restrictorEmail, targetEmail)).thenReturn(true)
 
             val result = friendRestrictionServiceImpl.existRestricted(restrictorEmail, targetId)
@@ -256,7 +254,7 @@ class FriendRestrictionServiceImplTest {
             val targetEmail = "target@test.com"
             val targetUser = createTestUser(id = targetId, email = targetEmail)
 
-            `when`(userDao.findById(targetId)).thenReturn(targetUser)
+            `when`(userRepository.findById(targetId)).thenReturn(targetUser)
             `when`(friendRestrictionRepository.existsRestriction(restrictorEmail, targetEmail)).thenReturn(false)
 
             val result = friendRestrictionServiceImpl.existRestricted(restrictorEmail, targetId)
@@ -268,7 +266,7 @@ class FriendRestrictionServiceImplTest {
         @DisplayName("대상이 존재하지 않으면 false를 반환한다")
         fun targetNotFound() {
             val targetId = UUID.randomUUID()
-            `when`(userDao.findById(targetId)).thenReturn(null)
+            `when`(userRepository.findById(targetId)).thenReturn(null)
 
             val result = friendRestrictionServiceImpl.existRestricted("test@test.com", targetId)
 

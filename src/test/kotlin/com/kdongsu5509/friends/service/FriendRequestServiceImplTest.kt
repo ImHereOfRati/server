@@ -3,7 +3,6 @@ package com.kdongsu5509.friends.service
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
-import com.kdongsu5509.friends.FriendException
 import com.kdongsu5509.friends.controller.dto.FriendRequestViewType
 import com.kdongsu5509.friends.domain.FriendRequest
 import com.kdongsu5509.friends.domain.FriendRestriction
@@ -59,7 +58,11 @@ class FriendRequestServiceImplTest {
     @InjectMocks
     lateinit var friendRequestServiceImpl: FriendRequestServiceImpl
 
-    private fun createTestUser(id: UUID = UUID.randomUUID(), email: String = "test@test.com", nickname: String = "test"): User = User(
+    private fun createTestUser(
+        id: UUID = UUID.randomUUID(),
+        email: String = "test@test.com",
+        nickname: String = "test"
+    ): User = User(
         id = id,
         email = email,
         nickname = nickname,
@@ -98,7 +101,7 @@ class FriendRequestServiceImplTest {
         fun success() {
             val requesterEmail = "req@test.com"
             val receiverId = UUID.randomUUID()
-            
+
             val requesterUser = createTestUser(email = requesterEmail)
             val receiverUser = createTestUser(id = receiverId, email = "rec@test.com")
             val requesterResult = createTestUserResult(requesterUser)
@@ -122,10 +125,10 @@ class FriendRequestServiceImplTest {
         fun blockByMe() {
             val requesterEmail = "req@test.com"
             val receiverId = UUID.randomUUID()
-            
+
             val requesterUser = createTestUser(email = requesterEmail)
             val receiverUser = createTestUser(id = receiverId, email = "rec@test.com")
-            
+
             `when`(userService.findByEmail(requesterEmail)).thenReturn(createTestUserResult(requesterUser))
             `when`(userService.findById(receiverId)).thenReturn(createTestUserResult(receiverUser))
             `when`(friendRestrictionRepository.existsRestriction(requesterEmail, receiverUser.email)).thenReturn(true)
@@ -140,14 +143,64 @@ class FriendRequestServiceImplTest {
         fun blockByTarget() {
             val requesterEmail = "req@test.com"
             val receiverId = UUID.randomUUID()
-            
+
             val requesterUser = createTestUser(email = requesterEmail)
             val receiverUser = createTestUser(id = receiverId, email = "rec@test.com")
-            
+
             `when`(userService.findByEmail(requesterEmail)).thenReturn(createTestUserResult(requesterUser))
             `when`(userService.findById(receiverId)).thenReturn(createTestUserResult(receiverUser))
             `when`(friendRestrictionRepository.existsRestriction(requesterEmail, receiverUser.email)).thenReturn(false)
             `when`(friendRestrictionRepository.existsRestriction(receiverUser.email, requesterEmail)).thenReturn(true)
+
+            assertThrows<ImHereBaseException> {
+                friendRequestServiceImpl.request(requesterEmail, receiverId, "안녕")
+            }
+        }
+
+        //verifyNotAlreadyRequested(me, target)
+        @Test
+        @DisplayName("이미 친구 요청을 보낸 상태이면 예외를 발생시킨다")
+        fun alreadyRequested() {
+            val requesterEmail = "req@test.com"
+            val receiverId = UUID.randomUUID()
+
+            val requesterUser = createTestUser(email = requesterEmail)
+            val receiverUser = createTestUser(id = receiverId, email = "rec@test.com")
+
+            `when`(userService.findByEmail(requesterEmail)).thenReturn(createTestUserResult(requesterUser))
+            `when`(userService.findById(receiverId)).thenReturn(createTestUserResult(receiverUser))
+            `when`(friendRestrictionRepository.existsRestriction(requesterEmail, receiverUser.email)).thenReturn(false)
+            `when`(friendRestrictionRepository.existsRestriction(receiverUser.email, requesterEmail)).thenReturn(false)
+
+            `when`(friendRequestRepository.existsByRequesterIdAndReceiverId(requesterUser.id!!, receiverId)).thenReturn(
+                true
+            )
+
+            assertThrows<ImHereBaseException> {
+                friendRequestServiceImpl.request(requesterEmail, receiverId, "안녕")
+            }
+        }
+
+        //        verifyNotAlreadyFriend(me, target)
+        @Test
+        @DisplayName("상대와 이미 친구 상태이면 예외를 발생시킨다")
+        fun alreadyFriend() {
+            val requesterEmail = "req@test.com"
+            val receiverId = UUID.randomUUID()
+
+            val requesterUser = createTestUser(email = requesterEmail)
+            val receiverUser = createTestUser(id = receiverId, email = "rec@test.com")
+
+            `when`(userService.findByEmail(requesterEmail)).thenReturn(createTestUserResult(requesterUser))
+            `when`(userService.findById(receiverId)).thenReturn(createTestUserResult(receiverUser))
+            `when`(friendRestrictionRepository.existsRestriction(requesterEmail, receiverUser.email)).thenReturn(false)
+            `when`(friendRestrictionRepository.existsRestriction(receiverUser.email, requesterEmail)).thenReturn(false)
+            `when`(friendRequestRepository.existsByRequesterIdAndReceiverId(requesterUser.id!!, receiverId)).thenReturn(
+                false
+            )
+            `when`(friendshipRepository.existsByOwnerUserIdAndFriendUserId(requesterUser.id, receiverId)).thenReturn(
+                true
+            )
 
             assertThrows<ImHereBaseException> {
                 friendRequestServiceImpl.request(requesterEmail, receiverId, "안녕")
@@ -218,11 +271,11 @@ class FriendRequestServiceImplTest {
         fun success() {
             val id = UUID.randomUUID()
             val friendRequest = createTestFriendRequest(id = id)
-            
+
             `when`(friendRequestRepository.findById(id)).thenReturn(friendRequest)
-            
+
             val result = friendRequestServiceImpl.findById(id)
-            
+
             assertThat(result).isEqualTo(friendRequest)
         }
 
@@ -296,7 +349,14 @@ class FriendRequestServiceImplTest {
             val receiver = createTestUser(email = email, nickname = "rec_nick")
             val requester = createTestUser(email = "req@test.com", nickname = "req_nick")
             val friendRequest = createTestFriendRequest(id = id, requester = requester, receiver = receiver)
-            val savedFriendship = Friendship(UUID.randomUUID(), receiver, requester, requester.nickname, LocalDateTime.now(), LocalDateTime.now())
+            val savedFriendship = Friendship(
+                UUID.randomUUID(),
+                receiver,
+                requester,
+                requester.nickname,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+            )
 
             `when`(friendRequestRepository.findById(id)).thenReturn(friendRequest)
             `when`(friendshipRepository.save(any())).thenReturn(savedFriendship)
@@ -312,7 +372,7 @@ class FriendRequestServiceImplTest {
         fun ownerMissMatch() {
             val id = UUID.randomUUID()
             val friendRequest = createTestFriendRequest(id = id)
-            
+
             `when`(friendRequestRepository.findById(id)).thenReturn(friendRequest)
 
             assertThrows<ImHereBaseException> {
@@ -332,7 +392,15 @@ class FriendRequestServiceImplTest {
             val receiver = createTestUser(email = email)
             val requester = createTestUser(email = "req@test.com")
             val friendRequest = createTestFriendRequest(id = id, requester = requester, receiver = receiver)
-            val savedRestriction = FriendRestriction(UUID.randomUUID(), receiver, requester, FriendRestrictionType.REJECT, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now())
+            val savedRestriction = FriendRestriction(
+                UUID.randomUUID(),
+                receiver,
+                requester,
+                FriendRestrictionType.REJECT,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                LocalDateTime.now()
+            )
 
             `when`(friendRequestRepository.findById(id)).thenReturn(friendRequest)
             `when`(friendRestrictionRepository.save(any())).thenReturn(savedRestriction)
@@ -373,7 +441,7 @@ class FriendRequestServiceImplTest {
 
             verify(friendRequestRepository).deleteById(id)
         }
-        
+
         @Test
         @DisplayName("수신자가 다르면 예외를 발생시킨다")
         fun ownerMissMatch() {

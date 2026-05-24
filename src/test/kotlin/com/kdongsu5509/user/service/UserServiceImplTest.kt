@@ -6,7 +6,7 @@ import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.exception.UserException
-import com.kdongsu5509.user.repository.UserDao
+import com.kdongsu5509.user.repository.UserRepository
 import com.kdongsu5509.user.service.dto.UserResult
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -26,7 +26,7 @@ import java.util.*
 class UserServiceImplTest {
 
     @Mock
-    lateinit var userDao: UserDao
+    lateinit var userRepository: UserRepository
 
     @InjectMocks
     lateinit var userServiceImpl: UserServiceImpl
@@ -49,7 +49,7 @@ class UserServiceImplTest {
     @DisplayName("이메일로 사용자를 조회하면 성공하고 UserResult를 반환한다")
     fun findByEmail_success() {
         // given
-        `when`(userDao.findByEmail(TEST_EMAIL)).thenReturn(testUser)
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(testUser)
 
         // when
         val result = userServiceImpl.findByEmail(TEST_EMAIL)
@@ -64,14 +64,14 @@ class UserServiceImplTest {
             status = UserStatus.ACTIVE
         )
         assertThat(result).isEqualTo(expected)
-        verify(userDao).findByEmail(TEST_EMAIL)
+        verify(userRepository).findByEmail(TEST_EMAIL)
     }
 
     @Test
     @DisplayName("존재하지 않는 이메일로 사용자 조회 시 예외가 발생한다")
     fun findByEmail_fail_user_not_found() {
         // given
-        `when`(userDao.findByEmail(TEST_EMAIL)).thenReturn(null)
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(null)
 
         // when & then
         assertThatThrownBy {
@@ -87,7 +87,7 @@ class UserServiceImplTest {
         // given
         val pageable = PageRequest.of(0, 20)
         val slice = SliceImpl(listOf(testUser), pageable, false)
-        `when`(userDao.findAll(pageable)).thenReturn(slice)
+        `when`(userRepository.findAll(pageable)).thenReturn(slice)
 
         // when
         val result = userServiceImpl.findAll(pageable)
@@ -103,7 +103,7 @@ class UserServiceImplTest {
             status = UserStatus.ACTIVE
         )
         assertThat(result.content[0]).isEqualTo(expected)
-        verify(userDao).findAll(pageable)
+        verify(userRepository).findAll(pageable)
     }
 
     @Test
@@ -112,7 +112,7 @@ class UserServiceImplTest {
         // given
         val pageable = PageRequest.of(0, 20)
         val slice = SliceImpl(listOf(testUser), pageable, false)
-        `when`(userDao.findSliceByEmailAndNickname(TEST_EMAIL, TEST_NICKNAME, pageable)).thenReturn(slice)
+        `when`(userRepository.findSliceByEmailAndNickname(TEST_EMAIL, TEST_NICKNAME, pageable)).thenReturn(slice)
 
         // when
         val result = userServiceImpl.findByKeyword(TEST_EMAIL, TEST_NICKNAME, pageable)
@@ -128,7 +128,7 @@ class UserServiceImplTest {
             status = UserStatus.ACTIVE
         )
         assertThat(result.content[0]).isEqualTo(expected)
-        verify(userDao).findSliceByEmailAndNickname(TEST_EMAIL, TEST_NICKNAME, pageable)
+        verify(userRepository).findSliceByEmailAndNickname(TEST_EMAIL, TEST_NICKNAME, pageable)
     }
 
     @Test
@@ -144,7 +144,7 @@ class UserServiceImplTest {
             oauthProvider = OAuth2Provider.KAKAO,
             status = UserStatus.ACTIVE
         )
-        `when`(userDao.updateNickname(TEST_EMAIL, newNickname)).thenReturn(updatedUser)
+        `when`(userRepository.updateNickname(TEST_EMAIL, newNickname)).thenReturn(updatedUser)
 
         // when
         val result = userServiceImpl.updateNickname(TEST_EMAIL, newNickname)
@@ -159,7 +159,7 @@ class UserServiceImplTest {
             status = UserStatus.ACTIVE
         )
         assertThat(result).isEqualTo(expected)
-        verify(userDao).updateNickname(TEST_EMAIL, newNickname)
+        verify(userRepository).updateNickname(TEST_EMAIL, newNickname)
     }
 
     @Test
@@ -169,7 +169,7 @@ class UserServiceImplTest {
         userServiceImpl.block(TEST_EMAIL)
 
         // then
-        verify(userDao).block(TEST_EMAIL)
+        verify(userRepository).block(TEST_EMAIL)
     }
 
     @Test
@@ -179,6 +179,6 @@ class UserServiceImplTest {
         userServiceImpl.unblock(TEST_EMAIL)
 
         // then
-        verify(userDao).unblock(TEST_EMAIL)
+        verify(userRepository).unblock(TEST_EMAIL)
     }
 }

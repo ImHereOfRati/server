@@ -6,9 +6,9 @@ import com.kdongsu5509.friends.repository.jpa.SpringDataFriendshipRepository
 import com.kdongsu5509.friends.repository.mapper.FriendshipMapper
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import jakarta.persistence.EntityManager
-import org.springframework.stereotype.Repository
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
+import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
@@ -59,4 +59,7 @@ class FriendshipRepositoryImpl(
 
         return friendshipMapper.toDomain(springDataFriendshipRepository.save(entity))
     }
+
+    override fun existsByOwnerUserIdAndFriendUserId(ownerId: UUID, friendId: UUID): Boolean =
+        springDataFriendshipRepository.existsByOwnerUserIdAndFriendUserId(ownerId, friendId)
 }

@@ -37,7 +37,9 @@ class FriendRequestServiceImpl(
         val me: UserResult = userService.findByEmail(requesterEmail)
         val target = userService.findById(receiverId)
 
-        checkRestriction(requesterEmail, target.email)
+        verifyNotRestricted(requesterEmail, target.email)
+        verifyNotAlreadyRequested(me, target)
+        verifyNotAlreadyFriend(me, target)
 
         val friendRequest = FriendRequest.createWithNullId(me.toDomain(), target.toDomain(), message)
         val result = friendRequestRepository.save(friendRequest)
@@ -45,7 +47,17 @@ class FriendRequestServiceImpl(
         return result
     }
 
-    private fun checkRestriction(requesterEmail: String, targetEmail: String) {
+    private fun verifyNotAlreadyFriend(me: UserResult, target: UserResult) {
+        if (friendshipRepository.existsByOwnerUserIdAndFriendUserId(me.id, target.id))
+            FriendException.ALREADY_FRIEND.throwIt()
+    }
+
+    private fun verifyNotAlreadyRequested(me: UserResult, target: UserResult) {
+        if (friendRequestRepository.existsByRequesterIdAndReceiverId(me.id, target.id))
+            FriendException.FRIEND_REQUEST_ALREADY_SENT.throwIt()
+    }
+
+    private fun verifyNotRestricted(requesterEmail: String, targetEmail: String) {
         if (friendRestrictionRepository.existsRestriction(requesterEmail, targetEmail)) {
             FriendException.FRIEND_REQUEST_UNPROCESSABLE_BY_ME.throwIt()
         }

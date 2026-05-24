@@ -1,7 +1,7 @@
 package com.kdongsu5509.terms.adapter.out
 
+import com.kdongsu5509.shared.BaseEntity
 import com.kdongsu5509.terms.domain.TermTypes
-import com.kdongsu5509.user.adapter.out.persistence.common.BaseEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
 

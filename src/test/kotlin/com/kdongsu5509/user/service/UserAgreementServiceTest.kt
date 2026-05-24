@@ -10,8 +10,8 @@ import com.kdongsu5509.terms.application.TermService
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.exception.UserException
-import com.kdongsu5509.user.repository.UserAgreementDao
-import com.kdongsu5509.user.repository.UserDao
+import com.kdongsu5509.user.repository.UserAgreementRepository
+import com.kdongsu5509.user.repository.UserRepository
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand.TermConsentCommand
 import org.assertj.core.api.Assertions.assertThat
@@ -31,13 +31,13 @@ import java.util.*
 class UserAgreementServiceTest {
 
     @Mock
-    lateinit var userDao: UserDao
+    lateinit var userRepository: UserRepository
 
     @Mock
     lateinit var termService: TermService
 
     @Mock
-    lateinit var userAgreementDao: UserAgreementDao
+    lateinit var userAgreementRepository: UserAgreementRepository
 
     @InjectMocks
     lateinit var userAgreementService: UserAgreementService
@@ -65,7 +65,7 @@ class UserAgreementServiceTest {
         val termResult3 = TermResult(3L, 1L, TermTypes.MARKETING, "마케팅 약관", "내용", LocalDateTime.now(), false)
 
         `when`(termService.findAll(true)).thenReturn(listOf(termResult1, termResult2, termResult3))
-        `when`(userDao.findByEmail(TEST_EMAIL)).thenReturn(testUser)
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(testUser)
 
         val command = MultiTermsConsentCommand(
             consents = listOf(
@@ -80,8 +80,8 @@ class UserAgreementServiceTest {
 
         // then
         assertThat(result.status).isEqualTo(UserStatus.ACTIVE)
-        verify(userAgreementDao).saveAll(userId, listOf(1L, 2L, 3L))
-        verify(userDao).activate(userId)
+        verify(userAgreementRepository).saveAll(userId, listOf(1L, 2L, 3L))
+        verify(userRepository).activate(userId)
     }
 
     @Test
@@ -114,7 +114,7 @@ class UserAgreementServiceTest {
         // given
         val termResult1 = TermResult(1L, 1L, TermTypes.SERVICE, "서비스 약관", "내용", LocalDateTime.now(), true)
         `when`(termService.findAll(true)).thenReturn(listOf(termResult1))
-        `when`(userDao.findByEmail(TEST_EMAIL)).thenReturn(null)
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(null)
 
         val command = MultiTermsConsentCommand(
             consents = listOf(
@@ -134,20 +134,20 @@ class UserAgreementServiceTest {
     @DisplayName("개별 약관에 동의하면 정상적으로 동의 기록을 저장한다")
     fun consent_success() {
         // given
-        `when`(userDao.findByEmail(TEST_EMAIL)).thenReturn(testUser)
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(testUser)
 
         // when
         userAgreementService.consent(TEST_EMAIL, 1L)
 
         // then
-        verify(userAgreementDao).save(userId, 1L)
+        verify(userAgreementRepository).save(userId, 1L)
     }
 
     @Test
     @DisplayName("개별 약관 동의 시 사용자가 존재하지 않으면 예외가 발생한다")
     fun consent_fail_user_not_found() {
         // given
-        `when`(userDao.findByEmail(TEST_EMAIL)).thenReturn(null)
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(null)
 
         // when & then
         assertThatThrownBy {

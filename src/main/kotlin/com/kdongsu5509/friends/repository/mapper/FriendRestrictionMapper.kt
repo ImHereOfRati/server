@@ -18,7 +18,7 @@ class FriendRestrictionMapper(
         type = entity.type,
         createdAt = entity.createdAt,
         updatedAt = entity.updatedAt,
-        expiredAt = entity.updatedAt
+        expiredAt = entity.expiredAt
     )
 
     fun toEntity(domain: FriendRestriction) =

@@ -1,16 +1,16 @@
 package com.kdongsu5509.friends.repository.mapper
 
-import com.kdongsu5509.friends.domain.FriendRelationship
-import com.kdongsu5509.friends.repository.jpa.FriendRelationshipsJpaEntity
+import com.kdongsu5509.friends.domain.Friendship
+import com.kdongsu5509.friends.repository.jpa.FriendshipJpaEntity
 import com.kdongsu5509.user.repository.UserMapper
 import org.springframework.stereotype.Component
 
 @Component
-class FriendRelationshipMapper(
+class FriendshipMapper(
     private val userMapper: UserMapper
 ) {
-    fun toDomain(entity: FriendRelationshipsJpaEntity) =
-        FriendRelationship(
+    fun toDomain(entity: FriendshipJpaEntity) =
+        Friendship(
             id = entity.id,
             owner = userMapper.toDomain(entity.ownerUser)!!,
             friend = userMapper.toDomain(entity.friendUser)!!,
@@ -19,8 +19,8 @@ class FriendRelationshipMapper(
             updatedAt = entity.updatedAt
         )
 
-    fun toEntity(domain: FriendRelationship) =
-        FriendRelationshipsJpaEntity(
+    fun toEntity(domain: Friendship) =
+        FriendshipJpaEntity(
             ownerUser = userMapper.toEntity(domain.owner),
             friendUser = userMapper.toEntity(domain.friend),
             friendAlias = domain.friendAlias

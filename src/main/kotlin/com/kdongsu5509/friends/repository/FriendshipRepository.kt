@@ -13,4 +13,5 @@ interface FriendshipRepository {
     fun delete(ownerId: UUID, friendId: UUID)
     fun updateAlias(newFriendship: Friendship): Friendship
     fun save(friendship: Friendship): Friendship
+    fun existsByOwnerUserIdAndFriendUserId(ownerId: UUID, friendId: UUID): Boolean
 }

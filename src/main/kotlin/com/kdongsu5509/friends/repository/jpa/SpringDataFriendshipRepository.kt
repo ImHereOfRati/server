@@ -28,4 +28,6 @@ interface SpringDataFriendshipRepository : JpaRepository<FriendshipJpaEntity, UU
 """
     )
     fun deleteBoth(@Param("ownerId") ownerId: UUID, @Param("friendId") friendId: UUID)
+
+    fun existsByOwnerUserIdAndFriendUserId(ownerId: UUID, friendId: UUID): Boolean
 }

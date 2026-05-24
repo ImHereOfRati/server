@@ -21,7 +21,7 @@ class TermPersistenceAdapter(
     }
 
     fun findLatestByType(type: TermTypes): Term? {
-        val entity = termRepository.findTopByTypeOrderByVersionDesc(type)
+        val entity = termRepository.findLatestByType(type)
         return termMapper.toDomain(entity)
     }
 
@@ -32,4 +32,9 @@ class TermPersistenceAdapter(
     fun findActiveAll() = termRepository.findActiveAll()
         .map { termMapper.toDomain(it)!! }
         .toList()
+
+    fun findById(id: Long): Term? {
+        val foundTermEntity: TermJpaEntity? = termRepository.findById(id).orElse(null)
+        return termMapper.toDomain(foundTermEntity)
+    }
 }

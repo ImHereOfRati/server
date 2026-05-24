@@ -1,10 +1,10 @@
 package com.kdongsu5509.user.repository.jpa
 
 import com.kdongsu5509.auth.domain.UserStatus
-import com.kdongsu5509.friends.adapter.out.jpa.QFriendRelationshipsJpaEntity
-import com.kdongsu5509.friends.adapter.out.jpa.QFriendRequestJpaEntity
-import com.kdongsu5509.friends.adapter.out.jpa.QFriendRestrictionJpaEntity
-import com.kdongsu5509.user.repository.QUserJpaEntity
+import com.kdongsu5509.friends.repository.jpa.QFriendRequestJpaEntity
+import com.kdongsu5509.friends.repository.jpa.QFriendRestrictionJpaEntity
+import com.kdongsu5509.friends.repository.jpa.QFriendshipJpaEntity
+import com.kdongsu5509.user.repository.jpa.QUserJpaEntity
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.springframework.data.domain.PageRequest
@@ -92,14 +92,14 @@ class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
     }
 
     private fun findFriendUserIds(currentUserId: UUID): List<UUID?> {
-        val friendRelationships = QFriendRelationshipsJpaEntity.friendRelationshipsJpaEntity
-        return queryFactory.select(friendRelationships.friendUser.id)
-            .from(friendRelationships)
-            .where(friendRelationships.ownerUser.id.eq(currentUserId))
+        val friendship = QFriendshipJpaEntity.friendshipJpaEntity
+        return queryFactory.select(friendship.friendUser.id)
+            .from(friendship)
+            .where(friendship.ownerUser.id.eq(currentUserId))
             .fetch() +
-                queryFactory.select(friendRelationships.ownerUser.id)
-                    .from(friendRelationships)
-                    .where(friendRelationships.friendUser.id.eq(currentUserId))
+                queryFactory.select(friendship.ownerUser.id)
+                    .from(friendship)
+                    .where(friendship.friendUser.id.eq(currentUserId))
                     .fetch()
     }
 
@@ -117,13 +117,13 @@ class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
 
     private fun findRestrictionUserIds(currentUserId: UUID): List<UUID?> {
         val friendRestriction = QFriendRestrictionJpaEntity.friendRestrictionJpaEntity
-        return queryFactory.select(friendRestriction.target.id)
+        return queryFactory.select(friendRestriction.restricted.id)
             .from(friendRestriction)
-            .where(friendRestriction.actor.id.eq(currentUserId))
+            .where(friendRestriction.restrictor.id.eq(currentUserId))
             .fetch() +
-                queryFactory.select(friendRestriction.actor.id)
+                queryFactory.select(friendRestriction.restrictor.id)
                     .from(friendRestriction)
-                    .where(friendRestriction.target.id.eq(currentUserId))
+                    .where(friendRestriction.restricted.id.eq(currentUserId))
                     .fetch()
     }
 

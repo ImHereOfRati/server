@@ -13,7 +13,7 @@ enum class TermException(
     OBLIGATORY_TERM_NOT_AGREED(CommonErrorCode.INVALID_INPUT, "TERM-000", "필수 약관에 동의해야 합니다."),
 
     // --- 3xx: Resource Absence (404) ---
-    TERM_DEFINITION_NOT_FOUND(CommonErrorCode.NOT_FOUND, "TERM-300", "해당 약관 정의를 찾을 수 없습니다."),
+    TERM_NOT_FOUND(CommonErrorCode.NOT_FOUND, "TERM-300", "해당 약관 정의를 찾을 수 없습니다."),
 
     // --- 5xx: State Conflict (409) ---
     TERM_DEFINITION_ALREADY_EXIST(CommonErrorCode.CONFLICT, "TERM-500", "이미 존재하는 약관 정의입니다."),

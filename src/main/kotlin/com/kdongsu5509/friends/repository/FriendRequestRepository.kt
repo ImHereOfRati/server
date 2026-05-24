@@ -13,4 +13,5 @@ interface FriendRequestRepository {
     fun findById(id: UUID): FriendRequest?
     fun deleteById(id: UUID)
     fun deleteBetween(user1Id: UUID, user2Id: UUID)
+    fun existsByRequesterIdAndReceiverId(requesterId: UUID, receiverId: UUID): Boolean
 }

@@ -15,12 +15,12 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.kotlin.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.util.ReflectionTestUtils
@@ -72,7 +72,7 @@ class FriendRequestRepositoryImplTest {
 
             val requester = createTestUser(requesterId)
             val receiver = createTestUser(receiverId)
-            
+
             val requesterEntity = createTestUserEntity(requesterId)
             val receiverEntity = createTestUserEntity(receiverId)
 
@@ -84,7 +84,7 @@ class FriendRequestRepositoryImplTest {
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now()
             )
-            
+
             val entity = FriendRequestJpaEntity(requesterEntity, receiverEntity, "안녕")
 
             `when`(entityManager.getReference(UserJpaEntity::class.java, requesterId)).thenReturn(requesterEntity)
@@ -256,10 +256,10 @@ class FriendRequestRepositoryImplTest {
         @DisplayName("ID로 친구 요청을 삭제한다")
         fun success() {
             val id = UUID.randomUUID()
-            
+
             // when
             friendRequestRepositoryImpl.deleteById(id)
-            
+
             // then
             verify(springDataFriendRequestRepository).deleteById(id)
         }
@@ -274,19 +274,35 @@ class FriendRequestRepositoryImplTest {
         fun success() {
             val u1Id = UUID.randomUUID()
             val u2Id = UUID.randomUUID()
-            
+
             val u1Entity = createTestUserEntity(u1Id)
             val u2Entity = createTestUserEntity(u2Id)
-            
+
             `when`(entityManager.getReference(UserJpaEntity::class.java, u1Id)).thenReturn(u1Entity)
             `when`(entityManager.getReference(UserJpaEntity::class.java, u2Id)).thenReturn(u2Entity)
-            
+
             // when
             friendRequestRepositoryImpl.deleteBetween(u1Id, u2Id)
-            
+
             // then
             verify(springDataFriendRequestRepository).deleteByRequesterAndReceiver(u1Entity, u2Entity)
             verify(springDataFriendRequestRepository).deleteByRequesterAndReceiver(u2Entity, u1Entity)
         }
+    }
+
+    //8. existByRequesterEmailAndReceiverId
+    @Test
+    @DisplayName("기존의 친구 요청이 존재하는 지 잘 확인한다")
+    fun existsByRequesterIdAndReceiverId_success() {
+        val u1Id = UUID.randomUUID()
+        val u2Id = UUID.randomUUID()
+
+        val u1Entity = createTestUserEntity(u1Id)
+
+        // when
+        friendRequestRepositoryImpl.existsByRequesterIdAndReceiverId(u1Entity.id!!, u2Id)
+
+        // then
+        verify(springDataFriendRequestRepository).existsByRequesterIdAndReceiverId(u1Entity.id!!, u2Id)
     }
 }

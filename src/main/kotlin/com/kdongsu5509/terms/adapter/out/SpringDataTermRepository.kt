@@ -5,7 +5,15 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 
 interface SpringDataTermRepository : JpaRepository<TermJpaEntity, Long> {
-    fun findTopByTypeOrderByVersionDesc(type: TermTypes): TermJpaEntity?
+    @Query(
+        """                                                              
+            SELECT t FROM TermJpaEntity t                                    
+            WHERE t.type = :type                                             
+            ORDER BY t.version DESC                                          
+            LIMIT 1                                                          
+            """
+    )
+    fun findLatestByType(type: TermTypes): TermJpaEntity?
 
     @Query(
         """

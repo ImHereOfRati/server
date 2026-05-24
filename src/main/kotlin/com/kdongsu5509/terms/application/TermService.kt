@@ -4,6 +4,7 @@ import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.adapter.out.TermPersistenceAdapter
 import com.kdongsu5509.terms.domain.Term
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -27,17 +28,15 @@ class TermService(
             .let { TermResult.from(it) }
     }
 
-    fun findAll(): List<TermResult> =
-        termPersistenceAdapter.findAll()
-            .map { TermResult.from(it) }
-            .toList()
+    @PreAuthorize("hasRole('PENDING')")
+    fun findAll(): List<TermResult> = termPersistenceAdapter.findAll()
+        .map { TermResult.from(it) }
+        .toList()
 
-    fun findAll(isActive: Boolean): List<TermResult> {
-        if (!isActive) {
-            TermException.NON_ACTIVE_TERM_NOT_ALLOWED.throwIt()
-        }
-        return termPersistenceAdapter.findActiveAll()
-            .map { TermResult.from(it) }
-            .toList()
-    }
+    fun findAll(isActive: Boolean): List<TermResult> =
+        if (isActive)
+            termPersistenceAdapter.findActiveAll()
+                .map { TermResult.from(it) }
+                .toList()
+        else TermException.NON_ACTIVE_TERM_NOT_ALLOWED.throwIt()
 }

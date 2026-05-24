@@ -5,8 +5,8 @@ import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.application.TermService
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.exception.UserException
-import com.kdongsu5509.user.repository.UserAgreementDao
-import com.kdongsu5509.user.repository.UserDao
+import com.kdongsu5509.user.repository.UserAgreementRepository
+import com.kdongsu5509.user.repository.UserRepository
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand.TermConsentCommand
 import org.springframework.stereotype.Service
@@ -15,9 +15,9 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional(readOnly = true)
 class UserAgreementService(
-    private val userDao: UserDao,
+    private val userRepository: UserRepository,
     private val termService: TermService,
-    private val userAgreementDao: UserAgreementDao,
+    private val userAgreementRepository: UserAgreementRepository,
 ) {
 
     @Transactional
@@ -25,21 +25,21 @@ class UserAgreementService(
         val consents = multiTermsConsentCommand.consents
         verifyRequiredTerms(consents)
 
-        val user = userDao.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
+        val user = userRepository.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
 
         val agreedIds = consents.filter { it.isAgreed }.map { it.id }
-        userAgreementDao.saveAll(user.id!!, agreedIds)
+        userAgreementRepository.saveAll(user.id!!, agreedIds)
 
         user.activate()
-        userDao.activate(user.id)
+        userRepository.activate(user.id)
 
         return user
     }
 
     @Transactional
     fun consent(email: String, id: Long) {
-        val user = userDao.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
-        userAgreementDao.save(user.id!!, id)
+        val user = userRepository.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
+        userAgreementRepository.save(user.id!!, id)
     }
 
     private fun verifyRequiredTerms(consents: List<TermConsentCommand>) {

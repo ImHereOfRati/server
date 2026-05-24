@@ -17,4 +17,16 @@ data class FriendRequest(
     init {
         if (requester.id == receiver.id) FriendException.SELF_FRIENDSHIP.throwIt()
     }
+
+    companion object {
+        fun createWithNullId(requester: User, receiver: User, message: String): FriendRequest = FriendRequest(
+            requester = requester,
+            receiver = receiver,
+            message = message
+        )
+    }
+
+    fun requesterId() = requester.id
+    fun receiverId() = receiver.id
+    fun receiverEmail() = receiver.email
 }

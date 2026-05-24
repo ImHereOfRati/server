@@ -17,8 +17,5 @@ interface UserRepository {
 
     fun findActiveUserByEmail(email: String): User?
     fun save(user: User): User
-    fun activate(userId: UUID)
-    fun updateNickname(userEmail: String, newNickname: String): User
-    fun block(userEmail: String)
-    fun unblock(userEmail: String)
+    fun update(user: User)
 }

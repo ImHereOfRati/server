@@ -13,6 +13,7 @@ enum class UserException(
     USER_ID_NULL(CommonErrorCode.INVALID_INPUT, "USER-000", "사용자 식별값이 없습니다."),
     INVALID_USER_STATUS(CommonErrorCode.INVALID_INPUT, "USER-001", "유효하지 않은 사용자 상태입니다."),
 
+
     // --- 3xx: Resource Absence (404) ---
     USER_NOT_FOUND(CommonErrorCode.NOT_FOUND, "USER-300", "사용자를 찾을 수 없습니다."),
     USER_NOT_ACTIVE(CommonErrorCode.NOT_FOUND, "USER-301", "비활성화된 사용자입니다."),

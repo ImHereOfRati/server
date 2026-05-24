@@ -1,12 +1,12 @@
 package com.kdongsu5509.user.repository
 
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.repository.jpa.SpringQueryDSLUserRepository
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
+import jakarta.persistence.EntityManager
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Component
@@ -15,6 +15,7 @@ import java.util.*
 @Component
 class UserRepositoryImpl(
     private val userMapper: UserMapper,
+    private val entityManager: EntityManager,
     private val springDataUserRepository: SpringDataUserRepository,
     private val springQueryDSLUserRepository: SpringQueryDSLUserRepository
 ) : UserRepository {
@@ -57,37 +58,9 @@ class UserRepositoryImpl(
         return userMapper.toDomain(savedEntity)!!
     }
 
-
-    override fun activate(userId: UUID) {
-        val queryResult = springDataUserRepository.findById(userId).orElseThrow {
-            UserException.USER_NOT_FOUND.throwIt()
-        }
-
-        if (queryResult.status == UserStatus.PENDING) {
-            queryResult.activate()
-            springDataUserRepository.save(queryResult)
-        }
-    }
-
-    override fun updateNickname(userEmail: String, newNickname: String): User {
-        val queryResult = springDataUserRepository.findByEmail(userEmail) ?: UserException.USER_NOT_FOUND.throwIt()
-        queryResult.changeNickname(newNickname)
-        return userMapper.toDomain(springDataUserRepository.save(queryResult))!!
-    }
-
-    override fun block(userEmail: String) {
-        val entity = findUserJpaEntity(userEmail)
-        entity.block()
-        springDataUserRepository.save(entity)
-    }
-
-    override fun unblock(userEmail: String) {
-        val entity = findUserJpaEntity(userEmail)
-        entity.unblock()
-        springDataUserRepository.save(entity)
-    }
-
-    private fun findUserJpaEntity(userEmail: String): UserJpaEntity {
-        return springDataUserRepository.findByEmail(userEmail) ?: UserException.USER_NOT_FOUND.throwIt()
+    override fun update(user: User) {
+        val userJpaEntity = entityManager.find(UserJpaEntity::class.java, user.id)
+            ?: UserException.USER_NOT_FOUND.throwIt()
+        userJpaEntity.update(user)
     }
 }

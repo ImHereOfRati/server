@@ -1,6 +1,7 @@
 package com.kdongsu5509.user.service
 
 import com.kdongsu5509.support.exception.throwIt
+import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.UserRepository
 import com.kdongsu5509.user.service.dto.UserResult
@@ -21,8 +22,9 @@ class UserServiceImpl(
     }
 
     override fun findByEmail(email: String): UserResult {
-        val result = userRepository.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
-        return UserResult.fromDomain(result)
+        return UserResult.fromDomain(
+            findAndValidateUser(email)
+        )
     }
 
     override fun findAll(pageable: Pageable): Slice<UserResult> {
@@ -41,17 +43,29 @@ class UserServiceImpl(
 
     @Transactional
     override fun updateNickname(userEmail: String, newNickname: String): UserResult {
-        val updatedUser = userRepository.updateNickname(userEmail, newNickname)
+        val user = findAndValidateUser(userEmail)
+        val updatedUser = user.updateNickname(newNickname)
+        userRepository.update(updatedUser)
         return UserResult.fromDomain(updatedUser)
     }
 
+
     @Transactional
-    override fun block(userEmail: String) {
-        userRepository.block(userEmail)
+    override fun block(userEmail: String): UserResult {
+        val user = findAndValidateUser(userEmail)
+        val blockedUser = user.block()
+        userRepository.update(blockedUser)
+        return UserResult.fromDomain(blockedUser)
     }
 
     @Transactional
-    override fun unblock(userEmail: String) {
-        userRepository.unblock(userEmail)
+    override fun unblock(userEmail: String): UserResult {
+        val user = findAndValidateUser(userEmail)
+        val unblockedUser = user.unblock()
+        userRepository.update(unblockedUser)
+        return UserResult.fromDomain(unblockedUser)
     }
+
+    private fun findAndValidateUser(userEmail: String): User =
+        userRepository.findByEmail(userEmail) ?: UserException.USER_NOT_FOUND.throwIt()
 }

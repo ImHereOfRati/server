@@ -16,7 +16,6 @@ interface UserService {
     ): Slice<UserResult>
 
     fun updateNickname(userEmail: String, newNickname: String): UserResult
-    fun block(userEmail: String)
-    fun unblock(userEmail: String)
-
+    fun block(userEmail: String): UserResult
+    fun unblock(userEmail: String): UserResult
 }

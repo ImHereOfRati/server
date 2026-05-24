@@ -30,10 +30,10 @@ class UserAgreementService(
         val agreedIds = consents.filter { it.isAgreed }.map { it.id }
         userAgreementRepository.saveAll(user.id!!, agreedIds)
 
-        user.activate()
-        userRepository.activate(user.id)
+        val activeUser = user.activate()
+        userRepository.update(activeUser)
 
-        return user
+        return activeUser
     }
 
     @Transactional

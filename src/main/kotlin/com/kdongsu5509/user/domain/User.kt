@@ -3,6 +3,8 @@ package com.kdongsu5509.user.domain
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
+import com.kdongsu5509.support.exception.throwIt
+import com.kdongsu5509.user.exception.UserException
 import java.util.*
 
 data class User(
@@ -27,7 +29,54 @@ data class User(
         return this.status.name
     }
 
-    fun activate() {
-        this.status = UserStatus.ACTIVE
+    fun activate(): User {
+        if (this.status != UserStatus.PENDING) {
+            UserException.INVALID_USER_STATUS.throwIt()
+        }
+        return User(
+            id = id,
+            email = email,
+            nickname = nickname,
+            role = role,
+            oauthProvider = oauthProvider,
+            status = UserStatus.ACTIVE
+        )
     }
+
+    fun block(): User {
+        if (this.status == UserStatus.BLOCKED) {
+            UserException.INVALID_USER_STATUS.throwIt()
+        }
+        return User(
+            id = id,
+            email = email,
+            nickname = nickname,
+            role = role,
+            oauthProvider = oauthProvider,
+            status = UserStatus.BLOCKED
+        )
+    }
+
+    fun unblock(): User {
+        if (this.status != UserStatus.BLOCKED) {
+            UserException.INVALID_USER_STATUS.throwIt()
+        }
+        return User(
+            id = id,
+            email = email,
+            nickname = nickname,
+            role = role,
+            oauthProvider = oauthProvider,
+            status = UserStatus.ACTIVE
+        )
+    }
+
+    fun updateNickname(newNickname: String) = User(
+        id = id,
+        email = email,
+        nickname = newNickname,
+        role = role,
+        oauthProvider = oauthProvider,
+        status = status
+    )
 }

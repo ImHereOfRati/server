@@ -24,7 +24,7 @@ data class UserResult(
             status = user.status
         )
     }
-    
+
     fun toDomain() = User(
         id = id,
         email = email,

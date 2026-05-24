@@ -4,6 +4,7 @@ import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.shared.BaseTimeEntity
+import com.kdongsu5509.user.domain.User
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import java.util.*
@@ -42,19 +43,8 @@ class UserJpaEntity(
     @UuidGenerator
     var id: UUID? = null
 
-    fun activate() {
-        this.status = UserStatus.ACTIVE
-    }
-
-    fun block() {
-        this.status = UserStatus.BLOCKED
-    }
-
-    fun unblock() {
-        this.status = UserStatus.ACTIVE
-    }
-
-    fun changeNickname(newNickname: String) {
-        this.nickname = newNickname
+    fun update(user: User) {
+        this.nickname = user.nickname
+        this.status = user.status
     }
 }

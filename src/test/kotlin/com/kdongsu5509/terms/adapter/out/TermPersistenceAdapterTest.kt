@@ -54,7 +54,7 @@ class TermPersistenceAdapterTest {
         val entity = TermJpaEntity(1L, 1L, type, "제목", "내용", LocalDateTime.now(), true)
         val term = Term(1L, 1L, type, "제목", "내용", entity.effectiveDate, true)
 
-        given(termRepository.findTopByTypeOrderByVersionDesc(type)).willReturn(entity)
+        given(termRepository.findLatestByType(type)).willReturn(entity)
         given(termMapper.toDomain(entity)).willReturn(term)
 
         // when

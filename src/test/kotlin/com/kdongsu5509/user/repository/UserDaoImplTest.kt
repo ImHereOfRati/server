@@ -58,6 +58,36 @@ class UserDaoImplTest {
     }
 
     @Test
+    @DisplayName("아이디로 사용자를 조회하면 성공하고 유저 모델을 반환한다")
+    fun findById_success() {
+        val testOptionalUserEntity = Optional.of(testUserEntity)
+        `when`(springDataUserRepository.findById(testUser.id!!)).thenReturn(testOptionalUserEntity)
+        `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
+
+        // when
+        val result = userDaoImpl.findById(testUser.id)
+
+        // then
+        assertThat(result).isNotNull
+        assertThat(result?.email).isEqualTo(TEST_EMAIL)
+        verify(springDataUserRepository).findById(testUser.id)
+    }
+
+    @Test
+    @DisplayName("아이디로 사용자를 조회 시 존재하지 않으면 null을 반환한다")
+    fun findById_null() {
+        // given
+        val notExistUserId = UUID.randomUUID()
+        `when`(springDataUserRepository.findById(notExistUserId)).thenReturn(Optional.empty())
+
+        // when
+        val result = userDaoImpl.findById(notExistUserId)
+
+        // then
+        assertThat(result).isNull()
+    }
+
+    @Test
     @DisplayName("이메일로 사용자를 조회하면 성공하고 유저 모델을 반환한다")
     fun findByEmail_success() {
         // given

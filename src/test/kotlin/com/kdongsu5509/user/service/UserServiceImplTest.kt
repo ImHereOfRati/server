@@ -18,6 +18,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.SliceImpl
 import java.util.*
@@ -46,6 +47,35 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("아이디로 사용자를 조회하면 성공하고 UserResult를 반환한다")
+    fun findById_success() {
+        // given
+        `when`(userRepository.findById(userId)).thenReturn(testUser)
+
+        // when
+        val result = userServiceImpl.findById(userId)
+
+        // then
+        val expected = UserResult.fromDomain(testUser)
+        assertThat(result).isEqualTo(expected)
+        verify(userRepository).findById(userId)
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 아이디로 사용자 조회 시 예외가 발생한다")
+    fun findById_fail_user_not_found() {
+        // given
+        `when`(userRepository.findById(userId)).thenReturn(null)
+
+        // when & then
+        assertThatThrownBy {
+            userServiceImpl.findById(userId)
+        }.isInstanceOf(ImHereBaseException::class.java)
+            .extracting("errorCode")
+            .isEqualTo(UserException.USER_NOT_FOUND)
+    }
+
+    @Test
     @DisplayName("이메일로 사용자를 조회하면 성공하고 UserResult를 반환한다")
     fun findByEmail_success() {
         // given
@@ -55,14 +85,7 @@ class UserServiceImplTest {
         val result = userServiceImpl.findByEmail(TEST_EMAIL)
 
         // then
-        val expected = UserResult(
-            id = userId,
-            email = TEST_EMAIL,
-            nickname = TEST_NICKNAME,
-            oauthProvider = OAuth2Provider.KAKAO,
-            role = UserRole.NORMAL,
-            status = UserStatus.ACTIVE
-        )
+        val expected = UserResult.fromDomain(testUser)
         assertThat(result).isEqualTo(expected)
         verify(userRepository).findByEmail(TEST_EMAIL)
     }
@@ -94,14 +117,7 @@ class UserServiceImplTest {
 
         // then
         assertThat(result.content).hasSize(1)
-        val expected = UserResult(
-            id = userId,
-            email = TEST_EMAIL,
-            nickname = TEST_NICKNAME,
-            oauthProvider = OAuth2Provider.KAKAO,
-            role = UserRole.NORMAL,
-            status = UserStatus.ACTIVE
-        )
+        val expected = UserResult.fromDomain(testUser)
         assertThat(result.content[0]).isEqualTo(expected)
         verify(userRepository).findAll(pageable)
     }
@@ -119,14 +135,7 @@ class UserServiceImplTest {
 
         // then
         assertThat(result.content).hasSize(1)
-        val expected = UserResult(
-            id = userId,
-            email = TEST_EMAIL,
-            nickname = TEST_NICKNAME,
-            oauthProvider = OAuth2Provider.KAKAO,
-            role = UserRole.NORMAL,
-            status = UserStatus.ACTIVE
-        )
+        val expected = UserResult.fromDomain(testUser)
         assertThat(result.content[0]).isEqualTo(expected)
         verify(userRepository).findSliceByEmailAndNickname(TEST_EMAIL, TEST_NICKNAME, pageable)
     }
@@ -136,49 +145,52 @@ class UserServiceImplTest {
     fun updateNickname_success() {
         // given
         val newNickname = "새닉네임"
-        val updatedUser = User(
-            id = userId,
-            email = TEST_EMAIL,
-            nickname = newNickname,
-            role = UserRole.NORMAL,
-            oauthProvider = OAuth2Provider.KAKAO,
-            status = UserStatus.ACTIVE
-        )
-        `when`(userRepository.updateNickname(TEST_EMAIL, newNickname)).thenReturn(updatedUser)
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(testUser)
 
         // when
         val result = userServiceImpl.updateNickname(TEST_EMAIL, newNickname)
 
         // then
-        val expected = UserResult(
+        assertThat(result.nickname).isEqualTo(newNickname)
+        verify(userRepository).findByEmail(TEST_EMAIL)
+        verify(userRepository).update(any())
+    }
+
+    @Test
+    @DisplayName("사용자를 차단 상태로 변경하고 수정 요청을 보낸다")
+    fun block_success() {
+        // given
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(testUser)
+
+        // when
+        val result = userServiceImpl.block(TEST_EMAIL)
+
+        // then
+        assertThat(result.status).isEqualTo(UserStatus.BLOCKED)
+        verify(userRepository).findByEmail(TEST_EMAIL)
+        verify(userRepository).update(any())
+    }
+
+    @Test
+    @DisplayName("사용자 차단을 해제하여 활성 상태로 변경하고 수정 요청을 보낸다")
+    fun unblock_success() {
+        // given
+        val blockedUser = User(
             id = userId,
             email = TEST_EMAIL,
-            nickname = newNickname,
-            oauthProvider = OAuth2Provider.KAKAO,
+            nickname = TEST_NICKNAME,
             role = UserRole.NORMAL,
-            status = UserStatus.ACTIVE
+            oauthProvider = OAuth2Provider.KAKAO,
+            status = UserStatus.BLOCKED
         )
-        assertThat(result).isEqualTo(expected)
-        verify(userRepository).updateNickname(TEST_EMAIL, newNickname)
-    }
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(blockedUser)
 
-    @Test
-    @DisplayName("사용자를 차단한다")
-    fun block_success() {
         // when
-        userServiceImpl.block(TEST_EMAIL)
+        val result = userServiceImpl.unblock(TEST_EMAIL)
 
         // then
-        verify(userRepository).block(TEST_EMAIL)
-    }
-
-    @Test
-    @DisplayName("사용자 차단을 해제한다")
-    fun unblock_success() {
-        // when
-        userServiceImpl.unblock(TEST_EMAIL)
-
-        // then
-        verify(userRepository).unblock(TEST_EMAIL)
+        assertThat(result.status).isEqualTo(UserStatus.ACTIVE)
+        verify(userRepository).findByEmail(TEST_EMAIL)
+        verify(userRepository).update(any())
     }
 }

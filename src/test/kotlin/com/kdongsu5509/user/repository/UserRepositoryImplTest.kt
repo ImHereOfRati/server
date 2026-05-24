@@ -9,6 +9,7 @@ import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.repository.jpa.SpringQueryDSLUserRepository
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName
@@ -29,13 +30,16 @@ class UserRepositoryImplTest {
     lateinit var userMapper: UserMapper
 
     @Mock
+    lateinit var entityManager: EntityManager
+
+    @Mock
     lateinit var springDataUserRepository: SpringDataUserRepository
 
     @Mock
     lateinit var springQueryDSLUserRepository: SpringQueryDSLUserRepository
 
     @InjectMocks
-    lateinit var userDaoImpl: UserRepositoryImpl
+    lateinit var userRepositoryImpl: UserRepositoryImpl
 
     companion object {
         const val TEST_EMAIL = "test@test.com"
@@ -60,17 +64,18 @@ class UserRepositoryImplTest {
     @Test
     @DisplayName("아이디로 사용자를 조회하면 성공하고 유저 모델을 반환한다")
     fun findById_success() {
+        // given
         val testOptionalUserEntity = Optional.of(testUserEntity)
         `when`(springDataUserRepository.findById(testUser.id!!)).thenReturn(testOptionalUserEntity)
         `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
 
         // when
-        val result = userDaoImpl.findById(testUser.id)
+        val result = userRepositoryImpl.findById(testUser.id!!)
 
         // then
         assertThat(result).isNotNull
         assertThat(result?.email).isEqualTo(TEST_EMAIL)
-        verify(springDataUserRepository).findById(testUser.id)
+        verify(springDataUserRepository).findById(testUser.id!!)
     }
 
     @Test
@@ -81,7 +86,7 @@ class UserRepositoryImplTest {
         `when`(springDataUserRepository.findById(notExistUserId)).thenReturn(Optional.empty())
 
         // when
-        val result = userDaoImpl.findById(notExistUserId)
+        val result = userRepositoryImpl.findById(notExistUserId)
 
         // then
         assertThat(result).isNull()
@@ -95,7 +100,7 @@ class UserRepositoryImplTest {
         `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
 
         // when
-        val result = userDaoImpl.findByEmail(TEST_EMAIL)
+        val result = userRepositoryImpl.findByEmail(TEST_EMAIL)
 
         // then
         assertThat(result).isNotNull
@@ -110,7 +115,7 @@ class UserRepositoryImplTest {
         `when`(springDataUserRepository.findByEmail(TEST_EMAIL)).thenReturn(null)
 
         // when
-        val result = userDaoImpl.findByEmail(TEST_EMAIL)
+        val result = userRepositoryImpl.findByEmail(TEST_EMAIL)
 
         // then
         assertThat(result).isNull()
@@ -126,7 +131,7 @@ class UserRepositoryImplTest {
         `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
 
         // when
-        val result = userDaoImpl.findAll(pageable)
+        val result = userRepositoryImpl.findAll(pageable)
 
         // then
         assertThat(result.content).hasSize(1)
@@ -141,7 +146,7 @@ class UserRepositoryImplTest {
         `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
 
         // when
-        val result = userDaoImpl.findActiveUserByEmail(TEST_EMAIL)
+        val result = userRepositoryImpl.findActiveUserByEmail(TEST_EMAIL)
 
         // then
         assertThat(result).isNotNull
@@ -155,7 +160,7 @@ class UserRepositoryImplTest {
         `when`(springQueryDSLUserRepository.findActiveUserByEmail(TEST_EMAIL)).thenReturn(null)
 
         // when
-        val result = userDaoImpl.findActiveUserByEmail(TEST_EMAIL)
+        val result = userRepositoryImpl.findActiveUserByEmail(TEST_EMAIL)
 
         // then
         assertThat(result).isNull()
@@ -176,7 +181,7 @@ class UserRepositoryImplTest {
         `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
 
         // when
-        val result = userDaoImpl.findSliceByEmailAndNickname("owner@owner.com", TEST_NICKNAME, pageable)
+        val result = userRepositoryImpl.findSliceByEmailAndNickname("owner@owner.com", TEST_NICKNAME, pageable)
 
         // then
         assertThat(result.content).hasSize(1)
@@ -192,7 +197,7 @@ class UserRepositoryImplTest {
         `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
 
         // when
-        val result = userDaoImpl.save(testUser)
+        val result = userRepositoryImpl.save(testUser)
 
         // then
         assertThat(result).isEqualTo(testUser)
@@ -200,91 +205,58 @@ class UserRepositoryImplTest {
     }
 
     @Test
-    @DisplayName("PENDING 상태의 사용자 ID를 주면 활성화(ACTIVE) 처리한다")
-    fun activate_success() {
+    @DisplayName("사용자 정보 수정 요청 시 영속화된 엔티티의 데이터를 업데이트한다")
+    fun update_success() {
         // given
-        val userId = UUID.randomUUID()
-        val pendingUserEntity = UserJpaEntity(
+        val userId = testUser.id!!
+        val existingJpaEntity = UserJpaEntity(
             TEST_EMAIL,
             TEST_NICKNAME,
             UserRole.NORMAL,
             OAuth2Provider.KAKAO,
             status = UserStatus.PENDING
         )
-        `when`(springDataUserRepository.findById(userId)).thenReturn(Optional.of(pendingUserEntity))
+        `when`(entityManager.find(UserJpaEntity::class.java, userId)).thenReturn(existingJpaEntity)
+
+        // 도메인 레이어에서 변경이 일어난 유저 상태 시뮬레이션 (ACTIVE 상태 및 새 닉네임)
+        val updatedDomainUser = User(
+            id = userId,
+            email = TEST_EMAIL,
+            nickname = "newNickname",
+            role = UserRole.NORMAL,
+            oauthProvider = OAuth2Provider.KAKAO,
+            status = UserStatus.ACTIVE
+        )
 
         // when
-        userDaoImpl.activate(userId)
+        userRepositoryImpl.update(updatedDomainUser)
 
         // then
-        assertThat(pendingUserEntity.status).isEqualTo(UserStatus.ACTIVE)
-        verify(springDataUserRepository).save(pendingUserEntity)
+        // 구현체의 userJpaEntity.update(user) 내부 로직이 올바르게 수행되었는지 엔티티 상태로 검증
+        assertThat(existingJpaEntity.status).isEqualTo(UserStatus.ACTIVE)
+        assertThat(existingJpaEntity.nickname).isEqualTo("newNickname")
     }
 
     @Test
-    @DisplayName("존재하지 않는 사용자 ID로 활성화 시도 시 예외가 발생한다")
-    fun activate_fail_when_user_not_found() {
+    @DisplayName("존재하지 않는 사용자 정보로 수정 시도 시 예외가 발생한다")
+    fun update_fail_when_user_not_found() {
         // given
-        val userId = UUID.randomUUID()
-        `when`(springDataUserRepository.findById(userId)).thenReturn(Optional.empty())
+        val notExistUserId = UUID.randomUUID()
+        val dummyUser = User(
+            id = notExistUserId,
+            email = TEST_EMAIL,
+            nickname = TEST_NICKNAME,
+            role = UserRole.NORMAL,
+            oauthProvider = OAuth2Provider.KAKAO,
+            status = UserStatus.ACTIVE
+        )
+        `when`(entityManager.find(UserJpaEntity::class.java, notExistUserId)).thenReturn(null)
 
         // when & then
         assertThatThrownBy {
-            userDaoImpl.activate(userId)
+            userRepositoryImpl.update(dummyUser)
         }.isInstanceOf(ImHereBaseException::class.java)
             .extracting("errorCode")
             .isEqualTo(UserException.USER_NOT_FOUND)
-    }
-
-    @Test
-    @DisplayName("사용자의 닉네임을 변경하고 수정된 유저를 반환한다")
-    fun updateNickname_success() {
-        // given
-        val newNickname = "새닉네임"
-        `when`(springDataUserRepository.findByEmail(TEST_EMAIL)).thenReturn(testUserEntity)
-        `when`(springDataUserRepository.save(testUserEntity)).thenReturn(testUserEntity)
-        `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
-
-        // when
-        val result = userDaoImpl.updateNickname(TEST_EMAIL, newNickname)
-
-        // then
-        assertThat(result).isNotNull
-        verify(springDataUserRepository).save(testUserEntity)
-    }
-
-    @Test
-    @DisplayName("차단(block) 호출 시 사용자를 차단 상태로 만들고 저장한다")
-    fun block_success() {
-        // given
-        `when`(springDataUserRepository.findByEmail(TEST_EMAIL)).thenReturn(testUserEntity)
-
-        // when
-        userDaoImpl.block(TEST_EMAIL)
-
-        // then
-        assertThat(testUserEntity.status).isEqualTo(UserStatus.BLOCKED)
-        verify(springDataUserRepository).save(testUserEntity)
-    }
-
-    @Test
-    @DisplayName("차단 해제(unblock) 호출 시 사용자를 활성 상태로 만들고 저장한다")
-    fun unblock_success() {
-        // given
-        val blockedUserEntity = UserJpaEntity(
-            TEST_EMAIL,
-            TEST_NICKNAME,
-            UserRole.NORMAL,
-            OAuth2Provider.KAKAO,
-            status = UserStatus.BLOCKED
-        )
-        `when`(springDataUserRepository.findByEmail(TEST_EMAIL)).thenReturn(blockedUserEntity)
-
-        // when
-        userDaoImpl.unblock(TEST_EMAIL)
-
-        // then
-        assertThat(blockedUserEntity.status).isEqualTo(UserStatus.ACTIVE)
-        verify(springDataUserRepository).save(blockedUserEntity)
     }
 }

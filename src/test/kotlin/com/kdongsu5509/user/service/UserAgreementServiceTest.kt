@@ -24,6 +24,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import java.time.LocalDateTime
 import java.util.*
 
@@ -46,7 +47,8 @@ class UserAgreementServiceTest {
         const val TEST_EMAIL = "test@test.com"
         const val TEST_NICKNAME = "테스트"
         val userId = UUID.randomUUID()
-        val testUser = User(
+
+        fun createPendingUser() = User(
             id = userId,
             email = TEST_EMAIL,
             nickname = TEST_NICKNAME,
@@ -64,8 +66,9 @@ class UserAgreementServiceTest {
         val termResult2 = TermResult(2L, 1L, TermTypes.PRIVACY, "개인정보 약관", "내용", LocalDateTime.now(), true)
         val termResult3 = TermResult(3L, 1L, TermTypes.MARKETING, "마케팅 약관", "내용", LocalDateTime.now(), false)
 
+        val pendingUser = createPendingUser()
         `when`(termService.findAll(true)).thenReturn(listOf(termResult1, termResult2, termResult3))
-        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(testUser)
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(pendingUser)
 
         val command = MultiTermsConsentCommand(
             consents = listOf(
@@ -81,7 +84,7 @@ class UserAgreementServiceTest {
         // then
         assertThat(result.status).isEqualTo(UserStatus.ACTIVE)
         verify(userAgreementRepository).saveAll(userId, listOf(1L, 2L, 3L))
-        verify(userRepository).activate(userId)
+        verify(userRepository).update(any()) // activate(userId) 대신 인터페이스 스펙인 update(user) 검증
     }
 
     @Test
@@ -134,7 +137,8 @@ class UserAgreementServiceTest {
     @DisplayName("개별 약관에 동의하면 정상적으로 동의 기록을 저장한다")
     fun consent_success() {
         // given
-        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(testUser)
+        val pendingUser = createPendingUser()
+        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(pendingUser)
 
         // when
         userAgreementService.consent(TEST_EMAIL, 1L)

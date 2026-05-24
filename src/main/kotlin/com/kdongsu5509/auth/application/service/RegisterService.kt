@@ -8,14 +8,14 @@ import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.User
-import com.kdongsu5509.user.repository.UserDao
+import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class RegisterService(
     private val oidcVerifyPort: OIDCVerifyPort,
-    private val userDao: UserDao,
+    private val userRepository: UserRepository,
     private val tokenProviderPort: ImHereTokenProviderPort
 ) : RegisterUseCase {
 
@@ -34,6 +34,6 @@ class RegisterService(
 
     private fun saveNewUser(email: String, nickname: String, provider: OAuth2Provider): User {
         val newUser = User.createWithPendingStatus(email, nickname, provider)
-        return userDao.save(newUser)
+        return userRepository.save(newUser)
     }
 }

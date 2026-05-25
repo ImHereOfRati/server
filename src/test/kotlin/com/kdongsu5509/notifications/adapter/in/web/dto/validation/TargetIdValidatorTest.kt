@@ -10,7 +10,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 
 class TargetIdValidatorTest {
@@ -51,7 +52,7 @@ class TargetIdValidatorTest {
     fun isValid_email_success() {
         val request = NotificationRequest(
             targetId = "test@example.com",
-            notificationMethod = NotificationMethod.USER_EMAIL,
+            notificationMethod = NotificationMethod.FCM,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
         assertThat(validator.isValid(request, context)).isTrue()
@@ -62,11 +63,11 @@ class TargetIdValidatorTest {
     fun isValid_email_fail() {
         val request = NotificationRequest(
             targetId = "test-example.com", // No @
-            notificationMethod = NotificationMethod.USER_EMAIL,
+            notificationMethod = NotificationMethod.FCM,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
         setupContextMock("올바른 이메일 형식이 아닙니다.")
-        
+
         assertThat(validator.isValid(request, context)).isFalse()
         verify(context).disableDefaultConstraintViolation()
         verify(context).buildConstraintViolationWithTemplate("올바른 이메일 형식이 아닙니다.")
@@ -98,7 +99,7 @@ class TargetIdValidatorTest {
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
         setupContextMock("올바른 휴대전화 번호 형식이 아닙니다.")
-        
+
         assertThat(validator.isValid(request, context)).isFalse()
         verify(context).disableDefaultConstraintViolation()
         verify(context).buildConstraintViolationWithTemplate("올바른 휴대전화 번호 형식이 아닙니다.")
@@ -109,11 +110,11 @@ class TargetIdValidatorTest {
     fun isValid_multi_fail() {
         val request = MultiNotificationRequest(
             targetIds = listOf("test@ex.com", "wrong-email"),
-            notificationMethod = NotificationMethod.USER_EMAIL,
+            notificationMethod = NotificationMethod.FCM,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
         setupContextMock("올바른 이메일 형식이 아닙니다.")
-        
+
         assertThat(validator.isValid(request, context)).isFalse()
     }
 
@@ -122,7 +123,7 @@ class TargetIdValidatorTest {
     fun isValid_multi_success() {
         val request = MultiNotificationRequest(
             targetIds = listOf("test1@ex.com", "test2@ex.com"),
-            notificationMethod = NotificationMethod.USER_EMAIL,
+            notificationMethod = NotificationMethod.FCM,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
         assertThat(validator.isValid(request, context)).isTrue()

@@ -7,8 +7,8 @@ import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
@@ -30,7 +30,6 @@ import tools.jackson.databind.json.JsonMapper
 import java.time.LocalDateTime
 
 @WebMvcTest(NotificationReadController::class)
-@AutoConfigureMockMvc(addFilters = false)
 class NotificationReadControllerWebMvcTest {
 
     @Autowired
@@ -76,7 +75,7 @@ class NotificationReadControllerWebMvcTest {
             createdAt = LocalDateTime.now()
         )
 
-        `when`(notificationHistoryUseCase.findByReceiverEmail(userDetails.email, 0, 20))
+        whenever(notificationHistoryUseCase.findByReceiverEmail(userDetails.email, 0, 20))
             .thenReturn(listOf(history))
 
         mockMvc.perform(

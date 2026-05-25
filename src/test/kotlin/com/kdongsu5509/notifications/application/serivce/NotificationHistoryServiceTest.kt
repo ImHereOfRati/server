@@ -11,9 +11,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
@@ -47,7 +48,7 @@ class NotificationHistoryServiceTest {
             isRead = false,
             createdAt = LocalDateTime.now()
         )
-        `when`(persistencePort.findByReceiverEmail(email, page, size)).thenReturn(listOf(history))
+        whenever(persistencePort.findByReceiverEmail(email, page, size)).thenReturn(listOf(history))
 
         // when
         val result = service.findByReceiverEmail(email, page, size)
@@ -75,14 +76,15 @@ class NotificationHistoryServiceTest {
             isRead = false,
             createdAt = LocalDateTime.now()
         )
-        `when`(persistencePort.findById(id)).thenReturn(history)
+        whenever(persistencePort.findById(id)).thenReturn(history)
 
         // when
         service.markAsRead(email, id)
 
         // then
-        assertThat(history.isRead).isTrue()
-        verify(persistencePort).save(history)
+        val captor = argumentCaptor<NotificationHistory>()
+        verify(persistencePort).save(captor.capture())
+        assertThat(captor.firstValue.isRead).isTrue()
     }
 
     @Test
@@ -91,7 +93,7 @@ class NotificationHistoryServiceTest {
         // given
         val email = "test@ex.com"
         val id = 1L
-        `when`(persistencePort.findById(id)).thenReturn(null)
+        whenever(persistencePort.findById(id)).thenReturn(null)
 
         // when & then
         assertThatThrownBy { service.markAsRead(email, id) }
@@ -115,7 +117,7 @@ class NotificationHistoryServiceTest {
             isRead = false,
             createdAt = LocalDateTime.now()
         )
-        `when`(persistencePort.findById(id)).thenReturn(history)
+        whenever(persistencePort.findById(id)).thenReturn(history)
 
         // when & then
         assertThatThrownBy { service.markAsRead(email, id) }

@@ -8,7 +8,7 @@ import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.verify
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
@@ -28,8 +28,7 @@ import org.springframework.web.filter.CharacterEncodingFilter
 import tools.jackson.databind.json.JsonMapper
 
 @WebMvcTest(FcmTokenEnrollController::class)
-@AutoConfigureMockMvc(addFilters = false)
-private class FcmTokenEnrollControllerWebMvcTest {
+class FcmTokenEnrollControllerWebMvcTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
@@ -86,7 +85,7 @@ private class FcmTokenEnrollControllerWebMvcTest {
     @DisplayName("FCM 토큰 값이 없으면 400 Bad Request를 반환한다")
     fun enroll_fail_when_token_is_blank() {
         val requestDto = FcmTokenEnrollRequest(
-            fcmToken = "", // Blank
+            fcmToken = "",
             deviceType = DeviceType.IOS
         )
 

@@ -1,0 +1,31 @@
+package com.kdongsu5509.notifications.adapter.`in`.web.dto
+
+import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationType
+import com.kdongsu5509.notifications.adapter.`in`.web.dto.validation.ValidTargetId
+import com.kdongsu5509.notifications.application.dto.NotificationCommand
+import com.kdongsu5509.notifications.domain.NotificationMethod
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+
+@ValidTargetId
+data class NotificationRequest(
+    @field:NotNull(message = "발송 대상 타입을 입력해 주세요.")
+    val notificationMethod: NotificationMethod,
+
+    @field:NotBlank(message = "알림을 수신할 대상(이메일 또는 전화번호)을 입력해 주세요.")
+    val targetId: String,
+
+    @field:NotNull(message = "알림 템플릿 타입을 선택해 주세요.")
+    val type: NotificationType,
+
+    val extraData: Map<String, String> = emptyMap()
+) {
+    fun toCommand(senderNickname: String, senderEmail: String) = NotificationCommand(
+        senderNickname = senderNickname,
+        senderEmail = senderEmail,
+        notificationMethod = notificationMethod,
+        targetIdentifier = targetId,
+        type = type.name,
+        extraData = extraData
+    )
+}

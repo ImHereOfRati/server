@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface SpringDataFcmTokenRepository : JpaRepository<FcmTokenJpaEntity, Long> {
-    fun findByUserEmail(email: String): FcmTokenJpaEntity?
+    fun findByEmail(email: String): FcmTokenJpaEntity?
 }

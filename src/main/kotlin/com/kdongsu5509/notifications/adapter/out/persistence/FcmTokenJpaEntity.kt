@@ -1,6 +1,7 @@
 package com.kdongsu5509.notifications.adapter.out.persistence
 
 import com.kdongsu5509.notifications.domain.DeviceType
+import com.kdongsu5509.shared.BaseTimeEntity
 import jakarta.persistence.*
 
 @Entity
@@ -9,17 +10,14 @@ class FcmTokenJpaEntity(
     @Column(nullable = false)
     var token: String,
 
-    val userEmail: String,
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    val email: String,
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     var deviceType: DeviceType
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
-
-    fun updateToken(newToken: String) {
-        this.token = newToken
-    }
 }

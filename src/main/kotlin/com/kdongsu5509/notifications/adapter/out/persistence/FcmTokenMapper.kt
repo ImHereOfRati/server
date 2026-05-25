@@ -5,13 +5,21 @@ import org.springframework.stereotype.Component
 
 @Component
 class FcmTokenMapper {
-    fun mapToDomainEntity(jpaEntity: FcmTokenJpaEntity): FcmToken {
+    fun toDomain(jpaEntity: FcmTokenJpaEntity): FcmToken {
         return FcmToken(
             id = jpaEntity.id,
-            userEmail = jpaEntity.userEmail,
+            email = jpaEntity.email,
             fcmToken = jpaEntity.token,
             deviceType = jpaEntity.deviceType,
             updatedAt = jpaEntity.updatedAt,
         )
+    }
+
+    fun toEntity(domain: FcmToken) = FcmTokenJpaEntity(
+        token = domain.fcmToken,
+        email = domain.email,
+        deviceType = domain.deviceType
+    ).apply {
+        id = domain.id
     }
 }

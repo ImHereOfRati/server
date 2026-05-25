@@ -1,4 +1,4 @@
-package com.kdongsu5509.terms.application
+package com.kdongsu5509.terms.service
 
 import com.kdongsu5509.terms.domain.Term
 import com.kdongsu5509.terms.domain.TermTypes

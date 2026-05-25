@@ -1,4 +1,4 @@
-package com.kdongsu5509.terms.adapter.out
+package com.kdongsu5509.terms.repository
 
 import com.kdongsu5509.terms.domain.TermTypes
 import org.assertj.core.api.Assertions.assertThat

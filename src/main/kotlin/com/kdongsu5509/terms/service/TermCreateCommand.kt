@@ -1,6 +1,6 @@
-package com.kdongsu5509.terms.application
+package com.kdongsu5509.terms.service
 
-import com.kdongsu5509.terms.adapter.`in`.dto.TermCreateRequest
+import com.kdongsu5509.terms.controller.dto.TermCreateRequest
 import com.kdongsu5509.terms.domain.TermTypes
 import java.time.LocalDateTime
 

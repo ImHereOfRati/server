@@ -1,10 +1,10 @@
-package com.kdongsu5509.terms.application
+package com.kdongsu5509.terms.service
 
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.terms.TermException
-import com.kdongsu5509.terms.adapter.out.TermPersistenceAdapter
 import com.kdongsu5509.terms.domain.Term
 import com.kdongsu5509.terms.domain.TermTypes
+import com.kdongsu5509.terms.repository.TermPersistenceAdapter
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

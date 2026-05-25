@@ -1,9 +1,9 @@
-package com.kdongsu5509.terms.application
+package com.kdongsu5509.terms.service
 
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.TermException
-import com.kdongsu5509.terms.adapter.out.TermPersistenceAdapter
 import com.kdongsu5509.terms.domain.Term
+import com.kdongsu5509.terms.repository.TermPersistenceAdapter
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

@@ -1,4 +1,4 @@
-package com.kdongsu5509.terms.adapter.`in`.dto
+package com.kdongsu5509.terms.controller.dto
 
 import com.kdongsu5509.terms.domain.TermTypes
 import jakarta.validation.constraints.NotBlank

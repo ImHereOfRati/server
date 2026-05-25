@@ -1,15 +1,15 @@
-package com.kdongsu5509.terms.adapter.`in`
+package com.kdongsu5509.terms.controller
 
 import com.kdongsu5509.support.exception.type.UnprocessableEntityException
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import com.kdongsu5509.terms.TermException
-import com.kdongsu5509.terms.adapter.`in`.dto.TermCreateRequest
-import com.kdongsu5509.terms.application.TermResult
-import com.kdongsu5509.terms.application.TermService
+import com.kdongsu5509.terms.controller.dto.TermCreateRequest
 import com.kdongsu5509.terms.domain.TermTypes
+import com.kdongsu5509.terms.service.TermResult
+import com.kdongsu5509.terms.service.TermService
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -18,10 +18,8 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import tools.jackson.databind.json.JsonMapper
 import java.time.LocalDateTime
 
@@ -57,17 +55,17 @@ class TermsControllerTest {
             isRequired = true
         )
         val result = TermResult(1L, 1L, TermTypes.SERVICE, "제목", "내용", request.effectiveDate, true)
-        given(termService.save(any())).willReturn(result)
+        BDDMockito.given(termService.save(any())).willReturn(result)
 
         // when & then
         mockMvc.perform(
-            post(TERM_CONTROLLER_URL)
+            MockMvcRequestBuilders.post(TERM_CONTROLLER_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.id").value(1L))
-            .andExpect(jsonPath("$.data.title").value("제목"))
+            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.id").value(1L))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.title").value("제목"))
     }
 
     @Test
@@ -84,12 +82,12 @@ class TermsControllerTest {
 
         // when & then
         mockMvc.perform(
-            post(TERM_CONTROLLER_URL)
+            MockMvcRequestBuilders.post(TERM_CONTROLLER_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.imhereResponseCode").value("GLOBAL-000"))
+            .andExpect(MockMvcResultMatchers.status().isBadRequest)
+            .andExpect(MockMvcResultMatchers.jsonPath("$.imhereResponseCode").value("GLOBAL-000"))
     }
 
     @Test
@@ -103,16 +101,16 @@ class TermsControllerTest {
             effectiveDate = LocalDateTime.now(),
             isRequired = true
         )
-        given(termService.save(any())).willThrow(DataIntegrityViolationException("Duplicate version"))
+        BDDMockito.given(termService.save(any())).willThrow(DataIntegrityViolationException("Duplicate version"))
 
         // when & then
         mockMvc.perform(
-            post(TERM_CONTROLLER_URL)
+            MockMvcRequestBuilders.post(TERM_CONTROLLER_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().isConflict)
-            .andExpect(jsonPath("$.imhereResponseCode").value("GLOBAL-500"))
+            .andExpect(MockMvcResultMatchers.status().isConflict)
+            .andExpect(MockMvcResultMatchers.jsonPath("$.imhereResponseCode").value("GLOBAL-500"))
     }
 
     @Test
@@ -122,12 +120,12 @@ class TermsControllerTest {
         val results = listOf(
             TermResult(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
         )
-        given(termService.findAll()).willReturn(results)
+        BDDMockito.given(termService.findAll()).willReturn(results)
 
         // when & then
-        mockMvc.perform(get(TERM_CONTROLLER_URL))
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data[0].id").value(1L))
+        mockMvc.perform(MockMvcRequestBuilders.get(TERM_CONTROLLER_URL))
+            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].id").value(1L))
     }
 
     @Test
@@ -137,22 +135,22 @@ class TermsControllerTest {
         val results = listOf(
             TermResult(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
         )
-        given(termService.findAll(true)).willReturn(results)
+        BDDMockito.given(termService.findAll(true)).willReturn(results)
 
         // when & then
         mockMvc.perform(
-            get(TERM_CONTROLLER_URL)
+            MockMvcRequestBuilders.get(TERM_CONTROLLER_URL)
                 .param("isActive", "true")
         )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data[0].id").value(1L))
+            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].id").value(1L))
     }
 
     @Test
     @DisplayName("isActive 파라미터가 false이면 422 오류를 반환한다")
     fun readAllByActive_fail_when_inactive() {
         // given
-        given(termService.findAll(false))
+        BDDMockito.given(termService.findAll(false))
             .willThrow(
                 UnprocessableEntityException(
                     message = TermException.NON_ACTIVE_TERM_NOT_ALLOWED.errorMessage
@@ -161,10 +159,10 @@ class TermsControllerTest {
 
         // when & then
         mockMvc.perform(
-            get(TERM_CONTROLLER_URL)
+            MockMvcRequestBuilders.get(TERM_CONTROLLER_URL)
                 .param("isActive", "false")
         )
-            .andExpect(status().isUnprocessableContent)
-            .andExpect(jsonPath("$.message").value("비활성화된 약관은 조회할 수 없습니다."))
+            .andExpect(MockMvcResultMatchers.status().isUnprocessableContent)
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("비활성화된 약관은 조회할 수 없습니다."))
     }
 }

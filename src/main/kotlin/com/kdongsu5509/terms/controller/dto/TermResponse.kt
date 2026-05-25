@@ -1,7 +1,7 @@
-package com.kdongsu5509.terms.adapter.`in`.dto
+package com.kdongsu5509.terms.controller.dto
 
-import com.kdongsu5509.terms.application.TermResult
 import com.kdongsu5509.terms.domain.TermTypes
+import com.kdongsu5509.terms.service.TermResult
 import java.time.LocalDateTime
 
 data class TermResponse(

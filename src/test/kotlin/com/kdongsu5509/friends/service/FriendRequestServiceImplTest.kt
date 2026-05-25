@@ -11,9 +11,8 @@ import com.kdongsu5509.friends.domain.Friendship
 import com.kdongsu5509.friends.repository.FriendRequestRepository
 import com.kdongsu5509.friends.repository.FriendRestrictionRepository
 import com.kdongsu5509.friends.repository.FriendshipRepository
-import com.kdongsu5509.friends.repository.mapper.FriendRequestMapper
+import com.kdongsu5509.shared.notification.NotificationPort
 import com.kdongsu5509.support.exception.ImHereBaseException
-import com.kdongsu5509.user.application.port.FriendAlertPort
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.service.UserService
 import com.kdongsu5509.user.service.dto.UserResult
@@ -50,10 +49,7 @@ class FriendRequestServiceImplTest {
     lateinit var friendshipRepository: FriendshipRepository
 
     @Mock
-    lateinit var friendAlertPort: FriendAlertPort
-
-    @Mock
-    lateinit var friendRequestMapper: FriendRequestMapper
+    lateinit var notificationPort: NotificationPort
 
     @InjectMocks
     lateinit var friendRequestServiceImpl: FriendRequestServiceImpl

@@ -1,8 +1,8 @@
 package com.kdongsu5509.auth.security.handler
 
+import com.kdongsu5509.shared.response.APIResponseSerializers
 import com.kdongsu5509.support.external.DiscordMessageDto
 import com.kdongsu5509.support.external.DiscordMessageSender
-import com.kdongsu5509.support.response.APIResponseSerializers
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value

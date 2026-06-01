@@ -153,4 +153,33 @@ class JjwtOIDCTokenVerifyAdapterTest {
         assertThat(result).isNotNull
         assertThat(result.payload.issuer).isEqualTo(KakaoTestJwtProvider.PAYLOAD_ISS)
     }
+
+    @Test
+    @DisplayName("서명이 일치하지 않거나 토큰 파싱 에러 시 UnauthorizedException 발생시킨다")
+    fun verifySignature_invalidSignature_throwsException() {
+        val token = "invalid.token.signature"
+        val publicKey = KakaoTestJwtProvider.keyPair.public as java.security.interfaces.RSAPublicKey
+        val modulus = Base64.getUrlEncoder().encodeToString(publicKey.modulus.toByteArray())
+        val exponent = Base64.getUrlEncoder().encodeToString(publicKey.publicExponent.toByteArray())
+
+        assertThrows<UnauthorizedException> {
+            jjwtOIDCTokenVerifyAdapter.verifySignature(token, modulus, exponent)
+        }.also {
+            assertThat(it.message).contains("OIDC ID 토큰의 서명 검증에 실패했습니다.")
+        }
+    }
+
+    @Test
+    @DisplayName("잘못된 인코딩 값이 입력되면 InvalidInputException 발생시킨다")
+    fun createPublicKey_invalidEncoding_throwsException() {
+        val token = "some.token.here"
+        val invalidModulus = "invalid_base64!!"
+        val exponent = "AQAB"
+
+        assertThrows<com.kdongsu5509.support.exception.type.InvalidInputException> {
+            jjwtOIDCTokenVerifyAdapter.verifySignature(token, invalidModulus, exponent)
+        }.also {
+            assertThat(it.message).contains("잘못된 Base64 인코딩 값입니다.")
+        }
+    }
 }

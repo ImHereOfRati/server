@@ -4,11 +4,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.domain.AuditorAware
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.security.core.context.SecurityContextHolder
 import java.util.*
 
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
+@EnableJpaRepositories(basePackages = ["com.kdongsu5509"])
 class JpaCommonConfig {
 
     @Bean

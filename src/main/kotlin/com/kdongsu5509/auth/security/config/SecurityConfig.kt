@@ -8,7 +8,7 @@ import com.kdongsu5509.auth.security.filter.AdminSecretFilter
 import com.kdongsu5509.auth.security.filter.JwtAuthenticationFilter
 import com.kdongsu5509.auth.security.handler.ImHereOttSuccessHandler
 import com.kdongsu5509.auth.security.handler.OttLoginSuccessHandler
-import com.kdongsu5509.support.response.APIResponseSerializers
+import com.kdongsu5509.shared.response.APIResponseSerializers
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean

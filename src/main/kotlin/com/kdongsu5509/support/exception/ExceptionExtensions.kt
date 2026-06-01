@@ -49,6 +49,13 @@ fun ImHereBaseErrorCode.throwIt(
             errorCode = this
         )
 
+        422 -> UnprocessableEntityException(
+            message = finalMessage,
+            contextData = contextData,
+            cause = cause,
+            errorCode = this
+        )
+
         500 -> InternalServerException(
             message = finalMessage,
             contextData = contextData,

@@ -4,14 +4,12 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.MDC
-import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.util.ContentCachingRequestWrapper
 import org.springframework.web.util.ContentCachingResponseWrapper
 import java.time.LocalDateTime
 import java.util.*
 
-@Component
 class LoggingFilter(
     private val logPrinter: AccessLogPrinter
 ) : OncePerRequestFilter() {

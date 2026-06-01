@@ -4,9 +4,9 @@ import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.friends.controller.dto.FriendshipResponse
 import com.kdongsu5509.friends.controller.dto.UpdateAliasRequest
 import com.kdongsu5509.friends.service.FriendshipService
-import com.kdongsu5509.support.response.ApiResponse
-import com.kdongsu5509.support.response.SliceResponse
-import com.kdongsu5509.support.response.toOkResponse
+import com.kdongsu5509.shared.response.ApiResponse
+import com.kdongsu5509.shared.response.SliceResponse
+import com.kdongsu5509.shared.response.toOkResponse
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity

@@ -1,7 +1,7 @@
 package com.kdongsu5509.auth.security.filter
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.support.response.APIResponseSerializers
+import com.kdongsu5509.shared.response.APIResponseSerializers
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

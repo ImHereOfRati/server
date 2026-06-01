@@ -1,7 +1,7 @@
 package com.kdongsu5509.user.repository.jpa
 
 import com.kdongsu5509.shared.BaseTimeEntity
-import com.kdongsu5509.terms.adapter.out.TermJpaEntity
+import com.kdongsu5509.terms.repository.TermJpaEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import java.util.*

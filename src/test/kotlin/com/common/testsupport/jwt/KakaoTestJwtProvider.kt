@@ -22,6 +22,7 @@ object KakaoTestJwtProvider {
         initialize(2048)
     }.generateKeyPair()
 
+    val testPublicKey = keyPair.public
     val testPrivateKey = keyPair.private
 
     /**

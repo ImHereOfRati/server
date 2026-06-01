@@ -4,8 +4,8 @@ import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
+import com.kdongsu5509.shared.response.APIResponseSerializers
 import com.kdongsu5509.support.exception.ImHereBaseException
-import com.kdongsu5509.support.response.APIResponseSerializers
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

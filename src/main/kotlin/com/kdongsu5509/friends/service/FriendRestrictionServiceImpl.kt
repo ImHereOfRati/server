@@ -7,7 +7,7 @@ import com.kdongsu5509.friends.repository.FriendRequestRepository
 import com.kdongsu5509.friends.repository.FriendRestrictionRepository
 import com.kdongsu5509.friends.repository.FriendshipRepository
 import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.repository.UserDao
+import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.security.access.prepost.PreAuthorize
@@ -19,7 +19,7 @@ import java.util.*
 @Transactional(readOnly = true)
 class FriendRestrictionServiceImpl(
     private val friendRestrictionRepository: FriendRestrictionRepository,
-    private val userDao: UserDao,
+    private val userRepository: UserRepository,
     private val friendshipRepository: FriendshipRepository,
     private val friendRequestRepository: FriendRequestRepository
 ) : FriendRestrictionService {
@@ -54,8 +54,10 @@ class FriendRestrictionServiceImpl(
     @Transactional
     override fun restrictUser(restrictorEmail: String, targetUserId: UUID): FriendRestriction {
         val restrictor =
-            userDao.findByEmail(restrictorEmail) ?: FriendException.FRIEND_RELATIONSHIP_OWNER_MISS_MATCH.throwIt()
-        val restricted = userDao.findById(targetUserId) ?: FriendException.FRIEND_RELATIONSHIP_NOT_FOUND.throwIt()
+            userRepository.findByEmail(restrictorEmail)
+                ?: FriendException.FRIEND_RELATIONSHIP_OWNER_MISS_MATCH.throwIt()
+        val restricted =
+            userRepository.findById(targetUserId) ?: FriendException.FRIEND_RELATIONSHIP_NOT_FOUND.throwIt()
 
         val restrictorId = restrictor.id!!
         val restrictedId = restricted.id!!
@@ -77,7 +79,7 @@ class FriendRestrictionServiceImpl(
     }
 
     override fun existRestricted(restrictorEmail: String, targetUserId: UUID): Boolean {
-        val targetUser = userDao.findById(targetUserId) ?: return false
+        val targetUser = userRepository.findById(targetUserId) ?: return false
         return friendRestrictionRepository.existsRestriction(restrictorEmail, targetUser.email)
     }
 }

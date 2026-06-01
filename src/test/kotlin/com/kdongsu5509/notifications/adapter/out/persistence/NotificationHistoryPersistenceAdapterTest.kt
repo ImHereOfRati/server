@@ -147,7 +147,7 @@ class NotificationHistoryPersistenceAdapterTest {
         val receiverEmail = "test@ex.com"
         val page = 0
         val size = 20
-        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
+        val pageable = PageRequest.of(page, size)
 
         val entity = NotificationHistoryJpaEntity(
             id = 1L,

@@ -4,7 +4,7 @@ import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
-import com.kdongsu5509.support.response.APIResponseSerializers
+import com.kdongsu5509.shared.response.APIResponseSerializers
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value

@@ -2,8 +2,8 @@ package com.kdongsu5509.user.repository
 
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.TermException
-import com.kdongsu5509.terms.adapter.out.TermMapper
-import com.kdongsu5509.terms.adapter.out.TermPersistenceAdapter
+import com.kdongsu5509.terms.repository.TermMapper
+import com.kdongsu5509.terms.repository.TermPersistenceAdapter
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.jpa.SpringDataUserAgreementRepository
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository

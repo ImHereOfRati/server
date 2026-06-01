@@ -49,7 +49,6 @@ class UserServiceImpl(
         return UserResult.fromDomain(updatedUser)
     }
 
-
     @Transactional
     override fun block(userEmail: String): UserResult {
         val user = findAndValidateUser(userEmail)

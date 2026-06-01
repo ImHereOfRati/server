@@ -54,7 +54,7 @@ class MemberControllerSliceTest {
 // ✅ Controller Integration Test (Security 플로우 검증 및 RestDocs 문서화)
 @SpringBootTest
 @AutoConfigureMockMvc
-class MemberControllerIntTest {
+class MemberControllerIntegrationTest {
     @Autowired lateinit var mockMvc: MockMvc
     
     @Test

@@ -2,19 +2,18 @@ package com.kdongsu5509.notifications.adapter.out.firebase
 
 import com.google.firebase.messaging.*
 import com.kdongsu5509.notifications.application.port.out.FirebasePort
-import com.kdongsu5509.notifications.domain.FCMMessageTitle
-import com.kdongsu5509.support.exception.BusinessException
-import com.kdongsu5509.support.exception.FCMErrorCode
+import com.kdongsu5509.support.exception.ImHereBaseException
+import com.kdongsu5509.support.exception.type.InternalServerException
+import com.kdongsu5509.support.exception.type.InvalidInputException
+import com.kdongsu5509.support.exception.type.NotFoundException
 import org.slf4j.LoggerFactory
-import org.springframework.resilience.annotation.Retryable
 import org.springframework.stereotype.Component
 
 @Component
 class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : FirebasePort {
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    @Retryable(value = [RetryableFcmException::class], delay = 1000, multiplier = 2.0)
-    override fun send(fcmToken: String, title: FCMMessageTitle, body: String, data: Map<String, String>) {
+    override fun send(fcmToken: String, title: String, body: String, data: Map<String, String>) {
         if (fcmToken.isBlank()) return log.warn("FCM 토큰 공백으로 전송 중단")
         try {
             firebaseMessaging.send(createFcmMessage(fcmToken, title, body, data))
@@ -27,13 +26,13 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
         handleUnregistered(ex)
         handleRetryable(ex)
         handleNonRetryable(ex)
-        throw BusinessException(FCMErrorCode.FCM_UNKNOWN_ERROR)
+        throw InternalServerException("알 수 없는 FCM 오류가 발생했습니다.", cause = ex)
     }
 
     private fun handleUnregistered(ex: FirebaseMessagingException) =
         if (ex.messagingErrorCode == MessagingErrorCode.UNREGISTERED) {
             log.error("등록 해제된 토큰. DB 삭제 필요")
-            throw BusinessException(FCMErrorCode.FCM_TOKEN_UNREGISTERED)
+            throw NotFoundException("등록 해제된 FCM 토큰입니다.", contextData = mapOf("unregistered" to true))
         } else Unit
 
     private fun handleRetryable(ex: FirebaseMessagingException) {
@@ -44,21 +43,25 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
     }
 
     private fun handleNonRetryable(ex: FirebaseMessagingException) = when (ex.messagingErrorCode) {
-        MessagingErrorCode.INVALID_ARGUMENT -> logAndThrow(FCMErrorCode.FCM_INVALID_ARGUMENT, "잘못된 매개변수", ex)
-        MessagingErrorCode.SENDER_ID_MISMATCH -> logAndThrow(FCMErrorCode.FCM_AUTH_ERROR, "발신자 ID 불일치", ex)
-        MessagingErrorCode.THIRD_PARTY_AUTH_ERROR -> logAndThrow(FCMErrorCode.FCM_AUTH_ERROR, "타사 인증 오류", ex)
+        MessagingErrorCode.INVALID_ARGUMENT -> logAndThrow(InvalidInputException("FCM 요청 매개변수가 잘못되었습니다."), ex)
+        MessagingErrorCode.SENDER_ID_MISMATCH -> logAndThrow(InternalServerException("FCM 발신자 ID가 일치하지 않습니다."), ex)
+        MessagingErrorCode.THIRD_PARTY_AUTH_ERROR -> logAndThrow(
+            InternalServerException("FCM 타사 인증 오류가 발생했습니다."),
+            ex
+        )
+
         else -> Unit
     }
 
-    private fun createFcmMessage(token: String, title: FCMMessageTitle, body: String, data: Map<String, String>) =
+    private fun createFcmMessage(token: String, title: String, body: String, data: Map<String, String>) =
         Message.builder()
-            .setNotification(Notification.builder().setTitle(title.content).setBody(body).build())
+            .setNotification(Notification.builder().setTitle(title).setBody(body).build())
             .putAllData(data)
             .setToken(token).build()
 
-    private fun logAndThrow(err: FCMErrorCode, msg: String, ex: Exception): Nothing {
-        log.error("[$err] $msg", ex)
-        throw BusinessException(err)
+    private fun logAndThrow(exception: ImHereBaseException, ex: Exception): Nothing {
+        log.error("[${exception.errorCode}] ${exception.message}", ex)
+        throw exception
     }
 
     private fun logAndReturnRetryable(code: MessagingErrorCode, ex: Exception): RetryableFcmException {

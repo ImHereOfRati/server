@@ -375,6 +375,17 @@ class FriendRequestServiceImplTest {
                 friendRequestServiceImpl.acceptRequest("hacker@test.com", id)
             }
         }
+
+        @Test
+        @DisplayName("요청 ID가 없으면 예외를 발생시킨다")
+        fun notFound() {
+            val id = UUID.randomUUID()
+            `when`(friendRequestRepository.findById(id)).thenReturn(null)
+
+            assertThrows<ImHereBaseException> {
+                friendRequestServiceImpl.acceptRequest("rec@test.com", id)
+            }
+        }
     }
 
     @Nested
@@ -405,6 +416,17 @@ class FriendRequestServiceImplTest {
 
             assertThat(result).isEqualTo(savedRestriction)
             verify(friendRequestRepository).deleteById(id)
+        }
+
+        @Test
+        @DisplayName("요청 ID가 없으면 예외를 발생시킨다")
+        fun notFound() {
+            val id = UUID.randomUUID()
+            `when`(friendRequestRepository.findById(id)).thenReturn(null)
+
+            assertThrows<ImHereBaseException> {
+                friendRequestServiceImpl.rejectRequest("rec@test.com", id)
+            }
         }
     }
 
@@ -450,6 +472,17 @@ class FriendRequestServiceImplTest {
                 friendRequestServiceImpl.deleteByIdAndReceiverEmail(id, "fake@test.com")
             }
         }
+
+        @Test
+        @DisplayName("요청 ID가 없으면 예외를 발생시킨다")
+        fun notFound() {
+            val id = UUID.randomUUID()
+            `when`(friendRequestRepository.findById(id)).thenReturn(null)
+
+            assertThrows<ImHereBaseException> {
+                friendRequestServiceImpl.deleteByIdAndReceiverEmail(id, "rec@test.com")
+            }
+        }
     }
 
     @Nested
@@ -480,6 +513,17 @@ class FriendRequestServiceImplTest {
 
             assertThrows<ImHereBaseException> {
                 friendRequestServiceImpl.deleteByIdAndRequesterEmail(id, "fake@test.com")
+            }
+        }
+
+        @Test
+        @DisplayName("요청 ID가 없으면 예외를 발생시킨다")
+        fun notFound() {
+            val id = UUID.randomUUID()
+            `when`(friendRequestRepository.findById(id)).thenReturn(null)
+
+            assertThrows<ImHereBaseException> {
+                friendRequestServiceImpl.deleteByIdAndRequesterEmail(id, "req@test.com")
             }
         }
     }

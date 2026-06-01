@@ -2,7 +2,7 @@ package com.kdongsu5509.user.service
 
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.TermException
-import com.kdongsu5509.terms.application.TermService
+import com.kdongsu5509.terms.service.TermService
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.UserAgreementRepository

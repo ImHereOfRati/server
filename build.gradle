@@ -10,12 +10,13 @@ buildscript {
 
 plugins {
     //spring
-    id 'org.springframework.boot' version '4.0.5'
+    id 'org.springframework.boot' version '4.0.6'
+
+    id 'org.jetbrains.kotlin.jvm' version '2.3.21'
+    id 'com.google.devtools.ksp' version '2.3.7'
     //kotlin
-    id 'org.jetbrains.kotlin.jvm' version '2.3.20'
     id 'org.jetbrains.kotlin.plugin.spring' version '2.3.20'
     id 'org.jetbrains.kotlin.plugin.jpa' version '2.3.20'
-    id 'com.google.devtools.ksp' version '2.3.6'
     id 'jacoco'
 
     id 'com.epages.restdocs-api-spec' version '0.20.0'
@@ -45,7 +46,7 @@ configurations {
 }
 
 dependencies {
-    implementation platform("org.springframework.boot:spring-boot-dependencies:4.0.5")
+    implementation platform("org.springframework.boot:spring-boot-dependencies:4.0.6")
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor:4.0.0'
 
     // KOTLIN
@@ -74,7 +75,7 @@ dependencies {
     // DB & EXTERNAL
     implementation 'com.mysql:mysql-connector-j'
     developmentOnly 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
-    implementation 'com.google.firebase:firebase-admin:9.8.0'
+    implementation 'com.google.firebase:firebase-admin:9.9.0'
     implementation 'com.solapi:sdk:1.1.0'
 
     // QUERY DSL (KSP 환경)
@@ -183,14 +184,17 @@ jacocoTestReport {
             fileTree(dir: it, exclude: [
                     "**/support/**",
                     "**/dto/**",
+                    "**/*Request*",
+                    "**/*Response*",
+                    "**/*Command*",
                     "**/config/**",
                     "**/exception/**",
                     "**/common/**",
-                    "**/domain/**",
-                    "**/*Entity*",
-                    "**/port/**",
+                    "**/*JpaEntity*",
                     "**/Q*",
-                    "**/*Application*"
+                    "**/*Application*",
+                    "**/*BaseEntity*",
+                    "**/*BaseTimeEntity*"
             ])
         }))
     }

@@ -1,9 +1,9 @@
 package com.kdongsu5509.user.controller
 
 import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.support.response.ApiResponse
-import com.kdongsu5509.support.response.SliceResponse
-import com.kdongsu5509.support.response.toOkResponse
+import com.kdongsu5509.shared.response.ApiResponse
+import com.kdongsu5509.shared.response.SliceResponse
+import com.kdongsu5509.shared.response.toOkResponse
 import com.kdongsu5509.user.controller.dto.CompactUserResponse
 import com.kdongsu5509.user.controller.dto.DetailUserResponse
 import com.kdongsu5509.user.service.UserService

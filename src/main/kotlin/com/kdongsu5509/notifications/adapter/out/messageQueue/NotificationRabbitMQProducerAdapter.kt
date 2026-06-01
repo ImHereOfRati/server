@@ -8,6 +8,7 @@ import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
 import com.kdongsu5509.support.config.RabbitMQConfig
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 class NotificationRabbitMQProducerAdapter(
@@ -20,7 +21,8 @@ class NotificationRabbitMQProducerAdapter(
             category = category,
             sender = NotificationPersonInfo(command.senderEmail, command.senderNickname),
             receiver = NotificationPersonInfo(command.targetIdentifier, ""),
-            data = command.extraData
+            data = command.extraData,
+            messageId = UUID.randomUUID()
         )
 
         val routingKey = findProperRoutingKey(category)

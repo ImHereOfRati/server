@@ -9,7 +9,7 @@ import jakarta.validation.ConstraintValidatorContext
 
 class TargetIdValidator : ConstraintValidator<ValidTargetId, Any> {
 
-    private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\$")
+    private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
     private val phoneRegex = Regex("^01[0-9]-?[0-9]{3,4}-?[0-9]{4}\$")
 
     override fun isValid(value: Any?, context: ConstraintValidatorContext): Boolean {
@@ -39,7 +39,7 @@ class TargetIdValidator : ConstraintValidator<ValidTargetId, Any> {
 
     private fun isValidFormat(type: NotificationMethod, targetId: String): Boolean {
         return when (type) {
-            NotificationMethod.USER_EMAIL -> emailRegex.matches(targetId)
+            NotificationMethod.FCM -> emailRegex.matches(targetId)
             NotificationMethod.PHONE_NUMBER -> phoneRegex.matches(targetId)
         }
     }
@@ -48,7 +48,7 @@ class TargetIdValidator : ConstraintValidator<ValidTargetId, Any> {
         context.disableDefaultConstraintViolation()
 
         val message = when (type) {
-            NotificationMethod.USER_EMAIL -> "올바른 이메일 형식이 아닙니다."
+            NotificationMethod.FCM -> "올바른 이메일 형식이 아닙니다."
             NotificationMethod.PHONE_NUMBER -> "올바른 휴대전화 번호 형식이 아닙니다."
         }
 

@@ -13,7 +13,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)
-class FcmTokenPersistencePersistenceAdapterTest {
+class FcmTokenPersistenceAdapterTest {
 
     @Mock
     private lateinit var fcmTokenMapper: FcmTokenMapper
@@ -21,11 +21,11 @@ class FcmTokenPersistencePersistenceAdapterTest {
     @Mock
     private lateinit var repository: SpringDataFcmTokenRepository
 
-    private lateinit var adapter: FcmTokenPersistencePersistenceAdapter
+    private lateinit var adapter: FcmTokenPersistenceAdapter
 
     @BeforeEach
     fun setUp() {
-        adapter = FcmTokenPersistencePersistenceAdapter(fcmTokenMapper, repository)
+        adapter = FcmTokenPersistenceAdapter(fcmTokenMapper, repository)
     }
 
     @Test

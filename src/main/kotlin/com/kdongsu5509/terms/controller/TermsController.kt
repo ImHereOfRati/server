@@ -17,7 +17,7 @@ class TermsController(
     @PostMapping
     fun create(@RequestBody @Validated request: TermCreateRequest): TermResponse {
         val result = termService.save(TermCreateCommand.fromRequest(request))
-        return TermResponse.Companion.from(result)
+        return TermResponse.from(result)
     }
 
     @GetMapping(params = ["isActive"])
@@ -34,6 +34,6 @@ class TermsController(
     }
 
     private fun convertToTermResponses(terms: List<TermResult>): List<TermResponse> {
-        return terms.map { TermResponse.Companion.from(it) }
+        return terms.map { TermResponse.from(it) }
     }
 }

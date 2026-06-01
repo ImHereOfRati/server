@@ -3,7 +3,6 @@ package com.kdongsu5509.notifications.adapter.out.persistence
 import com.kdongsu5509.notifications.application.port.out.NotificationHistoryPersistencePort
 import com.kdongsu5509.notifications.domain.NotificationHistory
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
 
 @Component
@@ -23,7 +22,7 @@ class NotificationHistoryPersistenceAdapter(
     }
 
     override fun findByReceiverEmail(receiverEmail: String, page: Int, size: Int): List<NotificationHistory> {
-        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
+        val pageable = PageRequest.of(page, size)
         return repository.findByReceiverEmailOrderByCreatedAtDesc(receiverEmail, pageable)
             .content
             .map { mapper.toDomain(it) }

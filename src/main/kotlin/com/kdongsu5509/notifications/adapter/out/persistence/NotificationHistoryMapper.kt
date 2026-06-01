@@ -5,8 +5,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class NotificationHistoryMapper {
-    fun toDomain(entity: NotificationHistoryJpaEntity): NotificationHistory {
-        return NotificationHistory(
+    fun toDomain(entity: NotificationHistoryJpaEntity): NotificationHistory =
+        NotificationHistory.reconstruct(
             id = entity.id,
             receiverEmail = entity.receiverEmail,
             senderNickname = entity.senderNickname,
@@ -17,10 +17,9 @@ class NotificationHistoryMapper {
             isRead = entity.isRead,
             createdAt = entity.createdAt
         )
-    }
 
-    fun toEntity(domain: NotificationHistory): NotificationHistoryJpaEntity {
-        return NotificationHistoryJpaEntity(
+    fun toEntity(domain: NotificationHistory): NotificationHistoryJpaEntity =
+        NotificationHistoryJpaEntity(
             id = domain.id,
             receiverEmail = domain.receiverEmail,
             senderNickname = domain.senderNickname,
@@ -30,5 +29,4 @@ class NotificationHistoryMapper {
             path = domain.path,
             isRead = domain.isRead,
         )
-    }
 }

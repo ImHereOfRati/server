@@ -142,10 +142,10 @@ allOpen {
 }
 
 openapi3 {
-    setServer("http://localhost:8080")
+    setServer("https://fortunki.site")
     title = "ImHere API 문서"
-    description = "User & Notification 통합 API 문서"
-    version = "0.0.1"
+    description = "ImHere 통합 API 문서"
+    version = "1.0.0"
     format = "yaml"
 }
 

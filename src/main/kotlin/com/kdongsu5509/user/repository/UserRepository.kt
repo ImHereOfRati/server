@@ -18,4 +18,5 @@ interface UserRepository {
     fun findActiveUserByEmail(email: String): User?
     fun save(user: User): User
     fun update(user: User)
+    fun existsByEmail(email: String): Boolean
 }

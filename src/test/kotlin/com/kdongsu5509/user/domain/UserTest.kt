@@ -9,7 +9,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.util.*
 
 class UserTest {
 
@@ -88,5 +88,20 @@ class UserTest {
         }.isInstanceOf(ImHereBaseException::class.java)
             .extracting("errorCode")
             .isEqualTo(UserException.INVALID_USER_STATUS)
+    }
+
+    @Test
+    @DisplayName("중복되는 이메일이 있으면 오류를 던진다")
+    fun validateDuplicateEmailAllowed() {
+        // given
+        val user = createUser(UserStatus.ACTIVE)
+        val isExistingEmail = true
+
+        // when,then
+        assertThatThrownBy {
+            user.validateDuplicateEmailAllowed(isExistingEmail)
+        }.isInstanceOf(ImHereBaseException::class.java)
+            .extracting("errorCode")
+            .isEqualTo(UserException.DUPLICATE_EMAIL)
     }
 }

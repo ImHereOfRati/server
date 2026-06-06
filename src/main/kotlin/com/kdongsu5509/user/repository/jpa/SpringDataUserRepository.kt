@@ -7,4 +7,5 @@ import java.util.*
 @Repository
 interface SpringDataUserRepository : JpaRepository<UserJpaEntity, UUID> {
     fun findByEmail(email: String): UserJpaEntity?
+    fun existsByEmail(email: String): Boolean
 }

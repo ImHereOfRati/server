@@ -79,4 +79,10 @@ data class User(
         oauthProvider = oauthProvider,
         status = status
     )
+
+    fun validateDuplicateEmailAllowed(isExistingEmail: Boolean) {
+        if (isExistingEmail) {
+            UserException.DUPLICATE_EMAIL.throwIt()
+        }
+    }
 }

@@ -63,4 +63,7 @@ class UserRepositoryImpl(
             ?: UserException.USER_NOT_FOUND.throwIt()
         userJpaEntity.update(user)
     }
+
+    override fun existsByEmail(email: String): Boolean =
+        springDataUserRepository.existsByEmail(email)
 }

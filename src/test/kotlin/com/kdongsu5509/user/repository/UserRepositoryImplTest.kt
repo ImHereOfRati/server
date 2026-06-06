@@ -20,6 +20,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.given
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.SliceImpl
 import java.util.*
@@ -70,12 +71,12 @@ class UserRepositoryImplTest {
         `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
 
         // when
-        val result = userRepositoryImpl.findById(testUser.id!!)
+        val result = userRepositoryImpl.findById(testUser.id)
 
         // then
         assertThat(result).isNotNull
         assertThat(result?.email).isEqualTo(TEST_EMAIL)
-        verify(springDataUserRepository).findById(testUser.id!!)
+        verify(springDataUserRepository).findById(testUser.id)
     }
 
     @Test
@@ -258,5 +259,30 @@ class UserRepositoryImplTest {
         }.isInstanceOf(ImHereBaseException::class.java)
             .extracting("errorCode")
             .isEqualTo(UserException.USER_NOT_FOUND)
+    }
+
+    @Test
+    @DisplayName("사용자 이메일 기반으로 존재 및 미존재 여부를 확인한다")
+    fun existByEmail() {
+        // given
+        val notExistUserId = UUID.randomUUID()
+        val dummyUser = User(
+            id = notExistUserId,
+            email = TEST_EMAIL,
+            nickname = TEST_NICKNAME,
+            role = UserRole.NORMAL,
+            oauthProvider = OAuth2Provider.KAKAO,
+            status = UserStatus.ACTIVE
+        )
+        given(springDataUserRepository.existsByEmail(TEST_EMAIL)).willReturn(true)
+        given(springDataUserRepository.existsByEmail("noexist@gmail.com")).willReturn(false)
+
+        // when
+        val trueResult = userRepositoryImpl.existsByEmail(TEST_EMAIL)
+        val falseResult = userRepositoryImpl.existsByEmail("noexist@gmail.com")
+
+        // then
+        assertThat(trueResult).isEqualTo(true)
+        assertThat(falseResult).isEqualTo(false)
     }
 }

@@ -1,6 +1,7 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
+import com.common.testsupport.WebIntegrationTestSupport
 import com.kdongsu5509.auth.adapter.`in`.web.dto.TokenRefreshRequest
 import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
@@ -10,7 +11,6 @@ import com.kdongsu5509.user.repository.UserRepository
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
@@ -24,8 +24,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
  * 실제 Spring Security 필터 체인과 JWT 토큰 파서를 사용하여 토큰 재발급 플로우를 검증하며,
  * 정상/실패 케이스 모두 RestDocs(epages)로 문서화한다.
  */
-@SpringBootTest
-class RefreshControllerIntegrationTest : AuthIntegrationTestSupport() {
+class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
 
     @Autowired
     private lateinit var userRepository: UserRepository
@@ -39,9 +38,9 @@ class RefreshControllerIntegrationTest : AuthIntegrationTestSupport() {
         // given
         val email = "refresh@example.com"
         val user = User.createWithPendingStatus(email, "Refresh User", OAuth2Provider.KAKAO).activate()
-        userRepository.save(user)
+        val savedUser = userRepository.save(user)
 
-        val claims = JwtTokenClaims.fromUser(user)
+        val claims = JwtTokenClaims.fromUser(savedUser)
         val initialToken = tokenProviderPort.issue(claims)
 
         val request = TokenRefreshRequest(refreshToken = initialToken.refreshToken)
@@ -131,9 +130,9 @@ class RefreshControllerIntegrationTest : AuthIntegrationTestSupport() {
         // given - 유효한 서명이지만 Redis에 없는 토큰 (로그아웃 후 재사용 시도 시나리오)
         val email = "logout@example.com"
         val user = User.createWithPendingStatus(email, "Logout User", OAuth2Provider.KAKAO).activate()
-        userRepository.save(user)
+        val savedUser = userRepository.save(user)
 
-        val claims = JwtTokenClaims.fromUser(user)
+        val claims = JwtTokenClaims.fromUser(savedUser)
         val token = tokenProviderPort.issue(claims)
         // 정상 발급 후 Redis에서 제거하지 않고 직접 다른 refreshToken 값을 구성하는 대신,
         // Redis에 없는 상황을 재현하기 위해 서명이 올바르지 않은 토큰을 사용한다.

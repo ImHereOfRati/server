@@ -31,6 +31,7 @@ object APIResponseSerializers {
         )
 
         response.writer.write(jsonMapper.writeValueAsString(body))
+        response.writer.flush()
     }
 
     /**
@@ -48,5 +49,6 @@ object APIResponseSerializers {
         val body = ApiResponse.success(data, message)
 
         response.writer.write(jsonMapper.writeValueAsString(body))
+        response.writer.flush()
     }
 }

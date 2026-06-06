@@ -88,7 +88,22 @@ class SecurityConfig(
             }
 
             exceptionHandling {
-                authenticationEntryPoint = HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
+                authenticationEntryPoint = { _, response, _ ->
+                    APIResponseSerializers.writeErrorResponse(
+                        response = response,
+                        status = HttpStatus.UNAUTHORIZED,
+                        imhereErrorCode = AuthException.IMHERE_INVALID_TOKEN.imhereErrorCode,
+                        errorMessage = "인증이 필요합니다."
+                    )
+                }
+                accessDeniedHandler = { _, response, _ ->
+                    APIResponseSerializers.writeErrorResponse(
+                        response = response,
+                        status = HttpStatus.FORBIDDEN,
+                        imhereErrorCode = AuthException.IMHERE_ACCESS_DENIED.imhereErrorCode,
+                        errorMessage = "접근 권한이 없습니다."
+                    )
+                }
             }
 
             oneTimeTokenLogin {

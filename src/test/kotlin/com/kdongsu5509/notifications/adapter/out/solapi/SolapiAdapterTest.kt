@@ -92,7 +92,7 @@ class SolapiAdapterTest {
 
         doAnswer {
             val sendMethod = DefaultMessageService::class.java.methods.find {
-                it.name == "send" && it.parameterTypes.size == 2 && it.parameterTypes[0] == java.util.List::class.java
+                it.name == "send" && it.parameterTypes.size == 2 && it.parameterTypes[0] == List::class.java
             }!!
             val mockResult = mock(sendMethod.returnType)
             `when`(mockResult.javaClass.getMethod("getMessageList").invoke(mockResult)).thenReturn(emptyList<Any>())

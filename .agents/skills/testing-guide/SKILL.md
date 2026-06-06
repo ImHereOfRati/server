@@ -90,3 +90,11 @@ class MemberRepositoryTest {
     fun `이름으로 회원 조회`() { ... }
 }
 ```
+## Rule 4 — Shared Web Integration Harness
+
+공통 웹 통합 테스트 초기화는 `WebIntegrationTestSupport` 같은 베이스 클래스에 모은다.
+개별 컨트롤러 통합 테스트는 `@MockitoBean`, 도메인 fixture, 요청/응답 검증만 선언한다.
+## Rule 5 — 401 Documentation Without Body
+
+When a security filter returns an empty 401 response, do not attach `responseFields(...)` in RestDocs.
+Document only the status, or use a response body only when the filter/controller actually writes one.

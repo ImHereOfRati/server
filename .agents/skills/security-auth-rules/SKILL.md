@@ -28,3 +28,7 @@ fun getMyProfile(
 
 * 권한 부족 시: HTTP 403을 반환하는 에러코드 정의 후 `.throwIt()` 호출
 * 인증 정보 누락/만료 시: HTTP 401을 반환하는 에러코드 정의 후 `.throwIt()` 호출
+## Rule 3 ??Public Auth Paths in Tests
+
+Test profile whitelist must match the real public auth endpoints used by integration tests.
+If `/api/auth/**` is protected while tests hit those URLs, the request will fail in the security filter chain before controller logic runs.

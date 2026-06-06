@@ -40,8 +40,12 @@ class JwtAuthenticationFilter(
     ) {
         val jwt = resolveToken(request) ?: return filterChain.doFilter(request, response)
 
-        if (!tokenParser.validate(jwt)) {
-            return sendErrorResponse(response, AuthException.IMHERE_INVALID_TOKEN)
+        try {
+            if (!tokenParser.validate(jwt)) {
+                return sendErrorResponse(response, AuthException.IMHERE_INVALID_TOKEN)
+            }
+        } catch (e: ImHereBaseException) {
+            return sendErrorResponse(response, e.errorCode as AuthException)
         }
 
         if (SecurityContextHolder.getContext().authentication == null) {

@@ -101,6 +101,7 @@ class KakaoOIDCVerifyServiceTest {
     }
 
     private fun givenTokenSignatureVerificationSucceeds() {
+        @Suppress("UNCHECKED_CAST")
         val mockJws = mock(Jws::class.java) as Jws<Claims>
         given(oidcIdTokenVerifyPort.getKid(ID_TOKEN)).willReturn(KID)
         given(publicKeyLoadPort.findByKeyId(KID)).willReturn(PUBLIC_KEY)

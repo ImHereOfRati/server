@@ -33,7 +33,9 @@ class RegisterService(
     }
 
     private fun saveNewUser(email: String, nickname: String, provider: OAuth2Provider): User {
+        val isExistingEmail = userRepository.existsByEmail(email)
         val newUser = User.createWithPendingStatus(email, nickname, provider)
+        newUser.validateDuplicateEmailAllowed(isExistingEmail)
         return userRepository.save(newUser)
     }
 }

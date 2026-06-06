@@ -250,6 +250,21 @@ class FriendshipControllerWebMvcTest {
     }
 
     @Test
+    @DisplayName("친구 별칭 수정 시 별칭이 너무 길면 400 Bad Request를 반환한다")
+    fun updateAlias_fail_when_alias_is_too_long() {
+        val friendshipId = UUID.randomUUID()
+        val requestDto = UpdateAliasRequest(alias = "A".repeat(50)) // 가상의 길이 초과 에러
+
+        mockMvc.perform(
+            patch("$BASE_PATH/$friendshipId/alias")
+                .with(csrf())
+                .with(user(userDetails))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto))
+        ).andExpect(status().isBadRequest)
+    }
+
+    @Test
     @DisplayName("친구 차단 성공 시 200 OK를 반환한다")
     fun blockFriend_success() {
         val friendshipId = UUID.randomUUID()

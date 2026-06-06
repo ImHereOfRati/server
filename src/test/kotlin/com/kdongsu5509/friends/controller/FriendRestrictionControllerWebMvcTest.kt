@@ -179,6 +179,20 @@ class FriendRestrictionControllerWebMvcTest {
     }
 
     @Test
+    @DisplayName("유저 차단 시 targetUserId가 없으면 400 Bad Request를 반환한다")
+    fun restrictUser_fail_when_targetId_is_null() {
+        val requestDto = "{}"
+
+        mockMvc.perform(
+            post(BASE_PATH)
+                .with(csrf())
+                .with(user(userDetails))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestDto)
+        ).andExpect(status().isBadRequest)
+    }
+
+    @Test
     @DisplayName("유저 차단 여부 확인 시 200 OK와 여부를 Boolean으로 반환한다")
     fun checkRestrictionStatus_success() {
         val targetUserId = restricted.id!!

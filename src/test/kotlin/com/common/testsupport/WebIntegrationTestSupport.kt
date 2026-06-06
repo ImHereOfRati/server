@@ -1,10 +1,8 @@
-package com.kdongsu5509.auth.adapter.`in`.web
+package com.common.testsupport
 
-import com.common.testsupport.PersistenceTestSupport
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.restdocs.RestDocumentationContextProvider
 import org.springframework.restdocs.RestDocumentationExtension
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation
@@ -17,16 +15,8 @@ import org.springframework.web.context.WebApplicationContext
 import org.springframework.web.filter.CharacterEncodingFilter
 import tools.jackson.databind.json.JsonMapper
 
-/**
- * Auth 도메인 Controller 통합 테스트를 위한 기반 클래스.
- *
- * - @SpringBootTest: 실제 Spring 컨텍스트를 전부 띄워 Security 필터 체인까지 검증한다.
- * - springSecurity() 적용: 실제 인증/인가 흐름이 동작한다.
- * - RestDocumentation 설정: MockMvc에 RestDocs 컨텍스트를 주입해 epages 문서 자동 생성을 지원한다.
- */
-@SpringBootTest
 @ExtendWith(RestDocumentationExtension::class)
-abstract class AuthIntegrationTestSupport : PersistenceTestSupport() {
+abstract class WebIntegrationTestSupport : PersistenceTestSupport() {
 
     protected lateinit var mockMvc: MockMvc
 
@@ -38,7 +28,7 @@ abstract class AuthIntegrationTestSupport : PersistenceTestSupport() {
         webApplicationContext: WebApplicationContext,
         restDocumentation: RestDocumentationContextProvider
     ) {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
             .apply<DefaultMockMvcBuilder>(springSecurity())
             .apply<DefaultMockMvcBuilder>(MockMvcRestDocumentation.documentationConfiguration(restDocumentation))
             .alwaysDo<DefaultMockMvcBuilder>(MockMvcResultHandlers.print())

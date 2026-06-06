@@ -47,7 +47,10 @@ jwt:
 
 security:
   whitelist:
-    - "/api/user/auth/login"
+    - "/api/auth/login"
+    - "/api/auth/registration"
+    - "/api/auth/refresh"
+    - "/api/auth/activation"
     - "/swagger-ui/**"
     - "/v3/api-docs/**"
 

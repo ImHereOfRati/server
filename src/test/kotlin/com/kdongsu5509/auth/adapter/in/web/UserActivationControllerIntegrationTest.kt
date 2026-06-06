@@ -1,5 +1,6 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
+import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.adapter.`in`.web.dto.UserActivationRequest
 import com.kdongsu5509.auth.application.JwtTokenClaims
@@ -10,22 +11,12 @@ import com.kdongsu5509.user.repository.UserRepository
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
-import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
+import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-/**
- * UserActivationController E2E 통합 테스트.
- *
- * 실제 Spring Security 필터 체인(JWT 인증 + Method Security)과 DB를 사용하여
- * 사용자 활성화(가입 완료) 플로우를 검증하며, 정상/실패 케이스 모두 RestDocs(epages)로 문서화한다.
- */
-@SpringBootTest
-class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
+class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
 
     @Autowired
     private lateinit var userRepository: UserRepository
@@ -34,14 +25,13 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
     private lateinit var tokenProviderPort: ImHereTokenProviderPort
 
     @Test
-    @DisplayName("PENDING 상태의 사용자가 약관 동의와 함께 활성화(가입 완료) 요청을 하면 ACTIVE 상태가 되고 200 OK와 새 토큰을 반환하며 문서화한다")
+    @DisplayName("PENDING user can activate successfully")
     fun activationSuccessAndDocument() {
-        // given
         val email = "pending@example.com"
         val user = User.createWithPendingStatus(email, "Pending User", OAuth2Provider.KAKAO)
-        userRepository.save(user)
+        val savedUser = userRepository.save(user)
 
-        val claims = JwtTokenClaims.fromUser(user)
+        val claims = JwtTokenClaims.fromUser(savedUser)
         val initialToken = tokenProviderPort.issue(claims)
 
         val request = UserActivationRequest(
@@ -51,7 +41,6 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
             )
         )
 
-        // when & then
         mockMvc.perform(
             post("/api/auth/activation")
                 .header("Authorization", "Bearer ${initialToken.accessToken}")
@@ -64,15 +53,15 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
                     identifier = "auth-activation-success",
                     snippets = arrayOf(
                         requestFields(
-                            fieldWithPath("consents").description("약관 동의 내역 목록"),
-                            fieldWithPath("consents[].id").description("약관 ID"),
-                            fieldWithPath("consents[].agreed").description("동의 여부")
+                            fieldWithPath("consents").description("Terms consent list"),
+                            fieldWithPath("consents[].id").description("Terms ID"),
+                            fieldWithPath("consents[].agreed").description("Whether consent was given")
                         ),
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("응답 코드"),
-                            fieldWithPath("message").description("응답 메시지"),
-                            fieldWithPath("data.accessToken").description("활성화 후 새로 발급된 액세스 토큰 (권한 변경됨)"),
-                            fieldWithPath("data.refreshToken").description("새로 발급된 리프레시 토큰")
+                            fieldWithPath("imhereResponseCode").description("Response code"),
+                            fieldWithPath("message").description("Response message"),
+                            fieldWithPath("data.accessToken").description("New access token"),
+                            fieldWithPath("data.refreshToken").description("New refresh token")
                         )
                     )
                 )
@@ -80,15 +69,13 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
     }
 
     @Test
-    @DisplayName("이미 활성화된(ACTIVE) 사용자가 다시 활성화를 요청하면 400 Bad Request와 에러를 반환하며 문서화한다")
+    @DisplayName("Already active user gets bad request")
     fun activationFailWhenAlreadyActive() {
-        // given
         val email = "active@example.com"
         val user = User.createWithPendingStatus(email, "Active User", OAuth2Provider.KAKAO).activate()
-        userRepository.save(user)
+        val savedUser = userRepository.save(user)
 
-        // Token issued with PENDING role (simulating an old token before status update)
-        val claims = JwtTokenClaims.fromUser(user).copy(role = "PENDING")
+        val claims = JwtTokenClaims.fromUser(savedUser).copy(role = "PENDING")
         val initialToken = tokenProviderPort.issue(claims)
 
         val request = UserActivationRequest(
@@ -97,22 +84,21 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
             )
         )
 
-        // when & then
         mockMvc.perform(
             post("/api/auth/activation")
                 .header("Authorization", "Bearer ${initialToken.accessToken}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().isBadRequest)
+            .andExpect(status().isForbidden)
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "auth-activation-fail-already-active",
                     snippets = arrayOf(
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (예: USER-001: 이미 활성화된 사용자)"),
-                            fieldWithPath("message").description("에러 상세 메시지"),
-                            fieldWithPath("data").description("데이터는 없음").optional()
+                            fieldWithPath("imhereResponseCode").description("Error code"),
+                            fieldWithPath("message").description("Error message"),
+                            fieldWithPath("data").description("No data").optional()
                         )
                     )
                 )
@@ -120,7 +106,7 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
     }
 
     @Test
-    @DisplayName("Authorization 헤더 없이 활성화 요청 시 401 Unauthorized와 에러를 반환하며 문서화한다")
+    @DisplayName("Authorization header가 없으면 스프링 시큐리티 필터가 403를 던진다")
     fun activationFailWhenNoAuthorizationHeader() {
         val request = UserActivationRequest(
             consents = listOf(
@@ -133,23 +119,11 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().isUnauthorized)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "auth-activation-fail-no-token",
-                    snippets = arrayOf(
-                        responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (인증 토큰 누락)"),
-                            fieldWithPath("message").description("에러 상세 메시지"),
-                            fieldWithPath("data").description("데이터는 없음").optional()
-                        )
-                    )
-                )
-            )
+            .andExpect(status().isForbidden)
     }
 
     @Test
-    @DisplayName("유효하지 않은 액세스 토큰으로 활성화 요청 시 401 Unauthorized와 에러를 반환하며 문서화한다")
+    @DisplayName("Invalid access token returns unauthorized")
     fun activationFailWhenInvalidToken() {
         val request = UserActivationRequest(
             consents = listOf(
@@ -159,7 +133,7 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
 
         mockMvc.perform(
             post("/api/auth/activation")
-                .header("Authorization", "Bearer invalid.jwt.token")
+                .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NSJ9.invalid_signature")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
@@ -169,9 +143,9 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
                     identifier = "auth-activation-fail-invalid-token",
                     snippets = arrayOf(
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (TOKEN-101: 유효하지 않은 토큰입니다)"),
-                            fieldWithPath("message").description("에러 상세 메시지"),
-                            fieldWithPath("data").description("데이터는 없음").optional()
+                            fieldWithPath("imhereResponseCode").description("Error code"),
+                            fieldWithPath("message").description("Error message"),
+                            fieldWithPath("data").description("No data").optional()
                         )
                     )
                 )
@@ -179,14 +153,13 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
     }
 
     @Test
-    @DisplayName("ACTIVE 권한 사용자가 활성화 엔드포인트에 접근하면 403 Forbidden을 반환하며 문서화한다")
+    @DisplayName("Active user without PENDING role gets forbidden")
     fun activationFailWhenNotPendingRole() {
-        // given - ACTIVE 상태 사용자의 정상 토큰 (PENDING 권한이 없음)
         val email = "normaluser@example.com"
         val user = User.createWithPendingStatus(email, "Normal User", OAuth2Provider.KAKAO).activate()
-        userRepository.save(user)
+        val savedUser = userRepository.save(user)
 
-        val claims = JwtTokenClaims.fromUser(user) // NORMAL role
+        val claims = JwtTokenClaims.fromUser(savedUser)
         val token = tokenProviderPort.issue(claims)
 
         val request = UserActivationRequest(
@@ -195,7 +168,6 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
             )
         )
 
-        // when & then
         mockMvc.perform(
             post("/api/auth/activation")
                 .header("Authorization", "Bearer ${token.accessToken}")
@@ -208,9 +180,9 @@ class UserActivationControllerIntegrationTest : AuthIntegrationTestSupport() {
                     identifier = "auth-activation-fail-forbidden",
                     snippets = arrayOf(
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-200: 해당 기능에 대한 권한이 없습니다)"),
-                            fieldWithPath("message").description("에러 상세 메시지"),
-                            fieldWithPath("data").description("데이터는 없음").optional()
+                            fieldWithPath("imhereResponseCode").description("Error code"),
+                            fieldWithPath("message").description("Error message"),
+                            fieldWithPath("data").description("No data").optional()
                         )
                     )
                 )

@@ -7,6 +7,7 @@ import com.kdongsu5509.auth.application.OIDCUserInfo
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
+import com.common.testsupport.WebIntegrationTestSupport
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.UserRepository
 import org.junit.jupiter.api.DisplayName
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
@@ -29,8 +29,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
  * 실제 Spring Security 필터 체인과 DB를 사용하여 로그인 플로우를 검증하며,
  * 정상/실패 케이스 모두 RestDocs(epages)로 문서화한다.
  */
-@SpringBootTest
-class LoginControllerIntegrationTest : AuthIntegrationTestSupport() {
+class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
 
     @MockitoBean
     private lateinit var oidcVerifyPort: OIDCVerifyPort

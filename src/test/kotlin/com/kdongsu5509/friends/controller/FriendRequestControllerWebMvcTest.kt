@@ -136,6 +136,23 @@ class FriendRequestControllerWebMvcTest {
     }
 
     @Test
+    @DisplayName("친구 요청 시 메시지가 비어있으면 400 Bad Request를 반환한다")
+    fun request_fail_when_message_is_blank() {
+        val requestDto = NewFriendRequest(
+            targetId = receiver.id!!,
+            message = ""
+        )
+
+        mockMvc.perform(
+            post(BASE_PATH)
+                .with(csrf())
+                .with(user(userDetails))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto))
+        ).andExpect(status().isBadRequest)
+    }
+
+    @Test
     @DisplayName("전체 친구 요청 목록 조회 시 200 OK와 페이징된 목록을 반환한다")
     fun findAll_admin_success() {
         val friendRequest = FriendRequest(

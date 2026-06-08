@@ -66,3 +66,7 @@ mockMvc.perform(get("/api/v1/members/999"))
         )
     )
 ```
+
+## Rule 5 — Relaxed Fields and Nullable Values
+
+RestDocs에서 `relaxedResponseFields`를 사용할 때, 문서화된 필드가 응답 JSON에서 누락(null 값으로 인해 Jackson의 `NON_NULL` 옵션에 의해 제외됨)되면 `SnippetException`이 발생합니다. 따라서 값이 null이 될 수 있는 필드는 반드시 `.optional()`을 명시해야 합니다. 또한, 중첩된 하위 객체를 간단하게 무시/문서화하고 싶을 때는 `subsectionWithPath()`를 활용하세요.

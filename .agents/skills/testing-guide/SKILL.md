@@ -104,3 +104,7 @@ Document only the status, or use a response body only when the filter/controller
 - **요청 값 검증 (Validation Error)**: 파라미터 누락, 형식 오류 등 `@Valid`에 의한 400 Bad Request 검증은 슬라이스 테스트(`@WebMvcTest`) 계층에서 수행합니다.
 - **비즈니스/도메인 에러 (Business Error)**: 도메인 로직이나 비즈니스 정책 위반으로 발생하는 에러(예: 필수 약관 미동의, 중복 가입, 잘못된 상태에서의 요청 등)는 통합 테스트(`@SpringBootTest`) 계층에서 E2E로 검증합니다.
 - **문서화 원칙**: 통합 테스트에서 발생하는 비즈니스 에러는 **반드시 `RestDocs`를 통해 문서화**하여 클라이언트에게 도메인 제약 사항을 명확히 전달해야 합니다. 반면, 단순 파라미터 검증 실패는 문서화를 생략하거나 가볍게 다룰 수 있습니다.
+
+## Rule 7 — E2E Test Data Validation constraints
+
+통합/E2E 테스트 시 DTO Validation 제약조건(예: 글자 수 제한 등)을 반드시 만족하는 정상 형식의 데이터를 넣어야 비즈니스 로직 및 도메인 예외 테스트 계층까지 정상적으로 도달할 수 있습니다. 형식이 맞지 않으면 400 Bad Request로 튕겨 비즈니스 검증이 불가능해지니 테스트 픽스처 생성 시 주의하세요.

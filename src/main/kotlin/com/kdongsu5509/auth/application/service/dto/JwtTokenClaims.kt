@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.application
+package com.kdongsu5509.auth.application.service.dto
 
 import com.kdongsu5509.user.domain.User
 import java.time.LocalDateTime

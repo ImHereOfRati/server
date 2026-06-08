@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.application
+package com.kdongsu5509.auth.application.service.dto
 
 data class ImHereJwtToken(
     val accessToken: String,

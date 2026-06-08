@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.application
+package com.kdongsu5509.auth.application.service.dto
 
 data class OIDCDecodePayload(
     val iss: String, // ID Token을 발급한 OAuth 2.0 제공자의 URL

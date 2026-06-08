@@ -25,6 +25,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.given
 import java.time.LocalDateTime
 import java.util.*
 
@@ -138,7 +139,10 @@ class UserAgreementServiceTest {
     fun consent_success() {
         // given
         val pendingUser = createPendingUser()
-        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(pendingUser)
+        val termResult1 = TermResult(1L, 1L, TermTypes.SERVICE, "서비스 약관", "내용", LocalDateTime.now(), true)
+
+        given(userRepository.findByEmail(TEST_EMAIL)).willReturn(pendingUser)
+        given(termService.findAll(true)).willReturn(listOf(termResult1))
 
         // when
         userAgreementService.consent(TEST_EMAIL, 1L)

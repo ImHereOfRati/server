@@ -152,11 +152,14 @@ openapi3 {
 tasks.register("copyOasToSwagger", Copy) {
     dependsOn "openapi3"
     from "build/api-spec/openapi3.yaml"
-    into "build/resources/main/static/docs"
+    into "src/main/resources/static/docs"
 }
 
 tasks.named('bootJar') {
-    dependsOn 'copyOasToSwagger'
+    dependsOn 'openapi3'
+    from("build/api-spec") {
+        into "static/docs"
+    }
 }
 
 tasks.named('test') {

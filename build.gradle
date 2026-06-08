@@ -152,14 +152,18 @@ openapi3 {
 tasks.register("copyOasToSwagger", Copy) {
     dependsOn "openapi3"
     from "build/api-spec/openapi3.yaml"
-    into "src/main/resources/static/docs"
+    into "build/resources/main/static/docs"
+}
+
+tasks.named('bootJar') {
+    dependsOn 'copyOasToSwagger'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
     jvmArgs("-XX:+EnableDynamicAgentLoading")
     outputs.dir snippetsDir
-    finalizedBy 'jacocoTestReport', 'copyOasToSwagger'
+    finalizedBy 'jacocoTestReport'
 }
 
 tasks.named("asciidoctor") {

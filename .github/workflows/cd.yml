@@ -71,7 +71,7 @@ jobs:
       - name: Build JAR
         run: |
           chmod +x ./gradlew
-          ./gradlew bootJar -x test
+          ./gradlew test bootJar
 
       # GitHub OIDC로 IAM role을 assume하여 단기 자격증명을 발급받는다.
       # 정적 access key를 Secret에 보관하지 않으므로 키 만료/노출 위험이 없다.

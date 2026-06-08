@@ -155,7 +155,10 @@ class UserAgreementServiceTest {
     @DisplayName("개별 약관 동의 시 사용자가 존재하지 않으면 예외가 발생한다")
     fun consent_fail_user_not_found() {
         // given
-        `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(null)
+        val termResult1 = TermResult(1L, 1L, TermTypes.SERVICE, "서비스 약관", "내용", LocalDateTime.now(), true)
+        given(termService.findAll(true)).willReturn(listOf(termResult1))
+
+        given(userRepository.findByEmail(TEST_EMAIL)).willReturn(null)
 
         // when & then
         assertThatThrownBy {

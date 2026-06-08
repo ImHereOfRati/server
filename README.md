@@ -9,67 +9,52 @@
 
 ## 기술 스택
 
-| 분류            | 기술                                            |
-|---------------|-----------------------------------------------|
-| Language      | Kotlin 2.x                                    |
-| Runtime       | Java 21                                       |
-| Framework     | Spring Boot 4.0.x                             |
-| Architecture  | Hexagonal (Ports & Adapters)                  |
-| DB            | MySQL + Spring Data JPA + QueryDSL (KSP)      |
-| Cache         | Redis                                         |
-| Message Queue | RabbitMQ                                      |
-| Auth          | Kakao OIDC + JJWT + Spring Security           |
-| Admin Auth    | Spring Security OTT (One-Time Token)          |
-| Push          | Firebase Admin SDK (FCM)                      |
-| SMS           | Solapi SDK                                    |
-| Alerting      | Discord Webhook                               |
-| API Docs      | Spring REST Docs + OpenAPI 3 (Swagger UI)     |
-| Monitoring    | Micrometer + Prometheus                       |
-| Test          | JUnit 5, Mockito-Kotlin, Testcontainers       |
-| Coverage      | JaCoCo                                        |
-| Infra         | AWS EC2 + ECR, Docker                         |
+| 분류            | 기술                                        |
+|---------------|-------------------------------------------|
+| Language      | Kotlin 2.x                                |
+| Runtime       | Java 21                                   |
+| Framework     | Spring Boot 4.0.x                         |
+| Architecture  | Hexagonal (Ports & Adapters)              |
+| DB            | MySQL + Spring Data JPA + QueryDSL (KSP)  |
+| Cache         | Redis                                     |
+| Message Queue | RabbitMQ                                  |
+| Auth          | Kakao OIDC + JJWT + Spring Security       |
+| Admin Auth    | Spring Security OTT (One-Time Token)      |
+| Push          | Firebase Admin SDK (FCM)                  |
+| SMS           | Solapi SDK                                |
+| Alerting      | Discord Webhook                           |
+| API Docs      | Spring REST Docs + OpenAPI 3 (Swagger UI) |
+| Monitoring    | Micrometer + Prometheus                   |
+| Test          | JUnit 5, Mockito-Kotlin, Testcontainers   |
+| Coverage      | JaCoCo                                    |
+| Infra         | AWS EC2 + ECR, Docker                     |
 
 ---
 
 ## 아키텍처
 
-Hexagonal Architecture (포트-어댑터 패턴)를 적용합니다.
-외부 의존성(DB, Redis, Kakao, FCM 등)은 모두 **아웃바운드 포트**로 추상화되어 있으며, 도메인/애플리케이션 레이어는 프레임워크에 의존하지 않습니다.
+비즈니스 로직의 변경 빈도와 복잡도에 따라 두 가지 아키텍처 중 하나를 선택적으로 적용하는 **하이브리드 아키텍처**를 사용합니다.
+
+1. **MVC (Layered Architecture)** (`user`, `friends`, `terms` 도메인)
+    - 변경이 적고 단순한 CRUD 중심의 도메인에 적용
+    - `Controller` -> `Service` -> `Repository` 계층형 구조
+2. **Hexagonal Architecture (Ports and Adapters)** (`auth`, `notifications` 도메인)
+    - 외부 시스템 연동이 잦고 복잡한 비즈니스 로직이 포함된 도메인에 적용
+    - 프레임워크 의존성 없이 순수한 도메인/애플리케이션 레이어를 유지하며 외부 의존성은 `adapter`로 분리
 
 ```
 src/main/kotlin/com/kdongsu5509/
-├── user/                          # 사용자 도메인
-│   ├── adapter/
-│   │   ├── in/web/                # REST 컨트롤러
-│   │   └── out/
-│   │       ├── auth/              # JWT 파서, Kakao OIDC 클라이언트
-│   │       ├── persistence/       # JPA 어댑터 (user, friends, terms)
-│   │       ├── redis/             # Redis 어댑터 (공개키 캐시, 토큰)
-│   │       └── messageQueue/      # RabbitMQ 발행 어댑터
-│   ├── application/
-│   │   ├── port/in/               # 유스케이스 포트
-│   │   ├── port/out/              # 외부 의존성 포트
-│   │   └── service/               # 서비스 구현
-│   └── domain/                    # 도메인 모델 (user, friend, terms)
-│
-├── notifications/                 # 알림 도메인
-│   ├── adapter/
-│   │   ├── in/web/                # FCM 알림 컨트롤러
-│   │   ├── in/messageQueue/       # RabbitMQ 소비 어댑터
-│   │   └── out/
-│   │       ├── firebase/          # FCM 발송 어댑터
-│   │       ├── solapi/            # SMS 발송 어댑터
-│   │       └── persistence/       # FCM 토큰 영속성 어댑터
-│   ├── application/
-│   │   ├── port/                  # 알림 유스케이스/외부 포트
-│   │   └── service/               # 알림 서비스 구현
-│   └── domain/                    # 알림 도메인 모델
-│
+├── auth/                          # 인증 도메인 (Hexagonal)
+├── friends/                       # 친구 도메인 (MVC)
+├── notifications/                 # 알림 도메인 (Hexagonal)
+├── terms/                         # 약관 도메인 (MVC)
+├── user/                          # 사용자 도메인 (MVC)
+├── shared/                        # 도메인 간 공통 객체 (BaseEntity 등)
 └── support/                       # 횡단 관심사
-    ├── config/                    # Security, Redis, RabbitMQ, Async 설정
+    ├── config/                    # Security, Redis, RabbitMQ 설정
     ├── exception/                 # 글로벌 예외 처리, 에러 코드
-    ├── external/                  # Discord Webhook 클라이언트
-    ├── logger/                    # HTTP 접근 로그 (MDC, ECS JSON)
+    ├── external/                  # 외부 시스템 연동 (Discord Webhook 등)
+    ├── logger/                    # HTTP 접근 로그, 데이터 마스킹
     └── response/                  # 공통 API 응답 래퍼
 ```
 
@@ -95,7 +80,7 @@ src/main/kotlin/com/kdongsu5509/
 
 - **FCM 푸시 알림** — 위치 도착/출발 알림 (Retryable 재시도 포함)
 - **SMS 알림** — Solapi 단일/다중 발송
-- RabbitMQ를 통한 비동기 알림 전달
+- RabbitMQ를 통한 비동기 알림 전달 (메시지 멱등성 보장 및 DLQ 관리자 기능 포함)
 
 ### 운영
 
@@ -120,7 +105,7 @@ src/main/kotlin/com/kdongsu5509/
 docker-compose up -d redis
 ```
 
-> RabbitMQ, PostgreSQL은 별도 설치 또는 컨테이너로 실행 필요
+> MySQL, RabbitMQ는 별도 설치 또는 컨테이너로 실행 필요
 
 ### 환경 변수 설정
 
@@ -202,14 +187,4 @@ docker push <ECR_REGISTRY>/iamhere:latest
 docker-compose up -d
 ```
 
----
 
-## 개발 컨벤션
-
-| 항목     | 규칙                                    |
-|--------|---------------------------------------|
-| 커밋     | AngularJS Git Commit Convention       |
-| 로깅     | `.claude/convention/loggingSystem.md` |
-| AOS 로깅 | `.claude/convention/aos-logging.md`   |
-| API 문서 | Spring REST Docs 기반, Swagger UI 제공    |
-| 아키텍처   | Hexagonal — 도메인은 프레임워크 의존 금지          |

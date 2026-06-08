@@ -22,7 +22,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = ["com.kdongsu5509"])
 class GlobalExceptionHandler(
     private val discordUserErrorNotifier: DiscordUserErrorNotifier
 ) {

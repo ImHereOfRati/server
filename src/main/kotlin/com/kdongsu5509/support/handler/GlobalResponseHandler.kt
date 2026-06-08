@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice
  * 모든 컨트롤러의 응답을 [com.kdongsu5509.shared.response.ApiResponse] 규격으로 자동 래핑합니다.
  * 컨트롤러에서 순수 DTO만 반환하더라도 클라이언트에는 공통 포맷으로 전달됩니다.
  */
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = ["com.kdongsu5509"])
 class GlobalResponseHandler : ResponseBodyAdvice<Any> {
 
     override fun supports(

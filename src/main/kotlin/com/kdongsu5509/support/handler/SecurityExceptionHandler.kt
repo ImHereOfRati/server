@@ -12,7 +12,7 @@ import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = ["com.kdongsu5509"])
 @Order(3)
 class SecurityExceptionHandler(
     private val discordUserErrorNotifier: DiscordUserErrorNotifier

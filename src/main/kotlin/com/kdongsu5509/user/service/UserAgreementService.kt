@@ -23,7 +23,15 @@ class UserAgreementService(
     @Transactional
     fun consentAll(email: String, multiTermsConsentCommand: MultiTermsConsentCommand): User {
         val consents = multiTermsConsentCommand.consents
-        verifyRequiredTerms(consents)
+
+        val activeTerms = termService.findAll(isActive = true)
+        val activeTermIds = activeTerms.map { it.id }.toSet()
+
+        if (consents.any { it.id !in activeTermIds }) {
+            TermException.TERM_NOT_FOUND.throwIt()
+        }
+
+        verifyRequiredTerms(consents, activeTerms)
 
         val user = userRepository.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
 
@@ -38,12 +46,17 @@ class UserAgreementService(
 
     @Transactional
     fun consent(email: String, id: Long) {
+        val activeTermIds = termService.findAll(isActive = true).map { it.id }.toSet()
+        if (id !in activeTermIds) {
+            TermException.TERM_NOT_FOUND.throwIt()
+        }
+
         val user = userRepository.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
         userAgreementRepository.save(user.id!!, id)
     }
 
-    private fun verifyRequiredTerms(consents: List<TermConsentCommand>) {
-        val requiredTerms = termService.findAll(true)
+    private fun verifyRequiredTerms(consents: List<TermConsentCommand>, activeTerms: List<com.kdongsu5509.terms.service.TermResult>) {
+        val requiredTerms = activeTerms.filter { it.isRequired }
         val consentMap = consents.associate { it.id to it.isAgreed }
         val allRequiredTermsAgreed = requiredTerms.all { consentMap[it.id] == true }
 

@@ -4,7 +4,6 @@ import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.domain.Term
 import com.kdongsu5509.terms.repository.TermPersistenceAdapter
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -28,7 +27,6 @@ class TermService(
             .let { TermResult.from(it) }
     }
 
-    @PreAuthorize("hasRole('PENDING')")
     fun findAll(): List<TermResult> = termPersistenceAdapter.findAll()
         .map { TermResult.from(it) }
         .toList()

@@ -98,7 +98,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
         )
 
         mockMvc.perform(
-            delete("/api/friends/restrictions/${restriction.id}")
+            delete("/api/friends/restrictions/{id}", restriction.id)
                 .header("Authorization", "Bearer $token")
         )
             .andExpect(status().isOk)
@@ -111,7 +111,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
         val (_, token) = createUserAndToken("restrictor4@example.com", "restrictor")
 
         mockMvc.perform(
-            delete("/api/friends/restrictions/${UUID.randomUUID()}")
+            delete("/api/friends/restrictions/{id}", UUID.randomUUID())
                 .header("Authorization", "Bearer $token")
         )
             .andExpect(status().isNotFound)
@@ -130,7 +130,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
         )
 
         mockMvc.perform(
-            delete("/api/friends/restrictions/${restriction.id}")
+            delete("/api/friends/restrictions/{id}", restriction.id)
                 .header("Authorization", "Bearer $otherToken")
         )
             .andExpect(status().isForbidden)

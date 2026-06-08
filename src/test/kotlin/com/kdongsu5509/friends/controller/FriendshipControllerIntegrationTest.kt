@@ -43,7 +43,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         val requestDto = UpdateAliasRequest(alias = "단짝")
 
         mockMvc.perform(
-            patch("/api/friendships/${friendship.id}/alias")
+            patch("/api/friendships/{id}/alias", friendship.id)
                 .header("Authorization", "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(requestDto))
@@ -78,7 +78,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         val requestDto = UpdateAliasRequest(alias = "단짝")
 
         mockMvc.perform(
-            patch("/api/friendships/${UUID.randomUUID()}/alias")
+            patch("/api/friendships/{id}/alias", UUID.randomUUID())
                 .header("Authorization", "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(requestDto))
@@ -98,7 +98,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         val requestDto = UpdateAliasRequest(alias = "단짝")
 
         mockMvc.perform(
-            patch("/api/friendships/${friendship.id}/alias")
+            patch("/api/friendships/{id}/alias", friendship.id)
                 .header("Authorization", "Bearer $otherToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(requestDto))
@@ -116,7 +116,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         val friendship = friendshipRepository.save(Friendship(owner = owner, friend = friend, friendAlias = "친구"))
 
         mockMvc.perform(
-            post("/api/friendships/${friendship.id}/block")
+            post("/api/friendships/{id}/block", friendship.id)
                 .header("Authorization", "Bearer $token")
         )
             .andExpect(status().isOk)
@@ -132,7 +132,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         val friendship = friendshipRepository.save(Friendship(owner = owner, friend = friend, friendAlias = "친구"))
 
         mockMvc.perform(
-            delete("/api/friendships/${friendship.id}")
+            delete("/api/friendships/{id}", friendship.id)
                 .header("Authorization", "Bearer $token")
         )
             .andExpect(status().isNoContent)

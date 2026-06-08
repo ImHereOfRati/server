@@ -184,7 +184,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "안녕"))
 
         mockMvc.perform(
-            post("/api/friends/requests/${request.id}/accept")
+            post("/api/friends/requests/{id}/accept", request.id)
                 .header("Authorization", "Bearer $token")
         )
             .andExpect(status().isOk)
@@ -200,7 +200,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "안녕"))
 
         mockMvc.perform(
-            post("/api/friends/requests/${request.id}/accept")
+            post("/api/friends/requests/{id}/accept", request.id)
                 .header("Authorization", "Bearer $token")
         )
             .andExpect(status().isBadRequest)

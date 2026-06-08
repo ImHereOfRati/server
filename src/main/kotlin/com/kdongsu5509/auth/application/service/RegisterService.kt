@@ -1,12 +1,15 @@
 package com.kdongsu5509.auth.application.service
 
-import com.kdongsu5509.auth.application.ImHereJwtToken
-import com.kdongsu5509.auth.application.JwtTokenClaims
-import com.kdongsu5509.auth.application.OIDCUserInfo
+import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.`in`.RegisterUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
+import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
+import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
+import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
 import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.auth.domain.UserStatus
+import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.stereotype.Service
@@ -33,9 +36,12 @@ class RegisterService(
     }
 
     private fun saveNewUser(email: String, nickname: String, provider: OAuth2Provider): User {
-        val isExistingEmail = userRepository.existsByEmail(email)
+        val existingUser = userRepository.findByEmail(email)
+        if (existingUser?.status == UserStatus.BLOCKED) {
+            AuthException.USER_DISABLED.throwIt()
+        }
         val newUser = User.createWithPendingStatus(email, nickname, provider)
-        newUser.validateDuplicateEmailAllowed(isExistingEmail)
+        newUser.validateDuplicateEmailAllowed(existingUser != null)
         return userRepository.save(newUser)
     }
 }

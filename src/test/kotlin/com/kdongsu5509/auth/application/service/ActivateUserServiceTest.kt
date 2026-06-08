@@ -1,9 +1,9 @@
 package com.kdongsu5509.auth.application.service
 
-import com.kdongsu5509.auth.application.ImHereJwtToken
-import com.kdongsu5509.auth.application.JwtTokenClaims
-import com.kdongsu5509.auth.application.UserActivationCommand
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
+import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
+import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
+import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
@@ -58,8 +58,8 @@ class ActivateUserServiceTest {
         val command = UserActivationCommand(
             email = TEST_EMAIL,
             consents = listOf(
-                UserActivationCommand.RequiredTermConsentCommand(id = 1L, isAgreed = true),
-                UserActivationCommand.RequiredTermConsentCommand(id = 2L, isAgreed = false),
+                UserActivationCommand.TermConsentCommand(id = 1L, isAgreed = true),
+                UserActivationCommand.TermConsentCommand(id = 2L, isAgreed = false),
             )
         )
         val consentsCommand = MultiTermsConsentCommand(
@@ -89,7 +89,7 @@ class ActivateUserServiceTest {
         // given
         val command = UserActivationCommand(
             email = TEST_EMAIL,
-            consents = listOf(UserActivationCommand.RequiredTermConsentCommand(id = 1L, isAgreed = true))
+            consents = listOf(UserActivationCommand.TermConsentCommand(id = 1L, isAgreed = true))
         )
         val consentsCommand = MultiTermsConsentCommand(
             consents = listOf(MultiTermsConsentCommand.TermConsentCommand(id = 1L, isAgreed = true))
@@ -111,7 +111,7 @@ class ActivateUserServiceTest {
         // given
         val command = UserActivationCommand(
             email = TEST_EMAIL,
-            consents = listOf(UserActivationCommand.RequiredTermConsentCommand(id = 1L, isAgreed = true))
+            consents = listOf(UserActivationCommand.TermConsentCommand(id = 1L, isAgreed = true))
         )
         val consentsCommand = MultiTermsConsentCommand(
             consents = listOf(MultiTermsConsentCommand.TermConsentCommand(id = 1L, isAgreed = true))

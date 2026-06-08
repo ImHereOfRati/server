@@ -1,6 +1,6 @@
 package com.kdongsu5509.auth.adapter.`in`.web.dto
 
-import com.kdongsu5509.auth.application.ImHereJwtToken
+import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 
 data class OIDCAuthResponse(
     val accessToken: String,

@@ -1,10 +1,10 @@
 package com.kdongsu5509.auth.application.service
 
-import com.kdongsu5509.auth.application.ImHereJwtToken
-import com.kdongsu5509.auth.application.JwtTokenClaims
-import com.kdongsu5509.auth.application.UserActivationCommand
 import com.kdongsu5509.auth.application.port.`in`.ActivateUserUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
+import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
+import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
+import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
 import com.kdongsu5509.user.service.UserAgreementService
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand
 import org.springframework.stereotype.Service

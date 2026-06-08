@@ -1,9 +1,9 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
-import com.kdongsu5509.auth.application.ImHereJwtToken
-import com.kdongsu5509.auth.application.UserActivationCommand
 import com.kdongsu5509.auth.application.port.`in`.ActivateUserUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
+import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
+import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.auth.security.ImHereUserDetails
@@ -111,8 +111,8 @@ class UserActivationControllerWebMvcTest {
 
         assertThat(commandCaptor.firstValue.email).isEqualTo(TEST_EMAIL)
         assertThat(commandCaptor.firstValue.consents).containsExactly(
-            UserActivationCommand.RequiredTermConsentCommand(id = 1L, isAgreed = true),
-            UserActivationCommand.RequiredTermConsentCommand(id = 2L, isAgreed = false),
+            UserActivationCommand.TermConsentCommand(id = 1L, isAgreed = true),
+            UserActivationCommand.TermConsentCommand(id = 2L, isAgreed = false),
         )
     }
 

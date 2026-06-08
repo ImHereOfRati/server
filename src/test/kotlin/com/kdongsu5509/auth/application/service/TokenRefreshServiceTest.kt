@@ -1,8 +1,8 @@
 package com.kdongsu5509.auth.application.service
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.auth.application.ImHereJwtToken
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
+import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.support.exception.ImHereBaseException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy

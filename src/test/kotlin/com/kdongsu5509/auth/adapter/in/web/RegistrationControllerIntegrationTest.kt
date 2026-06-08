@@ -1,13 +1,13 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
+import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.adapter.`in`.web.dto.OIDCAuthRequest
-import com.kdongsu5509.auth.application.OIDCUserInfo
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
+import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
-import com.common.testsupport.WebIntegrationTestSupport
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.UserRepository
 import org.junit.jupiter.api.DisplayName
@@ -16,9 +16,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
-import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
-import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
+import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -158,6 +156,41 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
                     snippets = arrayOf(
                         responseFields(
                             fieldWithPath("imhereResponseCode").description("에러 코드 (이미 가입된 사용자)"),
+                            fieldWithPath("message").description("에러 상세 메시지"),
+                            fieldWithPath("data").description("데이터는 없음").optional()
+                        )
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("정지된 계정(BLOCKED)과 동일한 이메일로 재가입 시도 시 예외를 반환하며 문서화한다")
+    fun registerFailWhenEmailIsBlocked() {
+        // given
+        val email = "blocked@example.com"
+        val blockedUser = User.createWithPendingStatus(email, "Blocked User", OAuth2Provider.KAKAO).activate().block()
+        userRepository.save(blockedUser)
+
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token")
+
+        given(oidcVerifyPort.verify(any(), any())).willReturn(
+            OIDCUserInfo(email = email, nickname = "Blocked User")
+        )
+
+        // when & then
+        mockMvc.perform(
+            post("/api/auth/registration")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request))
+        )
+            .andExpect(status().isUnauthorized) // 정책에 따라 401 또는 403일 수 있음
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "auth-registration-fail-blocked-user",
+                    snippets = arrayOf(
+                        responseFields(
+                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-106: 비활성화된 계정입니다)"),
                             fieldWithPath("message").description("에러 상세 메시지"),
                             fieldWithPath("data").description("데이터는 없음").optional()
                         )

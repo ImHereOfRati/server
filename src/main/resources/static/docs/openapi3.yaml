@@ -1,11 +1,192 @@
 openapi: 3.0.1
 info:
   title: ImHere API 문서
-  description: User & Notification 통합 API 문서
-  version: 0.0.1
+  description: ImHere 통합 API 문서
+  version: 1.0.0
 servers:
-- url: http://localhost:8080
+- url: https://fortunki.site
 tags: []
-paths: {}
+paths:
+  /api/auth/activation:
+    post:
+      tags:
+      - api
+      operationId: auth-activation-
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: "#/components/schemas/api-auth-activation636321831"
+            examples:
+              auth-activation-fail-already-active:
+                value: "{\"consents\":[{\"id\":1,\"agreed\":true}]}"
+              auth-activation-fail-forbidden:
+                value: "{\"consents\":[{\"id\":1,\"agreed\":true}]}"
+              auth-activation-fail-mandatory-consent:
+                value: "{\"consents\":[{\"id\":1,\"agreed\":false}]}"
+              auth-activation-fail-term-not-found:
+                value: "{\"consents\":[{\"id\":999,\"agreed\":true}]}"
+              auth-activation-success:
+                value: "{\"consents\":[{\"id\":2,\"agreed\":true},{\"id\":3,\"agreed\"\
+                  :false}]}"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/api-auth-activation-33084672"
+            examples:
+              auth-activation-fail-invalid-token:
+                value: "{\"consents\":[{\"id\":1,\"agreed\":true}]}"
+      responses:
+        "403":
+          description: "403"
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: "#/components/schemas/api-auth-activation1407207443"
+              examples:
+                auth-activation-fail-already-active:
+                  value: "{\"imhereResponseCode\":\"GLOBAL-200\",\"message\":\"해당\
+                    \ 리소스에 접근할 권한이 없습니다.\",\"data\":null}"
+                auth-activation-fail-forbidden:
+                  value: "{\"imhereResponseCode\":\"GLOBAL-200\",\"message\":\"해당\
+                    \ 리소스에 접근할 권한이 없습니다.\",\"data\":null}"
+        "401":
+          description: "401"
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: "#/components/schemas/api-auth-activation1407207443"
+              examples:
+                auth-activation-fail-invalid-token:
+                  value: "{\"imhereResponseCode\":\"TOKEN-102\",\"message\":\"토큰의\
+                    \ 서명 정보가 일치하지 않습니다.\",\"data\":null}"
+        "400":
+          description: "400"
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: "#/components/schemas/api-auth-activation-1195011613"
+              examples:
+                auth-activation-fail-mandatory-consent:
+                  value: "{\"imhereResponseCode\":\"TERM-000\",\"message\":\"필수 약관\
+                    에 동의해야 합니다.\",\"data\":{}}"
+        "404":
+          description: "404"
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: "#/components/schemas/api-auth-activation1294468459"
+              examples:
+                auth-activation-fail-term-not-found:
+                  value: "{\"imhereResponseCode\":\"TERM-300\",\"message\":\"해당 약관\
+                    \ 정의를 찾을 수 없습니다.\",\"data\":{}}"
+        "200":
+          description: "200"
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: "#/components/schemas/api-auth-activation1728072345"
+              examples:
+                auth-activation-success:
+                  value: "{\"imhereResponseCode\":\"SUCCESS\",\"message\":\"OK\",\"\
+                    data\":{\"accessToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJkZmVjNzExYS0xZjA0LTQ4ODgtYWQxMy1iYzNkNzcyMmM5ZTQiLCJjYXRlZ29yeSI6ImFjY2VzcyIsInVpZCI6ImI1NDhmYWM0LTVhZTgtNDYyNC1iNDMzLTFlYjk4ZDllNzljMCIsImVtYWlsIjoicGVuZGluZ0BleGFtcGxlLmNvbSIsIm5pY2tuYW1lIjoiUGVuZGluZyBVc2VyIiwicm9sZSI6IlJPTEVfTk9STUFMIiwic3RhdHVzIjoiQUNUSVZFIiwiaWF0IjoxNzgwOTAxOTM1LCJleHAiOjE3ODA5MDE5OTV9.7LxF5Gs-Fx-Dfbf5nFZPprHzT-QKTfkMgrCkgUDCRsGFMRFyaO5K-YHaO13FQTAb\"\
+                    ,\"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJmNGViZDRlNC0wMWUxLTRjNTgtOTBlZS1kNWJiYmVkOWQ1OWEiLCJjYXRlZ29yeSI6InJlZnJlc2giLCJ1aWQiOiJiNTQ4ZmFjNC01YWU4LTQ2MjQtYjQzMy0xZWI5OGQ5ZTc5YzAiLCJlbWFpbCI6InBlbmRpbmdAZXhhbXBsZS5jb20iLCJuaWNrbmFtZSI6IlBlbmRpbmcgVXNlciIsInJvbGUiOiJST0xFX05PUk1BTCIsInN0YXR1cyI6IkFDVElWRSIsImlhdCI6MTc4MDkwMTkzNSwiZXhwIjoxNzgxMDc0NzM1fQ._EKz9PtfAmd2xehX5pv1lw7ORcebtytWjCvtUv8pENVgbTytK45oimV7MJAcaXTC\"\
+                    }}"
+      security:
+      - bearerAuthJWT: []
 components:
-  schemas: {}
+  schemas:
+    api-auth-activation1407207443:
+      required:
+      - imhereResponseCode
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        imhereResponseCode:
+          type: string
+          description: Error code
+    api-auth-activation1294468459:
+      required:
+      - imhereResponseCode
+      - message
+      type: object
+      properties:
+        data:
+          type: object
+          description: 데이터는 없음
+          nullable: true
+        message:
+          type: string
+          description: 에러 상세 메시지
+        imhereResponseCode:
+          type: string
+          description: "에러 코드 (예: 약관을 찾을 수 없음)"
+    api-auth-activation-1195011613:
+      required:
+      - imhereResponseCode
+      - message
+      type: object
+      properties:
+        data:
+          type: object
+          description: 데이터는 없음
+          nullable: true
+        message:
+          type: string
+          description: 에러 상세 메시지
+        imhereResponseCode:
+          type: string
+          description: "에러 코드 (예: 약관 동의 누락)"
+    api-auth-activation-33084672:
+      type: object
+    api-auth-activation1728072345:
+      required:
+      - imhereResponseCode
+      - message
+      type: object
+      properties:
+        data:
+          required:
+          - accessToken
+          - refreshToken
+          type: object
+          properties:
+            accessToken:
+              type: string
+              description: New access token
+            refreshToken:
+              type: string
+              description: New refresh token
+        message:
+          type: string
+          description: Response message
+        imhereResponseCode:
+          type: string
+          description: Response code
+    api-auth-activation636321831:
+      required:
+      - consents
+      type: object
+      properties:
+        consents:
+          type: array
+          description: Terms consent list
+          items:
+            required:
+            - agreed
+            - id
+            type: object
+            properties:
+              id:
+                type: number
+                description: Terms ID
+              agreed:
+                type: boolean
+                description: Whether consent was given
+  securitySchemes:
+    bearerAuthJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

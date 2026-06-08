@@ -1,8 +1,8 @@
 package com.kdongsu5509.auth.security.filter
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
+import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.support.exception.ImHereBaseException
 import jakarta.servlet.FilterChain
@@ -12,14 +12,13 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.never
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.whenever
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.context.SecurityContextHolder
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class JwtAuthenticationFilterTest {
@@ -74,7 +73,7 @@ class JwtAuthenticationFilterTest {
         request.addHeader("Authorization", "Bearer validToken")
         val response = MockHttpServletResponse()
 
-        val claims = JwtTokenClaims(java.util.UUID.randomUUID(), "test@test.com", "Tester", "ROLE_USER", "ACTIVE")
+        val claims = JwtTokenClaims(UUID.randomUUID(), "test@test.com", "Tester", "ROLE_USER", "ACTIVE")
         whenever(tokenParser.validate("validToken")).thenReturn(true)
         whenever(tokenParser.parse("validToken")).thenReturn(claims)
 
@@ -93,7 +92,7 @@ class JwtAuthenticationFilterTest {
         request.addHeader("Authorization", "Bearer validToken")
         val response = MockHttpServletResponse()
 
-        val claims = JwtTokenClaims(java.util.UUID.randomUUID(), "test@test.com", "Tester", "ROLE_USER", "DISABLED")
+        val claims = JwtTokenClaims(UUID.randomUUID(), "test@test.com", "Tester", "ROLE_USER", "DISABLED")
         whenever(tokenParser.validate("validToken")).thenReturn(true)
         whenever(tokenParser.parse("validToken")).thenReturn(claims)
 

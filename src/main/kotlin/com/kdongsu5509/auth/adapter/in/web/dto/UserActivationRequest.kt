@@ -1,8 +1,8 @@
 package com.kdongsu5509.auth.adapter.`in`.web.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.kdongsu5509.auth.application.UserActivationCommand
-import com.kdongsu5509.auth.application.UserActivationCommand.RequiredTermConsentCommand
+import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
+import com.kdongsu5509.auth.application.service.dto.UserActivationCommand.TermConsentCommand
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
@@ -25,7 +25,7 @@ data class UserActivationRequest(
         return UserActivationCommand(
             email = email,
             consents = consents.map {
-                RequiredTermConsentCommand(
+                TermConsentCommand(
                     id = it.id,
                     isAgreed = it.isAgreed
                 )

@@ -1,8 +1,8 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
 import com.kdongsu5509.auth.adapter.`in`.web.dto.OIDCAuthRequest
-import com.kdongsu5509.auth.application.ImHereJwtToken
 import com.kdongsu5509.auth.application.port.`in`.RegisterUseCase
+import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.security.config.SecurityConfig
 import com.kdongsu5509.support.config.LoggingConfig

@@ -1,7 +1,7 @@
 package com.kdongsu5509.auth.security.handler
 
-import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
+import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.shared.response.APIResponseSerializers

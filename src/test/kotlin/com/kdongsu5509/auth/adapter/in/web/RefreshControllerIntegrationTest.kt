@@ -1,10 +1,10 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.common.testsupport.WebIntegrationTestSupport
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.adapter.`in`.web.dto.TokenRefreshRequest
-import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
+import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.UserRepository
@@ -12,9 +12,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
-import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
-import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
+import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 

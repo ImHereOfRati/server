@@ -1,12 +1,12 @@
 package com.kdongsu5509.auth.adapter.out.jwt
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.auth.application.ImHereJwtToken
-import com.kdongsu5509.auth.application.JwtTokenClaims
 import com.kdongsu5509.auth.application.port.out.CachePort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
+import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
+import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.support.exception.throwIt
 import org.springframework.stereotype.Component
 import java.time.Duration

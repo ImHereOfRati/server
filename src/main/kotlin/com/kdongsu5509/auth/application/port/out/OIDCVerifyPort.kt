@@ -1,6 +1,6 @@
 package com.kdongsu5509.auth.application.port.out
 
-import com.kdongsu5509.auth.application.OIDCUserInfo
+import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
 import com.kdongsu5509.auth.domain.OAuth2Provider
 
 interface OIDCVerifyPort {

@@ -41,6 +41,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://${DB_HOST}:3306/${DB_NAME}?createDatabaseIfNotExist=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       # Firebase 키 경로 — ClassPathResource 대신 파일시스템 경로 사용
       - FIREBASE_PATH=file:/app/secrets/imhereFirebaseKey.json
       # OpenTelemetry → Alloy (OTLP HTTP). Alloy가 Tempo로 forward

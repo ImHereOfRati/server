@@ -35,3 +35,34 @@ fun getUserProfile(userId: Long): UserProfile { ... }
 @CacheEvict(value = ["userProfile"], key = "#userId")
 fun updateProfile(userId: Long, req: UpdateReq) { ... }
 ```
+
+## Rule 4 — Jackson 3 Deserialization with Final/Concrete Classes
+
+**Why:** Jackson 3.x에서는 다형성 타입 정보(Default Typing) 처리가 엄격하여 final인 Kotlin `data class`나 구체 클래스를 캐싱할 때 타입 정보(`@class`)가 누락되거나, 역직렬화 시 `LinkedHashMap`으로 잘못 캐스팅되어 `ClassCastException`이 발생할 수 있습니다. 이를 방지하기 위해 해당 클래스들은 스프링 캐시 어노테이션 대신 `CachePort`를 주입받아 명시적인 타입 정보로 직접 조회하도록 처리해야 합니다.
+
+```kotlin
+// ✅ GOOD (CachePort를 활용한 명시적 타입 캐싱)
+@Component
+class KakaoOauthClient(
+    private val apiClient: KakaoOauthPublicKeyApiClient,
+    private val cachePort: CachePort
+) : OauthClientPort {
+    override fun fetch(): OIDCPublicKeyResponse? {
+        val cached = cachePort.find("key", OIDCPublicKeyResponse::class.java)
+        if (cached != null) return cached
+        
+        return apiClient.fetchKakaoPublicKey()?.also {
+            cachePort.save("key", it, Duration.ofDays(8))
+        }
+    }
+}
+
+// ❌ BAD (Jackson 3 환경에서 final data class에 대한 어노테이션 기반 캐싱)
+@Component
+class KakaoOauthClient(...) : OauthClientPort {
+    @Cacheable(value = ["kakaoOidcKeys"], cacheManager = "oidcCacheManager")
+    override fun fetch(): OIDCPublicKeyResponse? {
+        return apiClient.fetchKakaoPublicKey()
+    }
+}
+```

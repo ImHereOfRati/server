@@ -1,23 +1,39 @@
 package com.kdongsu5509.auth.adapter.out.oauth
 
 import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKeyResponse
+import com.kdongsu5509.auth.application.port.out.CachePort
 import com.kdongsu5509.auth.application.port.out.OauthClientPort
-import org.springframework.cache.annotation.CachePut
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
+import java.time.Duration
 
 @Component
 class KakaoOauthClient(
-    private val kakaoOauthPublicKeyApiClient: KakaoOauthPublicKeyApiClient
+    private val kakaoOauthPublicKeyApiClient: KakaoOauthPublicKeyApiClient,
+    private val cachePort: CachePort
 ) : OauthClientPort {
 
-    @Cacheable(value = ["kakaoOidcKeys"], cacheManager = "oidcCacheManager", key = "'kakaoPublicKeySet'")
-    override fun fetch(): OIDCPublicKeyResponse? {
-        return kakaoOauthPublicKeyApiClient.fetchKakaoPublicKey()
+    companion object {
+        private const val CACHE_KEY = "kakaoOidcKeys::kakaoPublicKeySet"
+        private val CACHE_DURATION = Duration.ofDays(8)
     }
 
-    @CachePut(value = ["kakaoOidcKeys"], cacheManager = "oidcCacheManager", key = "'kakaoPublicKeySet'")
+    override fun fetch(): OIDCPublicKeyResponse? {
+        val cached = cachePort.find(CACHE_KEY, OIDCPublicKeyResponse::class.java)
+        if (cached != null) {
+            return cached
+        }
+        val fetched = kakaoOauthPublicKeyApiClient.fetchKakaoPublicKey()
+        if (fetched != null) {
+            cachePort.save(CACHE_KEY, fetched, CACHE_DURATION)
+        }
+        return fetched
+    }
+
     override fun refresh(): OIDCPublicKeyResponse? {
-        return kakaoOauthPublicKeyApiClient.fetchKakaoPublicKey()
+        val fetched = kakaoOauthPublicKeyApiClient.fetchKakaoPublicKey()
+        if (fetched != null) {
+            cachePort.save(CACHE_KEY, fetched, CACHE_DURATION)
+        }
+        return fetched
     }
 }

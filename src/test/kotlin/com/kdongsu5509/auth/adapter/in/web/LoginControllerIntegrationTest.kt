@@ -76,7 +76,7 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
     }
 
     @Test
-    @DisplayName("로그인 시 등록되지 않은 사용자면 401 Unauthorized와 에러를 반환하며 문서화한다")
+    @DisplayName("로그인 시 등록되지 않은 사용자면 404 NotFound와 에러를 반환하며 문서화한다")
     fun loginFailWhenUserNotRegistered() {
         val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token")
 
@@ -89,13 +89,13 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().isUnauthorized)
+            .andExpect(status().isNotFound)
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "auth-login-fail-not-registered",
                     snippets = arrayOf(
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-104: 사용자 정보를 찾을 수 없습니다)"),
+                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-300: 사용자 정보를 찾을 수 없습니다)"),
                             fieldWithPath("message").description("에러 상세 메시지"),
                             fieldWithPath("data").description("데이터는 없음").optional()
                         )

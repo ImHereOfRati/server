@@ -117,6 +117,7 @@ class SecurityConfig(
                 authorize("/admin/ott", permitAll)
                 authorize("/admin/ott/request", permitAll)
                 authorize("/admin/ott/verify", permitAll)
+                authorize("/error", permitAll)
                 authorize(anyRequest, hasRole(UserRole.ADMIN.name))
             }
 
@@ -165,6 +166,7 @@ class SecurityConfig(
 
             authorizeHttpRequests {
                 securityWhiteList.whitelist.forEach { authorize(it, permitAll) }
+                authorize("/error", permitAll)
                 authorize(HttpMethod.OPTIONS, "/**", permitAll)
                 authorize("/api/admin/**", hasRole(UserRole.ADMIN.name))
                 authorize(anyRequest, authenticated)

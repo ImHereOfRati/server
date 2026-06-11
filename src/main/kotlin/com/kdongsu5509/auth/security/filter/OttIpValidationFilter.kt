@@ -7,10 +7,13 @@ import jakarta.servlet.ServletResponse
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
+import org.slf4j.LoggerFactory
 
 class OttIpValidationFilter(
     private val ottIpFilterConfig: OttIpFilterConfig
 ) : Filter {
+
+    private val log = LoggerFactory.getLogger(OttIpValidationFilter::class.java)
 
     companion object {
         private const val OTT_REQUEST_URL = "/admin/ott/request"
@@ -55,6 +58,8 @@ class OttIpValidationFilter(
     }
 
     private fun isIpAllowed(clientIp: String): Boolean {
-        return ottIpFilterConfig.allowedIps.contains(clientIp)
+        val allowed = ottIpFilterConfig.allowedIps.contains(clientIp)
+        log.info("OTT IP Validation: clientIp=$clientIp, allowedIps=${ottIpFilterConfig.allowedIps}, allowed=$allowed")
+        return allowed
     }
 }

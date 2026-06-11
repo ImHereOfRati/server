@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>약관 관리</title>
+</head>
+<body>
+<h1>약관 관리</h1>
+<p><a href="/admin">대시보드로 돌아가기</a></p>
+<table>
+    <thead><tr><th>Type</th><th>Title</th><th>Version</th><th>Required</th></tr></thead>
+    <tbody>
+    <tr th:each="term : ${terms}">
+        <td th:text="${term.type}"></td>
+        <td th:text="${term.title}"></td>
+        <td th:text="${term.version}"></td>
+        <td th:text="${term.isRequired}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

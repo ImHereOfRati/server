@@ -1,21 +1,44 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>관리자 대시보드</title>
-</head>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: common-head('관리자 대시보드')}"></head>
 <body>
-<h1>관리자 대시보드</h1>
-<nav>
-    <a href="/admin/users">사용자 관리</a>
-    <a href="/admin/terms">약관 관리</a>
-    <a href="/admin/friend-requests">친구 요청 관리</a>
-    <a href="/admin/friend-restrictions">친구 차단 관리</a>
-    <a href="/admin/friendships">친구 관계 관리</a>
-    <a href="/admin/dead-letter-queues">DLQ 관리</a>
-</nav>
-<form method="post" action="/admin/logout">
-    <button type="submit">로그아웃</button>
-</form>
+    <header th:replace="~{admin/layout :: common-header}"></header>
+
+    <main class="notion-container">
+        <div class="page-header">
+            <h1 class="page-title">관리자 대시보드</h1>
+            <p class="page-subtitle">ImHere 서비스의 전체 설정을 제어하고 데이터를 모니터링합니다.</p>
+        </div>
+
+        <div class="feature-card elevated">
+            <h3>바로가기 메뉴</h3>
+            <div class="nav-links mt-lg" style="flex-wrap: wrap;">
+                <a href="/admin/users" class="button-secondary">
+                    <span class="sticker-dot sky"></span>
+                    사용자 관리
+                </a>
+                <a href="/admin/terms" class="button-secondary">
+                    <span class="sticker-dot purple"></span>
+                    약관 관리
+                </a>
+                <a href="/admin/friend-requests" class="button-secondary">
+                    <span class="sticker-dot pink"></span>
+                    친구 요청 관리
+                </a>
+                <a href="/admin/friend-restrictions" class="button-secondary">
+                    <span class="sticker-dot orange"></span>
+                    친구 차단 관리
+                </a>
+                <a href="/admin/friendships" class="button-secondary">
+                    <span class="sticker-dot teal"></span>
+                    친구 관계 관리
+                </a>
+                <a href="/admin/dead-letter-queues" class="button-secondary">
+                    <span class="sticker-dot green"></span>
+                    DLQ 관리
+                </a>
+            </div>
+        </div>
+    </main>
 </body>
 </html>

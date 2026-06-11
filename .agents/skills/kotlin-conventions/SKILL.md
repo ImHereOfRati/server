@@ -27,3 +27,9 @@ val masked = "user@test.com".toMaskedEmail()
 // ❌ 금지 (Java 스타일 정적 유틸리티 호출)
 val masked = StringUtils.maskEmail("user@test.com")
 ```
+
+## Rule 4 — Spring `@Value` Annotation Parameter Targeting
+
+* **Primary Constructor Parameters**: 클래스 프로퍼티로 주입받는 생성자 매개변수에는 `@param:Value("\${prop.path}")`와 같이 `@param:` 타겟을 명시하여 필드 주입 경고를 방지합니다.
+* **Method/Function Parameters**: `@Bean` 메서드나 일반 함수 매개변수에 `@Value`를 사용할 때는 `@param:` 지시자를 붙이지 않고 직접 `@Value("\${prop.path}")`로 선언해야 합니다. 그렇지 않으면 컴파일 타임 에러가 발생합니다.
+* **Safe Defaults**: `@Value`로 주입받는 프로퍼티는 테스트 환경(`application-test.yml` 등)이나 개발 환경에서 설정 누락으로 인해 Context 로드 실패가 발생하는 것을 막기 위해 가급적 기본값(`@Value("\${prop.path:default_value}")`)을 동봉하여 선언합니다.

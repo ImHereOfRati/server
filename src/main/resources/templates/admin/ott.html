@@ -1,19 +1,38 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>관리자 OTT 인증</title>
-</head>
+<head th:replace="~{admin/layout :: common-head('관리자 OTT 인증')}"></head>
 <body>
-<h1>관리자 OTT 인증</h1>
-<p>Discord로 전달된 OTT를 입력하세요.</p>
-<p th:if="${hasError}">유효하지 않은 OTT입니다.</p>
-<form method="post" action="/admin/ott/verify">
-    <input name="username" type="hidden" th:value="${username}" />
-    <label for="token">OTT</label>
-    <input id="token" name="token" type="text" required />
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-    <button type="submit">로그인</button>
-</form>
+    <main class="centered-card-container">
+        <div class="centered-card">
+            <div class="page-header">
+                <span class="sticker-dot orange" style="width: 16px; height: 16px; margin-bottom: var(--spacing-xs);"></span>
+                <h1 class="page-title" style="font-size: 26px;">OTT 2차 인증</h1>
+                <p class="page-subtitle">Discord 채널로 발송된 One-Time Token을 입력하세요.</p>
+            </div>
+
+            <div th:if="${hasError}" class="notion-alert error">
+                <span class="sticker-dot red"></span>
+                <span>유효하지 않은 OTT입니다. 다시 확인해 주세요.</span>
+            </div>
+
+            <form method="post" action="/admin/ott/verify" class="mt-lg">
+                <input name="username" type="hidden" th:value="${username}" />
+                <div class="form-group">
+                    <label for="token">인증 토큰 (OTT)</label>
+                    <input id="token" 
+                           name="token" 
+                           type="text" 
+                           class="text-input" 
+                           placeholder="인증 토큰을 입력하세요" 
+                           required 
+                           autofocus />
+                </div>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="button-primary" style="width: 100%; margin-top: var(--spacing-md);">
+                    로그인 완료
+                </button>
+            </form>
+        </div>
+    </main>
 </body>
 </html>

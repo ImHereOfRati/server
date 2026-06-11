@@ -5,15 +5,18 @@ import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.auth.security.filter.JwtAuthenticationFilter
+import com.kdongsu5509.auth.security.filter.OttIpFilterConfig
 import com.kdongsu5509.auth.security.filter.OttIpValidationFilter
 import com.kdongsu5509.auth.security.handler.ImHereOttSuccessHandler
 import com.kdongsu5509.auth.security.handler.OttLoginSuccessHandler
 import com.kdongsu5509.shared.response.APIResponseSerializers
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpStatus
+import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 import org.springframework.jdbc.core.JdbcOperations
 import org.springframework.security.authentication.ott.JdbcOneTimeTokenService
 import org.springframework.security.authentication.ott.OneTimeTokenService
@@ -28,7 +31,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-import org.springframework.core.annotation.Order
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -45,8 +47,8 @@ class SecurityConfig(
     private val imHereJwtTokenParserPort: ImHereTokenParserPort,
     private val imHereOttSuccessHandler: ImHereOttSuccessHandler,
     private val ottLoginSuccessHandler: OttLoginSuccessHandler,
-    private val ottIpValidationFilter: OttIpValidationFilter,
-    @param:org.springframework.beans.factory.annotation.Value("\${admin.id}") private val adminId: String,
+    @Value("\${admin.id}") private val adminId: String,
+    @Value("\${admin.allowed-ips:127.0.0.1}") private val allowedIps: List<String>,
 ) {
 
     @Bean
@@ -70,6 +72,16 @@ class SecurityConfig(
         JdbcOneTimeTokenService(jdbcOperation)
 
     @Bean
+    fun ottIpFilterConfig(): OttIpFilterConfig {
+        return OttIpFilterConfig(adminId, "", allowedIps)
+    }
+
+    @Bean
+    fun ottIpValidationFilter(config: OttIpFilterConfig): OttIpValidationFilter {
+        return OttIpValidationFilter(config)
+    }
+
+    @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration().apply {
             allowedOrigins = securityWhiteList.corsAllowedOrigins
@@ -85,7 +97,7 @@ class SecurityConfig(
 
     @Bean
     @Order(1)
-    fun adminWebFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun adminWebFilterChain(http: HttpSecurity, ottIpValidationFilter: OttIpValidationFilter): SecurityFilterChain {
         http.securityMatcher("/admin/**")
 
         http {

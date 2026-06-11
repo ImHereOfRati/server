@@ -1,22 +1,47 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>사용자 관리</title>
-</head>
+<head th:replace="~{admin/layout :: common-head('사용자 관리')}"></head>
 <body>
-<h1>사용자 관리</h1>
-<p><a href="/admin">대시보드로 돌아가기</a></p>
-<table>
-    <thead><tr><th>Email</th><th>Nickname</th><th>Role</th><th>Status</th></tr></thead>
-    <tbody>
-    <tr th:each="user : ${users}">
-        <td th:text="${user.email}"></td>
-        <td th:text="${user.nickname}"></td>
-        <td th:text="${user.role}"></td>
-        <td th:text="${user.status}"></td>
-    </tr>
-    </tbody>
-</table>
+    <header th:replace="~{admin/layout :: common-header}"></header>
+
+    <main class="notion-container">
+        <a href="/admin" class="back-to-dashboard">← 대시보드로 돌아가기</a>
+
+        <div class="page-header">
+            <h1 class="page-title">사용자 관리</h1>
+            <p class="page-subtitle">서비스에 가입된 사용자의 목록을 조회하고 계정 권한 및 상태를 관리합니다.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="table-responsive">
+                <table class="notion-table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Nickname</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}">
+                            <td th:text="${user.email}" style="font-weight: 500;"></td>
+                            <td th:text="${user.nickname}"></td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${user.role.toString() == 'ADMIN' ? 'purple' : 'gray'}" 
+                                      th:text="${user.role}"></span>
+                            </td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${user.status.toString() == 'ACTIVE' ? 'green' : 'red'}" 
+                                      th:text="${user.status}"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 </body>
 </html>

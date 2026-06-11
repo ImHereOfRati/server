@@ -1,9 +1,6 @@
--- ImHere full database initialization script for MySQL 8+
--- Usage:
--- 1. Update database/user names if needed.
--- 2. Execute this file once before application startup.
+DROP DATABASE IF EXISTS rati;
 
-CREATE DATABASE IF NOT EXISTS rati
+CREATE DATABASE rati
     DEFAULT CHARACTER SET utf8mb4
     DEFAULT COLLATE utf8mb4_unicode_ci;
 
@@ -25,14 +22,14 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users
 (
-    id         CHAR(36) CHARACTER SET ascii          NOT NULL,
-    email      VARCHAR(255)                          NOT NULL,
-    nickname   VARCHAR(255)                          NOT NULL,
-    role       ENUM ('NORMAL', 'ADMIN')              NOT NULL,
-    provider   ENUM ('KAKAO')                        NOT NULL,
+    id         CHAR(36)                                           NOT NULL,
+    email      VARCHAR(255)                                       NOT NULL,
+    nickname   VARCHAR(255)                                       NOT NULL,
+    role       ENUM ('NORMAL', 'ADMIN')                           NOT NULL,
+    provider   ENUM ('KAKAO')                                     NOT NULL,
     status     ENUM ('PENDING', 'ACTIVE', 'BLOCKED', 'WITHDRAWN') NOT NULL,
-    created_at DATETIME(6)                           NOT NULL,
-    updated_at DATETIME(6)                           NOT NULL,
+    created_at DATETIME(6)                                        NOT NULL,
+    updated_at DATETIME(6)                                        NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_users_email (email),
     KEY idx_users_nickname (nickname)
@@ -61,8 +58,8 @@ CREATE TABLE terms
 
 CREATE TABLE user_agreement
 (
-    id               CHAR(36) CHARACTER SET ascii    NOT NULL,
-    user_id          CHAR(36) CHARACTER SET ascii    NOT NULL,
+    id               CHAR(36)    NOT NULL,
+    user_id          CHAR(36)    NOT NULL,
     terms_version_id BIGINT      NOT NULL,
     created_at       DATETIME(6) NOT NULL,
     updated_at       DATETIME(6) NOT NULL,
@@ -75,12 +72,12 @@ CREATE TABLE user_agreement
 
 CREATE TABLE friend_request
 (
-    friend_request_id CHAR(36) CHARACTER SET ascii     NOT NULL,
-    requester_id      CHAR(36) CHARACTER SET ascii     NOT NULL,
-    receiver_id       CHAR(36) CHARACTER SET ascii     NOT NULL,
-    message           VARCHAR(255) NOT NULL,
-    created_at        DATETIME(6)  NOT NULL,
-    updated_at        DATETIME(6)  NOT NULL,
+    friend_request_id CHAR(36)                     NOT NULL,
+    requester_id      CHAR(36)                     NOT NULL,
+    receiver_id       CHAR(36) NOT NULL,
+    message           VARCHAR(255)                 NOT NULL,
+    created_at        DATETIME(6)                  NOT NULL,
+    updated_at        DATETIME(6)                  NOT NULL,
     PRIMARY KEY (friend_request_id),
     CONSTRAINT fk_friend_request_requester FOREIGN KEY (requester_id) REFERENCES users (id),
     CONSTRAINT fk_friend_request_receiver FOREIGN KEY (receiver_id) REFERENCES users (id)
@@ -90,13 +87,13 @@ CREATE TABLE friend_request
 
 CREATE TABLE friend_restrictions
 (
-    friend_restriction_id CHAR(36) CHARACTER SET ascii                 NOT NULL,
-    restrictor_id         CHAR(36) CHARACTER SET ascii                 NULL,
-    restricted_id         CHAR(36) CHARACTER SET ascii                 NULL,
-    type                  ENUM ('BLOCK', 'REJECT') NOT NULL,
-    expired_at            DATETIME(6)              NULL,
-    created_at            DATETIME(6)              NOT NULL,
-    updated_at            DATETIME(6)              NOT NULL,
+    friend_restriction_id CHAR(36) NOT NULL,
+    restrictor_id         CHAR(36) NULL,
+    restricted_id         CHAR(36) NULL,
+    type                  ENUM ('BLOCK', 'REJECT')     NOT NULL,
+    expired_at            DATETIME(6)                  NULL,
+    created_at            DATETIME(6)                  NOT NULL,
+    updated_at            DATETIME(6)                  NOT NULL,
     PRIMARY KEY (friend_restriction_id),
     CONSTRAINT fk_friend_restrictions_restrictor FOREIGN KEY (restrictor_id) REFERENCES users (id),
     CONSTRAINT fk_friend_restrictions_restricted FOREIGN KEY (restricted_id) REFERENCES users (id)
@@ -106,9 +103,9 @@ CREATE TABLE friend_restrictions
 
 CREATE TABLE friend_relationships
 (
-    friend_relationship_id CHAR(36) CHARACTER SET ascii    NOT NULL,
-    owner_user_id          CHAR(36) CHARACTER SET ascii    NOT NULL,
-    friend_user_id         CHAR(36) CHARACTER SET ascii    NOT NULL,
+    friend_relationship_id CHAR(36)    NOT NULL,
+    owner_user_id          CHAR(36)    NOT NULL,
+    friend_user_id         CHAR(36)    NOT NULL,
     friend_alias           VARCHAR(20) NOT NULL,
     created_at             DATETIME(6) NOT NULL,
     updated_at             DATETIME(6) NOT NULL,

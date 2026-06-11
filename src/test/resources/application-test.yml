@@ -53,6 +53,8 @@ security:
     - "/api/auth/activation"
     - "/swagger-ui/**"
     - "/v3/api-docs/**"
+  cors-allowed-origins:
+    - "https://fortuneki.site"
 
 oidc:
   kakao:

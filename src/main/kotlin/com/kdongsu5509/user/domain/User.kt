@@ -71,6 +71,20 @@ data class User(
         )
     }
 
+    fun withdraw(): User {
+        if (this.status == UserStatus.WITHDRAWN) {
+            UserException.INVALID_USER_STATUS.throwIt()
+        }
+        return User(
+            id = id,
+            email = email,
+            nickname = nickname,
+            role = role,
+            oauthProvider = oauthProvider,
+            status = UserStatus.WITHDRAWN
+        )
+    }
+
     fun updateNickname(newNickname: String) = User(
         id = id,
         email = email,

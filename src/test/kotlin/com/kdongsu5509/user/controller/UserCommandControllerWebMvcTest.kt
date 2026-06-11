@@ -1,5 +1,6 @@
 package com.kdongsu5509.user.controller
 
+import com.kdongsu5509.auth.application.port.`in`.ForceLogoutUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
@@ -43,6 +44,9 @@ class UserCommandControllerWebMvcTest {
 
     @MockitoBean
     private lateinit var userService: UserService
+
+    @MockitoBean
+    private lateinit var forceLogoutUseCase: ForceLogoutUseCase
 
     @MockitoBean
     private lateinit var accessLogPrinter: AccessLogPrinter

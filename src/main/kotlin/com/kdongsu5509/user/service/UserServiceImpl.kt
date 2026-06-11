@@ -65,6 +65,14 @@ class UserServiceImpl(
         return UserResult.fromDomain(unblockedUser)
     }
 
+    @Transactional
+    override fun withdraw(userEmail: String): UserResult {
+        val user = findAndValidateUser(userEmail)
+        val withdrawnUser = user.withdraw()
+        userRepository.update(withdrawnUser)
+        return UserResult.fromDomain(withdrawnUser)
+    }
+
     private fun findAndValidateUser(userEmail: String): User =
         userRepository.findByEmail(userEmail) ?: UserException.USER_NOT_FOUND.throwIt()
 }

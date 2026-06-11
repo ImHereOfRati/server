@@ -57,7 +57,7 @@ class TermsAdminControllerIntegrationTest : WebIntegrationTestSupport() {
         )
 
         mockMvc.perform(
-            post("/api/terms").with(csrf()).with(user(adminUser)).contentType(MediaType.APPLICATION_JSON)
+            post("/api/admin/terms").with(csrf()).with(user(adminUser)).contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         ).andExpect(status().isOk)
 

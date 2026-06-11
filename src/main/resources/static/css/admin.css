@@ -456,3 +456,48 @@ label {
 .back-to-dashboard:hover {
     color: var(--colors-ink);
 }
+
+/* Action Buttons */
+.action-btn {
+    border: none;
+    border-radius: var(--rounded-sm);
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-danger {
+    background-color: #ff6b6b;
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background-color: #ff5252;
+}
+
+.btn-success {
+    background-color: var(--colors-accent-green);
+    color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    background-color: #1aae39;
+    filter: brightness(0.9);
+}
+
+.btn-warning {
+    background-color: var(--colors-accent-orange);
+    color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background-color: #c74a00;
+}

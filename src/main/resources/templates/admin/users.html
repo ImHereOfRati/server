@@ -21,6 +21,7 @@
                             <th>Nickname</th>
                             <th>Role</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -28,14 +29,32 @@
                             <td th:text="${user.email}" style="font-weight: 500;"></td>
                             <td th:text="${user.nickname}"></td>
                             <td>
-                                <span class="badge" 
-                                      th:classappend="${user.role.toString() == 'ADMIN' ? 'purple' : 'gray'}" 
+                                <span class="badge"
+                                      th:classappend="${user.role.toString() == 'ADMIN' ? 'purple' : 'gray'}"
                                       th:text="${user.role}"></span>
                             </td>
                             <td>
-                                <span class="badge" 
-                                      th:classappend="${user.status.toString() == 'ACTIVE' ? 'green' : 'red'}" 
+                                <span class="badge"
+                                      th:classappend="${user.status.toString() == 'ACTIVE' ? 'green' : (user.status.toString() == 'BLOCKED' ? 'red' : 'gray')}"
                                       th:text="${user.status}"></span>
+                            </td>
+                            <td style="min-width: 300px;">
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <button th:if="${user.status.toString() == 'ACTIVE'}"
+                                            onclick="blockUser(this, [[${user.email}]])"
+                                            class="action-btn btn-danger"
+                                            style="font-size: 12px; padding: 4px 8px;">차단</button>
+                                    <button th:if="${user.status.toString() == 'BLOCKED'}"
+                                            onclick="unblockUser(this, [[${user.email}]])"
+                                            class="action-btn btn-success"
+                                            style="font-size: 12px; padding: 4px 8px;">차단 해제</button>
+                                    <button onclick="forceLogout(this, [[${user.email}]])"
+                                            class="action-btn btn-warning"
+                                            style="font-size: 12px; padding: 4px 8px;">강제 로그아웃</button>
+                                    <button onclick="withdrawUser(this, [[${user.email}]])"
+                                            class="action-btn btn-danger"
+                                            style="font-size: 12px; padding: 4px 8px;">탈퇴</button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -43,5 +62,40 @@
             </div>
         </div>
     </main>
+
+    <script>
+        function blockUser(btn, email) {
+            if (!confirm(`${email} 사용자를 차단하시겠습니까?`)) return;
+            btn.disabled = true;
+            fetch(`/api/admin/users/${email}/block`, { method: 'POST' })
+                .then(r => r.ok ? location.reload() : alert('차단 실패'))
+                .catch(() => alert('차단 실패'));
+        }
+
+        function unblockUser(btn, email) {
+            if (!confirm(`${email} 사용자를 차단 해제하시겠습니까?`)) return;
+            btn.disabled = true;
+            fetch(`/api/admin/users/${email}/block`, { method: 'DELETE' })
+                .then(r => r.ok ? location.reload() : alert('차단 해제 실패'))
+                .catch(() => alert('차단 해제 실패'));
+        }
+
+        function forceLogout(btn, email) {
+            if (!confirm(`${email} 사용자를 강제 로그아웃하시겠습니까?`)) return;
+            btn.disabled = true;
+            fetch(`/api/admin/users/${email}/token`, { method: 'DELETE' })
+                .then(r => r.ok ? alert('강제 로그아웃 완료') : alert('강제 로그아웃 실패'))
+                .catch(() => alert('강제 로그아웃 실패'))
+                .finally(() => btn.disabled = false);
+        }
+
+        function withdrawUser(btn, email) {
+            if (!confirm(`${email} 사용자를 탈퇴 처리하시겠습니까? 이 작업은 취소할 수 없습니다.`)) return;
+            btn.disabled = true;
+            fetch(`/api/admin/users/${email}`, { method: 'DELETE' })
+                .then(r => r.ok ? location.reload() : alert('탈퇴 처리 실패'))
+                .catch(() => alert('탈퇴 처리 실패'));
+        }
+    </script>
 </body>
 </html>

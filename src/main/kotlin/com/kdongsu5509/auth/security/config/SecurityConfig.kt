@@ -97,6 +97,46 @@ class SecurityConfig(
 
     @Bean
     @Order(1)
+    fun adminApiFilterChain(http: HttpSecurity, ottIpValidationFilter: OttIpValidationFilter): SecurityFilterChain {
+        http.securityMatcher("/api/admin/**")
+
+        http {
+            csrf { disable() }
+            formLogin { disable() }
+            httpBasic { disable() }
+            cors { }
+
+            sessionManagement {
+                sessionCreationPolicy = SessionCreationPolicy.IF_REQUIRED
+            }
+
+            authorizeHttpRequests {
+                authorize(anyRequest, hasRole(UserRole.ADMIN.name))
+            }
+
+            exceptionHandling {
+                authenticationEntryPoint = { _, response, _ ->
+                    response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized")
+                }
+                accessDeniedHandler = { _, response, _ ->
+                    APIResponseSerializers.writeErrorResponse(
+                        response = response,
+                        status = HttpStatus.FORBIDDEN,
+                        imhereErrorCode = AuthException.IMHERE_ACCESS_DENIED.imhereErrorCode,
+                        errorMessage = "접근 권한이 없습니다."
+                    )
+                }
+            }
+
+            addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthenticationFilter())
+            addFilterBefore<UsernamePasswordAuthenticationFilter>(ottIpValidationFilter)
+        }
+
+        return http.build()
+    }
+
+    @Bean
+    @Order(2)
     fun adminWebFilterChain(http: HttpSecurity, ottIpValidationFilter: OttIpValidationFilter): SecurityFilterChain {
         http.securityMatcher("/admin/**")
 
@@ -148,7 +188,7 @@ class SecurityConfig(
     }
 
     @Bean
-    @Order(2)
+    @Order(3)
     fun apiFilterChain(http: HttpSecurity): SecurityFilterChain {
         http {
             csrf { disable() }

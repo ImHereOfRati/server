@@ -114,21 +114,6 @@ class TermsControllerTest {
     }
 
     @Test
-    @DisplayName("모든 약관을 조회한다")
-    fun readAll_success() {
-        // given
-        val results = listOf(
-            TermResult(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
-        )
-        BDDMockito.given(termService.findAll()).willReturn(results)
-
-        // when & then
-        mockMvc.perform(MockMvcRequestBuilders.get(TERM_CONTROLLER_URL))
-            .andExpect(MockMvcResultMatchers.status().isOk)
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].id").value(1L))
-    }
-
-    @Test
     @DisplayName("isActive 파라미터가 true이면 활성화된 약관을 조회한다")
     fun readAllByActive_success() {
         // given

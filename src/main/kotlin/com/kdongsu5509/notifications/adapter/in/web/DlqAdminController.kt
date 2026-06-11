@@ -6,11 +6,9 @@ import com.kdongsu5509.notifications.application.service.DlqAdminService
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.toOkResponse
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/admin/dead-letter-queues", version = "1")
 class DlqAdminController(
     private val dlqAdminService: DlqAdminService

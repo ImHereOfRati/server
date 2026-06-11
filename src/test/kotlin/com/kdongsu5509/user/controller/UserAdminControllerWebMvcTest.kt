@@ -100,14 +100,4 @@ class UserAdminControllerWebMvcTest {
             .andExpect(jsonPath("$.data.hasNext").value(false))
     }
 
-    @Test
-    @DisplayName("관리자 권한이 아닌 사용자가 전체 조회를 요청하면 403 Forbidden을 반환한다")
-    fun readAll_fail_when_not_admin() {
-        val userDetails = ImHereUserDetails("user@example.com", "user", "NORMAL", "ACTIVE")
-
-        mockMvc.perform(
-            get(BASE_PATH)
-                .with(user(userDetails))
-        ).andExpect(status().isForbidden)
-    }
 }

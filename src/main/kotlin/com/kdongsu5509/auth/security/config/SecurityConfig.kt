@@ -5,6 +5,7 @@ import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.auth.security.filter.JwtAuthenticationFilter
+import com.kdongsu5509.auth.security.filter.OttIpValidationFilter
 import com.kdongsu5509.auth.security.handler.ImHereOttSuccessHandler
 import com.kdongsu5509.auth.security.handler.OttLoginSuccessHandler
 import com.kdongsu5509.shared.response.APIResponseSerializers
@@ -44,6 +45,7 @@ class SecurityConfig(
     private val imHereJwtTokenParserPort: ImHereTokenParserPort,
     private val imHereOttSuccessHandler: ImHereOttSuccessHandler,
     private val ottLoginSuccessHandler: OttLoginSuccessHandler,
+    private val ottIpValidationFilter: OttIpValidationFilter,
     @param:org.springframework.beans.factory.annotation.Value("\${admin.id}") private val adminId: String,
 ) {
 
@@ -125,6 +127,8 @@ class SecurityConfig(
                 logoutUrl = "/admin/logout"
                 logoutSuccessUrl = "/admin/login?logout=true"
             }
+
+            addFilterBefore<UsernamePasswordAuthenticationFilter>(ottIpValidationFilter)
         }
 
         return http.build()

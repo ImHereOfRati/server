@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.ott.OneTimeToken
 import org.springframework.security.web.authentication.ott.OneTimeTokenGenerationSuccessHandler
 import org.springframework.stereotype.Component
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Component
 class ImHereOttSuccessHandler(
@@ -30,15 +32,7 @@ class ImHereOttSuccessHandler(
     override fun handle(request: HttpServletRequest, response: HttpServletResponse, oneTimeToken: OneTimeToken) {
         val message = DiscordMessageDto(createOTTMessage(oneTimeToken))
         discordMessageSender.sendMessage(ottAlertChannelWebhookUrl, message)
-        writeSuccessAtResponseBody(response)
-    }
-
-    private fun writeSuccessAtResponseBody(response: HttpServletResponse) {
-        APIResponseSerializers.writeSuccessResponse(
-            response = response,
-            data = null,
-            message = SUCCESS_MESSAGE
-        )
+        response.sendRedirect("/admin/ott?username=${URLEncoder.encode(oneTimeToken.username, StandardCharsets.UTF_8)}")
     }
 
     private fun createOTTMessage(oneTimeToken: OneTimeToken): String {

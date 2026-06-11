@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 OTT 인증</title>
+</head>
+<body>
+<h1>관리자 OTT 인증</h1>
+<p>Discord로 전달된 OTT를 입력하세요.</p>
+<p th:if="${hasError}">유효하지 않은 OTT입니다.</p>
+<form method="post" action="/admin/ott/verify">
+    <input name="username" type="hidden" th:value="${username}" />
+    <label for="token">OTT</label>
+    <input id="token" name="token" type="text" required />
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+    <button type="submit">로그인</button>
+</form>
+</body>
+</html>

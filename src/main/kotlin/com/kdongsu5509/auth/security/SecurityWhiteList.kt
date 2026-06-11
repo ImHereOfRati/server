@@ -4,5 +4,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "security")
 class SecurityWhiteList(
-    val whitelist: List<String> = emptyList()
+    var whitelist: List<String> = emptyList(),
+    var corsAllowedOrigins: List<String> = emptyList()
 )

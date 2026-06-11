@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 로그인</title>
+</head>
+<body>
+<h1>관리자 로그인</h1>
+<form method="post" action="/admin/ott/request">
+    <label for="username">관리자 ID</label>
+    <input id="username" name="username" type="text" th:value="${adminId}" required />
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+    <button type="submit">OTT 발급 요청</button>
+</form>
+</body>
+</html>

@@ -31,7 +31,7 @@ class ImHereOttSuccessHandlerTest {
     }
 
     @Test
-    @DisplayName("handle 호출 시 Discord 메시지를 전송하고 성공 응답을 반환한다")
+    @DisplayName("handle 호출 시 Discord 메시지를 전송하고 OTT 입력 페이지로 이동시킨다")
     fun handle() {
         val request = MockHttpServletRequest()
         val response = MockHttpServletResponse()
@@ -40,6 +40,7 @@ class ImHereOttSuccessHandlerTest {
         handler.handle(request, response, token)
 
         verify(discordMessageSender).sendMessage(eq(webhookUrl), any())
-        assert(response.status == 200)
+        assert(response.status == 302)
+        assert(response.redirectedUrl == "/admin/ott?username=admin")
     }
 }

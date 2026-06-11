@@ -4,12 +4,10 @@ import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.security.SecurityWhiteList
-import com.kdongsu5509.auth.security.filter.AdminSecretFilter
 import com.kdongsu5509.auth.security.filter.JwtAuthenticationFilter
 import com.kdongsu5509.auth.security.handler.ImHereOttSuccessHandler
 import com.kdongsu5509.auth.security.handler.OttLoginSuccessHandler
 import com.kdongsu5509.shared.response.APIResponseSerializers
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -26,9 +24,12 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.HttpStatusEntryPoint
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-import org.springframework.security.web.authentication.ott.GenerateOneTimeTokenFilter
+import org.springframework.core.annotation.Order
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
@@ -42,8 +43,7 @@ class SecurityConfig(
     private val imHereJwtTokenParserPort: ImHereTokenParserPort,
     private val imHereOttSuccessHandler: ImHereOttSuccessHandler,
     private val ottLoginSuccessHandler: OttLoginSuccessHandler,
-    @param:Value("\${admin.secret}") private val adminSecret: String,
-    @param:Value("\${admin.id}") private val adminId: String,
+    @param:org.springframework.beans.factory.annotation.Value("\${admin.id}") private val adminId: String,
 ) {
 
     @Bean
@@ -67,11 +67,76 @@ class SecurityConfig(
         JdbcOneTimeTokenService(jdbcOperation)
 
     @Bean
-    fun filterChain(http: HttpSecurity): SecurityFilterChain {
+    fun corsConfigurationSource(): CorsConfigurationSource {
+        val configuration = CorsConfiguration().apply {
+            allowedOrigins = securityWhiteList.corsAllowedOrigins
+            allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+            allowedHeaders = listOf("Authorization", "Content-Type", "X-Requested-With", "X-CSRF-TOKEN")
+            allowCredentials = true
+        }
+
+        return UrlBasedCorsConfigurationSource().apply {
+            registerCorsConfiguration("/api/**", configuration)
+        }
+    }
+
+    @Bean
+    @Order(1)
+    fun adminWebFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http.securityMatcher("/admin/**")
+
+        http {
+            formLogin { disable() }
+            httpBasic { disable() }
+
+            headers {
+                frameOptions { sameOrigin }
+            }
+
+            sessionManagement {
+                sessionCreationPolicy = SessionCreationPolicy.IF_REQUIRED
+            }
+
+            authorizeHttpRequests {
+                authorize("/admin/login", permitAll)
+                authorize("/admin/ott", permitAll)
+                authorize("/admin/ott/request", permitAll)
+                authorize("/admin/ott/verify", permitAll)
+                authorize(anyRequest, hasRole(UserRole.ADMIN.name))
+            }
+
+            exceptionHandling {
+                authenticationEntryPoint = LoginUrlAuthenticationEntryPoint("/admin/login")
+            }
+
+            oneTimeTokenLogin {
+                showDefaultSubmitPage = false
+                tokenGeneratingUrl = "/admin/ott/request"
+                loginProcessingUrl = "/admin/ott/verify"
+                oneTimeTokenGenerationSuccessHandler = imHereOttSuccessHandler
+                authenticationSuccessHandler = ottLoginSuccessHandler
+                authenticationFailureHandler = { _, response, _ ->
+                    response.sendRedirect("/admin/ott?error=true")
+                }
+            }
+
+            logout {
+                logoutUrl = "/admin/logout"
+                logoutSuccessUrl = "/admin/login?logout=true"
+            }
+        }
+
+        return http.build()
+    }
+
+    @Bean
+    @Order(2)
+    fun apiFilterChain(http: HttpSecurity): SecurityFilterChain {
         http {
             csrf { disable() }
             formLogin { disable() }
             httpBasic { disable() }
+            cors { }
 
             headers {
                 frameOptions { sameOrigin }
@@ -106,25 +171,7 @@ class SecurityConfig(
                 }
             }
 
-            oneTimeTokenLogin {
-                showDefaultSubmitPage = false
-                tokenGeneratingUrl = "/api/admin/auth/ott"
-                loginProcessingUrl = "/api/admin/auth"
-                oneTimeTokenGenerationSuccessHandler = imHereOttSuccessHandler // 1. 발급 성공 시 메신저 발송
-                authenticationSuccessHandler = ottLoginSuccessHandler // 2. 인증(OTP) 성공 시 처리 (JWT 발급 등)
-                authenticationFailureHandler = { _, response, _ ->
-                    val error = AuthException.INVALID_OTT
-                    APIResponseSerializers.writeErrorResponse(
-                        response = response,
-                        status = error.httpStatus,
-                        imhereErrorCode = error.imhereErrorCode,
-                        errorMessage = error.errorMessage
-                    )
-                }
-            }
-
             addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthenticationFilter())
-            addFilterBefore<GenerateOneTimeTokenFilter>(AdminSecretFilter(adminSecret))
         }
 
         return http.build()

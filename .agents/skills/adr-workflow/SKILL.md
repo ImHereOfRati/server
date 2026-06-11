@@ -1,6 +1,6 @@
 ---
 name: adr-workflow
-description: 모든 의미 있는 설계 결정 및 구조 변경 시 반드시 따라야 하는 ADR(Architecture Decision Record) 기반의 워크플로우를 강제한다.
+description: Use when making meaningful design decisions, architecture changes, or structural refactors that should be captured as an ADR.
 ---
 
 # ADR-Driven Development Workflow

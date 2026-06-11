@@ -1,6 +1,6 @@
 ---
 name: core-behavior
-description: Behavioral guidelines to reduce common LLM coding mistakes, emphasizing caution, simplicity, surgical changes, and goal-driven execution.
+description: Use for general coding work to enforce caution, simplicity, surgical edits, and goal-driven execution.
 ---
 
 # Core Behavioral Guidelines

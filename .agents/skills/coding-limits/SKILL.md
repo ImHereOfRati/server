@@ -1,6 +1,6 @@
 ---
 name: coding-limits
-description: ImHere Server 프로젝트의 코딩 제약. @Autowired 필드 주입 금지, 무분별한 @Data 금지, 로깅 규칙 등 객체 지향 및 Spring 제약 사항을 규정한다.
+description: Use when editing Kotlin or Spring code in this repo and project-specific coding constraints or prohibited patterns must be enforced.
 ---
 
 # Coding Limits — ImHere Server (Kotlin/Spring)

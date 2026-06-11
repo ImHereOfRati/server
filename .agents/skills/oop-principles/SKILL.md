@@ -1,6 +1,6 @@
 ---
 name: oop-principles
-description: 객체지향 원칙 (클린 코드, 조영호의 오브젝트). Tell Don't Ask, DTO/Domain 분리, 캡슐화, 단일 책임 원칙 등을 Kotlin/Spring/JPA 기반으로 규정한다.
+description: Use when shaping domain models, DTO boundaries, encapsulation, Tell Don't Ask, or other object-oriented design decisions.
 ---
 
 # OOP Principles (Kotlin & Spring)

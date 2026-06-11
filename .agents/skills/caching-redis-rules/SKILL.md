@@ -1,6 +1,6 @@
 ---
 name: caching-redis-rules
-description: Redis 및 Spring Cache를 활용한 성능 최적화, Cache Key 네이밍, TTL 적용, 데이터 불일치 방지 규칙을 정의한다.
+description: Use when adding or changing Redis, Spring Cache, cache keys, TTL settings, or cache consistency behavior.
 ---
 
 # Caching & Redis Rules

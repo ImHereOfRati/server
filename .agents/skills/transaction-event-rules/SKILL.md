@@ -1,6 +1,6 @@
 ---
 name: transaction-event-rules
-description: @Transactional(readOnly=true) 성능 최적화 및 도메인 간 결합도를 낮추기 위한 스프링 이벤트(@TransactionalEventListener) 활용 규칙을 정의한다.
+description: Use when editing transactional boundaries, readOnly transactions, domain events, or `@TransactionalEventListener` based decoupling.
 ---
 
 # Transaction & Event Rules

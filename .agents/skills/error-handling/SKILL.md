@@ -1,6 +1,6 @@
 ---
 name: error-handling
-description: ImHere Server 프로젝트의 전역 예외 처리 규칙. ErrorCode Enum 정의, .throwIt() 확장 함수 사용법 등을 규정한다.
+description: Use when defining exceptions, ErrorCode values, global exception handling, or `.throwIt()` based error flows.
 ---
 
 # Error Handling Rules

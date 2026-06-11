@@ -1,6 +1,6 @@
 ---
 name: testing-guide
-description: ImHere Server 프로젝트의 테스트 전략. 단위/슬라이스/통합 테스트 기준, JUnit5/Mockito/AssertJ 사용법을 정의한다.
+description: Use when adding or updating tests, choosing unit versus slice versus integration coverage, or applying JUnit5, Mockito, and AssertJ.
 ---
 
 # Testing Guide — ImHere Server (Kotlin/Spring)

@@ -1,6 +1,6 @@
 ---
 name: jpa-querydsl-rules
-description: JPA와 QueryDSL 사용 시 N+1 문제 방지, 동적 쿼리 분리, BaseEntity 상속 등의 규칙을 정의한다.
+description: Use when editing entities, repositories, JPA mappings, QueryDSL queries, fetch joins, or persistence performance behavior.
 ---
 
 # JPA & QueryDSL Guidelines

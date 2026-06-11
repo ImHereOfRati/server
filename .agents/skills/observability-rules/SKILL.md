@@ -1,6 +1,6 @@
 ---
 name: observability-rules
-description: 커스텀 Access Log, 민감 데이터 마스킹(BodyMasker), Micrometer Tracing(Trace ID) 등을 활용한 로깅 및 관측성 규칙을 정의한다.
+description: Use when changing logging, access logs, masking, tracing, Micrometer, or other observability and telemetry behavior.
 ---
 
 # Observability & Logging Rules

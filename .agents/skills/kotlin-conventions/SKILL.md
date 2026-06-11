@@ -1,6 +1,6 @@
 ---
 name: kotlin-conventions
-description: 코틀린의 장점을 극대화하기 위한 불변성 강제, 확장 함수 활용, lateinit 제한 등을 정의한다.
+description: Use when writing Kotlin code and applying project conventions around immutability, extension functions, null-safety, and lateinit usage.
 ---
 
 # Kotlin Language Conventions

@@ -1,6 +1,6 @@
 ---
 name: api-design
-description: REST API 엔드포인트 설계 규칙, 응답 공통 포맷, Controller 작성 원칙을 정의한다.
+description: Use when creating or changing REST APIs, controllers, endpoints, request or response formats, or URI design.
 ---
 
 # API Design & Controller Rules

@@ -1,9 +1,9 @@
 ---
 name: self-improvement
-description: 매 작업 종료 후 에이전트가 반드시 따라야 할 로그 기록 및 스킬 자동 업데이트 프로토콜. 대화 내용, 실패, 수정 방식, 인사이트를 agent-log/에 기록하고 관련 스킬을 즉시 갱신한다.
+description: Use ONLY at the end of a task to write agent logs, capture failures and fixes, and update outdated skills immediately.
 ---
 
-# Self-Improvement Protocol — ImHere Mobile
+# Self-Improvement Protocol - ImHere Server
 
 > **This is the LAST step of every task. No exceptions.**
 

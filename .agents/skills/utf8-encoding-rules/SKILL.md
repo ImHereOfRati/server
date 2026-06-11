@@ -1,6 +1,6 @@
 ---
-name: "UTF-8 인코딩 강제 규칙"
-description: "프로젝트 내의 모든 파일, 컴파일 환경, 테스트, 시스템 프로퍼티에서 항상 UTF-8 인코딩을 강제하도록 설정하는 규칙입니다."
+name: utf8-encoding-rules
+description: Use when editing files, build settings, tests, or runtime configuration that must preserve and enforce UTF-8 encoding.
 ---
 
 # UTF-8 Encoding Rules

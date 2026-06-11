@@ -1,6 +1,6 @@
 ---
 name: async-external-rules
-description: 외부 API 연동(Port/Adapter) 및 비동기 처리(RabbitMQ, @Async) 시 준수해야 할 규칙을 정의한다.
+description: Use when integrating external APIs, ports and adapters, RabbitMQ, @Async, or other asynchronous processing flows.
 ---
 
 # Async & External Integration Rules

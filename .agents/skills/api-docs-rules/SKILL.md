@@ -1,6 +1,6 @@
 ---
 name: api-docs-rules
-description: REST Docs 및 epages 라이브러리를 활용한 API 명세서 자동 생성(OpenAPI 3.0) 규칙을 정의한다.
+description: Use when writing or updating REST Docs tests, epages snippets, or generated OpenAPI 3.0 API documentation.
 ---
 
 # API Documentation Rules (Spring REST Docs & OpenAPI)

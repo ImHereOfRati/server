@@ -1,6 +1,6 @@
 ---
 name: security-auth-rules
-description: Spring Security 기반 인증 사용자 정보 획득 방법, 인가 예외 처리 등을 정의한다.
+description: Use when changing authentication, authorization, Spring Security context access, or auth-related exception handling.
 ---
 
 # Security & Authentication Rules

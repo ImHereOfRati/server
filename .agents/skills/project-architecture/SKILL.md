@@ -1,6 +1,6 @@
 ---
 name: project-architecture
-description: ImHere Server 프로젝트의 아키텍처 규칙. 변경 빈도에 따른 MVC/Hexagonal 선택 기준, 레이어별 책임 및 폴더 맵을 정의한다.
+description: Use when adding or moving modules, deciding MVC versus Hexagonal boundaries, or changing layer and folder responsibilities.
 ---
 
 # Project Architecture — ImHere Server

@@ -48,3 +48,6 @@ management:
       probability: 0.1
     baggage:
       enabled: true
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}

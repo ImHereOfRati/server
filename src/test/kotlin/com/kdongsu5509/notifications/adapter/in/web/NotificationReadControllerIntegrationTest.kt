@@ -10,8 +10,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
+import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
+import org.springframework.restdocs.request.RequestDocumentation.pathParameters
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
@@ -30,6 +32,12 @@ class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
         nickname = "receiverNick",
         role = "USER",
         status = "ACTIVE"
+    )
+
+    private fun errorResponseFields() = relaxedResponseFields(
+        fieldWithPath("imhereResponseCode").description("에러 코드"),
+        fieldWithPath("message").description("에러 메시지"),
+        fieldWithPath("data.id").description("문제가 발생한 알림 식별자").optional()
     )
 
     @Test
@@ -104,11 +112,62 @@ class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
         ).andExpect(status().isNoContent)
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
-                    identifier = "notifications-mark-as-read-success"
+                    identifier = "notifications-mark-as-read-success",
+                    snippets = arrayOf(
+                        pathParameters(
+                            parameterWithName("id").description("읽음 처리할 알림 식별자")
+                        )
+                    )
                 )
             )
 
         val updated = notificationHistoryRepository.findById(saved.id!!).orElseThrow()
         assertThat(updated.isRead).isTrue()
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 알림 읽음 요청은 404 Not Found를 반환한다")
+    fun markAsReadFailNotFound() {
+        mockMvc.perform(
+            patch("/api/notifications/{id}/read", 999999L)
+                .with(csrf())
+                .with(user(userDetails))
+        )
+            .andExpect(status().isNotFound)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "notifications-mark-as-read-fail-not-found",
+                    snippets = arrayOf(errorResponseFields())
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("내 알림이 아닌 읽음 요청은 403 Forbidden을 반환한다")
+    fun markAsReadFailForbidden() {
+        val saved = notificationHistoryRepository.save(
+            NotificationHistoryJpaEntity(
+                receiverEmail = "other@example.com",
+                senderNickname = "senderNick",
+                title = "title-1",
+                body = "body-1",
+                type = "NOTICE",
+                path = null,
+                isRead = false
+            )
+        )
+
+        mockMvc.perform(
+            patch("/api/notifications/{id}/read", saved.id)
+                .with(csrf())
+                .with(user(userDetails))
+        )
+            .andExpect(status().isForbidden)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "notifications-mark-as-read-fail-forbidden",
+                    snippets = arrayOf(errorResponseFields())
+                )
+            )
     }
 }

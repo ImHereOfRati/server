@@ -16,6 +16,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.restdocs.payload.PayloadDocumentation.*
+import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
+import org.springframework.restdocs.request.RequestDocumentation.pathParameters
+import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.util.*
@@ -31,6 +34,133 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
         val saved = userRepository.save(user)
         val token = tokenProviderPort.issue(JwtTokenClaims.fromUser(saved)).accessToken
         return Pair(saved, token)
+    }
+
+    private fun createAdminUserAndToken(email: String, nickname: String): Pair<User, String> {
+        val user = User.createWithPendingStatus(email, nickname, OAuth2Provider.KAKAO).activate()
+        val saved = userRepository.save(user)
+        val token = tokenProviderPort.issue(
+            JwtTokenClaims(
+                uid = saved.id!!,
+                email = saved.email,
+                nickname = saved.nickname,
+                role = "ADMIN",
+                status = saved.statusName()
+            )
+        ).accessToken
+        return Pair(saved, token)
+    }
+
+    private fun restrictionResponseFields() = relaxedResponseFields(
+        fieldWithPath("imhereResponseCode").description("응답 코드"),
+        fieldWithPath("message").description("응답 메시지"),
+        fieldWithPath("data.id").description("차단 식별자").optional(),
+        fieldWithPath("data.type").description("제한 타입"),
+        subsectionWithPath("data.restrictor").description("차단자 정보"),
+        subsectionWithPath("data.restricted").description("피차단자 정보"),
+        fieldWithPath("data.createdAt").description("생성일시").optional(),
+        fieldWithPath("data.updatedAt").description("수정일시").optional(),
+        fieldWithPath("data.expiredAt").description("만료일시").optional()
+    )
+
+    private fun restrictionSliceResponseFields() = relaxedResponseFields(
+        fieldWithPath("imhereResponseCode").description("응답 코드"),
+        fieldWithPath("message").description("응답 메시지"),
+        fieldWithPath("data.content[].id").description("차단 식별자").optional(),
+        fieldWithPath("data.content[].type").description("제한 타입"),
+        subsectionWithPath("data.content[].restrictor").description("차단자 정보"),
+        subsectionWithPath("data.content[].restricted").description("피차단자 정보"),
+        fieldWithPath("data.content[].createdAt").description("생성일시").optional(),
+        fieldWithPath("data.content[].updatedAt").description("수정일시").optional(),
+        fieldWithPath("data.content[].expiredAt").description("만료일시").optional(),
+        fieldWithPath("data.hasNext").description("다음 페이지 존재 여부")
+    )
+
+    private fun errorResponseFields() = responseFields(
+        fieldWithPath("imhereResponseCode").description("에러 코드"),
+        fieldWithPath("message").description("에러 메시지"),
+        fieldWithPath("data").description("없음").optional()
+    )
+
+    @Test
+    @DisplayName("내 차단 목록을 조회하고 200 OK를 반환하며 문서화한다")
+    fun findAllSuccess() {
+        val (restrictor, token) = createUserAndToken("restrictor-list@example.com", "restrictor-list")
+        val (target, _) = createUserAndToken("target-list@example.com", "target-list")
+        friendRestrictionRepository.save(
+            FriendRestriction(restrictor = restrictor, restricted = target, type = FriendRestrictionType.BLOCK)
+        )
+
+        mockMvc.perform(
+            get("/api/friends/restrictions")
+                .header("Authorization", "Bearer $token")
+                .param("page", "0")
+                .param("size", "10")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.content[0].type").value("BLOCK"))
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-read-all-success",
+                    snippets = arrayOf(
+                        queryParameters(
+                            parameterWithName("page").description("페이지 번호").optional(),
+                            parameterWithName("size").description("페이지 크기").optional()
+                        ),
+                        restrictionSliceResponseFields()
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("관리자는 전체 차단 목록을 조회하고 문서화한다")
+    fun findAllAdminSuccess() {
+        val (restrictor, _) = createUserAndToken("restrictor-admin@example.com", "restrictor-admin")
+        val (target, _) = createUserAndToken("target-admin@example.com", "target-admin")
+        val (_, adminToken) = createAdminUserAndToken("admin-restriction@example.com", "admin-restriction")
+        friendRestrictionRepository.save(
+            FriendRestriction(restrictor = restrictor, restricted = target, type = FriendRestrictionType.BLOCK)
+        )
+
+        mockMvc.perform(
+            get("/api/friends/restrictions/admin")
+                .header("Authorization", "Bearer $adminToken")
+                .param("page", "0")
+                .param("size", "10")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.content[0].type").value("BLOCK"))
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-read-all-admin-success",
+                    snippets = arrayOf(
+                        queryParameters(
+                            parameterWithName("page").description("페이지 번호").optional(),
+                            parameterWithName("size").description("페이지 크기").optional()
+                        ),
+                        restrictionSliceResponseFields()
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("일반 사용자가 전체 차단 목록 조회를 시도하면 403 FORBIDDEN을 반환한다")
+    fun findAllAdminFailForbidden() {
+        val (_, token) = createUserAndToken("user-read-admin-restriction@example.com", "user")
+
+        mockMvc.perform(
+            get("/api/friends/restrictions/admin")
+                .header("Authorization", "Bearer $token")
+        )
+            .andExpect(status().isForbidden)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-read-all-admin-fail-forbidden",
+                    snippets = arrayOf(errorResponseFields())
+                )
+            )
     }
 
     @Test
@@ -55,17 +185,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                         requestFields(
                             fieldWithPath("targetUserId").description("차단할 유저 식별자")
                         ),
-                        relaxedResponseFields(
-                            fieldWithPath("imhereResponseCode").description("응답 코드"),
-                            fieldWithPath("message").description("응답 메시지"),
-                            fieldWithPath("data.id").description("차단 식별자").optional(),
-                            fieldWithPath("data.type").description("제한 타입 (BLOCK 등)"),
-                            subsectionWithPath("data.restrictor").description("차단자 정보"),
-                            subsectionWithPath("data.restricted").description("피차단자 정보"),
-                            fieldWithPath("data.createdAt").description("생성일시").optional(),
-                            fieldWithPath("data.updatedAt").description("수정일시").optional(),
-                            fieldWithPath("data.expiredAt").description("만료일시").optional()
-                        )
+                        restrictionResponseFields()
                     )
                 )
             )
@@ -84,7 +204,44 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                 .content(jsonMapper.writeValueAsString(requestDto))
         )
             .andExpect(status().isNotFound)
-            .andDo(MockMvcRestDocumentationWrapper.document("friend-restriction-create-fail-not-found"))
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-create-fail-not-found",
+                    snippets = arrayOf(errorResponseFields())
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("차단 여부 조회를 성공하고 문서화한다")
+    fun checkRestrictionStatusSuccess() {
+        val (restrictor, token) = createUserAndToken("restrictor-check@example.com", "restrictor-check")
+        val (target, _) = createUserAndToken("target-check@example.com", "target-check")
+        friendRestrictionRepository.save(
+            FriendRestriction(restrictor = restrictor, restricted = target, type = FriendRestrictionType.BLOCK)
+        )
+
+        mockMvc.perform(
+            get("/api/friends/restrictions/target/{targetUserId}", target.id)
+                .header("Authorization", "Bearer $token")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data").value(true))
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-check-status-success",
+                    snippets = arrayOf(
+                        pathParameters(
+                            parameterWithName("targetUserId").description("차단 여부를 확인할 대상 유저 식별자")
+                        ),
+                        responseFields(
+                            fieldWithPath("imhereResponseCode").description("응답 코드"),
+                            fieldWithPath("message").description("응답 메시지"),
+                            fieldWithPath("data").description("차단 여부")
+                        )
+                    )
+                )
+            )
     }
 
     @Test
@@ -102,7 +259,16 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                 .header("Authorization", "Bearer $token")
         )
             .andExpect(status().isOk)
-            .andDo(MockMvcRestDocumentationWrapper.document("friend-restriction-delete-success"))
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-delete-success",
+                    snippets = arrayOf(
+                        pathParameters(
+                            parameterWithName("id").description("삭제할 차단 식별자")
+                        )
+                    )
+                )
+            )
     }
 
     @Test
@@ -115,7 +281,12 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                 .header("Authorization", "Bearer $token")
         )
             .andExpect(status().isNotFound)
-            .andDo(MockMvcRestDocumentationWrapper.document("friend-restriction-delete-fail-not-found"))
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-delete-fail-not-found",
+                    snippets = arrayOf(errorResponseFields())
+                )
+            )
     }
 
     @Test
@@ -134,6 +305,82 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                 .header("Authorization", "Bearer $otherToken")
         )
             .andExpect(status().isForbidden)
-            .andDo(MockMvcRestDocumentationWrapper.document("friend-restriction-delete-fail-forbidden"))
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-delete-fail-forbidden",
+                    snippets = arrayOf(errorResponseFields())
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("차단 대상 사용자 식별자로 차단을 해제하고 문서화한다")
+    fun unblockSuccess() {
+        val (restrictor, token) = createUserAndToken("restrictor-unblock@example.com", "restrictor-unblock")
+        val (target, _) = createUserAndToken("target-unblock@example.com", "target-unblock")
+        friendRestrictionRepository.save(
+            FriendRestriction(restrictor = restrictor, restricted = target, type = FriendRestrictionType.BLOCK)
+        )
+
+        mockMvc.perform(
+            delete("/api/friends/restrictions/blocked-users/{restrictedId}", target.id)
+                .header("Authorization", "Bearer $token")
+        )
+            .andExpect(status().isOk)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-unblock-success",
+                    snippets = arrayOf(
+                        pathParameters(
+                            parameterWithName("restrictedId").description("차단 해제할 대상 유저 식별자")
+                        )
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("관리자는 차단 정보를 삭제하고 문서화한다")
+    fun deleteByIdAdminSuccess() {
+        val (restrictor, _) = createUserAndToken("restrictor-delete-admin@example.com", "restrictor-delete-admin")
+        val (target, _) = createUserAndToken("target-delete-admin@example.com", "target-delete-admin")
+        val (_, adminToken) = createAdminUserAndToken("admin-delete-restriction@example.com", "admin-delete-restriction")
+        val restriction = friendRestrictionRepository.save(
+            FriendRestriction(restrictor = restrictor, restricted = target, type = FriendRestrictionType.BLOCK)
+        )
+
+        mockMvc.perform(
+            delete("/api/friends/restrictions/admin/{id}", restriction.id)
+                .header("Authorization", "Bearer $adminToken")
+        )
+            .andExpect(status().isOk)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-delete-admin-success",
+                    snippets = arrayOf(
+                        pathParameters(
+                            parameterWithName("id").description("관리자가 삭제할 차단 식별자")
+                        )
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("일반 사용자가 관리자 차단 삭제를 시도하면 403 FORBIDDEN을 반환한다")
+    fun deleteByIdAdminFailForbidden() {
+        val (_, token) = createUserAndToken("user-delete-admin-restriction@example.com", "user")
+
+        mockMvc.perform(
+            delete("/api/friends/restrictions/admin/{id}", UUID.randomUUID())
+                .header("Authorization", "Bearer $token")
+        )
+            .andExpect(status().isForbidden)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "friend-restriction-delete-admin-fail-forbidden",
+                    snippets = arrayOf(errorResponseFields())
+                )
+            )
     }
 }

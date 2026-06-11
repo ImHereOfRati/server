@@ -18,6 +18,7 @@ import org.springframework.http.MediaType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.relaxedRequestFields
 import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
+import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
@@ -39,6 +40,12 @@ class UserCommandControllerIntegrationTest : WebIntegrationTestSupport() {
         nickname = "senderNick",
         role = "USER",
         status = "ACTIVE"
+    )
+
+    private fun errorResponseFields() = responseFields(
+        fieldWithPath("imhereResponseCode").description("에러 코드"),
+        fieldWithPath("message").description("에러 메시지"),
+        fieldWithPath("data").description("없음").optional()
     )
 
     @Test
@@ -86,5 +93,34 @@ class UserCommandControllerIntegrationTest : WebIntegrationTestSupport() {
 
         val updatedUser = userRepository.findByEmail("sender@example.com")!!
         assertThat(updatedUser.nickname).isEqualTo("새닉네임")
+    }
+
+    @Test
+    @DisplayName("닉네임이 5자를 초과하면 400 Bad Request를 반환한다")
+    fun updateMeFailBadRequest() {
+        val userEntity = UserJpaEntity(
+            email = "sender@example.com",
+            nickname = "senderNick",
+            role = UserRole.NORMAL,
+            provider = OAuth2Provider.KAKAO,
+            status = UserStatus.ACTIVE
+        )
+        userRepository.save(userEntity)
+
+        val request = UserUpdateRequest(nickname = "너무긴닉네임")
+
+        mockMvc.perform(
+            patch("/api/users/my")
+                .with(csrf())
+                .with(user(userDetails))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request))
+        ).andExpect(status().isBadRequest)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "users-update-me-fail-bad-request",
+                    snippets = arrayOf(errorResponseFields())
+                )
+            )
     }
 }

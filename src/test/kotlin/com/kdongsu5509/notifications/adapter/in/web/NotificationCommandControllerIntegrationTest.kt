@@ -209,4 +209,79 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                 )
             )
     }
+
+    @Test
+    @DisplayName("배치 대상 목록이 비어 있으면 400 Bad Request를 반환한다")
+    fun sendBatchFailsWhenTargetIdsEmpty() {
+        val request = MultiNotificationRequest(
+            notificationMethod = NotificationMethod.FCM,
+            targetIds = emptyList(),
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
+            extraData = emptyMap()
+        )
+
+        mockMvc.perform(
+            post("/api/notifications/batch")
+                .with(csrf())
+                .with(user(userDetails))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request))
+        ).andExpect(status().isBadRequest)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "notifications-send-batch-fail-empty-target-ids",
+                    snippets = arrayOf(
+                        relaxedRequestFields(
+                            fieldWithPath("notificationMethod").description("발송 방식"),
+                            fieldWithPath("targetIds").description("대상 식별자 목록"),
+                            fieldWithPath("type").description("알림 타입"),
+                            subsectionWithPath("extraData").description("추가 데이터").optional()
+                        ),
+                        relaxedResponseFields(
+                            fieldWithPath("imhereResponseCode").description("에러 코드"),
+                            fieldWithPath("message").description("에러 메시지"),
+                            fieldWithPath("data").description("없음").optional()
+                        )
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("배치 발송 방식이 없으면 400 Bad Request를 반환한다")
+    fun sendBatchFailsWhenNotificationMethodMissing() {
+        val requestJson = """
+            {
+              "targetIds": ["target1@example.com", "target2@example.com"],
+              "type": "FRIEND_REQUEST_RECEIVED",
+              "extraData": {"key":"value"}
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            post("/api/notifications/batch")
+                .with(csrf())
+                .with(user(userDetails))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+        ).andExpect(status().isBadRequest)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "notifications-send-batch-fail-missing-notification-method",
+                    snippets = arrayOf(
+                        relaxedRequestFields(
+                            fieldWithPath("notificationMethod").description("발송 방식").type(JsonFieldType.STRING).optional(),
+                            fieldWithPath("targetIds").description("대상 식별자 목록"),
+                            fieldWithPath("type").description("알림 타입"),
+                            subsectionWithPath("extraData").description("추가 데이터").optional()
+                        ),
+                        relaxedResponseFields(
+                            fieldWithPath("imhereResponseCode").description("에러 코드"),
+                            fieldWithPath("message").description("에러 메시지"),
+                            fieldWithPath("data").description("없음").optional()
+                        )
+                    )
+                )
+            )
+    }
 }

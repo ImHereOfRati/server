@@ -149,13 +149,13 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().is4xxClientError)
+            .andExpect(status().isConflict)
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "auth-registration-fail-already-registered",
                     snippets = arrayOf(
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (이미 가입된 사용자)"),
+                            fieldWithPath("imhereResponseCode").description("에러 코드 (USER-500: 이미 사용 중인 이메일입니다)"),
                             fieldWithPath("message").description("에러 상세 메시지"),
                             fieldWithPath("data").description("데이터는 없음").optional()
                         )
@@ -184,13 +184,13 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().isUnauthorized) // 정책에 따라 401 또는 403일 수 있음
+            .andExpect(status().isUnauthorized)
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "auth-registration-fail-blocked-user",
                     snippets = arrayOf(
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-106: 비활성화된 계정입니다)"),
+                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-105: 비활성화된 계정입니다)"),
                             fieldWithPath("message").description("에러 상세 메시지"),
                             fieldWithPath("data").description("데이터는 없음").optional()
                         )

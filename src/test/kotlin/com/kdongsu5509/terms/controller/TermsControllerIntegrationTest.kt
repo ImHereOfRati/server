@@ -16,6 +16,7 @@ import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.relaxedRequestFields
 import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
+import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -46,6 +47,12 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
         nickname = "User",
         role = "USER",
         status = "ACTIVE"
+    )
+
+    private fun errorResponseFields() = responseFields(
+        fieldWithPath("imhereResponseCode").description("에러 코드"),
+        fieldWithPath("message").description("에러 메시지"),
+        fieldWithPath("data").description("없음").optional()
     )
 
     @Test
@@ -141,6 +148,12 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(badRequest))
         ).andExpect(status().isBadRequest)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "terms-create-fail-bad-request",
+                    snippets = arrayOf(errorResponseFields())
+                )
+            )
     }
 
     @Test
@@ -259,7 +272,8 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
             .andExpect(status().isForbidden)
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
-                    identifier = "terms-read-all-forbidden"
+                    identifier = "terms-read-all-forbidden",
+                    snippets = arrayOf(errorResponseFields())
                 )
             )
     }

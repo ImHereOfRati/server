@@ -63,11 +63,17 @@
         </div>
     </main>
 
-    <script>
+    <script th:inline="javascript">
+        const csrfToken = [[${_csrf.token}]];
+        const csrfHeader = [[${_csrf.headerName}]];
+
         function blockUser(btn, email) {
             if (!confirm(`${email} 사용자를 차단하시겠습니까?`)) return;
             btn.disabled = true;
-            fetch(`/api/admin/users/${email}/block`, { method: 'POST' })
+            fetch(`/api/admin/users/${email}/block`, {
+                method: 'POST',
+                headers: { [csrfHeader]: csrfToken }
+            })
                 .then(r => r.ok ? location.reload() : alert('차단 실패'))
                 .catch(() => alert('차단 실패'));
         }
@@ -75,7 +81,10 @@
         function unblockUser(btn, email) {
             if (!confirm(`${email} 사용자를 차단 해제하시겠습니까?`)) return;
             btn.disabled = true;
-            fetch(`/api/admin/users/${email}/block`, { method: 'DELETE' })
+            fetch(`/api/admin/users/${email}/block`, {
+                method: 'DELETE',
+                headers: { [csrfHeader]: csrfToken }
+            })
                 .then(r => r.ok ? location.reload() : alert('차단 해제 실패'))
                 .catch(() => alert('차단 해제 실패'));
         }
@@ -83,7 +92,10 @@
         function forceLogout(btn, email) {
             if (!confirm(`${email} 사용자를 강제 로그아웃하시겠습니까?`)) return;
             btn.disabled = true;
-            fetch(`/api/admin/users/${email}/token`, { method: 'DELETE' })
+            fetch(`/api/admin/users/${email}/token`, {
+                method: 'DELETE',
+                headers: { [csrfHeader]: csrfToken }
+            })
                 .then(r => r.ok ? alert('강제 로그아웃 완료') : alert('강제 로그아웃 실패'))
                 .catch(() => alert('강제 로그아웃 실패'))
                 .finally(() => btn.disabled = false);
@@ -92,7 +104,10 @@
         function withdrawUser(btn, email) {
             if (!confirm(`${email} 사용자를 탈퇴 처리하시겠습니까? 이 작업은 취소할 수 없습니다.`)) return;
             btn.disabled = true;
-            fetch(`/api/admin/users/${email}`, { method: 'DELETE' })
+            fetch(`/api/admin/users/${email}`, {
+                method: 'DELETE',
+                headers: { [csrfHeader]: csrfToken }
+            })
                 .then(r => r.ok ? location.reload() : alert('탈퇴 처리 실패'))
                 .catch(() => alert('탈퇴 처리 실패'));
         }

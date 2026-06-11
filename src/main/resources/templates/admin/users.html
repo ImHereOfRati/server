@@ -65,7 +65,7 @@
 
     <script th:inline="javascript">
         const csrfToken = [[${_csrf.token}]];
-        const csrfHeader = [[${_csrf.headerName}]];
+        const csrfHeader = 'X-CSRF-TOKEN';
 
         function blockUser(btn, email) {
             if (!confirm(`${email} 사용자를 차단하시겠습니까?`)) return;

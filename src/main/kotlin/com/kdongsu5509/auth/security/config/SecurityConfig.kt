@@ -141,6 +141,7 @@ class SecurityConfig(
         http.securityMatcher("/admin/**")
 
         http {
+            csrf { }
             formLogin { disable() }
             httpBasic { disable() }
 

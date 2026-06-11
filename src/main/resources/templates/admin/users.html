@@ -72,7 +72,7 @@
             btn.disabled = true;
             fetch(`/api/admin/users/${email}/block`, {
                 method: 'POST',
-                headers: { [csrfHeader]: csrfToken }
+                headers: { 'X-CSRF-TOKEN': csrfToken }
             })
                 .then(r => r.ok ? location.reload() : alert('차단 실패'))
                 .catch(() => alert('차단 실패'));
@@ -83,7 +83,7 @@
             btn.disabled = true;
             fetch(`/api/admin/users/${email}/block`, {
                 method: 'DELETE',
-                headers: { [csrfHeader]: csrfToken }
+                headers: { 'X-CSRF-TOKEN': csrfToken }
             })
                 .then(r => r.ok ? location.reload() : alert('차단 해제 실패'))
                 .catch(() => alert('차단 해제 실패'));
@@ -94,7 +94,7 @@
             btn.disabled = true;
             fetch(`/api/admin/users/${email}/token`, {
                 method: 'DELETE',
-                headers: { [csrfHeader]: csrfToken }
+                headers: { 'X-CSRF-TOKEN': csrfToken }
             })
                 .then(r => r.ok ? alert('강제 로그아웃 완료') : alert('강제 로그아웃 실패'))
                 .catch(() => alert('강제 로그아웃 실패'))
@@ -106,7 +106,7 @@
             btn.disabled = true;
             fetch(`/api/admin/users/${email}`, {
                 method: 'DELETE',
-                headers: { [csrfHeader]: csrfToken }
+                headers: { 'X-CSRF-TOKEN': csrfToken }
             })
                 .then(r => r.ok ? location.reload() : alert('탈퇴 처리 실패'))
                 .catch(() => alert('탈퇴 처리 실패'));

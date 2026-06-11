@@ -41,7 +41,6 @@ class UserJpaEntity(
     @Id
     @GeneratedValue
     @UuidGenerator
-    @Column(columnDefinition = "CHAR(36) CHARACTER SET ascii", nullable = false)
     var id: UUID? = null
 
     fun update(user: User) {

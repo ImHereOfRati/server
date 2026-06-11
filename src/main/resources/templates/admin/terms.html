@@ -9,10 +9,60 @@
 
         <div class="page-header">
             <h1 class="page-title">약관 관리</h1>
-            <p class="page-subtitle">서비스 이용약관 및 동의서 항목 목록을 모니터링합니다.</p>
+            <p class="page-subtitle">서비스 이용약관 및 동의서 항목 목록을 모니터링하고 신규 약관을 등록합니다.</p>
         </div>
 
+        <div th:if="${message}" class="notion-alert success">
+            <span class="sticker-dot green"></span>
+            <span th:text="${message}"></span>
+        </div>
+
+        <!-- 신규 약관 등록 폼 -->
         <div class="feature-card">
+            <h3 style="margin-bottom: var(--spacing-sm);">신규 약관 등록</h3>
+            <form id="termForm" class="mt-lg">
+                <div class="form-group">
+                    <label for="type">약관 종류</label>
+                    <select id="type" name="type" class="text-input" style="width: 100%; max-width: 300px;" required>
+                        <option value="SERVICE">서비스 이용 약관 (SERVICE)</option>
+                        <option value="PRIVACY">개인정보 처리 방침 (PRIVACY)</option>
+                        <option value="LOCATION">위치정보 이용약관 (LOCATION)</option>
+                        <option value="MARKETING">마케팅 정보 수신 동의 (MARKETING)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">약관 제목</label>
+                    <input id="title" name="title" type="text" class="text-input" placeholder="예: 서비스 이용약관 v1.1" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="content">약관 내용</label>
+                    <textarea id="content" name="content" class="text-input" style="min-height: 120px; font-family: inherit;" placeholder="약관 본문 내용을 입력해 주세요" required></textarea>
+                </div>
+
+                <div class="form-group" style="display: flex; gap: var(--spacing-lg); flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label for="effectiveDate">시행 일시</label>
+                        <input id="effectiveDate" name="effectiveDate" type="datetime-local" class="text-input" required />
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label for="isRequired">필수 여부</label>
+                        <select id="isRequired" name="isRequired" class="text-input" required>
+                            <option value="true">필수 동의 (True)</option>
+                            <option value="false">선택 동의 (False)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="button-primary mt-sm">등록하기</button>
+            </form>
+        </div>
+
+        <!-- 약관 목록 테이블 -->
+        <div class="feature-card">
+            <h3 style="margin-bottom: var(--spacing-sm);">등록된 약관 목록</h3>
             <div class="table-responsive">
                 <table class="notion-table">
                     <thead>
@@ -43,5 +93,72 @@
             </div>
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Show success alert from sessionStorage if exists
+            const successMessage = sessionStorage.getItem('term_success_message');
+            if (successMessage) {
+                const alertContainer = document.createElement('div');
+                alertContainer.className = 'notion-alert success';
+                alertContainer.style.marginBottom = '20px';
+                alertContainer.innerHTML = `
+                    <span class="sticker-dot green"></span>
+                    <span>` + successMessage + `</span>
+                `;
+                const pageHeader = document.querySelector('.page-header');
+                pageHeader.insertAdjacentElement('afterend', alertContainer);
+                sessionStorage.removeItem('term_success_message');
+            }
+
+            const form = document.getElementById('termForm');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
+                    const type = document.getElementById('type').value;
+                    const title = document.getElementById('title').value;
+                    const content = document.getElementById('content').value;
+                    const effectiveDateInput = document.getElementById('effectiveDate').value;
+                    const isRequired = document.getElementById('isRequired').value === 'true';
+
+                    // Format datetime-local value (YYYY-MM-DDTHH:mm) to ISO with seconds (YYYY-MM-DDTHH:mm:ss)
+                    let effectiveDate = effectiveDateInput;
+                    if (effectiveDate && effectiveDate.length === 16) {
+                        effectiveDate += ':00';
+                    }
+
+                    try {
+                        const response = await fetch('/api/admin/terms', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({
+                                type,
+                                title,
+                                content,
+                                effectiveDate,
+                                isRequired
+                            })
+                        });
+
+                        if (response.ok) {
+                            sessionStorage.setItem('term_success_message', '약관이 성공적으로 등록되었습니다.');
+                            window.location.reload();
+                        } else {
+                            const errorData = await response.json();
+                            alert('약관 등록 실패: ' + (errorData.message || '알 수 없는 오류가 발생했습니다.'));
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('네트워크 또는 시스템 오류가 발생했습니다.');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

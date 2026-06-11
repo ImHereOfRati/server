@@ -67,7 +67,7 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
         )
 
         mockMvc.perform(
-            post("/api/terms")
+            post("/api/admin/terms")
                 .with(csrf())
                 .with(user(adminUser)) // 관리자 권한이 필요하다면 (현재 Controller에는 @PreAuthorize가 없음, 하지만 생성은 가능)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -121,7 +121,7 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // 첫 번째 생성
         mockMvc.perform(
-            post("/api/terms")
+            post("/api/admin/terms")
                 .with(csrf())
                 .with(user(adminUser))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -142,7 +142,7 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
         )
 
         mockMvc.perform(
-            post("/api/terms")
+            post("/api/admin/terms")
                 .with(csrf())
                 .with(user(adminUser))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -176,12 +176,12 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
         )
 
         mockMvc.perform(
-            post("/api/terms").with(csrf()).with(user(adminUser)).contentType(MediaType.APPLICATION_JSON)
+            post("/api/admin/terms").with(csrf()).with(user(adminUser)).contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request1))
         ).andExpect(status().isOk)
 
         mockMvc.perform(
-            post("/api/terms").with(csrf()).with(user(adminUser)).contentType(MediaType.APPLICATION_JSON)
+            post("/api/admin/terms").with(csrf()).with(user(adminUser)).contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request2))
         ).andExpect(status().isOk)
 

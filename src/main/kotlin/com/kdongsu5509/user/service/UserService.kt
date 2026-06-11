@@ -18,4 +18,5 @@ interface UserService {
     fun updateNickname(userEmail: String, newNickname: String): UserResult
     fun block(userEmail: String): UserResult
     fun unblock(userEmail: String): UserResult
+    fun withdraw(userEmail: String): UserResult
 }

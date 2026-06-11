@@ -154,7 +154,7 @@ CREATE TABLE one_time_tokens
 (
     token_value VARCHAR(255) NOT NULL,
     username    VARCHAR(255) NOT NULL,
-    issued_at   TIMESTAMP    NOT NULL,
+    issued_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at  TIMESTAMP    NOT NULL,
     PRIMARY KEY (token_value),
     KEY idx_one_time_tokens_expires_at (expires_at),

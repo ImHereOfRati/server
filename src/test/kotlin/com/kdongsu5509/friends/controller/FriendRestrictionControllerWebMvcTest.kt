@@ -128,30 +128,6 @@ class FriendRestrictionControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("전체 차단 목록 조회 시 200 OK와 페이징된 목록을 반환한다")
-    fun findAll_admin_success() {
-        val restriction = FriendRestriction(
-            id = UUID.randomUUID(),
-            restrictor = restrictor,
-            restricted = restricted,
-            type = FriendRestrictionType.BLOCK,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-        val slice = SliceImpl(listOf(restriction), PageRequest.of(0, 10), false)
-
-        given(friendRestrictionService.findAll(any()))
-            .willReturn(slice)
-
-        mockMvc.perform(
-            get("$BASE_PATH/admin")
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.imhereResponseCode").value("SUCCESS"))
-            .andExpect(jsonPath("$.data.content[0].id").value(restriction.id.toString()))
-    }
-
-    @Test
     @DisplayName("유저 차단 성공 시 200 OK와 차단 생성 정보를 반환한다")
     fun restrictUser_success() {
         val requestDto = CreateFriendRestrictionRequest(targetUserId = restricted.id!!)
@@ -230,15 +206,4 @@ class FriendRestrictionControllerWebMvcTest {
         ).andExpect(status().isOk)
     }
 
-    @Test
-    @DisplayName("차단 내역 삭제 시 200 OK를 반환한다")
-    fun deleteById_admin_success() {
-        val restrictionId = UUID.randomUUID()
-
-        mockMvc.perform(
-            delete("$BASE_PATH/admin/$restrictionId")
-                .with(csrf())
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-    }
 }

@@ -127,30 +127,6 @@ class FriendshipControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("전체 친구 목록 조회 시 200 OK와 페이징된 목록을 반환한다")
-    fun readAll_admin_success() {
-        val friendship = Friendship(
-            id = UUID.randomUUID(),
-            owner = owner,
-            friend = friend,
-            friendAlias = "베프",
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-        val slice = SliceImpl(listOf(friendship), PageRequest.of(0, 10), false)
-
-        given(friendshipService.findAll(any()))
-            .willReturn(slice)
-
-        mockMvc.perform(
-            get("$BASE_PATH/admin")
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.imhereResponseCode").value("SUCCESS"))
-            .andExpect(jsonPath("$.data.content[0].id").value(friendship.id.toString()))
-    }
-
-    @Test
     @DisplayName("특정 유저와 친구 여부 확인 시 200 OK와 여부를 Boolean으로 반환한다")
     fun checkFriendStatus_success() {
         val targetUserId = friend.id!!
@@ -204,18 +180,6 @@ class FriendshipControllerWebMvcTest {
 
         mockMvc.perform(
             delete("$BASE_PATH/$friendshipId")
-                .with(csrf())
-                .with(user(userDetails))
-        ).andExpect(status().isNoContent)
-    }
-
-    @Test
-    @DisplayName("친구 삭제 시 204 No Content를 반환한다")
-    fun deleteFriendship_admin_success() {
-        val friendshipId = UUID.randomUUID()
-
-        mockMvc.perform(
-            delete("$BASE_PATH/admin/$friendshipId")
                 .with(csrf())
                 .with(user(userDetails))
         ).andExpect(status().isNoContent)

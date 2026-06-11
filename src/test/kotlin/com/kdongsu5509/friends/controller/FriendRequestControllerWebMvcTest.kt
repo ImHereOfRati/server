@@ -153,29 +153,6 @@ class FriendRequestControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("전체 친구 요청 목록 조회 시 200 OK와 페이징된 목록을 반환한다")
-    fun findAll_admin_success() {
-        val friendRequest = FriendRequest(
-            id = UUID.randomUUID(),
-            requester = requester,
-            receiver = receiver,
-            message = "안녕하세요. 친하게 지내요!",
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-        val slice = SliceImpl(listOf(friendRequest), PageRequest.of(0, 10), false)
-
-        given(friendRequestService.findAll(any())).willReturn(slice)
-
-        mockMvc.perform(
-            get("$BASE_PATH/admin")
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.imhereResponseCode").value("SUCCESS"))
-            .andExpect(jsonPath("$.data.content[0].id").value(friendRequest.id.toString()))
-    }
-
-    @Test
     @DisplayName("보내거나 받은 친구 요청 목록 조회 시 200 OK와 페이징된 목록을 반환한다")
     fun findSentOrReceivedAll_success() {
         val friendRequest = FriendRequest(
@@ -310,15 +287,4 @@ class FriendRequestControllerWebMvcTest {
         ).andExpect(status().isOk)
     }
 
-    @Test
-    @DisplayName("특정 친구 요청 삭제 시 200 OK를 반환한다")
-    fun deleteById_admin_success() {
-        val requestId = UUID.randomUUID()
-
-        mockMvc.perform(
-            delete("$BASE_PATH/admin/$requestId")
-                .with(csrf())
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-    }
 }

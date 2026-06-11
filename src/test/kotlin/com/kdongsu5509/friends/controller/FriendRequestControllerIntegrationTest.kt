@@ -42,21 +42,6 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         return Pair(saved, token)
     }
 
-    private fun createAdminUserAndToken(email: String, nickname: String): Pair<User, String> {
-        val user = User.createWithPendingStatus(email, nickname, OAuth2Provider.KAKAO).activate()
-        val saved = userRepository.save(user)
-        val token = tokenProviderPort.issue(
-            JwtTokenClaims(
-                uid = saved.id!!,
-                email = saved.email,
-                nickname = saved.nickname,
-                role = "ADMIN",
-                status = saved.statusName()
-            )
-        ).accessToken
-        return Pair(saved, token)
-    }
-
     private fun errorResponseFields() = responseFields(
         fieldWithPath("imhereResponseCode").description("에러 코드"),
         fieldWithPath("message").description("에러 메시지"),
@@ -264,54 +249,6 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "friend-request-fail-restricted",
-                    snippets = arrayOf(errorResponseFields())
-                )
-            )
-    }
-
-    @Test
-    @DisplayName("관리자는 전체 친구 요청 목록을 조회하고 문서화한다")
-    fun findAllAdminSuccess() {
-        val (requester, _) = createUserAndToken("req-admin-list@example.com", "req-admin-list")
-        val (receiver, _) = createUserAndToken("rec-admin-list@example.com", "rec-admin-list")
-        val (_, adminToken) = createAdminUserAndToken("friend-request-admin@example.com", "friend-request-admin")
-        friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "관리자 조회용 요청입니다"))
-
-        mockMvc.perform(
-            get("/api/friends/requests/admin")
-                .header("Authorization", "Bearer $adminToken")
-                .param("page", "0")
-                .param("size", "10")
-        )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].message").value("관리자 조회용 요청입니다"))
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "friend-request-read-all-admin-success",
-                    snippets = arrayOf(
-                        queryParameters(
-                            parameterWithName("page").description("페이지 번호").optional(),
-                            parameterWithName("size").description("페이지 크기").optional()
-                        ),
-                        friendRequestSliceResponseFields()
-                    )
-                )
-            )
-    }
-
-    @Test
-    @DisplayName("일반 사용자가 관리자 친구 요청 목록 조회를 시도하면 403 FORBIDDEN을 반환한다")
-    fun findAllAdminFailForbidden() {
-        val (_, token) = createUserAndToken("user-friend-request-admin@example.com", "user")
-
-        mockMvc.perform(
-            get("/api/friends/requests/admin")
-                .header("Authorization", "Bearer $token")
-        )
-            .andExpect(status().isForbidden)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "friend-request-read-all-admin-fail-forbidden",
                     snippets = arrayOf(errorResponseFields())
                 )
             )
@@ -667,46 +604,4 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
             )
     }
 
-    @Test
-    @DisplayName("관리자는 친구 요청을 삭제하고 문서화한다")
-    fun deleteByIdAdminSuccess() {
-        val (requester, _) = createUserAndToken("req-delete-admin@example.com", "req-delete-admin")
-        val (receiver, _) = createUserAndToken("rec-delete-admin@example.com", "rec-delete-admin")
-        val (_, adminToken) = createAdminUserAndToken("friend-request-delete-admin@example.com", "friend-request-delete-admin")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "관리자 삭제"))
-
-        mockMvc.perform(
-            delete("/api/friends/requests/admin/{id}", request.id)
-                .header("Authorization", "Bearer $adminToken")
-        )
-            .andExpect(status().isOk)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "friend-request-delete-admin-success",
-                    snippets = arrayOf(
-                        pathParameters(
-                            parameterWithName("id").description("관리자가 삭제할 친구 요청 식별자")
-                        )
-                    )
-                )
-            )
-    }
-
-    @Test
-    @DisplayName("일반 사용자가 관리자 친구 요청 삭제를 시도하면 403 FORBIDDEN을 반환한다")
-    fun deleteByIdAdminFailForbidden() {
-        val (_, token) = createUserAndToken("user-delete-friend-request-admin@example.com", "user")
-
-        mockMvc.perform(
-            delete("/api/friends/requests/admin/{id}", UUID.randomUUID())
-                .header("Authorization", "Bearer $token")
-        )
-            .andExpect(status().isForbidden)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "friend-request-delete-admin-fail-forbidden",
-                    snippets = arrayOf(errorResponseFields())
-                )
-            )
-    }
 }

@@ -36,21 +36,6 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
         return Pair(saved, token)
     }
 
-    private fun createAdminUserAndToken(email: String, nickname: String): Pair<User, String> {
-        val user = User.createWithPendingStatus(email, nickname, OAuth2Provider.KAKAO).activate()
-        val saved = userRepository.save(user)
-        val token = tokenProviderPort.issue(
-            JwtTokenClaims(
-                uid = saved.id!!,
-                email = saved.email,
-                nickname = saved.nickname,
-                role = "ADMIN",
-                status = saved.statusName()
-            )
-        ).accessToken
-        return Pair(saved, token)
-    }
-
     private fun restrictionResponseFields() = relaxedResponseFields(
         fieldWithPath("imhereResponseCode").description("응답 코드"),
         fieldWithPath("message").description("응답 메시지"),
@@ -109,56 +94,6 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                         ),
                         restrictionSliceResponseFields()
                     )
-                )
-            )
-    }
-
-    @Test
-    @DisplayName("관리자는 전체 차단 목록을 조회하고 문서화한다")
-    fun findAllAdminSuccess() {
-        val (restrictor, _) = createUserAndToken("restrictor-admin@example.com", "restrictor-admin")
-        val (target, _) = createUserAndToken("target-admin@example.com", "target-admin")
-        val (_, adminToken) = createAdminUserAndToken("admin-restriction@example.com", "admin-restriction")
-        friendRestrictionRepository.save(
-            FriendRestriction(restrictor = restrictor, restricted = target, type = FriendRestrictionType.BLOCK)
-        )
-
-        mockMvc.perform(
-            get("/api/friends/restrictions/admin")
-                .header("Authorization", "Bearer $adminToken")
-                .param("page", "0")
-                .param("size", "10")
-        )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].type").value("BLOCK"))
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "friend-restriction-read-all-admin-success",
-                    snippets = arrayOf(
-                        queryParameters(
-                            parameterWithName("page").description("페이지 번호").optional(),
-                            parameterWithName("size").description("페이지 크기").optional()
-                        ),
-                        restrictionSliceResponseFields()
-                    )
-                )
-            )
-    }
-
-    @Test
-    @DisplayName("일반 사용자가 전체 차단 목록 조회를 시도하면 403 FORBIDDEN을 반환한다")
-    fun findAllAdminFailForbidden() {
-        val (_, token) = createUserAndToken("user-read-admin-restriction@example.com", "user")
-
-        mockMvc.perform(
-            get("/api/friends/restrictions/admin")
-                .header("Authorization", "Bearer $token")
-        )
-            .andExpect(status().isForbidden)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "friend-restriction-read-all-admin-fail-forbidden",
-                    snippets = arrayOf(errorResponseFields())
                 )
             )
     }
@@ -339,48 +274,4 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
             )
     }
 
-    @Test
-    @DisplayName("관리자는 차단 정보를 삭제하고 문서화한다")
-    fun deleteByIdAdminSuccess() {
-        val (restrictor, _) = createUserAndToken("restrictor-delete-admin@example.com", "restrictor-delete-admin")
-        val (target, _) = createUserAndToken("target-delete-admin@example.com", "target-delete-admin")
-        val (_, adminToken) = createAdminUserAndToken("admin-delete-restriction@example.com", "admin-delete-restriction")
-        val restriction = friendRestrictionRepository.save(
-            FriendRestriction(restrictor = restrictor, restricted = target, type = FriendRestrictionType.BLOCK)
-        )
-
-        mockMvc.perform(
-            delete("/api/friends/restrictions/admin/{id}", restriction.id)
-                .header("Authorization", "Bearer $adminToken")
-        )
-            .andExpect(status().isOk)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "friend-restriction-delete-admin-success",
-                    snippets = arrayOf(
-                        pathParameters(
-                            parameterWithName("id").description("관리자가 삭제할 차단 식별자")
-                        )
-                    )
-                )
-            )
-    }
-
-    @Test
-    @DisplayName("일반 사용자가 관리자 차단 삭제를 시도하면 403 FORBIDDEN을 반환한다")
-    fun deleteByIdAdminFailForbidden() {
-        val (_, token) = createUserAndToken("user-delete-admin-restriction@example.com", "user")
-
-        mockMvc.perform(
-            delete("/api/friends/restrictions/admin/{id}", UUID.randomUUID())
-                .header("Authorization", "Bearer $token")
-        )
-            .andExpect(status().isForbidden)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "friend-restriction-delete-admin-fail-forbidden",
-                    snippets = arrayOf(errorResponseFields())
-                )
-            )
-    }
 }

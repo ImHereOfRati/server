@@ -10,7 +10,6 @@ import jakarta.validation.constraints.NotNull
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
@@ -29,17 +28,6 @@ class FriendRequestController(
         val result = friendRequestService.request(user.email, request.targetId, request.message)
         return NewFriendRequestResponse(result.id!!)
     }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin")
-    fun findAll(
-        @PageableDefault pageable: Pageable
-    ): ResponseEntity<ApiResponse<SliceResponse<FriendRequestResponse>>> {
-        val requests = friendRequestService.findAll(pageable)
-        val sliceResponse = SliceResponse.from(requests.map { FriendRequestResponse.from(it) })
-        return sliceResponse.toOkResponse()
-    }
-
     @GetMapping(params = ["type"])
     fun findSentOrReceivedAll(
         @AuthenticationPrincipal userDetails: ImHereUserDetails,
@@ -88,8 +76,4 @@ class FriendRequestController(
         @PathVariable id: UUID,
         @AuthenticationPrincipal userDetails: ImHereUserDetails
     ) = friendRequestService.deleteByIdAndRequesterEmail(id, userDetails.email)
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/admin/{id}")
-    fun deleteById(@PathVariable id: UUID) = friendRequestService.deleteById(id)
 }

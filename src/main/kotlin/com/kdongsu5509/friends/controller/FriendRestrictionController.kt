@@ -10,7 +10,6 @@ import com.kdongsu5509.shared.response.toOkResponse
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
@@ -30,17 +29,6 @@ class FriendRestrictionController(
         val sliceResponse = SliceResponse.from(restrictions.map { FriendRestrictionResponse.fromDomain(it) })
         return sliceResponse.toOkResponse()
     }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin")
-    fun findAll(
-        @PageableDefault pageable: Pageable
-    ): ResponseEntity<ApiResponse<SliceResponse<FriendRestrictionResponse>>> {
-        val restrictions = friendRestrictionService.findAll(pageable)
-        val sliceResponse = SliceResponse.from(restrictions.map { FriendRestrictionResponse.fromDomain(it) })
-        return sliceResponse.toOkResponse()
-    }
-
     @PostMapping
     fun restrictUser(
         @AuthenticationPrincipal userDetails: ImHereUserDetails,
@@ -70,9 +58,4 @@ class FriendRestrictionController(
         userDetails.email,
         restrictedId
     )
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/admin/{id}")
-    fun deleteById(@PathVariable @Validated id: UUID) =
-        friendRestrictionService.deleteById(id)
 }

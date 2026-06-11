@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpMethod
 import org.springframework.jdbc.core.JdbcOperations
 import org.springframework.security.authentication.ott.JdbcOneTimeTokenService
 import org.springframework.security.authentication.ott.OneTimeTokenService
@@ -148,6 +149,7 @@ class SecurityConfig(
 
             authorizeHttpRequests {
                 securityWhiteList.whitelist.forEach { authorize(it, permitAll) }
+                authorize(HttpMethod.OPTIONS, "/**", permitAll)
                 authorize("/api/admin/**", hasRole(UserRole.ADMIN.name))
                 authorize(anyRequest, authenticated)
             }

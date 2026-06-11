@@ -1,10 +1,9 @@
 package com.kdongsu5509.user.repository.jpa
 
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.friends.repository.jpa.QFriendRequestJpaEntity
 import com.kdongsu5509.friends.repository.jpa.QFriendRestrictionJpaEntity
 import com.kdongsu5509.friends.repository.jpa.QFriendshipJpaEntity
-import com.kdongsu5509.user.repository.jpa.QUserJpaEntity
+import com.kdongsu5509.user.domain.UserStatus
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.springframework.data.domain.PageRequest

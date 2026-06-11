@@ -3,7 +3,6 @@ package com.kdongsu5509.friends.controller
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.friends.controller.dto.UpdateAliasRequest
@@ -12,6 +11,7 @@ import com.kdongsu5509.friends.service.FriendshipService
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import com.kdongsu5509.support.logger.AccessLogPrinter
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

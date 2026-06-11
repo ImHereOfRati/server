@@ -2,13 +2,13 @@ package com.kdongsu5509.friends.repository
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.friends.repository.jpa.FriendRestrictionJpaEntity
 import com.kdongsu5509.friends.repository.jpa.SpringDataFriendRestrictionRepository
 import com.kdongsu5509.friends.repository.mapper.FriendRestrictionMapper
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
@@ -16,13 +16,12 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.kotlin.any
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.util.ReflectionTestUtils
@@ -74,7 +73,7 @@ class FriendRestrictionRepositoryImplTest {
 
             val restrictor = createTestUser(restrictorId)
             val restricted = createTestUser(restrictedId)
-            
+
             val restrictorEntity = createTestUserEntity(restrictorId)
             val restrictedEntity = createTestUserEntity(restrictedId)
 
@@ -87,8 +86,9 @@ class FriendRestrictionRepositoryImplTest {
                 updatedAt = LocalDateTime.now(),
                 expiredAt = null
             )
-            
-            val entity = FriendRestrictionJpaEntity.create(restrictorEntity, restrictedEntity, FriendRestrictionType.BLOCK)
+
+            val entity =
+                FriendRestrictionJpaEntity.create(restrictorEntity, restrictedEntity, FriendRestrictionType.BLOCK)
 
             `when`(entityManager.getReference(UserJpaEntity::class.java, restrictorId)).thenReturn(restrictorEntity)
             `when`(entityManager.getReference(UserJpaEntity::class.java, restrictedId)).thenReturn(restrictedEntity)
@@ -158,7 +158,7 @@ class FriendRestrictionRepositoryImplTest {
             // given
             val email = "actor@test.com"
             val pageable = PageRequest.of(0, 10)
-            
+
             val entity = FriendRestrictionJpaEntity.create(
                 createTestUserEntity(UUID.randomUUID()),
                 createTestUserEntity(UUID.randomUUID()),
@@ -229,9 +229,9 @@ class FriendRestrictionRepositoryImplTest {
         @DisplayName("ID로 친구 제한을 삭제한다")
         fun success() {
             val id = UUID.randomUUID()
-            
+
             friendRestrictionRepositoryImpl.deleteById(id)
-            
+
             verify(springDataFriendRestrictionRepository).deleteById(id)
         }
     }
@@ -276,7 +276,12 @@ class FriendRestrictionRepositoryImplTest {
             val requesterEmail = "req@test.com"
             val targetEmail = "tar@test.com"
 
-            `when`(springDataFriendRestrictionRepository.existsByRestrictorEmailAndRestrictedEmail(requesterEmail, targetEmail)).thenReturn(true)
+            `when`(
+                springDataFriendRestrictionRepository.existsByRestrictorEmailAndRestrictedEmail(
+                    requesterEmail,
+                    targetEmail
+                )
+            ).thenReturn(true)
 
             val result = friendRestrictionRepositoryImpl.existsRestriction(requesterEmail, targetEmail)
 

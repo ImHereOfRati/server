@@ -3,7 +3,6 @@ package com.kdongsu5509.auth.adapter.`in`.web
 import com.common.testsupport.WebIntegrationTestSupport
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.friends.domain.FriendRequest
 import com.kdongsu5509.friends.domain.FriendRestriction
@@ -18,6 +17,7 @@ import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
 import com.kdongsu5509.terms.service.TermService
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.service.UserService
 import com.kdongsu5509.user.service.dto.UserResult
 import org.hamcrest.Matchers.containsString

@@ -2,7 +2,6 @@ package com.kdongsu5509.user.repository
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.domain.Term
@@ -10,6 +9,7 @@ import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.repository.TermJpaEntity
 import com.kdongsu5509.terms.repository.TermMapper
 import com.kdongsu5509.terms.repository.TermPersistenceAdapter
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.jpa.SpringDataUserAgreementRepository
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository

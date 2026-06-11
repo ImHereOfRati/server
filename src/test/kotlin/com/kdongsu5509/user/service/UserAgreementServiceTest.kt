@@ -2,13 +2,13 @@ package com.kdongsu5509.user.service
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
 import com.kdongsu5509.terms.service.TermService
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.UserAgreementRepository
 import com.kdongsu5509.user.repository.UserRepository

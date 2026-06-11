@@ -4,8 +4,8 @@ import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.junit.jupiter.api.BeforeEach
@@ -46,13 +46,15 @@ class UserAdminControllerIntegrationTest : WebIntegrationTestSupport() {
     @Test
     @DisplayName("관리자는 모든 사용자 정보를 조회할 수 있다")
     fun readAllAdminSuccess() {
-        userRepository.save(UserJpaEntity(
-            email = "user1@example.com",
-            nickname = "User1",
-            role = UserRole.NORMAL,
-            provider = OAuth2Provider.KAKAO,
-            status = UserStatus.ACTIVE
-        ))
+        userRepository.save(
+            UserJpaEntity(
+                email = "user1@example.com",
+                nickname = "User1",
+                role = UserRole.NORMAL,
+                provider = OAuth2Provider.KAKAO,
+                status = UserStatus.ACTIVE
+            )
+        )
 
         mockMvc.perform(
             get("/api/admin/users")

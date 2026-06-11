@@ -8,9 +8,9 @@ import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
 import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

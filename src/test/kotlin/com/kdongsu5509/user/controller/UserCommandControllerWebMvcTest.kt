@@ -4,12 +4,12 @@ import com.kdongsu5509.auth.application.port.`in`.ForceLogoutUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import com.kdongsu5509.support.logger.AccessLogPrinter
 import com.kdongsu5509.user.controller.dto.UserUpdateRequest
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.service.UserService
 import com.kdongsu5509.user.service.dto.UserResult
 import org.junit.jupiter.api.BeforeEach

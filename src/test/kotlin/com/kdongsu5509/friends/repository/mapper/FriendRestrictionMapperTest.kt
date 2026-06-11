@@ -2,11 +2,11 @@ package com.kdongsu5509.friends.repository.mapper
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.friends.repository.jpa.FriendRestrictionJpaEntity
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.UserMapper
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.assertj.core.api.Assertions.assertThat
@@ -19,7 +19,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.util.ReflectionTestUtils
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class FriendRestrictionMapperTest {
@@ -185,7 +185,7 @@ class FriendRestrictionMapperTest {
 
         // when
         val entity = mapper.toEntity(domain)
-        
+
         val after = LocalDateTime.now()
 
         // then

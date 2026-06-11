@@ -2,10 +2,10 @@ package com.kdongsu5509.friends.repository.mapper
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.friends.domain.Friendship
 import com.kdongsu5509.friends.repository.jpa.FriendshipJpaEntity
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.UserMapper
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.assertj.core.api.Assertions.assertThat

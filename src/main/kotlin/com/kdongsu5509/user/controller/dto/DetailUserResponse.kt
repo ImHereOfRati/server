@@ -2,7 +2,7 @@ package com.kdongsu5509.user.controller.dto
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.service.dto.UserResult
 import java.util.*
 

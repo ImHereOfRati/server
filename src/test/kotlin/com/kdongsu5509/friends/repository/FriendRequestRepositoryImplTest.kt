@@ -2,12 +2,12 @@ package com.kdongsu5509.friends.repository
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.friends.domain.FriendRequest
 import com.kdongsu5509.friends.repository.jpa.FriendRequestJpaEntity
 import com.kdongsu5509.friends.repository.jpa.SpringDataFriendRequestRepository
 import com.kdongsu5509.friends.repository.mapper.FriendRequestMapper
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat

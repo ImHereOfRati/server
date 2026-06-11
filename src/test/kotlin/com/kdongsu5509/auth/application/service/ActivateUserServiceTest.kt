@@ -6,8 +6,8 @@ import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.service.UserAgreementService
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand
 import org.assertj.core.api.Assertions.assertThat

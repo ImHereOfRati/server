@@ -2,9 +2,9 @@ package com.kdongsu5509.user.repository.jpa
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.shared.BaseTimeEntity
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import java.util.*
@@ -41,6 +41,7 @@ class UserJpaEntity(
     @Id
     @GeneratedValue
     @UuidGenerator
+    @Column(columnDefinition = "CHAR(36) CHARACTER SET ascii", nullable = false)
     var id: UUID? = null
 
     fun update(user: User) {

@@ -2,7 +2,6 @@ package com.kdongsu5509.user.domain
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.exception.UserException
 import java.util.*

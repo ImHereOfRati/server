@@ -4,8 +4,8 @@ import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.junit.jupiter.api.BeforeEach
@@ -16,7 +16,6 @@ import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
 import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -50,13 +49,15 @@ class UserReadControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("내 정보 조회를 성공한다")
     fun readMeSuccess() {
         // given
-        userRepository.save(UserJpaEntity(
-            email = "me@example.com",
-            nickname = "MeNick",
-            role = UserRole.NORMAL,
-            provider = OAuth2Provider.KAKAO,
-            status = UserStatus.ACTIVE
-        ))
+        userRepository.save(
+            UserJpaEntity(
+                email = "me@example.com",
+                nickname = "MeNick",
+                role = UserRole.NORMAL,
+                provider = OAuth2Provider.KAKAO,
+                status = UserStatus.ACTIVE
+            )
+        )
 
         // when & then
         mockMvc.perform(
@@ -85,27 +86,33 @@ class UserReadControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("키워드로 타 사용자를 페이징 조회한다")
     fun readOthersSuccess() {
         // given
-        userRepository.save(UserJpaEntity(
-            email = "me@example.com",
-            nickname = "MeNick",
-            role = UserRole.NORMAL,
-            provider = OAuth2Provider.KAKAO,
-            status = UserStatus.ACTIVE
-        ))
-        userRepository.save(UserJpaEntity(
-            email = "friend1@example.com",
-            nickname = "홍길동",
-            role = UserRole.NORMAL,
-            provider = OAuth2Provider.KAKAO,
-            status = UserStatus.ACTIVE
-        ))
-        userRepository.save(UserJpaEntity(
-            email = "friend2@example.com",
-            nickname = "홍길순",
-            role = UserRole.NORMAL,
-            provider = OAuth2Provider.KAKAO,
-            status = UserStatus.ACTIVE
-        ))
+        userRepository.save(
+            UserJpaEntity(
+                email = "me@example.com",
+                nickname = "MeNick",
+                role = UserRole.NORMAL,
+                provider = OAuth2Provider.KAKAO,
+                status = UserStatus.ACTIVE
+            )
+        )
+        userRepository.save(
+            UserJpaEntity(
+                email = "friend1@example.com",
+                nickname = "홍길동",
+                role = UserRole.NORMAL,
+                provider = OAuth2Provider.KAKAO,
+                status = UserStatus.ACTIVE
+            )
+        )
+        userRepository.save(
+            UserJpaEntity(
+                email = "friend2@example.com",
+                nickname = "홍길순",
+                role = UserRole.NORMAL,
+                provider = OAuth2Provider.KAKAO,
+                status = UserStatus.ACTIVE
+            )
+        )
 
         // when & then
         mockMvc.perform(

@@ -2,7 +2,6 @@ package com.kdongsu5509.friends.service
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.domain.UserStatus
 import com.kdongsu5509.friends.controller.dto.FriendRequestViewType
 import com.kdongsu5509.friends.domain.FriendRequest
 import com.kdongsu5509.friends.domain.FriendRestriction
@@ -14,6 +13,7 @@ import com.kdongsu5509.friends.repository.FriendshipRepository
 import com.kdongsu5509.shared.notification.NotificationPort
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.service.UserService
 import com.kdongsu5509.user.service.dto.UserResult
 import org.assertj.core.api.Assertions.assertThat

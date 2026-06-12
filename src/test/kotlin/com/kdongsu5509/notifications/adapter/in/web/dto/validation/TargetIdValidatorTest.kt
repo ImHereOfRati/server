@@ -78,12 +78,12 @@ class TargetIdValidatorTest {
     fun isValid_phone_success() {
         val request1 = NotificationRequest(
             targetId = "010-1234-5678",
-            notificationMethod = NotificationMethod.PHONE_NUMBER,
+            notificationMethod = NotificationMethod.SMS,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
         val request2 = NotificationRequest(
             targetId = "01012345678",
-            notificationMethod = NotificationMethod.PHONE_NUMBER,
+            notificationMethod = NotificationMethod.SMS,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
         assertThat(validator.isValid(request1, context)).isTrue()
@@ -95,7 +95,7 @@ class TargetIdValidatorTest {
     fun isValid_phone_fail() {
         val request = NotificationRequest(
             targetId = "02-123-4567", // Not 01X
-            notificationMethod = NotificationMethod.PHONE_NUMBER,
+            notificationMethod = NotificationMethod.SMS,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
         setupContextMock("올바른 휴대전화 번호 형식이 아닙니다.")

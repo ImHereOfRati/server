@@ -28,7 +28,7 @@ abstract class AbstractNotificationConsumer(
             NotificationCommand(
                 senderNickname = dto.sender.nickname,
                 senderEmail = dto.sender.email,
-                notificationMethod = NotificationMethod.FCM,
+                notificationMethod = dto.notificationMethod,
                 targetIdentifier = dto.receiver.email,
                 type = dto.category.name,
                 extraData = dto.data ?: emptyMap()

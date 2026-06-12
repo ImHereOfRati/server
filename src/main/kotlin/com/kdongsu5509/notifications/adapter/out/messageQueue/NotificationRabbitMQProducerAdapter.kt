@@ -21,6 +21,7 @@ class NotificationRabbitMQProducerAdapter(
             category = category,
             sender = NotificationPersonInfo(command.senderEmail, command.senderNickname),
             receiver = NotificationPersonInfo(command.targetIdentifier, ""),
+            notificationMethod = command.notificationMethod,
             data = command.extraData,
             messageId = UUID.randomUUID()
         )
@@ -39,7 +40,7 @@ class NotificationRabbitMQProducerAdapter(
             NotificationType.FRIEND_REQUEST_RECEIVED -> RabbitMQConfig.ROUTING_KEY_FRIEND_REQUEST_RECEIVED
             NotificationType.FRIEND_REQUEST_ACCEPTED -> RabbitMQConfig.ROUTING_KEY_FRIEND_REQUEST_ACCEPTED
             NotificationType.LOCATION_SHARE_RECEIVED -> RabbitMQConfig.ROUTING_KEY_LOCATION_SHARE
-            NotificationType.ARRIVAL_CONFIRMATION -> RabbitMQConfig.ROUTING_KEY_ARRIVAL_CONFIRMATION
+            NotificationType.ARRIVAL, NotificationType.ARRIVAL_CONFIRMATION -> RabbitMQConfig.ROUTING_KEY_ARRIVAL_CONFIRMATION
             NotificationType.TERMS_UPDATE_NOTICE -> RabbitMQConfig.ROUTING_KEY_TERMS_UPDATE
             NotificationType.DELIVERY_RESULT_NOTICE -> RabbitMQConfig.ROUTING_KEY_DELIVERY_RESULT
         }

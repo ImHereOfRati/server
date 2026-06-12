@@ -29,7 +29,7 @@ class SmsNotificationDispatchStrategyTest {
     @Test
     @DisplayName("NotificationMethod가 PHONE_NUMBER인지 확인한다")
     fun checkNotificationMethod() {
-        assertThat(strategy.notificationMethod).isEqualTo(NotificationMethod.PHONE_NUMBER)
+        assertThat(strategy.notificationMethod).isEqualTo(NotificationMethod.SMS)
     }
 
     @Test
@@ -38,7 +38,7 @@ class SmsNotificationDispatchStrategyTest {
         val command = NotificationCommand(
             senderNickname = "sender",
             senderEmail = "sender@example.com",
-            notificationMethod = NotificationMethod.PHONE_NUMBER,
+            notificationMethod = NotificationMethod.SMS,
             targetIdentifier = "01012345678",
             type = "TYPE",
             extraData = mapOf("location" to "Seoul")
@@ -59,7 +59,7 @@ class SmsNotificationDispatchStrategyTest {
         val command = MultipleNotificationCommand(
             senderNickname = "sender",
             senderEmail = "sender@example.com",
-            notificationMethod = NotificationMethod.PHONE_NUMBER,
+            notificationMethod = NotificationMethod.SMS,
             targetIdentifiers = listOf("01012345678", "01087654321"),
             type = "TYPE",
             extraData = mapOf("location" to "Seoul")

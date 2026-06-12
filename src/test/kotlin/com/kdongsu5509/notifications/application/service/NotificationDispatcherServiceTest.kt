@@ -31,7 +31,7 @@ class NotificationDispatcherServiceTest {
     @BeforeEach
     fun setUp() {
         whenever(fcmStrategy.notificationMethod).thenReturn(NotificationMethod.FCM)
-        whenever(smsStrategy.notificationMethod).thenReturn(NotificationMethod.PHONE_NUMBER)
+        whenever(smsStrategy.notificationMethod).thenReturn(NotificationMethod.SMS)
 
         service = NotificationDispatcherService(listOf(fcmStrategy, smsStrategy))
     }
@@ -77,7 +77,7 @@ class NotificationDispatcherServiceTest {
         val command = MultipleNotificationCommand(
             senderNickname = "sender",
             senderEmail = "sender@example.com",
-            notificationMethod = NotificationMethod.PHONE_NUMBER,
+            notificationMethod = NotificationMethod.SMS,
             targetIdentifiers = listOf("01011112222"),
             type = "TYPE",
             extraData = emptyMap()

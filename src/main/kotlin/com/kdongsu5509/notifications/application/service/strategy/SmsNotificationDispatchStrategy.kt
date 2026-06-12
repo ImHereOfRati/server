@@ -11,7 +11,7 @@ class SmsNotificationDispatchStrategy(
     private val smsService: MessageSendUseCase
 ) : NotificationDispatchStrategy {
 
-    override val notificationMethod: NotificationMethod = NotificationMethod.PHONE_NUMBER
+    override val notificationMethod: NotificationMethod = NotificationMethod.SMS
 
     override fun dispatch(command: NotificationCommand) {
         smsService.send(

@@ -40,7 +40,7 @@ class TargetIdValidator : ConstraintValidator<ValidTargetId, Any> {
     private fun isValidFormat(type: NotificationMethod, targetId: String): Boolean {
         return when (type) {
             NotificationMethod.FCM -> emailRegex.matches(targetId)
-            NotificationMethod.PHONE_NUMBER -> phoneRegex.matches(targetId)
+            NotificationMethod.SMS -> phoneRegex.matches(targetId)
         }
     }
 
@@ -49,7 +49,7 @@ class TargetIdValidator : ConstraintValidator<ValidTargetId, Any> {
 
         val message = when (type) {
             NotificationMethod.FCM -> "올바른 이메일 형식이 아닙니다."
-            NotificationMethod.PHONE_NUMBER -> "올바른 휴대전화 번호 형식이 아닙니다."
+            NotificationMethod.SMS -> "올바른 휴대전화 번호 형식이 아닙니다."
         }
 
         context.buildConstraintViolationWithTemplate(message)

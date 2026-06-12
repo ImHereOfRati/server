@@ -40,7 +40,7 @@ spring:
 
 jwt:
   secret: testSecretKeyForJwtAuthenticationTesting12345678901234567890
-  access-expiration-days: 1
+  access-expiration-minutes: 10
   refresh-expiration-days: 2
   access-header-name: Authorization
   admin-expiration-minutes: 5

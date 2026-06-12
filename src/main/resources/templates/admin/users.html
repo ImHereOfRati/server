@@ -31,12 +31,12 @@
                             <td>
                                 <span class="badge"
                                       th:classappend="${user.role.toString() == 'ADMIN' ? 'purple' : 'gray'}"
-                                      th:text="${user.role}"></span>
+                                      th:text="${user.role.toString() == 'ADMIN' ? '관리자' : '일반'}"></span>
                             </td>
                             <td>
                                 <span class="badge"
-                                      th:classappend="${user.status.toString() == 'ACTIVE' ? 'green' : (user.status.toString() == 'BLOCKED' ? 'red' : 'gray')}"
-                                      th:text="${user.status}"></span>
+                                      th:classappend="${user.status.toString() == 'ACTIVE' ? 'green' : (user.status.toString() == 'BLOCKED' ? 'red' : (user.status.toString() == 'WITHDRAWN' ? 'orange' : 'gray'))}"
+                                      th:text="${user.status.toString() == 'ACTIVE' ? '활성' : (user.status.toString() == 'BLOCKED' ? '차단' : (user.status.toString() == 'WITHDRAWN' ? '탈퇴' : '대기'))}"></span>
                             </td>
                             <td style="min-width: 300px;">
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">

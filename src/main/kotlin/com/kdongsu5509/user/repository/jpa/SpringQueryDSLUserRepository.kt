@@ -43,6 +43,7 @@ class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
 
     fun findAll(pageable: Pageable): Slice<UserJpaEntity> {
         val content = queryFactory.selectFrom(user)
+            .where(isNotWithdrawn())
             .fetch()
         val hasNext = content.size > pageable.pageSize
         val sliceContent = if (hasNext) content.subList(0, pageable.pageSize) else content
@@ -129,6 +130,7 @@ class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
     private fun idEquals(id: UUID): BooleanExpression = user.id.eq(id)
     private fun emailEquals(email: String): BooleanExpression = user.email.eq(email)
     private fun isActive(): BooleanExpression = user.status.eq(UserStatus.ACTIVE)
+    private fun isNotWithdrawn(): BooleanExpression = user.status.ne(UserStatus.WITHDRAWN)
 
     private fun nicknameEqualsOrEmailEquals(keyword: String): BooleanExpression =
         if (keyword.contains("@")) {

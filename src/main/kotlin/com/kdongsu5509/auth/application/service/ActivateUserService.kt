@@ -1,10 +1,13 @@
 package com.kdongsu5509.auth.application.service
 
+import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.`in`.ActivateUserUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
+import com.kdongsu5509.support.exception.throwIt
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.service.UserAgreementService
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand
 import org.springframework.stereotype.Service
@@ -17,7 +20,9 @@ class ActivateUserService(
 ) : ActivateUserUseCase {
 
     @Transactional
-    override fun activate(command: UserActivationCommand): ImHereJwtToken {
+    override fun activate(command: UserActivationCommand, userStatus: String): ImHereJwtToken {
+        if (userStatus != UserStatus.PENDING.name) AuthException.IMHERE_ALREADY_ACTIVE.throwIt()
+
         // 1. 약관 동의 처리 및 회원 상태를 ACTIVE로 변경
         val consentsCommand = MultiTermsConsentCommand(
             consents = command.consents.map {

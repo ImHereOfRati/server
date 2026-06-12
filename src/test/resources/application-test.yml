@@ -50,7 +50,6 @@ security:
     - "/api/auth/login"
     - "/api/auth/registration"
     - "/api/auth/refresh"
-    - "/api/auth/activation"
     - "/swagger-ui/**"
     - "/v3/api-docs/**"
   cors-allowed-origins:

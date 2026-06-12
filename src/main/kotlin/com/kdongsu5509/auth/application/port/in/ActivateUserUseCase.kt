@@ -4,5 +4,5 @@ import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
 
 interface ActivateUserUseCase {
-    fun activate(command: UserActivationCommand): ImHereJwtToken
+    fun activate(command: UserActivationCommand, userStatus: String): ImHereJwtToken
 }

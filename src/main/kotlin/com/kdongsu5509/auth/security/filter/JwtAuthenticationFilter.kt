@@ -6,6 +6,7 @@ import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.shared.response.APIResponseSerializers
 import com.kdongsu5509.support.exception.ImHereBaseException
+import com.kdongsu5509.support.exception.throwIt
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -63,8 +64,8 @@ class JwtAuthenticationFilter(
     }
 
     private fun resolveToken(request: HttpServletRequest): String? {
-        val bearerToken = request.getHeader(AUTH_HEADER)
-        return if (bearerToken?.startsWith(BEARER_PREFIX) == true) {
+        val bearerToken = request.getHeader(AUTH_HEADER) ?: return null
+        return if (bearerToken.startsWith(BEARER_PREFIX)) {
             bearerToken.removePrefix(BEARER_PREFIX)
         } else null
     }

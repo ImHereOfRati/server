@@ -13,11 +13,6 @@ data class ImHereUserDetails(
 ) : UserDetails {
     override fun getAuthorities(): Collection<GrantedAuthority> {
         val authorities = mutableListOf(SimpleGrantedAuthority("ROLE_$role"))
-
-        if (status == UserStatus.PENDING.name) {
-            authorities.add(SimpleGrantedAuthority(UserStatus.PENDING.name))
-        }
-
         return authorities
     }
 

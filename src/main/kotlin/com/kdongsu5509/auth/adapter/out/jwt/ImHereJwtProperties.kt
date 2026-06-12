@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 data class ImHereJwtProperties(
     var secret: String = "",
 
-    var accessExpirationDays: Long = 0,
+    var accessExpirationMinutes: Long = 0,
 
     var refreshExpirationDays: Long = 0,
 

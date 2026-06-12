@@ -50,7 +50,7 @@ class ImHereTokenProviderAdapterTest {
     fun setUp() {
         val properties = ImHereJwtProperties(
             secret = "test-secret-key-at-least-32-characters-long",
-            accessExpirationDays = 60,
+            accessExpirationMinutes = 60,
             refreshExpirationDays = REFRESH_EXP_DAYS
         )
 

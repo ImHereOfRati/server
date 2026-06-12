@@ -25,7 +25,7 @@ class LoginService(
     override fun login(provider: OAuth2Provider, idToken: String): ImHereJwtToken {
         val userInformation = verifyOIDCToken(provider, idToken)
         val user = userRepository.findByEmail(userInformation.email) ?: AuthException.USER_NOT_REGISTER.throwIt()
-        if (user.status == UserStatus.BLOCKED) {
+        if (user.status in setOf(UserStatus.BLOCKED, UserStatus.WITHDRAWN)) {
             AuthException.USER_DISABLED.throwIt()
         }
 

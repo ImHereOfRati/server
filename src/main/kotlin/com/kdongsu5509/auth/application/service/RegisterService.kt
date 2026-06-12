@@ -37,7 +37,7 @@ class RegisterService(
 
     private fun saveNewUser(email: String, nickname: String, provider: OAuth2Provider): User {
         val existingUser = userRepository.findByEmail(email)
-        if (existingUser?.status == UserStatus.BLOCKED) {
+        if (existingUser?.status in setOf(UserStatus.BLOCKED, UserStatus.WITHDRAWN)) {
             AuthException.USER_DISABLED.throwIt()
         }
         val newUser = User.createWithPendingStatus(email, nickname, provider)

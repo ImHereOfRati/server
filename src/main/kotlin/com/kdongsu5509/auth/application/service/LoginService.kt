@@ -25,12 +25,16 @@ class LoginService(
     override fun login(provider: OAuth2Provider, idToken: String): ImHereJwtToken {
         val userInformation = verifyOIDCToken(provider, idToken)
         val user = userRepository.findByEmail(userInformation.email) ?: AuthException.USER_NOT_REGISTER.throwIt()
-        if (user.status in setOf(UserStatus.BLOCKED, UserStatus.WITHDRAWN)) {
-            AuthException.USER_DISABLED.throwIt()
-        }
 
-        val newUserClaims = JwtTokenClaims.fromUser(user)
-        return tokenProviderPort.issue(newUserClaims)
+        when (user.status) {
+            UserStatus.PENDING -> AuthException.USER_PENDING.throwIt()
+            UserStatus.BLOCKED -> AuthException.USER_DISABLED.throwIt()
+            UserStatus.WITHDRAWN -> AuthException.USER_WITHDRAWN.throwIt()
+            UserStatus.ACTIVE -> {
+                val newUserClaims = JwtTokenClaims.fromUser(user)
+                return tokenProviderPort.issue(newUserClaims)
+            }
+        }
     }
 
     private fun verifyOIDCToken(provider: OAuth2Provider, idToken: String): OIDCUserInfo {

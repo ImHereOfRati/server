@@ -198,4 +198,39 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
                 )
             )
     }
+
+    @Test
+    @DisplayName("탈퇴한 계정(WITHDRAWN)과 동일한 이메일로 재가입 시도 시 예외를 반환하며 문서화한다")
+    fun registerFailWhenEmailIsWithdrawn() {
+        // given
+        val email = "withdrawn@example.com"
+        val withdrawnUser = User.createWithPendingStatus(email, "Withdrawn User", OAuth2Provider.KAKAO).activate().withdraw()
+        userRepository.save(withdrawnUser)
+
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token")
+
+        given(oidcVerifyPort.verify(any(), any())).willReturn(
+            OIDCUserInfo(email = email, nickname = "Withdrawn User")
+        )
+
+        // when & then
+        mockMvc.perform(
+            post("/api/auth/registration")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request))
+        )
+            .andExpect(status().isUnauthorized)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "auth-registration-fail-withdrawn-user",
+                    snippets = arrayOf(
+                        responseFields(
+                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-108: 탈퇴한 계정입니다)"),
+                            fieldWithPath("message").description("에러 상세 메시지"),
+                            fieldWithPath("data").description("데이터는 없음").optional()
+                        )
+                    )
+                )
+            )
+    }
 }

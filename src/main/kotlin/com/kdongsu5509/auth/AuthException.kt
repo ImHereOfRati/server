@@ -21,6 +21,8 @@ enum class AuthException(
     INVALID_OTT(CommonErrorCode.UNAUTHORIZED, "AUTH-104", "유효하지 않은 일회용 토큰입니다."),
     USER_DISABLED(CommonErrorCode.UNAUTHORIZED, "AUTH-105", "비활성화된 계정입니다."),
     USER_LOCKED(CommonErrorCode.UNAUTHORIZED, "AUTH-106", "잠긴 계정입니다."),
+    USER_PENDING(CommonErrorCode.UNAUTHORIZED, "AUTH-107", "가입 대기 중인 계정입니다. 이메일 인증 또는 약관 동의가 필요합니다."),
+    USER_WITHDRAWN(CommonErrorCode.UNAUTHORIZED, "AUTH-108", "탈퇴한 계정입니다."),
     IMHERE_EXPIRED_TOKEN(CommonErrorCode.UNAUTHORIZED, "TOKEN-100", "만료된 토큰입니다."),
     IMHERE_INVALID_TOKEN(CommonErrorCode.UNAUTHORIZED, "TOKEN-101", "유효하지 않은 토큰입니다."),
     IMHERE_INVALID_TOKEN_SIG(CommonErrorCode.UNAUTHORIZED, "TOKEN-102", "토큰의 서명 정보가 일치하지 않습니다."),

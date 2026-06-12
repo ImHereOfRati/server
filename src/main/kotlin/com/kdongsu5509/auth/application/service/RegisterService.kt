@@ -37,9 +37,14 @@ class RegisterService(
 
     private fun saveNewUser(email: String, nickname: String, provider: OAuth2Provider): User {
         val existingUser = userRepository.findByEmail(email)
-        if (existingUser?.status in setOf(UserStatus.BLOCKED, UserStatus.WITHDRAWN)) {
-            AuthException.USER_DISABLED.throwIt()
+
+        when (existingUser?.status) {
+            UserStatus.BLOCKED -> AuthException.USER_DISABLED.throwIt()
+            UserStatus.WITHDRAWN -> AuthException.USER_WITHDRAWN.throwIt()
+            UserStatus.PENDING, UserStatus.ACTIVE -> {} // Allow re-registration attempt, validation happens below
+            null -> {} // New user, proceed
         }
+
         val newUser = User.createWithPendingStatus(email, nickname, provider)
         newUser.validateDuplicateEmailAllowed(existingUser != null)
         return userRepository.save(newUser)

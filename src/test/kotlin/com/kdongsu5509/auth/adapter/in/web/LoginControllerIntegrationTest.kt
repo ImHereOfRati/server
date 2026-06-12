@@ -186,7 +186,73 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
                     identifier = "auth-login-fail-blocked",
                     snippets = arrayOf(
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-106: 비활성화된 계정입니다)"),
+                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-105: 비활성화된 계정입니다)"),
+                            fieldWithPath("message").description("에러 상세 메시지"),
+                            fieldWithPath("data").description("데이터는 없음").optional()
+                        )
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("가입 대기 중인 계정(PENDING)으로 로그인 시 401 Unauthorized와 에러를 반환하며 문서화한다")
+    fun loginFailWhenUserPending() {
+        val email = "pending@example.com"
+        val user = User.createWithPendingStatus(email, "Pending User", OAuth2Provider.KAKAO)
+        userRepository.save(user)
+
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token")
+
+        given(oidcVerifyPort.verify(any(), any())).willReturn(
+            OIDCUserInfo(email = email, nickname = "Pending User")
+        )
+
+        mockMvc.perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request))
+        )
+            .andExpect(status().isUnauthorized)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "auth-login-fail-pending",
+                    snippets = arrayOf(
+                        responseFields(
+                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-107: 가입 대기 중인 계정입니다)"),
+                            fieldWithPath("message").description("에러 상세 메시지"),
+                            fieldWithPath("data").description("데이터는 없음").optional()
+                        )
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("탈퇴한 계정(WITHDRAWN)으로 로그인 시 401 Unauthorized와 에러를 반환하며 문서화한다")
+    fun loginFailWhenUserWithdrawn() {
+        val email = "withdrawn@example.com"
+        val user = User.createWithPendingStatus(email, "Withdrawn User", OAuth2Provider.KAKAO).activate().withdraw()
+        userRepository.save(user)
+
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token")
+
+        given(oidcVerifyPort.verify(any(), any())).willReturn(
+            OIDCUserInfo(email = email, nickname = "Withdrawn User")
+        )
+
+        mockMvc.perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request))
+        )
+            .andExpect(status().isUnauthorized)
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "auth-login-fail-withdrawn",
+                    snippets = arrayOf(
+                        responseFields(
+                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-108: 탈퇴한 계정입니다)"),
                             fieldWithPath("message").description("에러 상세 메시지"),
                             fieldWithPath("data").description("데이터는 없음").optional()
                         )

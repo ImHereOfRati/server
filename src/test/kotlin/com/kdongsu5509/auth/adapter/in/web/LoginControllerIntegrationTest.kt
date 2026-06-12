@@ -68,7 +68,8 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
                             fieldWithPath("imhereResponseCode").description("응답 코드"),
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data.accessToken").description("발급된 액세스 토큰"),
-                            fieldWithPath("data.refreshToken").description("발급된 리프레시 토큰")
+                            fieldWithPath("data.refreshToken").description("발급된 리프레시 토큰"),
+                            fieldWithPath("data.userStatus").description("사용자 상태 (ACTIVE, PENDING, BLOCKED, WITHDRAWN)").optional()
                         )
                     )
                 )

@@ -88,7 +88,8 @@ class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
                             fieldWithPath("imhereResponseCode").description("Response code"),
                             fieldWithPath("message").description("Response message"),
                             fieldWithPath("data.accessToken").description("New access token"),
-                            fieldWithPath("data.refreshToken").description("New refresh token")
+                            fieldWithPath("data.refreshToken").description("New refresh token"),
+                            fieldWithPath("data.userStatus").description("User status (ACTIVE, PENDING, BLOCKED, WITHDRAWN)").optional()
                         )
                     )
                 )

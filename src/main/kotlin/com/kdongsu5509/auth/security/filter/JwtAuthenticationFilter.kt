@@ -6,10 +6,10 @@ import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.shared.response.APIResponseSerializers
 import com.kdongsu5509.support.exception.ImHereBaseException
-import com.kdongsu5509.support.exception.throwIt
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
@@ -24,14 +24,19 @@ class JwtAuthenticationFilter(
     companion object {
         private const val BEARER_PREFIX = "Bearer "
         private const val AUTH_HEADER = "Authorization"
+        private val log = LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
     }
 
     private val pathMatcher = AntPathMatcher()
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
-        return securityWhiteList.whitelist.any { path ->
+        val shouldSkip = securityWhiteList.whitelist.any { path ->
             pathMatcher.match(path, request.servletPath)
         }
+        if (shouldSkip) {
+            log.debug("JWT filter skipped for whitelisted path: {}", request.servletPath)
+        }
+        return shouldSkip
     }
 
     public override fun doFilterInternal(
@@ -39,13 +44,17 @@ class JwtAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+        log.debug("JwtAuthenticationFilter processing request: {}", request.requestURI)
         val jwt = resolveToken(request) ?: return filterChain.doFilter(request, response)
 
+        log.debug("Resolved JWT token, validating...")
         try {
             if (!tokenParser.validate(jwt)) {
+                log.warn("JWT validation failed for path: {}", request.requestURI)
                 return sendErrorResponse(response, AuthException.IMHERE_INVALID_TOKEN)
             }
         } catch (e: ImHereBaseException) {
+            log.warn("JWT validation exception: {}", e.errorCode)
             return sendErrorResponse(response, e.errorCode as AuthException)
         }
 
@@ -53,9 +62,12 @@ class JwtAuthenticationFilter(
             try {
                 val authentication = createAuthentication(jwt, request)
                 SecurityContextHolder.getContext().authentication = authentication
+                log.debug("Authentication set for user: {}", authentication.principal)
             } catch (e: ImHereBaseException) {
+                log.warn("Authentication creation failed: {}", e.errorCode)
                 return sendErrorResponse(response, e.errorCode as AuthException)
             } catch (e: Exception) {
+                log.error("Unexpected exception during authentication creation", e)
                 return sendErrorResponse(response, AuthException.IMHERE_ACCESS_DENIED, e.message)
             }
         }
@@ -64,10 +76,16 @@ class JwtAuthenticationFilter(
     }
 
     private fun resolveToken(request: HttpServletRequest): String? {
-        val bearerToken = request.getHeader(AUTH_HEADER) ?: return null
-        return if (bearerToken.startsWith(BEARER_PREFIX)) {
-            bearerToken.removePrefix(BEARER_PREFIX)
-        } else null
+        val authHeader = request.getHeader(AUTH_HEADER) ?: return null
+
+        val trimmed = authHeader.trim()
+        if (!trimmed.startsWith(BEARER_PREFIX, ignoreCase = false)) {
+            log.warn("Authorization header invalid format: starts_with='{}', uri={}",
+                trimmed.take(30), request.requestURI)
+            return null
+        }
+
+        return trimmed.substring(BEARER_PREFIX.length).trim()
     }
 
     private fun createAuthentication(jwt: String, request: HttpServletRequest): UsernamePasswordAuthenticationToken {

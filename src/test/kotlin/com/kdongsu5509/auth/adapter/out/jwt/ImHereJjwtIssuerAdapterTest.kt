@@ -48,7 +48,7 @@ class ImHereJjwtIssuerAdapterTest {
     @DisplayName("Access Token을 요청된 규격에 맞게 생성한다")
     fun createAccessToken_success() {
         // given
-        `when`(imHereJwtProperties.accessExpirationDays).thenReturn(30L)
+        `when`(imHereJwtProperties.accessExpirationMinutes).thenReturn(30L)
 
         // when
         val token = imHereJjwtIssuerAdapter.createAccessToken(claims)

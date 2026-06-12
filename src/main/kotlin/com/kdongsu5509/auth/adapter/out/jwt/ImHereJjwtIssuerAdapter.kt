@@ -20,7 +20,7 @@ class ImHereJjwtIssuerAdapter(
     }
 
     override fun createAccessToken(claims: JwtTokenClaims): String {
-        val expiredTime = LocalDateTime.now().plusMinutes(imHereJwtProperties.accessExpirationDays)
+        val expiredTime = LocalDateTime.now().plusMinutes(imHereJwtProperties.accessExpirationMinutes)
         return create(JwtClaimKeys.ACCESS_TOKEN, claims, expiredTime)
     }
 

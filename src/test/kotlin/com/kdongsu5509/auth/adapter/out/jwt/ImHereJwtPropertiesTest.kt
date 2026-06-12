@@ -11,7 +11,7 @@ class ImHereJwtPropertiesTest {
     fun create() {
         val properties = ImHereJwtProperties()
         assertThat(properties.secret).isEmpty()
-        assertThat(properties.accessExpirationDays).isEqualTo(0)
+        assertThat(properties.accessExpirationMinutes).isEqualTo(0)
         assertThat(properties.refreshExpirationDays).isEqualTo(0)
         assertThat(properties.adminExpirationMinutes).isEqualTo(0)
         assertThat(properties.accessHeaderName).isEmpty()
@@ -22,14 +22,14 @@ class ImHereJwtPropertiesTest {
     fun propertiesSetGet() {
         val properties = ImHereJwtProperties(
             secret = "my-secret",
-            accessExpirationDays = 1,
+            accessExpirationMinutes = 1,
             refreshExpirationDays = 7,
             adminExpirationMinutes = 30,
             accessHeaderName = "Authorization"
         )
-        
+
         assertThat(properties.secret).isEqualTo("my-secret")
-        assertThat(properties.accessExpirationDays).isEqualTo(1)
+        assertThat(properties.accessExpirationMinutes).isEqualTo(1)
         assertThat(properties.refreshExpirationDays).isEqualTo(7)
         assertThat(properties.adminExpirationMinutes).isEqualTo(30)
         assertThat(properties.accessHeaderName).isEqualTo("Authorization")

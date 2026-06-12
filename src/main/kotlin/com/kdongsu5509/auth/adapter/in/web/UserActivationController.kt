@@ -4,7 +4,6 @@ import com.kdongsu5509.auth.adapter.`in`.web.dto.OIDCAuthResponse
 import com.kdongsu5509.auth.adapter.`in`.web.dto.UserActivationRequest
 import com.kdongsu5509.auth.application.port.`in`.ActivateUserUseCase
 import com.kdongsu5509.auth.security.ImHereUserDetails
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
@@ -18,7 +17,6 @@ class UserActivationController(
     private val activateUserUseCase: ActivateUserUseCase
 ) {
 
-    @PreAuthorize("hasAuthority('PENDING')")
     @PostMapping
     fun activate(
         @AuthenticationPrincipal userDetails: ImHereUserDetails,

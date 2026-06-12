@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 @Component
 class DiscordUserErrorNotifier(
     private val discordMessageSendPort: DiscordMessageSendPort,
-    @param:Value("\${discord.url.UserErrorCode:}") private val userErrorWebhookUrl: String
+    @param:Value("\${discord.url.error.client:}") private val userErrorWebhookUrl: String
 ) {
 
     fun notifyUserError(request: HttpServletRequest, errorCode: String, errorMessage: String) {

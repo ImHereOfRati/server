@@ -83,5 +83,7 @@ firebase:
 
 discord:
   url:
-    error: "http://localhost/dummy-error"
-    ott: "http://localhost/dummy-ott"
+    error:
+      server: ""
+      client: ""
+    ott: ""

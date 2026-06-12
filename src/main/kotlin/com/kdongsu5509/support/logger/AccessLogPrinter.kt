@@ -12,7 +12,7 @@ class AccessLogPrinter(
     private val formatter: AccessLogFormatter
 ) {
 
-    @Value("\${discord.url.error:}")
+    @Value("\${discord.url.error.server:}")
     private val errorAlertChannelWebhookUrl: String? = null
 
     private val log = LoggerFactory.getLogger(AccessLogPrinter::class.java)

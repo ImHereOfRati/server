@@ -89,7 +89,8 @@ class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
                             fieldWithPath("message").description("Response message"),
                             fieldWithPath("data.accessToken").description("New access token"),
                             fieldWithPath("data.refreshToken").description("New refresh token"),
-                            fieldWithPath("data.userStatus").description("User status (ACTIVE, PENDING, BLOCKED, WITHDRAWN)").optional()
+                            fieldWithPath("data.userStatus").description("User status (ACTIVE, PENDING, BLOCKED, WITHDRAWN)")
+                                .optional()
                         )
                     )
                 )
@@ -134,7 +135,7 @@ class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
     }
 
     @Test
-    @DisplayName("Authorization header가 없으면 스프링 시큐리티 필터가 403를 던진다")
+    @DisplayName("Authorization header가 없으면 401 Unauthorized를 반환한다")
     fun activationFailWhenNoAuthorizationHeader() {
         val request = UserActivationRequest(
             consents = listOf(
@@ -147,7 +148,7 @@ class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().isForbidden)
+            .andExpect(status().isUnauthorized)
     }
 
     @Test
@@ -169,43 +170,6 @@ class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "auth-activation-fail-invalid-token",
-                    snippets = arrayOf(
-                        responseFields(
-                            fieldWithPath("imhereResponseCode").description("Error code"),
-                            fieldWithPath("message").description("Error message"),
-                            fieldWithPath("data").description("No data").optional()
-                        )
-                    )
-                )
-            )
-    }
-
-    @Test
-    @DisplayName("Active user without PENDING role gets forbidden")
-    fun activationFailWhenNotPendingRole() {
-        val email = "normaluser@example.com"
-        val user = User.createWithPendingStatus(email, "Normal User", OAuth2Provider.KAKAO).activate()
-        val savedUser = userRepository.save(user)
-
-        val claims = JwtTokenClaims.fromUser(savedUser)
-        val token = tokenProviderPort.issue(claims)
-
-        val request = UserActivationRequest(
-            consents = listOf(
-                UserActivationRequest.TermConsent(id = 1L, isAgreed = true)
-            )
-        )
-
-        mockMvc.perform(
-            post("/api/auth/activation")
-                .header("Authorization", "Bearer ${token.accessToken}")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(request))
-        )
-            .andExpect(status().isForbidden)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "auth-activation-fail-forbidden",
                     snippets = arrayOf(
                         responseFields(
                             fieldWithPath("imhereResponseCode").description("Error code"),

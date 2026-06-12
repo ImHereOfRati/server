@@ -6,6 +6,7 @@ import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
+import com.kdongsu5509.support.exception.type.ForbiddenException
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.service.UserAgreementService
@@ -75,12 +76,26 @@ class ActivateUserServiceTest {
         given(tokenProviderPort.issue(expectedClaims)).willReturn(expectedToken)
 
         // when
-        val result = activateUserService.activate(command)
+        val result = activateUserService.activate(command, UserStatus.PENDING.name)
 
         // then
         assertThat(result).isEqualTo(expectedToken)
         then(userAgreementService).should().consentAll(TEST_EMAIL, consentsCommand)
         then(tokenProviderPort).should().issue(expectedClaims)
+    }
+
+    @Test
+    @DisplayName("약관 동의 처리 중 예외가 발생하면 토큰을 발급하지 않고 예외를 전파한다")
+    fun activate_fail_already_active() {
+        // given
+        val command = UserActivationCommand(
+            email = TEST_EMAIL,
+            consents = listOf(UserActivationCommand.TermConsentCommand(id = 1L, isAgreed = true))
+        )
+
+        // when & then
+        assertThatThrownBy { activateUserService.activate(command, UserStatus.ACTIVE.name) }
+            .isInstanceOf(ForbiddenException::class.java)
     }
 
     @Test
@@ -99,7 +114,7 @@ class ActivateUserServiceTest {
         given(userAgreementService.consentAll(TEST_EMAIL, consentsCommand)).willThrow(expectedException)
 
         // when & then
-        assertThatThrownBy { activateUserService.activate(command) }
+        assertThatThrownBy { activateUserService.activate(command, UserStatus.PENDING.name) }
             .isSameAs(expectedException)
 
         then(tokenProviderPort).shouldHaveNoInteractions()
@@ -123,7 +138,7 @@ class ActivateUserServiceTest {
         given(tokenProviderPort.issue(expectedClaims)).willThrow(expectedException)
 
         // when & then
-        assertThatThrownBy { activateUserService.activate(command) }
+        assertThatThrownBy { activateUserService.activate(command, UserStatus.PENDING.name) }
             .isSameAs(expectedException)
 
         then(userAgreementService).should().consentAll(TEST_EMAIL, consentsCommand)

@@ -12,6 +12,7 @@ enum class AuthException(
     // --- 0xx: Bad Request (400) ---
     ALGORITHM_NOT_FOUND(CommonErrorCode.INVALID_INPUT, "AUTH-000", "공개키 알고리즘을 찾을 수 없습니다."),
     INVALID_ENCODING(CommonErrorCode.INVALID_INPUT, "AUTH-001", "잘못된 Base64 인코딩 값입니다."),
+    MISSING_REQUEST_HEADER(CommonErrorCode.INVALID_INPUT, "AUTH-002", "필수 헤더 값이 누락되었습니다."),
 
     // --- 1xx: Unauthorized (401) ---
     OIDC_EXPIRED(CommonErrorCode.UNAUTHORIZED, "AUTH-100", "OIDC ID 토큰이 만료되었습니다."),
@@ -30,7 +31,7 @@ enum class AuthException(
 
     // --- 2xx: Forbidden (403) ---
     IMHERE_ACCESS_DENIED(CommonErrorCode.FORBIDDEN, "AUTH-200", "해당 기능에 대한 권한이 없습니다."),
-    ADMIN_SECRET_INVALID(CommonErrorCode.FORBIDDEN, "AUTH-201", "관리자 인증 헤더가 누락되었거나 일치하지 않습니다."),
+    IMHERE_ALREADY_ACTIVE(CommonErrorCode.FORBIDDEN, "AUTH-201", "이미 활성화된 계정입니다. 해당 요청을 처리할 권한이 없습니다"),
 
     // --- 3xx : NotFound (404) ---
     USER_NOT_REGISTER(CommonErrorCode.NOT_FOUND, "AUTH-300", "사용자 정보를 찾을 수 없습니다."),

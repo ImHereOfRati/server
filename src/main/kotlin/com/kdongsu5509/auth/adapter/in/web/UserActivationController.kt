@@ -23,7 +23,7 @@ class UserActivationController(
         @Validated @RequestBody request: UserActivationRequest
     ): OIDCAuthResponse {
         val command = request.toCommand(userDetails.username)
-        val token = activateUserUseCase.activate(command)
+        val token = activateUserUseCase.activate(command, userDetails.status)
         return OIDCAuthResponse.fromImHereJwtToken(token)
     }
 }

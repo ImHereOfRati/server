@@ -91,7 +91,7 @@ class UserActivationControllerWebMvcTest {
         )
         val token = ImHereJwtToken(accessToken = "access-token", refreshToken = "refresh-token")
 
-        given(activateUserUseCase.activate(any())).willReturn(token)
+        given(activateUserUseCase.activate(any(), any())).willReturn(token)
 
         // when & then
         mockMvc.perform(
@@ -107,7 +107,7 @@ class UserActivationControllerWebMvcTest {
             .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"))
 
         val commandCaptor = argumentCaptor<UserActivationCommand>()
-        then(activateUserUseCase).should().activate(commandCaptor.capture())
+        then(activateUserUseCase).should().activate(commandCaptor.capture(), any())
 
         assertThat(commandCaptor.firstValue.email).isEqualTo(TEST_EMAIL)
         assertThat(commandCaptor.firstValue.consents).containsExactly(
@@ -131,32 +131,6 @@ class UserActivationControllerWebMvcTest {
                 .content(jsonMapper.writeValueAsString(request))
         ).andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.imhereResponseCode").value("GLOBAL-000"))
-
-        then(activateUserUseCase).shouldHaveNoInteractions()
-    }
-
-    @Test
-    @DisplayName("PENDING 권한이 없는 사용자가 요청하면 403 Forbidden을 반환한다")
-    fun activate_fail_without_pending_authority() {
-        // given
-        val activeUserDetails = ImHereUserDetails(
-            email = "active@example.com",
-            nickname = "active",
-            role = UserRole.NORMAL.name,
-            status = UserStatus.ACTIVE.name
-        )
-        val request = mapOf(
-            "consents" to listOf(mapOf("id" to 1L, "agreed" to true))
-        )
-
-        // when & then
-        mockMvc.perform(
-            post(REQUEST_API)
-                .with(csrf())
-                .with(user(activeUserDetails))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(request))
-        ).andExpect(status().isForbidden)
 
         then(activateUserUseCase).shouldHaveNoInteractions()
     }

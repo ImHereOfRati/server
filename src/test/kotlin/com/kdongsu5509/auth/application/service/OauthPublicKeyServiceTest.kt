@@ -24,11 +24,19 @@ class OauthPublicKeyServiceTest {
     @BeforeEach
     fun setUp() {
         oidcProperties = OIDCProperties(
-            kakao = OIDCProperties.Provider(
-                issuer = "https://kauth.kakao.com",
-                audience = "kakao-client-id",
-                cacheKey = "kakao-cache",
-                jwksUri = "https://kauth.kakao.com/.well-known/jwks.json"
+            providers = mutableMapOf(
+                "kakao" to OIDCProperties.Provider(
+                    issuer = "https://kauth.kakao.com",
+                    audience = "kakao-client-id",
+                    cacheKey = "kakao-cache",
+                    jwksUri = "https://kauth.kakao.com/.well-known/jwks.json"
+                ),
+                "google" to OIDCProperties.Provider(
+                    issuer = "https://accounts.google.com",
+                    audience = "google-client-id",
+                    cacheKey = "google-cache",
+                    jwksUri = "https://www.googleapis.com/oauth2/v3/certs"
+                )
             )
         )
         publicKeyService = OauthPublicKeyService(oauthClientPort, oidcProperties)
@@ -38,9 +46,20 @@ class OauthPublicKeyServiceTest {
     @DisplayName("OAuth 공개키를 외부 API로부터 성공적으로 강제 갱신한다")
     fun fetch_success() {
         // when
-        publicKeyService.fetch()
+        publicKeyService.fetch(OAuth2Provider.KAKAO)
 
         // then
         then(oauthClientPort).should().refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")
+    }
+
+    @Test
+    @DisplayName("등록된 모든 OIDC 공개키를 외부 API로부터 강제 갱신한다")
+    fun fetchAll_success() {
+        // when
+        publicKeyService.fetchAll()
+
+        // then
+        then(oauthClientPort).should().refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")
+        then(oauthClientPort).should().refresh("google-cache", "https://www.googleapis.com/oauth2/v3/certs")
     }
 }

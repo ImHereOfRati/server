@@ -38,17 +38,17 @@ enum class AuthException(
     USER_NOT_REGISTER(CommonErrorCode.NOT_FOUND, "AUTH-300", "사용자 정보를 찾을 수 없습니다."),
 
     // --- 9xx: Internal Error (500) ---
-    KAKAO_OIDC_PUBLIC_KEY_FETCH_FAILED(
+    OIDC_PUBLIC_KEY_FETCH_FAILED(
         CommonErrorCode.INTERNAL_SERVER_ERROR,
         "AUTH-900",
         "OIDC 서버로부터 공개키를 가져오는데 실패했습니다."
     ),
-    KAKAO_OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED(
+    OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED(
         CommonErrorCode.INFRA_FAILURE,
         "AUTH-901",
         "Redis로부터 OIDC 공개키를 가져오는데 실패했습니다."
     ),
-    KAKAO_OIDC_PUBLIC_KEY_NOT_FOUND(CommonErrorCode.INFRA_FAILURE, "AUTH-902", "공개키 목록에서 일치하는 키를 찾을 수 없습니다."),
+    OIDC_PUBLIC_KEY_NOT_FOUND(CommonErrorCode.INFRA_FAILURE, "AUTH-902", "공개키 목록에서 일치하는 키를 찾을 수 없습니다."),
     OIDC_KEY_PARSING_ERROR(CommonErrorCode.INTERNAL_SERVER_ERROR, "AUTH-903", "OIDC 키 파싱 중 오류가 발생했습니다"),
     IMHERE_KEY_EXCEPTION(CommonErrorCode.INTERNAL_SERVER_ERROR, "AUTH-904", "토큰 검증 중 오류가 발생하였습니다. 관리자에게 문의해주세요");
 

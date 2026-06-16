@@ -5,7 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class KakaoPublicKeyScheduler(
+class OIDCPublicKeyScheduler(
     private val oauthPublicKeyService: OauthPublicKeyService
 ) {
     companion object {
@@ -14,11 +14,11 @@ class KakaoPublicKeyScheduler(
 
     @PostConstruct
     fun initializePublicKeyCache() {
-        oauthPublicKeyService.fetch()
+        oauthPublicKeyService.fetchAll()
     }
 
-    @Scheduled(fixedRate = DURATION)
+    @Scheduled(fixedDelay = DURATION)
     fun updatePublicKey() {
-        oauthPublicKeyService.fetch()
+        oauthPublicKeyService.fetchAll()
     }
 }

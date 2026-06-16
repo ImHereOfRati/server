@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component
 import java.time.Duration
 
 @Component
-class KakaoOauthClient(
-    private val kakaoOauthPublicKeyApiClient: KakaoOauthPublicKeyApiClient,
+class OidcPublicKeyClient(
+    private val oidcPublicKeyApiClient: OidcPublicKeyApiClient,
     private val restClientBuilder: RestClient.Builder,
     private val cachePort: CachePort
 ) : OauthClientPort {
@@ -40,7 +40,7 @@ class KakaoOauthClient(
 
     private fun fetchRemote(jwksUri: String): OIDCPublicKeyResponse? {
         if (jwksUri.contains("kauth.kakao.com")) {
-            return runCatching { kakaoOauthPublicKeyApiClient.fetchKakaoPublicKey() }.getOrNull()
+            return runCatching { oidcPublicKeyApiClient.fetchPublicKey() }.getOrNull()
         }
 
         return runCatching {

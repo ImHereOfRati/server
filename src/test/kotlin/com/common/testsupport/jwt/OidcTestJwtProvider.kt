@@ -6,7 +6,7 @@ import java.security.KeyPairGenerator
 import java.time.Instant
 import java.util.*
 
-object KakaoTestJwtProvider {
+object OidcTestJwtProvider {
 
     const val HEADER_ALG = "RS256"
     const val HEADER_TYP = "JWT"

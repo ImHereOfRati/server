@@ -56,16 +56,17 @@ security:
     - "https://fortuneki.site"
 
 oidc:
-  kakao:
-    issuer: "https://kauth.kakao.com"
-    audience: "bf284f33bfeba9bc59575706d0eb0e9c"
-    cacheKey: "kakaoOidcKeys::kakaoPublicKeySet"
-    jwksUri: "https://kauth.kakao.com/.well-known/jwks.json"
-  google:
-    issuer: "https://accounts.google.com"
-    audience: "test-google-client-id"
-    cacheKey: "googleOidcKeys::googlePublicKeySet"
-    jwksUri: "https://www.googleapis.com/oauth2/v3/certs"
+  providers:
+    kakao:
+      issuer: "https://kauth.kakao.com"
+      audience: "bf284f33bfeba9bc59575706d0eb0e9c"
+      cacheKey: "kakaoOidcKeys::kakaoPublicKeySet"
+      jwksUri: "https://kauth.kakao.com/.well-known/jwks.json"
+    google:
+      issuer: "https://accounts.google.com"
+      audience: "test-google-client-id"
+      cacheKey: "googleOidcKeys::googlePublicKeySet"
+      jwksUri: "https://www.googleapis.com/oauth2/v3/certs"
 
 logging:
   file:

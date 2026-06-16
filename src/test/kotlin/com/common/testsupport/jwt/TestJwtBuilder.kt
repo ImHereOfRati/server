@@ -1,18 +1,18 @@
 package com.common.testsupport
 
 import com.common.testsupport.jwt.ImHereTestJwtProvider
-import com.common.testsupport.jwt.KakaoTestJwtProvider
+import com.common.testsupport.jwt.OidcTestJwtProvider
 import java.util.*
 
 object TestJwtBuilder {
 
 
     fun buildIdToken(email: String): String {
-        return KakaoTestJwtProvider.buildIdToken(email)
+        return OidcTestJwtProvider.buildIdToken(email)
     }
 
     fun buildDSKOIdToken(): String {
-        return KakaoTestJwtProvider.buildIdToken()
+        return OidcTestJwtProvider.buildIdToken()
     }
 
     fun buildImHereAccessToken(

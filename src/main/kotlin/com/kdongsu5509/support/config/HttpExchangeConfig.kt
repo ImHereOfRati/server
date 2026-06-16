@@ -1,6 +1,6 @@
 package com.kdongsu5509.support.config
 
-import com.kdongsu5509.auth.adapter.out.oauth.KakaoOauthPublicKeyApiClient
+import com.kdongsu5509.auth.adapter.out.oauth.OidcPublicKeyApiClient
 import com.kdongsu5509.support.external.DiscordApiClient
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -24,7 +24,7 @@ class HttpExchangeConfig {
     }
 
     @Bean
-    fun kakaoPublicKeyApiClient(restClientBuilder: Builder): KakaoOauthPublicKeyApiClient {
+    fun oidcPublicKeyApiClient(restClientBuilder: Builder): OidcPublicKeyApiClient {
 
         val restClient = restClientBuilder
             .baseUrl("https://kauth.kakao.com")
@@ -34,6 +34,6 @@ class HttpExchangeConfig {
 
         val httpServiceProxyFactory = HttpServiceProxyFactory.builderFor(adapter)
 
-        return httpServiceProxyFactory.build().createClient<KakaoOauthPublicKeyApiClient>()
+        return httpServiceProxyFactory.build().createClient<OidcPublicKeyApiClient>()
     }
 }

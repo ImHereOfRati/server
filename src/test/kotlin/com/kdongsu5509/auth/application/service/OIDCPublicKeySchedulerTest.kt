@@ -10,35 +10,35 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.times
 
 @ExtendWith(MockitoExtension::class)
-class KakaoPublicKeySchedulerTest {
+class OIDCPublicKeySchedulerTest {
 
     @Mock
     private lateinit var oauthPublicKeyService: OauthPublicKeyService
 
-    private lateinit var kakaoPublicKeyScheduler: KakaoPublicKeyScheduler
+    private lateinit var oidcPublicKeyScheduler: OIDCPublicKeyScheduler
 
     @BeforeEach
     fun setUp() {
-        kakaoPublicKeyScheduler = KakaoPublicKeyScheduler(oauthPublicKeyService)
+        oidcPublicKeyScheduler = OIDCPublicKeyScheduler(oauthPublicKeyService)
     }
 
     @Test
-    @DisplayName("애플리케이션 시작 시(PostConstruct) 카카오 공개키 캐시를 초기화한다")
+    @DisplayName("애플리케이션 시작 시(PostConstruct) OIDC 공개키 캐시를 초기화한다")
     fun initializePublicKeyCache_success() {
         // when
-        kakaoPublicKeyScheduler.initializePublicKeyCache()
+        oidcPublicKeyScheduler.initializePublicKeyCache()
 
         // then
-        then(oauthPublicKeyService).should(times(1)).fetch()
+        then(oauthPublicKeyService).should(times(1)).fetchAll()
     }
 
     @Test
-    @DisplayName("스케줄링된 주기에 따라 카카오 공개키를 업데이트한다")
+    @DisplayName("스케줄링된 주기에 따라 OIDC 공개키를 업데이트한다")
     fun updatePublicKey_success() {
         // when
-        kakaoPublicKeyScheduler.updatePublicKey()
+        oidcPublicKeyScheduler.updatePublicKey()
 
         // then
-        then(oauthPublicKeyService).should(times(1)).fetch()
+        then(oauthPublicKeyService).should(times(1)).fetchAll()
     }
 }

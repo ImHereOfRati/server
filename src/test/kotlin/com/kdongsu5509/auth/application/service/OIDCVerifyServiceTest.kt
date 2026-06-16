@@ -52,17 +52,19 @@ class OIDCVerifyServiceTest {
     @BeforeEach
     fun setUp() {
         oidcProperties = OIDCProperties(
-            kakao = OIDCProperties.Provider(
-                issuer = "https://kauth.kakao.com",
-                audience = "kakao-client-id",
-                cacheKey = "kakao-cache",
-                jwksUri = "https://kauth.kakao.com/.well-known/jwks.json"
-            ),
-            google = OIDCProperties.Provider(
-                issuer = "https://accounts.google.com",
-                audience = "google-client-id",
-                cacheKey = "google-cache",
-                jwksUri = "https://www.googleapis.com/oauth2/v3/certs"
+            providers = mutableMapOf(
+                "kakao" to OIDCProperties.Provider(
+                    issuer = "https://kauth.kakao.com",
+                    audience = "kakao-client-id",
+                    cacheKey = "kakao-cache",
+                    jwksUri = "https://kauth.kakao.com/.well-known/jwks.json"
+                ),
+                "google" to OIDCProperties.Provider(
+                    issuer = "https://accounts.google.com",
+                    audience = "google-client-id",
+                    cacheKey = "google-cache",
+                    jwksUri = "https://www.googleapis.com/oauth2/v3/certs"
+                )
             )
         )
         verifyService = OIDCVerifyService(oidcIdTokenVerifyPort, publicKeyLoadPort, oidcProperties)

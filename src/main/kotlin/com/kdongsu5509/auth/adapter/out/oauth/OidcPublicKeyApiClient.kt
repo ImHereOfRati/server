@@ -5,8 +5,8 @@ import org.springframework.web.service.annotation.GetExchange
 import org.springframework.web.service.annotation.HttpExchange
 
 @HttpExchange
-interface KakaoOauthPublicKeyApiClient {
+interface OidcPublicKeyApiClient {
 
     @GetExchange("/.well-known/jwks.json")
-    fun fetchKakaoPublicKey(): OIDCPublicKeyResponse
+    fun fetchPublicKey(): OIDCPublicKeyResponse
 }

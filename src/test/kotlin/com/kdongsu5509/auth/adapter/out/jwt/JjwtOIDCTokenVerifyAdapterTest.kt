@@ -1,7 +1,7 @@
 package com.kdongsu5509.auth.adapter.out.jwt
 
 import com.common.testsupport.TestJwtBuilder
-import com.common.testsupport.jwt.KakaoTestJwtProvider
+import com.common.testsupport.jwt.OidcTestJwtProvider
 import com.kdongsu5509.auth.application.service.dto.OIDCDecodePayload
 import com.kdongsu5509.support.exception.type.UnauthorizedException
 import org.assertj.core.api.Assertions.assertThat
@@ -155,7 +155,7 @@ class JjwtOIDCTokenVerifyAdapterTest {
     fun verifySignature_success() {
         // given
         val token = TestJwtBuilder.buildDSKOIdToken()
-        val publicKey = KakaoTestJwtProvider.keyPair.public as java.security.interfaces.RSAPublicKey
+        val publicKey = OidcTestJwtProvider.keyPair.public as java.security.interfaces.RSAPublicKey
         val modulus = Base64.getUrlEncoder().encodeToString(publicKey.modulus.toByteArray())
         val exponent = Base64.getUrlEncoder().encodeToString(publicKey.publicExponent.toByteArray())
 
@@ -164,14 +164,14 @@ class JjwtOIDCTokenVerifyAdapterTest {
 
         // then
         assertThat(result).isNotNull
-        assertThat(result.payload.issuer).isEqualTo(KakaoTestJwtProvider.PAYLOAD_ISS)
+        assertThat(result.payload.issuer).isEqualTo(OidcTestJwtProvider.PAYLOAD_ISS)
     }
 
     @Test
     @DisplayName("서명이 일치하지 않거나 토큰 파싱 에러 시 UnauthorizedException 발생시킨다")
     fun verifySignature_invalidSignature_throwsException() {
         val token = "invalid.token.signature"
-        val publicKey = KakaoTestJwtProvider.keyPair.public as java.security.interfaces.RSAPublicKey
+        val publicKey = OidcTestJwtProvider.keyPair.public as java.security.interfaces.RSAPublicKey
         val modulus = Base64.getUrlEncoder().encodeToString(publicKey.modulus.toByteArray())
         val exponent = Base64.getUrlEncoder().encodeToString(publicKey.publicExponent.toByteArray())
 

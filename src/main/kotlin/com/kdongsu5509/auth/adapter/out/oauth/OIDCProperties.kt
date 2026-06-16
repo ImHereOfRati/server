@@ -7,8 +7,7 @@ import org.springframework.stereotype.Component
 @Component
 @ConfigurationProperties(prefix = "oidc")
 data class OIDCProperties(
-    var kakao: Provider = Provider(),
-    var google: Provider = Provider()
+    var providers: MutableMap<String, Provider> = mutableMapOf()
 ) {
     data class Provider(
         var issuer: String = "",
@@ -18,7 +17,7 @@ data class OIDCProperties(
     )
 
     fun get(provider: OAuth2Provider): Provider = when (provider) {
-        OAuth2Provider.KAKAO -> kakao
-        OAuth2Provider.GOOGLE -> google
-    }
+        OAuth2Provider.KAKAO -> providers[OAuth2Provider.KAKAO.name.lowercase()]
+        OAuth2Provider.GOOGLE -> providers[OAuth2Provider.GOOGLE.name.lowercase()]
+    } ?: error("Missing OIDC provider config: $provider")
 }

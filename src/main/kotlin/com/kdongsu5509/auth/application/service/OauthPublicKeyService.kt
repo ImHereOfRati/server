@@ -13,11 +13,17 @@ class OauthPublicKeyService(
 ) {
     private val log = LoggerFactory.getLogger(OauthPublicKeyService::class.java)
 
-    fun fetch(provider: OAuth2Provider = OAuth2Provider.KAKAO) {
+    fun fetch(provider: OAuth2Provider) {
         val providerProperties = oidcProperties.get(provider)
 
         log.info("OIDC 공개키 강제 갱신 요청: {}", provider)
         oauthClientPort.refresh(providerProperties.cacheKey, providerProperties.jwksUri)
         log.info("OIDC 공개키 강제 갱신 완료: {}", provider)
+    }
+
+    fun fetchAll() {
+        OAuth2Provider.values().forEach { provider ->
+            fetch(provider)
+        }
     }
 }

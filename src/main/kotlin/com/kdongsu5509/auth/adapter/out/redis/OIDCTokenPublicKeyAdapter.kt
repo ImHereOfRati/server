@@ -19,7 +19,7 @@ class OIDCTokenPublicKeyAdapter(
         val providerProperties = oidcProperties.get(provider)
 
         val cachedKeys = oauthClientPort.fetch(providerProperties.cacheKey, providerProperties.jwksUri)
-            ?: AuthException.KAKAO_OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED.throwIt()
+            ?: AuthException.OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED.throwIt()
 
         cachedKeys.keys.firstOrNull { it.kid == kid }?.let { return it }
 
@@ -28,9 +28,9 @@ class OIDCTokenPublicKeyAdapter(
 
     private fun findAfterRefresh(cacheKey: String, jwksUri: String, kid: String): OIDCPublicKey {
         val refreshedKeys = oauthClientPort.refresh(cacheKey, jwksUri)
-            ?: AuthException.KAKAO_OIDC_PUBLIC_KEY_FETCH_FAILED.throwIt()
+            ?: AuthException.OIDC_PUBLIC_KEY_FETCH_FAILED.throwIt()
 
         return refreshedKeys.keys.firstOrNull { it.kid == kid }
-            ?: AuthException.KAKAO_OIDC_PUBLIC_KEY_NOT_FOUND.throwIt()
+            ?: AuthException.OIDC_PUBLIC_KEY_NOT_FOUND.throwIt()
     }
 }

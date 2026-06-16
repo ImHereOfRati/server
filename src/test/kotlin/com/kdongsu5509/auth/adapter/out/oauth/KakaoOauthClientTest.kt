@@ -13,6 +13,7 @@ import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.whenever
 import java.time.Duration
+import org.springframework.web.client.RestClient
 
 @ExtendWith(MockitoExtension::class)
 class KakaoOauthClientTest {
@@ -21,13 +22,16 @@ class KakaoOauthClientTest {
     private lateinit var kakaoOauthPublicKeyApiClient: KakaoOauthPublicKeyApiClient
 
     @Mock
+    private lateinit var restClientBuilder: RestClient.Builder
+
+    @Mock
     private lateinit var cachePort: CachePort
 
     private lateinit var client: KakaoOauthClient
 
     @BeforeEach
     fun setUp() {
-        client = KakaoOauthClient(kakaoOauthPublicKeyApiClient, cachePort)
+        client = KakaoOauthClient(kakaoOauthPublicKeyApiClient, restClientBuilder, cachePort)
     }
 
     @Test
@@ -38,7 +42,7 @@ class KakaoOauthClientTest {
         whenever(cachePort.find(key, OIDCPublicKeyResponse::class.java)).thenReturn(null)
         whenever(kakaoOauthPublicKeyApiClient.fetchKakaoPublicKey()).thenReturn(mockResponse)
 
-        val result = client.fetch()
+        val result = client.fetch(key, "https://kauth.kakao.com/.well-known/jwks.json")
 
         assertThat(result).isSameAs(mockResponse)
         verify(cachePort).find(key, OIDCPublicKeyResponse::class.java)
@@ -53,7 +57,7 @@ class KakaoOauthClientTest {
         val key = "kakaoOidcKeys::kakaoPublicKeySet"
         whenever(cachePort.find(key, OIDCPublicKeyResponse::class.java)).thenReturn(mockResponse)
 
-        val result = client.fetch()
+        val result = client.fetch(key, "https://kauth.kakao.com/.well-known/jwks.json")
 
         assertThat(result).isSameAs(mockResponse)
         verify(cachePort).find(key, OIDCPublicKeyResponse::class.java)
@@ -67,7 +71,7 @@ class KakaoOauthClientTest {
         val key = "kakaoOidcKeys::kakaoPublicKeySet"
         whenever(kakaoOauthPublicKeyApiClient.fetchKakaoPublicKey()).thenReturn(mockResponse)
 
-        val result = client.refresh()
+        val result = client.refresh(key, "https://kauth.kakao.com/.well-known/jwks.json")
 
         assertThat(result).isSameAs(mockResponse)
         verify(kakaoOauthPublicKeyApiClient).fetchKakaoPublicKey()

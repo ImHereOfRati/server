@@ -4,6 +4,7 @@ import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationM
 import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationType
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.`in`.NotificationDispatcherUseCase
+import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
 import com.kdongsu5509.notifications.application.service.MessageIdempotencyService
 import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
 import org.junit.jupiter.api.BeforeEach
@@ -30,13 +31,17 @@ class ServiceNotificationConsumerTest {
     @Mock
     private lateinit var messageIdempotencyService: MessageIdempotencyService
 
+    @Mock
+    private lateinit var notificationEnqueueUseCase: NotificationEnqueueUseCase
+
     private lateinit var consumer: ServiceNotificationConsumer
 
     @BeforeEach
     fun setUp() {
         consumer = ServiceNotificationConsumer(
             notificationDispatcherUseCase,
-            messageIdempotencyService
+            messageIdempotencyService,
+            notificationEnqueueUseCase
         )
     }
 

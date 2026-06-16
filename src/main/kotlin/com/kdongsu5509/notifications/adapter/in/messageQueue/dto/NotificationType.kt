@@ -7,5 +7,13 @@ enum class NotificationType(val appPath: String) {
     ARRIVAL("/record/notifications"),
     ARRIVAL_CONFIRMATION("/record/notifications"),
     TERMS_UPDATE_NOTICE("/terms-detail/{termId}"),
-    DELIVERY_RESULT_NOTICE("/record/send-history")
+    DELIVERY_RESULT_NOTICE("/record/send-history");
+
+    companion object {
+        val CLIENT_ALLOWED = setOf(
+            LOCATION_SHARE_RECEIVED,
+            ARRIVAL,
+            ARRIVAL_CONFIRMATION
+        )
+    }
 }

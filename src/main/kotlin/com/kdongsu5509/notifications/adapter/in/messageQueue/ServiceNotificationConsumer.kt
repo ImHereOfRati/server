@@ -2,6 +2,7 @@ package com.kdongsu5509.notifications.adapter.`in`.messageQueue
 
 import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationMessageDto
 import com.kdongsu5509.notifications.application.port.`in`.NotificationDispatcherUseCase
+import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
 import com.kdongsu5509.notifications.application.service.MessageIdempotencyService
 import com.kdongsu5509.support.config.RabbitMQConfig
 import org.springframework.amqp.rabbit.annotation.RabbitListener
@@ -10,8 +11,9 @@ import org.springframework.stereotype.Component
 @Component
 class ServiceNotificationConsumer(
     notificationDispatcherUseCase: NotificationDispatcherUseCase,
-    messageIdempotencyService: MessageIdempotencyService
-) : AbstractNotificationConsumer(notificationDispatcherUseCase, messageIdempotencyService) {
+    messageIdempotencyService: MessageIdempotencyService,
+    notificationEnqueueUseCase: NotificationEnqueueUseCase
+) : AbstractNotificationConsumer(notificationDispatcherUseCase, messageIdempotencyService, notificationEnqueueUseCase) {
     companion object {
         const val QUEUE_LABEL = "SERVICE"
     }

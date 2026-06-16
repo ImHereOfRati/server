@@ -4,6 +4,7 @@ import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationT
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.validation.ValidTargetId
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 
@@ -20,6 +21,9 @@ data class NotificationRequest(
 
     val extraData: Map<String, String> = emptyMap()
 ) {
+    @AssertTrue(message = "클라이언트가 직접 발송할 수 없는 알림 타입입니다.")
+    fun isClientAllowedType(): Boolean = type in NotificationType.CLIENT_ALLOWED
+
     fun toCommand(senderNickname: String, senderEmail: String) = NotificationCommand(
         senderNickname = senderNickname,
         senderEmail = senderEmail,

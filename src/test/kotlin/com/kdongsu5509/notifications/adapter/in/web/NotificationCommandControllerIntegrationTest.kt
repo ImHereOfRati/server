@@ -46,7 +46,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val request = NotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetId = "target@example.com",
-            type = NotificationType.FRIEND_REQUEST_RECEIVED,
+            type = NotificationType.LOCATION_SHARE_RECEIVED,
             extraData = mapOf("key" to "value")
         )
 
@@ -65,6 +65,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                             fieldWithPath("notificationMethod").description("발송 방식"),
                             fieldWithPath("targetId").description("대상 식별자"),
                             fieldWithPath("type").description("알림 타입"),
+                            fieldWithPath("isClientAllowedType").ignored(),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
                         ),
                         relaxedResponseFields(
@@ -84,7 +85,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         assertThat(command.senderEmail).isEqualTo("sender@example.com")
         assertThat(command.notificationMethod).isEqualTo(NotificationMethod.FCM)
         assertThat(command.targetIdentifier).isEqualTo("target@example.com")
-        assertThat(command.type).isEqualTo(NotificationType.FRIEND_REQUEST_RECEIVED.name)
+        assertThat(command.type).isEqualTo(NotificationType.LOCATION_SHARE_RECEIVED.name)
         assertThat(command.extraData).containsEntry("key", "value")
     }
 
@@ -94,7 +95,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val request = MultiNotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetIds = listOf("target1@example.com", "target2@example.com"),
-            type = NotificationType.FRIEND_REQUEST_RECEIVED,
+            type = NotificationType.LOCATION_SHARE_RECEIVED,
             extraData = mapOf("key" to "value")
         )
 
@@ -113,6 +114,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                             fieldWithPath("notificationMethod").description("발송 방식"),
                             fieldWithPath("targetIds").description("대상 식별자 목록"),
                             fieldWithPath("type").description("알림 타입"),
+                            fieldWithPath("isClientAllowedType").ignored(),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
                         ),
                         relaxedResponseFields(
@@ -132,7 +134,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
             "target1@example.com",
             "target2@example.com"
         )
-        assertThat(captor.allValues.map { it.type }).containsOnly(NotificationType.FRIEND_REQUEST_RECEIVED.name)
+        assertThat(captor.allValues.map { it.type }).containsOnly(NotificationType.LOCATION_SHARE_RECEIVED.name)
     }
 
     @Test
@@ -141,7 +143,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val request = NotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetId = "",
-            type = NotificationType.FRIEND_REQUEST_RECEIVED,
+            type = NotificationType.LOCATION_SHARE_RECEIVED,
             extraData = emptyMap()
         )
 
@@ -160,6 +162,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                             fieldWithPath("notificationMethod").description("발송 방식"),
                             fieldWithPath("targetId").description("대상 식별자"),
                             fieldWithPath("type").description("알림 타입"),
+                            fieldWithPath("isClientAllowedType").ignored(),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
                         ),
                         relaxedResponseFields(
@@ -178,7 +181,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val requestJson = """
             {
               "targetId": "target@example.com",
-              "type": "FRIEND_REQUEST_RECEIVED",
+              "type": "LOCATION_SHARE_RECEIVED",
               "extraData": {"key":"value"}
             }
         """.trimIndent()
@@ -199,11 +202,6 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                             fieldWithPath("targetId").description("대상 식별자"),
                             fieldWithPath("type").description("알림 타입"),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
-                        ),
-                        relaxedResponseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드"),
-                            fieldWithPath("message").description("에러 메시지"),
-                            fieldWithPath("data").description("없음").optional()
                         )
                     )
                 )
@@ -216,7 +214,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val request = MultiNotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetIds = emptyList(),
-            type = NotificationType.FRIEND_REQUEST_RECEIVED,
+            type = NotificationType.LOCATION_SHARE_RECEIVED,
             extraData = emptyMap()
         )
 
@@ -235,6 +233,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                             fieldWithPath("notificationMethod").description("발송 방식"),
                             fieldWithPath("targetIds").description("대상 식별자 목록"),
                             fieldWithPath("type").description("알림 타입"),
+                            fieldWithPath("isClientAllowedType").ignored(),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
                         ),
                         relaxedResponseFields(
@@ -253,7 +252,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val requestJson = """
             {
               "targetIds": ["target1@example.com", "target2@example.com"],
-              "type": "FRIEND_REQUEST_RECEIVED",
+              "type": "LOCATION_SHARE_RECEIVED",
               "extraData": {"key":"value"}
             }
         """.trimIndent()
@@ -274,11 +273,6 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                             fieldWithPath("targetIds").description("대상 식별자 목록"),
                             fieldWithPath("type").description("알림 타입"),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
-                        ),
-                        relaxedResponseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드"),
-                            fieldWithPath("message").description("에러 메시지"),
-                            fieldWithPath("data").description("없음").optional()
                         )
                     )
                 )

@@ -1,15 +1,18 @@
 package com.kdongsu5509.notifications.adapter.`in`.messageQueue
 
 import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationMessageDto
+import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationType
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.`in`.NotificationDispatcherUseCase
+import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
 import com.kdongsu5509.notifications.application.service.MessageIdempotencyService
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import org.slf4j.LoggerFactory
 
 abstract class AbstractNotificationConsumer(
     private val notificationDispatcherUseCase: NotificationDispatcherUseCase,
-    private val messageIdempotencyService: MessageIdempotencyService
+    private val messageIdempotencyService: MessageIdempotencyService,
+    private val notificationEnqueueUseCase: NotificationEnqueueUseCase
 ) {
     protected val log = LoggerFactory.getLogger(javaClass)
 
@@ -34,6 +37,19 @@ abstract class AbstractNotificationConsumer(
                 extraData = dto.data ?: emptyMap()
             )
         )
+
+        if (dto.category != NotificationType.DELIVERY_RESULT_NOTICE) {
+            notificationEnqueueUseCase.enqueue(
+                NotificationCommand(
+                    senderNickname = "ImHere",
+                    senderEmail = dto.sender.email,
+                    notificationMethod = NotificationMethod.FCM,
+                    targetIdentifier = dto.sender.email,
+                    type = NotificationType.DELIVERY_RESULT_NOTICE.name,
+                    extraData = emptyMap()
+                )
+            )
+        }
 
         // 정상 발송 완료 후에만 처리 완료로 기록한다.
         messageIdempotencyService.markAsProcessed(messageId)

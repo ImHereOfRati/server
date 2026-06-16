@@ -46,7 +46,7 @@ class NotificationConsumerIntegrationTest : PersistenceTestSupport() {
         )
 
         // then
-        verify(notificationDispatcherUseCase, timeout(3000).times(1)).dispatch(any())
+        verify(notificationDispatcherUseCase, timeout(3000).times(2)).dispatch(any())
     }
 
     @Test
@@ -70,6 +70,6 @@ class NotificationConsumerIntegrationTest : PersistenceTestSupport() {
         )
 
         // then
-        verify(notificationDispatcherUseCase, timeout(3000).times(1)).dispatch(any())
+        verify(notificationDispatcherUseCase, timeout(3000).times(2)).dispatch(any())
     }
 }

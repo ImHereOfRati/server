@@ -71,7 +71,7 @@ class NotificationCommandControllerWebMvcTest {
         val request = NotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetId = "target@example.com",
-            type = NotificationType.FRIEND_REQUEST_RECEIVED,
+            type = NotificationType.LOCATION_SHARE_RECEIVED,
             extraData = mapOf("key" to "value")
         )
 
@@ -90,7 +90,7 @@ class NotificationCommandControllerWebMvcTest {
         assertThat(cmd.senderNickname).isEqualTo("senderNickname")
         assertThat(cmd.senderEmail).isEqualTo("sender@example.com")
         assertThat(cmd.targetIdentifier).isEqualTo("target@example.com")
-        assertThat(cmd.type).isEqualTo(NotificationType.FRIEND_REQUEST_RECEIVED.name)
+        assertThat(cmd.type).isEqualTo(NotificationType.LOCATION_SHARE_RECEIVED.name)
     }
 
     @Test
@@ -99,7 +99,7 @@ class NotificationCommandControllerWebMvcTest {
         val request = MultiNotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetIds = listOf("target1@example.com", "target2@example.com"),
-            type = NotificationType.FRIEND_REQUEST_RECEIVED,
+            type = NotificationType.LOCATION_SHARE_RECEIVED,
             extraData = mapOf("key" to "value")
         )
 
@@ -118,6 +118,6 @@ class NotificationCommandControllerWebMvcTest {
         assertThat(cmd.senderNickname).isEqualTo("senderNickname")
         assertThat(cmd.senderEmail).isEqualTo("sender@example.com")
         assertThat(cmd.targetIdentifiers).hasSize(2)
-        assertThat(cmd.type).isEqualTo(NotificationType.FRIEND_REQUEST_RECEIVED.name)
+        assertThat(cmd.type).isEqualTo(NotificationType.LOCATION_SHARE_RECEIVED.name)
     }
 }

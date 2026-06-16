@@ -70,6 +70,38 @@ class SMSServiceTest {
     }
 
     @Test
+    @DisplayName("다건 SMS 수신자 목록이 비면 전송을 거부한다")
+    fun sendMultiple_rejectsEmptyReceiverList() {
+        assertThatThrownBy {
+            service.sendMultiple(
+                senderNickname = "sender",
+                receiverNumbers = emptyList(),
+                location = "Seoul"
+            )
+        }.isInstanceOf(InvalidInputException::class.java)
+
+        verifyNoInteractions(externalMessagePort)
+    }
+
+    @Test
+    @DisplayName("다건 SMS 응답에 실패가 포함되면 전송을 실패로 처리한다")
+    fun sendMultiple_rejectsFailedResponse() {
+        whenever(externalMessagePort.sendMultiple(any())).thenReturn(
+            listOf(SolapiResponse.success(), SolapiResponse.fail("boom"))
+        )
+
+        assertThatThrownBy {
+            service.sendMultiple(
+                senderNickname = "sender",
+                receiverNumbers = listOf("01012345678", "01087654321"),
+                location = "Seoul"
+            )
+        }.isInstanceOf(com.kdongsu5509.support.exception.type.InternalServerException::class.java)
+
+        verify(externalMessagePort).sendMultiple(any())
+    }
+
+    @Test
     @DisplayName("렌더링된 SMS 본문이 45자를 초과하면 전송을 거부한다")
     fun send_rejectsTooLongBody() {
         assertThatThrownBy {

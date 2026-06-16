@@ -2,7 +2,6 @@ package com.kdongsu5509.auth.adapter.out.jwt
 
 import com.common.testsupport.TestJwtBuilder
 import com.common.testsupport.jwt.KakaoTestJwtProvider
-import com.kdongsu5509.auth.adapter.out.oauth.KakaoOIDCProperties
 import com.kdongsu5509.auth.application.service.dto.OIDCDecodePayload
 import com.kdongsu5509.support.exception.type.UnauthorizedException
 import org.assertj.core.api.Assertions.assertThat
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import java.util.*
@@ -19,14 +17,11 @@ import java.util.*
 @ExtendWith(MockitoExtension::class)
 class JjwtOIDCTokenVerifyAdapterTest {
 
-    @Mock
-    private lateinit var kakaoOIDCProperties: KakaoOIDCProperties
-
     private lateinit var jjwtOIDCTokenVerifyAdapter: JjwtOIDCTokenVerifyAdapter
 
     @BeforeEach
     fun setUp() {
-        jjwtOIDCTokenVerifyAdapter = JjwtOIDCTokenVerifyAdapter(kakaoOIDCProperties)
+        jjwtOIDCTokenVerifyAdapter = JjwtOIDCTokenVerifyAdapter()
     }
 
     @Test
@@ -79,16 +74,14 @@ class JjwtOIDCTokenVerifyAdapterTest {
     @DisplayName("페이로드의 issuer와 audience가 설정과 일치하면 검증을 통과한다")
     fun verifyPayLoad_success() {
         // given
-        val issuer = "https://kauth.kakao.com"
+        val issuer = "https://accounts.google.com"
         val audience = "test-app-key"
+        val nonce = "test-nonce"
         val payload =
-            OIDCDecodePayload(iss = issuer, aud = audience, sub = "sub", email = "test@test.com", nickname = "nick")
-
-        `when`(kakaoOIDCProperties.issuer).thenReturn(issuer)
-        `when`(kakaoOIDCProperties.audience).thenReturn(audience)
+            OIDCDecodePayload(iss = "accounts.google.com", aud = audience, sub = "sub", nonce = nonce, email = "test@test.com", nickname = "nick")
 
         // when & then (예외가 발생하지 않아야 함)
-        jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload)
+        jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, issuer, audience, nonce)
     }
 
     @Test
@@ -99,15 +92,14 @@ class JjwtOIDCTokenVerifyAdapterTest {
             iss = "invalid-issuer",
             aud = "test-app-key",
             sub = "sub",
+            nonce = "test-nonce",
             email = "test@test.com",
             nickname = "nick"
         )
 
-        `when`(kakaoOIDCProperties.issuer).thenReturn("https://kauth.kakao.com")
-
         // when & then
         assertThrows<UnauthorizedException> {
-            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload)
+            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, "https://kauth.kakao.com", "test-app-key", "test-nonce")
         }.also {
             assertThat(it.message).contains("OIDC ID 토큰의 형식이나 구성이 올바르지 않습니다.")
         }
@@ -122,18 +114,39 @@ class JjwtOIDCTokenVerifyAdapterTest {
             iss = issuer,
             aud = "invalid-aud",
             sub = "sub",
+            nonce = "test-nonce",
             email = "test@test.com",
             nickname = "nick"
         )
 
-        `when`(kakaoOIDCProperties.issuer).thenReturn(issuer)
-        `when`(kakaoOIDCProperties.audience).thenReturn("valid-aud")
+        // when & then
+        assertThrows<UnauthorizedException> {
+            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, issuer, "valid-aud", "test-nonce")
+        }.also {
+            assertThat(it.message).contains("OIDC ID 토큰의 형식이나 구성이 올바르지 않습니다.")
+        }
+    }
+
+    @Test
+    @DisplayName("페이로드의 nonce가 일치하지 않으면 UnauthorizedException을 발생시킨다")
+    fun verifyPayLoad_invalidNonce_throwsException() {
+        // given
+        val issuer = "https://kauth.kakao.com"
+        val audience = "test-app-key"
+        val payload = OIDCDecodePayload(
+            iss = issuer,
+            aud = audience,
+            sub = "sub",
+            nonce = "payload-nonce",
+            email = "test@test.com",
+            nickname = "nick"
+        )
 
         // when & then
         assertThrows<UnauthorizedException> {
-            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload)
+            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, issuer, audience, "expected-nonce")
         }.also {
-            assertThat(it.message).contains("OIDC ID 토큰의 형식이나 구성이 올바르지 않습니다.")
+            assertThat(it.message).contains("OIDC ID 토큰의 nonce 검증에 실패했습니다.")
         }
     }
 

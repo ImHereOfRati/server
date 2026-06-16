@@ -19,6 +19,7 @@ enum class AuthException(
     OIDC_FORMAT_INVALID(CommonErrorCode.UNAUTHORIZED, "AUTH-101", "OIDC ID 토큰의 형식이나 구성이 올바르지 않습니다."),
     OIDC_SIGNATURE_INVALID(CommonErrorCode.UNAUTHORIZED, "AUTH-102", "OIDC ID 토큰의 서명 검증에 실패했습니다."),
     OIDC_MISSING_EMAIL(CommonErrorCode.UNAUTHORIZED, "AUTH-103", "OIDC ID 토큰에 필수 정보(이메일)가 없습니다."),
+    OIDC_NONCE_INVALID(CommonErrorCode.UNAUTHORIZED, "AUTH-109", "OIDC ID 토큰의 nonce 검증에 실패했습니다."),
     INVALID_OTT(CommonErrorCode.UNAUTHORIZED, "AUTH-104", "유효하지 않은 일회용 토큰입니다."),
     USER_DISABLED(CommonErrorCode.UNAUTHORIZED, "AUTH-105", "비활성화된 계정입니다."),
     USER_LOCKED(CommonErrorCode.UNAUTHORIZED, "AUTH-106", "잠긴 계정입니다."),
@@ -40,12 +41,12 @@ enum class AuthException(
     KAKAO_OIDC_PUBLIC_KEY_FETCH_FAILED(
         CommonErrorCode.INTERNAL_SERVER_ERROR,
         "AUTH-900",
-        "카카오 서버로부터 공개키를 가져오는데 실패했습니다."
+        "OIDC 서버로부터 공개키를 가져오는데 실패했습니다."
     ),
     KAKAO_OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED(
         CommonErrorCode.INFRA_FAILURE,
         "AUTH-901",
-        "Redis로부터 공개키를 가져오는데 실패했습니다."
+        "Redis로부터 OIDC 공개키를 가져오는데 실패했습니다."
     ),
     KAKAO_OIDC_PUBLIC_KEY_NOT_FOUND(CommonErrorCode.INFRA_FAILURE, "AUTH-902", "공개키 목록에서 일치하는 키를 찾을 수 없습니다."),
     OIDC_KEY_PARSING_ERROR(CommonErrorCode.INTERNAL_SERVER_ERROR, "AUTH-903", "OIDC 키 파싱 중 오류가 발생했습니다"),

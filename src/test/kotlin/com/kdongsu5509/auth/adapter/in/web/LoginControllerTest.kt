@@ -59,9 +59,9 @@ class LoginControllerTest {
     @DisplayName("로그인 잘 한다")
     fun login_success() {
         // given
-        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "test-id-token")
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "test-id-token", nonce = "test-nonce")
         val token = ImHereJwtToken(accessToken = "access-token", refreshToken = "refresh-token")
-        given(loginUseCase.login(any(), any())).willReturn(token)
+        given(loginUseCase.login(any(), any(), any())).willReturn(token)
 
         // when & then
         mockMvc.perform(

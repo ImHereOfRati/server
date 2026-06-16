@@ -60,7 +60,8 @@ class RegistrationControllerTest {
         // given
         val request = OIDCAuthRequest(
             provider = OAuth2Provider.KAKAO,
-            idToken = "test-id-token"
+            idToken = "test-id-token",
+            nonce = "test-nonce"
         )
 
         val token = ImHereJwtToken(
@@ -68,7 +69,7 @@ class RegistrationControllerTest {
             refreshToken = "refresh-token"
         )
 
-        given(registerUseCase.register(any(), any())).willReturn(token)
+        given(registerUseCase.register(any(), any(), any())).willReturn(token)
 
         // when & then
         mockMvc.perform(

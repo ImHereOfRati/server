@@ -1,7 +1,6 @@
 package com.kdongsu5509.auth.adapter.out.jwt
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.auth.adapter.out.oauth.KakaoOIDCProperties
 import com.kdongsu5509.auth.application.port.out.OIDCIdTokenVerifyPort
 import com.kdongsu5509.auth.application.service.dto.OIDCDecodePayload
 import com.kdongsu5509.support.exception.throwIt
@@ -19,9 +18,7 @@ import java.security.spec.RSAPublicKeySpec
 import java.util.*
 
 @Component
-class JjwtOIDCTokenVerifyAdapter(
-    private val kakaoOIDCProperties: KakaoOIDCProperties,
-) : OIDCIdTokenVerifyPort {
+class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
 
     companion object {
         private val KID_PATTERN = """ "kid"\s*:\s*"([^"]+)" """.trim().toRegex()
@@ -38,9 +35,10 @@ class JjwtOIDCTokenVerifyAdapter(
         return kidMatch?.groupValues?.get(1) ?: AuthException.OIDC_FORMAT_INVALID.throwIt()
     }
 
-    override fun verifyPayLoad(payload: OIDCDecodePayload) {
-        verifyIssuer(payload.iss)
-        verifyAudience(payload.aud)
+    override fun verifyPayLoad(payload: OIDCDecodePayload, issuer: String, audience: String, nonce: String) {
+        verifyIssuer(payload.iss, issuer)
+        verifyAudience(payload.aud, audience)
+        verifyNonce(payload.nonce, nonce)
     }
 
     override fun verifySignature(token: String, modulus: String, exponent: String): Jws<Claims> {
@@ -59,15 +57,26 @@ class JjwtOIDCTokenVerifyAdapter(
         }
     }
 
-    private fun verifyIssuer(actualIssuer: String) {
-        if (actualIssuer != kakaoOIDCProperties.issuer) {
+    private fun verifyIssuer(actualIssuer: String, expectedIssuer: String) {
+        val allowedIssuers = when (expectedIssuer) {
+            "https://accounts.google.com" -> setOf("https://accounts.google.com", "accounts.google.com")
+            else -> setOf(expectedIssuer)
+        }
+
+        if (actualIssuer !in allowedIssuers) {
             AuthException.OIDC_FORMAT_INVALID.throwIt()
         }
     }
 
-    private fun verifyAudience(actualAudience: String) {
-        if (actualAudience != kakaoOIDCProperties.audience) {
+    private fun verifyAudience(actualAudience: String, expectedAudience: String) {
+        if (actualAudience != expectedAudience) {
             AuthException.OIDC_FORMAT_INVALID.throwIt()
+        }
+    }
+
+    private fun verifyNonce(actualNonce: String?, expectedNonce: String) {
+        if (actualNonce.isNullOrBlank() || actualNonce != expectedNonce) {
+            AuthException.OIDC_NONCE_INVALID.throwIt()
         }
     }
 

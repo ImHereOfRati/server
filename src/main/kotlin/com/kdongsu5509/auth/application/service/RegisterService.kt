@@ -23,19 +23,19 @@ class RegisterService(
 ) : RegisterUseCase {
 
     @Transactional
-    override fun register(provider: OAuth2Provider, idToken: String): ImHereJwtToken {
-        val userInformation = verifyOIDCToken(provider, idToken)
-        val newUser = saveNewUser(userInformation.email, userInformation.nickname, provider)
+    override fun register(provider: OAuth2Provider, idToken: String, nonce: String?): ImHereJwtToken {
+        val userInformation = verifyOIDCToken(provider, idToken, nonce)
+        val newUser = saveNewUser(userInformation.email, userInformation.nickname, userInformation.sub, provider)
 
         val newUserClaims = JwtTokenClaims.fromUser(newUser)
         return tokenProviderPort.issue(newUserClaims)
     }
 
-    private fun verifyOIDCToken(provider: OAuth2Provider, idToken: String): OIDCUserInfo {
-        return oidcVerifyPort.verify(provider, idToken)
+    private fun verifyOIDCToken(provider: OAuth2Provider, idToken: String, nonce: String?): OIDCUserInfo {
+        return oidcVerifyPort.verify(provider, idToken, nonce)
     }
 
-    private fun saveNewUser(email: String, nickname: String, provider: OAuth2Provider): User {
+    private fun saveNewUser(email: String, nickname: String, sub: String?, provider: OAuth2Provider): User {
         val existingUser = userRepository.findByEmail(email)
 
         when (existingUser?.status) {
@@ -45,7 +45,7 @@ class RegisterService(
             null -> {} // New user, proceed
         }
 
-        val newUser = User.createWithPendingStatus(email, nickname, provider)
+        val newUser = User.createWithPendingStatus(email, nickname, provider, sub)
         newUser.validateDuplicateEmailAllowed(existingUser != null)
         return userRepository.save(newUser)
     }

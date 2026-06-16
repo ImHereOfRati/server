@@ -16,7 +16,7 @@ class LoginController(
 ) {
     @PostMapping
     fun login(@Validated @RequestBody request: OIDCAuthRequest): OIDCAuthResponse {
-        val imHereJwtToken = loginUseCase.login(request.provider, request.idToken)
+        val imHereJwtToken = loginUseCase.login(request.provider, request.idToken, request.nonce)
         return OIDCAuthResponse.fromImHereJwtToken(imHereJwtToken)
     }
 }

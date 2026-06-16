@@ -29,6 +29,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
  */
 class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
 
+    companion object {
+        private const val NONCE = "test-nonce"
+    }
+
     @MockitoBean
     private lateinit var oidcVerifyPort: OIDCVerifyPort
 
@@ -39,9 +43,9 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("정상적으로 회원가입을 수행하고 201 Created를 반환하며 문서화한다")
     fun registerSuccessAndDocument() {
         // given
-        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token")
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
 
-        given(oidcVerifyPort.verify(any(), any())).willReturn(
+        given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
             OIDCUserInfo(email = "newuser@example.com", nickname = "New User")
         )
 
@@ -58,7 +62,8 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
                     snippets = arrayOf(
                         requestFields(
                             fieldWithPath("provider").description("OAuth2 제공자 (예: KAKAO, APPLE)"),
-                            fieldWithPath("idToken").description("OIDC ID 토큰")
+                            fieldWithPath("idToken").description("OIDC ID 토큰"),
+                            fieldWithPath("nonce").description("OIDC nonce")
                         ),
                         responseFields(
                             fieldWithPath("imhereResponseCode").description("응답 코드"),
@@ -75,9 +80,9 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
     @Test
     @DisplayName("만료된 OIDC 토큰으로 회원가입 시 401 Unauthorized와 에러를 반환하며 문서화한다")
     fun registerFailWhenOidcExpired() {
-        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "expired-id-token")
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "expired-id-token", nonce = NONCE)
 
-        given(oidcVerifyPort.verify(any(), any())).willAnswer {
+        given(oidcVerifyPort.verify(any(), any(), any())).willAnswer {
             AuthException.OIDC_EXPIRED.throwIt()
         }
 
@@ -104,9 +109,9 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
     @Test
     @DisplayName("OIDC 토큰 형식이 올바르지 않으면 401 Unauthorized와 에러를 반환하며 문서화한다")
     fun registerFailWhenOidcFormatInvalid() {
-        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "malformed-token")
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "malformed-token", nonce = NONCE)
 
-        given(oidcVerifyPort.verify(any(), any())).willAnswer {
+        given(oidcVerifyPort.verify(any(), any(), any())).willAnswer {
             AuthException.OIDC_FORMAT_INVALID.throwIt()
         }
 
@@ -138,9 +143,9 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
         val existingUser = User.createWithPendingStatus(email, "Existing User", OAuth2Provider.KAKAO).activate()
         userRepository.save(existingUser)
 
-        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token")
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
 
-        given(oidcVerifyPort.verify(any(), any())).willReturn(
+        given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
             OIDCUserInfo(email = email, nickname = "Existing User")
         )
 
@@ -173,9 +178,9 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
         val blockedUser = User.createWithPendingStatus(email, "Blocked User", OAuth2Provider.KAKAO).activate().block()
         userRepository.save(blockedUser)
 
-        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token")
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
 
-        given(oidcVerifyPort.verify(any(), any())).willReturn(
+        given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
             OIDCUserInfo(email = email, nickname = "Blocked User")
         )
 
@@ -208,9 +213,9 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
         val withdrawnUser = User.createWithPendingStatus(email, "Withdrawn User", OAuth2Provider.KAKAO).activate().withdraw()
         userRepository.save(withdrawnUser)
 
-        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token")
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
 
-        given(oidcVerifyPort.verify(any(), any())).willReturn(
+        given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
             OIDCUserInfo(email = email, nickname = "Withdrawn User")
         )
 

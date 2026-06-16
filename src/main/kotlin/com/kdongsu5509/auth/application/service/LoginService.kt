@@ -22,8 +22,8 @@ class LoginService(
 ) : LoginUseCase {
 
     @Transactional
-    override fun login(provider: OAuth2Provider, idToken: String): ImHereJwtToken {
-        val userInformation = verifyOIDCToken(provider, idToken)
+    override fun login(provider: OAuth2Provider, idToken: String, nonce: String?): ImHereJwtToken {
+        val userInformation = verifyOIDCToken(provider, idToken, nonce)
         val user = userRepository.findByEmail(userInformation.email) ?: AuthException.USER_NOT_REGISTER.throwIt()
 
         when (user.status) {
@@ -37,7 +37,7 @@ class LoginService(
         }
     }
 
-    private fun verifyOIDCToken(provider: OAuth2Provider, idToken: String): OIDCUserInfo {
-        return oidcVerifyPort.verify(provider, idToken)
+    private fun verifyOIDCToken(provider: OAuth2Provider, idToken: String, nonce: String?): OIDCUserInfo {
+        return oidcVerifyPort.verify(provider, idToken, nonce)
     }
 }

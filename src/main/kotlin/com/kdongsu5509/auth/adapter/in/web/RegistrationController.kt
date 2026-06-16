@@ -15,7 +15,7 @@ class RegistrationController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun register(@Validated @RequestBody request: OIDCAuthRequest): OIDCAuthResponse {
-        val imHereJwtToken = registerUseCase.register(request.provider, request.idToken)
+        val imHereJwtToken = registerUseCase.register(request.provider, request.idToken, request.nonce)
         return OIDCAuthResponse.fromImHereJwtToken(imHereJwtToken)
     }
 }

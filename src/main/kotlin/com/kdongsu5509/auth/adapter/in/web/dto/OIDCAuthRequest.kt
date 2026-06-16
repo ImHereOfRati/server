@@ -10,4 +10,7 @@ data class OIDCAuthRequest(
 
     @field:NotBlank(message = "ID 토큰은 필수입니다.")
     val idToken: String,
+
+    @field:NotBlank(message = "Nonce는 필수입니다.")
+    val nonce: String,
 )

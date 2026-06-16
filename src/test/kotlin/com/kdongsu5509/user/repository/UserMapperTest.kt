@@ -23,6 +23,7 @@ class UserMapperTest {
             nickname = "테스트",
             role = UserRole.NORMAL,
             provider = OAuth2Provider.KAKAO,
+            oidcSubject = "subject-1",
             status = UserStatus.ACTIVE
         ).apply {
             this.id = id
@@ -38,7 +39,8 @@ class UserMapperTest {
             nickname = "테스트",
             role = UserRole.NORMAL,
             oauthProvider = OAuth2Provider.KAKAO,
-            status = UserStatus.ACTIVE
+            status = UserStatus.ACTIVE,
+            oidcSubject = "subject-1"
         )
         assertThat(domain).isEqualTo(expected)
     }
@@ -63,7 +65,8 @@ class UserMapperTest {
             nickname = "테스트",
             role = UserRole.NORMAL,
             oauthProvider = OAuth2Provider.KAKAO,
-            status = UserStatus.ACTIVE
+            status = UserStatus.ACTIVE,
+            oidcSubject = "subject-1"
         )
 
         // when
@@ -75,6 +78,7 @@ class UserMapperTest {
             nickname = "테스트",
             role = UserRole.NORMAL,
             provider = OAuth2Provider.KAKAO,
+            oidcSubject = "subject-1",
             status = UserStatus.ACTIVE
         )
         assertThat(entity)

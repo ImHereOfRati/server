@@ -9,21 +9,13 @@ on:
       - completed
 
 jobs:
-  deploy:
-    name: Build & Deploy
+  build-jar:
+    name: Build JAR
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
-    # OIDC 토큰 발급 권한 — AWS IAM role assume에 필요
-    permissions:
-      id-token: write
-      contents: read
-
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
-      ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
-      EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
 
     steps:
       - name: Checkout
@@ -31,7 +23,7 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Generate Image Tag based on date and time
+      - name: Generate image tag
         id: tag
         run: |
           DATE=$(TZ='Asia/Seoul' date +'%Y%m%d-%H%M')
@@ -67,15 +59,44 @@ jobs:
           restore-keys: |
             gradle-build-${{ runner.os }}-
 
-      # secrets 파일 없이 JAR 빌드 → 이미지에 민감 정보 미포함
       - name: Build JAR
         run: |
           chmod +x ./gradlew
-          ./gradlew test bootJar
+          ./gradlew bootJar -x test
 
-      # GitHub OIDC로 IAM role을 assume하여 단기 자격증명을 발급받는다.
-      # 정적 access key를 Secret에 보관하지 않으므로 키 만료/노출 위험이 없다.
-      # 사전 셋업: docs/cicd.md §4 "AWS OIDC 및 IAM 설정" 참고.
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-jar
+          path: build/libs/*.jar
+          retention-days: 1
+
+  docker-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: build-jar
+
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+      ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: app-jar
+          path: build/libs/
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -98,10 +119,33 @@ jobs:
           file: Dockerfile.release
           push: true
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.tag.outputs.tag }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ needs.build-jar.outputs.tag }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    needs: docker-push
+
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+      ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+      EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: imhere-github-actions-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Get GitHub Actions runner public IP
         id: ip
@@ -143,7 +187,6 @@ jobs:
           ${{ secrets.FIREBASE_JSON_KEY }}
           EOF
 
-      # 이미지가 아닌 EC2 파일시스템에 secrets 전달 → 볼륨 마운트로 런타임 주입
       - name: Copy secret config files to EC2
         run: |
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
@@ -158,7 +201,6 @@ jobs:
             /tmp/imhere-secrets/secrets/imhereFirebaseKey.json \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${EC2_DEPLOY_PATH}/secrets/"
 
-      # 1. Runner 환경에서 ECR 비밀번호 발급 (OIDC 인증됨)
       - name: Get ECR Login Password
         run: |
           echo "ECR_PASSWORD=$(aws ecr get-login-password --region ${{ env.AWS_REGION }})" >> $GITHUB_ENV
@@ -171,7 +213,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           envs: ECR_REGISTRY,ECR_REPOSITORY,AWS_REGION,EC2_DEPLOY_PATH,ECR_PASSWORD
           script: |
-            # EC2 내부가 아닌 Runner에서 전달받은 비밀번호 사용
             echo "$ECR_PASSWORD" | docker login --username AWS --password-stdin $ECR_REGISTRY
 
             cd $EC2_DEPLOY_PATH

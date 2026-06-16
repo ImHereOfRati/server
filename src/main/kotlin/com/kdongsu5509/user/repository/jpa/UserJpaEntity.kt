@@ -36,7 +36,10 @@ class UserJpaEntity(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var status: UserStatus
+    var status: UserStatus,
+
+    @Column(name = "oidc_subject")
+    var oidcSubject: String? = null
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue

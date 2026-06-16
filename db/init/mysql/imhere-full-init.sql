@@ -22,14 +22,15 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users
 (
-    id         CHAR(36)                                           NOT NULL,
-    email      VARCHAR(255)                                       NOT NULL,
-    nickname   VARCHAR(255)                                       NOT NULL,
-    role       ENUM ('NORMAL', 'ADMIN')                           NOT NULL,
-    provider   ENUM ('KAKAO')                                     NOT NULL,
-    status     ENUM ('PENDING', 'ACTIVE', 'BLOCKED', 'WITHDRAWN') NOT NULL,
-    created_at DATETIME(6)                                        NOT NULL,
-    updated_at DATETIME(6)                                        NOT NULL,
+    id           CHAR(36)                                              NOT NULL,
+    email        VARCHAR(255)                                          NOT NULL,
+    nickname     VARCHAR(255)                                          NOT NULL,
+    role         ENUM ('NORMAL', 'ADMIN')                              NOT NULL,
+    provider     ENUM ('KAKAO', 'GOOGLE', 'NAVER')                    NOT NULL,
+    status       ENUM ('PENDING', 'ACTIVE', 'BLOCKED', 'WITHDRAWN')    NOT NULL,
+    oidc_subject VARCHAR(255)                                          NULL,
+    created_at   DATETIME(6)                                           NOT NULL,
+    updated_at   DATETIME(6)                                           NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_users_email (email),
     KEY idx_users_nickname (nickname)

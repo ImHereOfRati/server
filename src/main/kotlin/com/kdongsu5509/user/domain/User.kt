@@ -12,11 +12,17 @@ data class User(
     var nickname: String,
     var role: UserRole,
     val oauthProvider: OAuth2Provider,
-    var status: UserStatus
+    var status: UserStatus,
+    val oidcSubject: String? = null
 ) {
     companion object {
-        fun createWithPendingStatus(email: String, nickname: String, oauthProvider: OAuth2Provider): User {
-            return User(null, email, nickname, UserRole.NORMAL, oauthProvider, UserStatus.PENDING)
+        fun createWithPendingStatus(
+            email: String,
+            nickname: String,
+            oauthProvider: OAuth2Provider,
+            oidcSubject: String? = null
+        ): User {
+            return User(null, email, nickname, UserRole.NORMAL, oauthProvider, UserStatus.PENDING, oidcSubject)
         }
     }
 
@@ -38,7 +44,8 @@ data class User(
             nickname = nickname,
             role = role,
             oauthProvider = oauthProvider,
-            status = UserStatus.ACTIVE
+            status = UserStatus.ACTIVE,
+            oidcSubject = oidcSubject
         )
     }
 
@@ -52,7 +59,8 @@ data class User(
             nickname = nickname,
             role = role,
             oauthProvider = oauthProvider,
-            status = UserStatus.BLOCKED
+            status = UserStatus.BLOCKED,
+            oidcSubject = oidcSubject
         )
     }
 
@@ -66,7 +74,8 @@ data class User(
             nickname = nickname,
             role = role,
             oauthProvider = oauthProvider,
-            status = UserStatus.ACTIVE
+            status = UserStatus.ACTIVE,
+            oidcSubject = oidcSubject
         )
     }
 
@@ -80,7 +89,8 @@ data class User(
             nickname = nickname,
             role = role,
             oauthProvider = oauthProvider,
-            status = UserStatus.WITHDRAWN
+            status = UserStatus.WITHDRAWN,
+            oidcSubject = oidcSubject
         )
     }
 
@@ -90,7 +100,8 @@ data class User(
         nickname = newNickname,
         role = role,
         oauthProvider = oauthProvider,
-        status = status
+        status = status,
+        oidcSubject = oidcSubject
     )
 
     fun validateDuplicateEmailAllowed(isExistingEmail: Boolean) {

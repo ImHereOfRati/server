@@ -14,7 +14,8 @@ class UserMapper {
             entity.nickname,
             entity.role,
             entity.provider,
-            entity.status
+            entity.status,
+            entity.oidcSubject
         )
 
     fun toEntity(domain: User): UserJpaEntity = UserJpaEntity(
@@ -22,6 +23,7 @@ class UserMapper {
         domain.nickname,
         domain.role,
         domain.oauthProvider,
-        domain.status
+        domain.status,
+        domain.oidcSubject
     )
 }

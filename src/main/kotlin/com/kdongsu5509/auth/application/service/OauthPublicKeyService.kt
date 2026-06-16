@@ -22,7 +22,7 @@ class OauthPublicKeyService(
     }
 
     fun fetchAll() {
-        OAuth2Provider.values().forEach { provider ->
+        oidcProperties.configuredProviders().forEach { provider ->
             fetch(provider)
         }
     }

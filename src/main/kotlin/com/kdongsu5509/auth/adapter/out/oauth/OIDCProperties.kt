@@ -20,4 +20,18 @@ data class OIDCProperties(
         OAuth2Provider.KAKAO -> providers[OAuth2Provider.KAKAO.name.lowercase()]
         OAuth2Provider.GOOGLE -> providers[OAuth2Provider.GOOGLE.name.lowercase()]
     } ?: error("Missing OIDC provider config: $provider")
+
+    fun configuredProviders(): List<OAuth2Provider> {
+        val configuredProviders = mutableListOf<OAuth2Provider>()
+
+        if (providers.containsKey(OAuth2Provider.KAKAO.name.lowercase())) {
+            configuredProviders.add(OAuth2Provider.KAKAO)
+        }
+
+        if (providers.containsKey(OAuth2Provider.GOOGLE.name.lowercase())) {
+            configuredProviders.add(OAuth2Provider.GOOGLE)
+        }
+
+        return configuredProviders
+    }
 }

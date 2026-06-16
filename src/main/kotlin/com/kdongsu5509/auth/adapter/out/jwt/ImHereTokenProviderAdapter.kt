@@ -26,7 +26,7 @@ class ImHereTokenProviderAdapter(
         val redisKey = getTokenRedisKey(claims.email)
         cachePort.save(redisKey, refreshToken, Duration.ofDays(imHereJwtProperties.refreshExpirationDays))
 
-        return ImHereJwtToken(accessToken, refreshToken)
+        return ImHereJwtToken(accessToken, refreshToken, claims.status)
     }
 
     override fun reissueByRefreshToken(refreshToken: String): ImHereJwtToken {

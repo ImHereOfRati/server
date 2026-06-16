@@ -202,8 +202,8 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
     }
 
     @Test
-    @DisplayName("가입 대기 중인 계정(PENDING)으로 로그인 시 401 Unauthorized와 에러를 반환하며 문서화한다")
-    fun loginFailWhenUserPending() {
+    @DisplayName("가입 대기 중인 계정(PENDING)으로 로그인 시 200 OK와 토큰, 상태를 반환하며 문서화한다")
+    fun loginSuccessWhenUserPending() {
         val email = "pending@example.com"
         val user = User.createWithPendingStatus(email, "Pending User", OAuth2Provider.KAKAO)
         userRepository.save(user)
@@ -219,15 +219,17 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
-            .andExpect(status().isUnauthorized)
+            .andExpect(status().isOk)
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
-                    identifier = "auth-login-fail-pending",
+                    identifier = "auth-login-success-pending",
                     snippets = arrayOf(
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (AUTH-107: 가입 대기 중인 계정입니다)"),
-                            fieldWithPath("message").description("에러 상세 메시지"),
-                            fieldWithPath("data").description("데이터는 없음").optional()
+                            fieldWithPath("imhereResponseCode").description("응답 코드"),
+                            fieldWithPath("message").description("응답 메시지"),
+                            fieldWithPath("data.accessToken").description("발급된 액세스 토큰"),
+                            fieldWithPath("data.refreshToken").description("발급된 리프레시 토큰"),
+                            fieldWithPath("data.userStatus").description("사용자 상태 (ACTIVE, PENDING, BLOCKED, WITHDRAWN)")
                         )
                     )
                 )

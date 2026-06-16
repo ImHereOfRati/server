@@ -28,11 +28,12 @@ class RegisterServiceTest {
         const val TEST_ID_TOKEN = "idToken"
         const val TEST_EMAIL = "test@test.com"
         const val TEST_NICKNAME = "홍길동"
+        const val TEST_SUB = "sub-123"
         const val TEST_ACCESS_TOKEN = "token"
         const val TEST_REFRESH_TOKEN = "refresh"
 
         val TEST_OAUTH_PROVIDER = OAuth2Provider.KAKAO
-        val TEST_OIDC_USER_INFO = OIDCUserInfo(email = TEST_EMAIL, nickname = TEST_NICKNAME)
+        val TEST_OIDC_USER_INFO = OIDCUserInfo(email = TEST_EMAIL, nickname = TEST_NICKNAME, sub = TEST_SUB)
         val TEST_NO_ID_USER = User(
             id = null,
             email = TEST_EMAIL,
@@ -40,6 +41,7 @@ class RegisterServiceTest {
             oauthProvider = TEST_OAUTH_PROVIDER,
             role = UserRole.NORMAL,
             status = UserStatus.PENDING,
+            oidcSubject = TEST_SUB
         )
         val TEST_WITH_ID_USER = User(
             id = UUID.randomUUID(),
@@ -48,6 +50,7 @@ class RegisterServiceTest {
             oauthProvider = TEST_OAUTH_PROVIDER,
             role = UserRole.NORMAL,
             status = UserStatus.PENDING,
+            oidcSubject = TEST_SUB
         )
 
     }

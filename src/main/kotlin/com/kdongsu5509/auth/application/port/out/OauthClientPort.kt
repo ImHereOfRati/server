@@ -4,6 +4,6 @@ import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKeyResponse
 
 
 interface OauthClientPort {
-    fun fetch(): OIDCPublicKeyResponse?
-    fun refresh(): OIDCPublicKeyResponse?
+    fun fetch(cacheKey: String, jwksUri: String): OIDCPublicKeyResponse?
+    fun refresh(cacheKey: String, jwksUri: String): OIDCPublicKeyResponse?
 }

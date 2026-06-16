@@ -1,6 +1,8 @@
 package com.kdongsu5509.auth.application.service
 
+import com.kdongsu5509.auth.adapter.out.oauth.OIDCProperties
 import com.kdongsu5509.auth.application.port.out.OauthClientPort
+import com.kdongsu5509.auth.domain.OAuth2Provider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -15,11 +17,21 @@ class OauthPublicKeyServiceTest {
     @Mock
     private lateinit var oauthClientPort: OauthClientPort
 
+    private lateinit var oidcProperties: OIDCProperties
+
     private lateinit var publicKeyService: OauthPublicKeyService
 
     @BeforeEach
     fun setUp() {
-        publicKeyService = OauthPublicKeyService(oauthClientPort)
+        oidcProperties = OIDCProperties(
+            kakao = OIDCProperties.Provider(
+                issuer = "https://kauth.kakao.com",
+                audience = "kakao-client-id",
+                cacheKey = "kakao-cache",
+                jwksUri = "https://kauth.kakao.com/.well-known/jwks.json"
+            )
+        )
+        publicKeyService = OauthPublicKeyService(oauthClientPort, oidcProperties)
     }
 
     @Test
@@ -29,6 +41,6 @@ class OauthPublicKeyServiceTest {
         publicKeyService.fetch()
 
         // then
-        then(oauthClientPort).should().refresh()
+        then(oauthClientPort).should().refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")
     }
 }

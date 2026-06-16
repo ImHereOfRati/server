@@ -14,6 +14,7 @@ enum class NotificationException(
 ) : ImHereBaseErrorCode {
     // --- 0xx: Bad Request (400) ---
     SMS_NOT_ALLOW_EMPTY(CommonErrorCode.INVALID_INPUT, "SMS-000", "전송할 메시지 내용이 비어있습니다."),
+    SMS_BODY_TOO_LONG(CommonErrorCode.INVALID_INPUT, "SMS-001", "SMS 본문은 개행 포함 45자를 초과할 수 없습니다."),
     UNSUPPORTED_TARGET_TYPE(CommonErrorCode.INVALID_INPUT, "NOTI-001", "지원하지 않는 알림 수단입니다."),
 
     // ---2xx: UNAUTHORIZE(403) ---

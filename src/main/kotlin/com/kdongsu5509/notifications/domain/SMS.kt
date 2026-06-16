@@ -1,7 +1,7 @@
 package com.kdongsu5509.notifications.domain
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import com.kdongsu5509.notifications.exception.NotificationException
+import com.kdongsu5509.support.exception.throwIt
 import java.util.Locale
 
 /**
@@ -14,17 +14,49 @@ class SMS(
     val location: String
 ) {
     companion object {
-        private const val MSG_FORMAT =
-            "%s에 안전하게 도착하였습니다.\n\n보낸 분 : %s\n시간: %s\n\nService by ImHere"
-        private val DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("a h시 m분").withLocale(Locale.KOREAN)
+        private const val SERVICE_NAME = "ImHere"
+        private const val MAX_MESSAGE_LENGTH = 45
+        private const val MSG_FORMAT = "[%s]\n%s 도착\n발신자: %s"
+    }
+
+    init {
+        validateRequiredFields()
+        validateMessageText()
     }
 
     /** SMS 발송용 본문을 생성합니다. */
-    fun buildMessageText(): String = String.format(
+    fun buildMessageText(): String = renderMessageText()
+
+    private fun renderMessageText(): String = String.format(
+        Locale.KOREAN,
         MSG_FORMAT,
+        SERVICE_NAME,
         location,
-        senderNickname,
-        LocalDateTime.now().format(DATE_FORMATTER)
+        senderNickname
     )
+
+    private fun validateMessageText() {
+        val messageText = renderMessageText()
+        if (messageText.length > MAX_MESSAGE_LENGTH) {
+            NotificationException.SMS_BODY_TOO_LONG.throwIt(
+                contextData = mapOf(
+                    "length" to messageText.length,
+                    "maxLength" to MAX_MESSAGE_LENGTH,
+                    "senderNickname" to senderNickname,
+                    "location" to location
+                )
+            )
+        }
+    }
+
+    private fun validateRequiredFields() {
+        if (senderNickname.isBlank() || location.isBlank()) {
+            NotificationException.SMS_NOT_ALLOW_EMPTY.throwIt(
+                contextData = mapOf(
+                    "senderNickname" to senderNickname,
+                    "location" to location
+                )
+            )
+        }
+    }
 }

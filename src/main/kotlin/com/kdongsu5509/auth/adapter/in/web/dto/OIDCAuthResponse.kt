@@ -13,7 +13,7 @@ data class OIDCAuthResponse(
             return OIDCAuthResponse(
                 imhereJwtToken.accessToken,
                 imhereJwtToken.refreshToken,
-                userStatus?.toString()
+                userStatus?.toString() ?: imhereJwtToken.userStatus
             )
         }
     }

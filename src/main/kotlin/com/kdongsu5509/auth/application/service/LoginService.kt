@@ -27,10 +27,9 @@ class LoginService(
         val user = userRepository.findByEmail(userInformation.email) ?: AuthException.USER_NOT_REGISTER.throwIt()
 
         when (user.status) {
-            UserStatus.PENDING -> AuthException.USER_PENDING.throwIt()
             UserStatus.BLOCKED -> AuthException.USER_DISABLED.throwIt()
             UserStatus.WITHDRAWN -> AuthException.USER_WITHDRAWN.throwIt()
-            UserStatus.ACTIVE -> {
+            UserStatus.PENDING, UserStatus.ACTIVE -> {
                 val newUserClaims = JwtTokenClaims.fromUser(user)
                 return tokenProviderPort.issue(newUserClaims)
             }

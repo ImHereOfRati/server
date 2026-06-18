@@ -9,15 +9,15 @@ import org.junit.jupiter.api.Test
 class SMSTest {
 
     @Test
-    @DisplayName("SMS 본문은 고정 템플릿으로 렌더링된다")
+    @DisplayName("SMS 본문은 전달된 body 그대로 사용한다")
     fun buildMessageText_success() {
         val sms = SMS(
             senderNickname = "sender",
             receiverNumber = "01012345678",
-            location = "Seoul"
+            body = "[ImHere]\nSeoul 도착"
         )
 
-        assertThat(sms.buildMessageText()).isEqualTo("[ImHere]\nSeoul 도착\n발신자: sender")
+        assertThat(sms.buildMessageText()).isEqualTo("[ImHere]\nSeoul 도착")
     }
 
     @Test
@@ -27,7 +27,7 @@ class SMSTest {
             SMS(
                 senderNickname = "very-long-sender-name",
                 receiverNumber = "01012345678",
-                location = "very-long-location-name-that-breaks-limit"
+                body = "1234567890123456789012345678901234567890123456"
             )
         }
             .isInstanceOf(com.kdongsu5509.support.exception.type.InvalidInputException::class.java)
@@ -41,7 +41,7 @@ class SMSTest {
             SMS(
                 senderNickname = "",
                 receiverNumber = "01012345678",
-                location = "Seoul"
+                body = "[ImHere]\nSeoul 도착"
             )
         }
             .isInstanceOf(com.kdongsu5509.support.exception.type.InvalidInputException::class.java)

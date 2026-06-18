@@ -2,7 +2,6 @@ package com.kdongsu5509.notifications.domain
 
 import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.support.exception.throwIt
-import java.util.Locale
 
 /**
  * SMS 도메인 객체.
@@ -11,12 +10,10 @@ import java.util.Locale
 class SMS(
     val senderNickname: String,
     val receiverNumber: String,
-    val location: String
+    val body: String
 ) {
     companion object {
-        private const val SERVICE_NAME = "ImHere"
         private const val MAX_MESSAGE_LENGTH = 45
-        private const val MSG_FORMAT = "[%s]\n%s 도착\n발신자: %s"
     }
 
     init {
@@ -25,36 +22,27 @@ class SMS(
     }
 
     /** SMS 발송용 본문을 생성합니다. */
-    fun buildMessageText(): String = renderMessageText()
-
-    private fun renderMessageText(): String = String.format(
-        Locale.KOREAN,
-        MSG_FORMAT,
-        SERVICE_NAME,
-        location,
-        senderNickname
-    )
+    fun buildMessageText(): String = body
 
     private fun validateMessageText() {
-        val messageText = renderMessageText()
-        if (messageText.length > MAX_MESSAGE_LENGTH) {
+        if (body.length > MAX_MESSAGE_LENGTH) {
             NotificationException.SMS_BODY_TOO_LONG.throwIt(
                 contextData = mapOf(
-                    "length" to messageText.length,
+                    "length" to body.length,
                     "maxLength" to MAX_MESSAGE_LENGTH,
                     "senderNickname" to senderNickname,
-                    "location" to location
+                    "body" to body
                 )
             )
         }
     }
 
     private fun validateRequiredFields() {
-        if (senderNickname.isBlank() || location.isBlank()) {
+        if (senderNickname.isBlank() || body.isBlank()) {
             NotificationException.SMS_NOT_ALLOW_EMPTY.throwIt(
                 contextData = mapOf(
                     "senderNickname" to senderNickname,
-                    "location" to location
+                    "body" to body
                 )
             )
         }

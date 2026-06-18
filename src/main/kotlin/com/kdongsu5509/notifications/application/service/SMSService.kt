@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class SMSService(private val externalMessagePort: ExternalMessagePort) : MessageSendUseCase {
-    override fun send(senderNickname: String, receiverNumber: String, location: String) {
+    override fun send(senderNickname: String, receiverNumber: String, body: String) {
         //TODO : 문자 발송 데이터 저장 필요
         validateReceiverNumber(receiverNumber)
         val sms = SMS(
             senderNickname = senderNickname,
             receiverNumber = receiverNumber,
-            location = location
+            body = body
         )
 
         val response = externalMessagePort.send(sms)
@@ -26,10 +26,10 @@ class SMSService(private val externalMessagePort: ExternalMessagePort) : Message
     override fun sendMultiple(
         senderNickname: String,
         receiverNumbers: List<String>,
-        location: String
+        body: String
     ) {
         validateReceiverNumbers(receiverNumbers)
-        val multipleSMS = receiverNumbers.map { SMS(senderNickname, it, location) }
+        val multipleSMS = receiverNumbers.map { SMS(senderNickname, it, body) }
 
         val responses = externalMessagePort.sendMultiple(multipleSMS)
         if (responses.size != multipleSMS.size || responses.any { it.status != SolapiResponse.SUCCESS_STATUS }) {

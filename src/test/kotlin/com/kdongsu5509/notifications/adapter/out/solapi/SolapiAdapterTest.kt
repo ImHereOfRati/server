@@ -41,7 +41,7 @@ class SolapiAdapterTest {
     @Test
     @DisplayName("단일 문자 발송 성공 시 success 응답을 반환한다")
     fun send_success() {
-        val sms = SMS("01011112222", "TestLocation", "TestSender")
+        val sms = SMS("TestSender", "01011112222", "[ImHere]\nTestLocation 도착")
 
         val sendMethod = DefaultMessageService::class.java.methods.find {
             it.name == "send" && it.parameterTypes.size == 2 && it.parameterTypes[0] == Message::class.java
@@ -57,7 +57,7 @@ class SolapiAdapterTest {
     @Test
     @DisplayName("단일 문자 발송 실패 시 fail 응답을 반환한다")
     fun send_fail() {
-        val sms = SMS("01011112222", "TestLocation", "TestSender")
+        val sms = SMS("TestSender", "01011112222", "[ImHere]\nTestLocation 도착")
         Mockito.doThrow(RuntimeException("Test Exception")).`when`(solapiService).send(any<Message>(), isNull())
 
         val result = adapter.send(sms)
@@ -68,7 +68,10 @@ class SolapiAdapterTest {
     @Test
     @DisplayName("다중 문자 발송 실패 시 예외를 잡아 fail 응답 리스트를 반환한다")
     fun sendMultiple_fail() {
-        val smsList = listOf(SMS("01011112222", "L1", "S1"), SMS("01011113333", "L2", "S2"))
+        val smsList = listOf(
+            SMS("S1", "01011112222", "[ImHere]\nL1 도착"),
+            SMS("S2", "01011113333", "[ImHere]\nL2 도착")
+        )
         Mockito.doThrow(RuntimeException("Bulk fail")).`when`(solapiService).send(any<List<Message>>(), isNull())
 
         val result = adapter.sendMultiple(smsList)
@@ -88,7 +91,7 @@ class SolapiAdapterTest {
     @Test
     @DisplayName("다중 문자 발송 시 응답 데이터가 비어있으면 실패 응답을 반환한다")
     fun sendMultiple_emptyResponse() {
-        val smsList = listOf(SMS("01011112222", "L1", "S1"))
+        val smsList = listOf(SMS("S1", "01011112222", "[ImHere]\nL1 도착"))
 
         doAnswer {
             val sendMethod = DefaultMessageService::class.java.methods.find {
@@ -108,7 +111,10 @@ class SolapiAdapterTest {
     @Test
     @DisplayName("다중 문자 발송 시 일부는 성공하고 일부는 실패하는 경우를 매핑한다")
     fun sendMultiple_partialSuccess() {
-        val smsList = listOf(SMS("01011112222", "L1", "S1"), SMS("01011113333", "L2", "S2"))
+        val smsList = listOf(
+            SMS("S1", "01011112222", "[ImHere]\nL1 도착"),
+            SMS("S2", "01011113333", "[ImHere]\nL2 도착")
+        )
 
         doAnswer {
             val sendMethod = DefaultMessageService::class.java.methods.find {
@@ -147,7 +153,7 @@ class SolapiAdapterTest {
     @Test
     @DisplayName("Solapi API 에러에 따라 적절한 에러 메시지를 반환한다")
     fun handleException_branches() {
-        val sms = SMS("01011112222", "L1", "S1")
+        val sms = SMS("S1", "01011112222", "[ImHere]\nL1 도착")
 
         val badReq = mock(SolapiBadRequestException::class.java)
         whenever(badReq.message).thenReturn("Bad Req")

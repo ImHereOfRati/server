@@ -35,7 +35,7 @@ class SMSServiceTest {
         service.send(
             senderNickname = "sender",
             receiverNumber = "01012345678",
-            location = "Seoul"
+            body = "[ImHere]\nSeoul 도착"
         )
 
         val captor = argumentCaptor<SMS>()
@@ -44,7 +44,7 @@ class SMSServiceTest {
         val sms = captor.firstValue
         assertThat(sms.senderNickname).isEqualTo("sender")
         assertThat(sms.receiverNumber).isEqualTo("01012345678")
-        assertThat(sms.location).isEqualTo("Seoul")
+        assertThat(sms.body).isEqualTo("[ImHere]\nSeoul 도착")
     }
 
     @Test
@@ -57,7 +57,7 @@ class SMSServiceTest {
         service.sendMultiple(
             senderNickname = "sender",
             receiverNumbers = listOf("01012345678", "01087654321"),
-            location = "Seoul"
+            body = "[ImHere]\nSeoul 도착"
         )
 
         val captor = argumentCaptor<List<SMS>>()
@@ -76,7 +76,7 @@ class SMSServiceTest {
             service.sendMultiple(
                 senderNickname = "sender",
                 receiverNumbers = emptyList(),
-                location = "Seoul"
+                body = "[ImHere]\nSeoul 도착"
             )
         }.isInstanceOf(InvalidInputException::class.java)
 
@@ -94,7 +94,7 @@ class SMSServiceTest {
             service.sendMultiple(
                 senderNickname = "sender",
                 receiverNumbers = listOf("01012345678", "01087654321"),
-                location = "Seoul"
+                body = "[ImHere]\nSeoul 도착"
             )
         }.isInstanceOf(com.kdongsu5509.support.exception.type.InternalServerException::class.java)
 
@@ -108,7 +108,7 @@ class SMSServiceTest {
             service.send(
                 senderNickname = "very-long-sender-name",
                 receiverNumber = "01012345678",
-                location = "very-long-location-name-that-breaks-limit"
+                body = "1234567890123456789012345678901234567890123456"
             )
         }.isInstanceOf(InvalidInputException::class.java)
 
@@ -122,7 +122,7 @@ class SMSServiceTest {
             service.send(
                 senderNickname = "sender",
                 receiverNumber = "",
-                location = "Seoul"
+                body = "[ImHere]\nSeoul 도착"
             )
         }.isInstanceOf(InvalidInputException::class.java)
 

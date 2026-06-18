@@ -41,7 +41,7 @@ class SmsNotificationDispatchStrategyTest {
             notificationMethod = NotificationMethod.SMS,
             targetIdentifier = "01012345678",
             type = "TYPE",
-            extraData = mapOf("location" to "Seoul")
+            extraData = mapOf("body" to "[ImHere]\nSeoul 도착")
         )
 
         strategy.dispatch(command)
@@ -49,7 +49,7 @@ class SmsNotificationDispatchStrategyTest {
         verify(smsService).send(
             senderNickname = "sender",
             receiverNumber = "01012345678",
-            location = "Seoul"
+            body = "[ImHere]\nSeoul 도착"
         )
     }
 
@@ -62,7 +62,7 @@ class SmsNotificationDispatchStrategyTest {
             notificationMethod = NotificationMethod.SMS,
             targetIdentifiers = listOf("01012345678", "01087654321"),
             type = "TYPE",
-            extraData = mapOf("location" to "Seoul")
+            extraData = mapOf("body" to "[ImHere]\nSeoul 도착")
         )
 
         strategy.dispatchMultiple(command)
@@ -70,7 +70,7 @@ class SmsNotificationDispatchStrategyTest {
         verify(smsService).sendMultiple(
             senderNickname = "sender",
             receiverNumbers = listOf("01012345678", "01087654321"),
-            location = "Seoul"
+            body = "[ImHere]\nSeoul 도착"
         )
     }
 }

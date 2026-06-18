@@ -9,7 +9,6 @@ import com.kdongsu5509.friends.domain.Friendship
 import com.kdongsu5509.friends.repository.FriendRequestRepository
 import com.kdongsu5509.friends.repository.FriendRestrictionRepository
 import com.kdongsu5509.friends.repository.FriendshipRepository
-import com.kdongsu5509.shared.notification.NotificationPort
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.service.UserService
 import com.kdongsu5509.user.service.dto.UserResult
@@ -27,7 +26,6 @@ class FriendRequestServiceImpl(
     private val friendRequestRepository: FriendRequestRepository,
     private val friendRestrictionRepository: FriendRestrictionRepository,
     private val friendshipRepository: FriendshipRepository,
-    private val notificationPort: NotificationPort,
 ) : FriendRequestService {
 
     @Transactional

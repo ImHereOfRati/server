@@ -1,190 +1,427 @@
-# ImHere — Server
+# 📍 ImHere Server
 
-**ImHere**는 위치 기반 알림 서비스의 백엔드 서버입니다.
-사용자가 특정 위치에 도착하거나 이탈할 때 지정된 연락처로 알림을 자동 전송합니다.
+ImHere Server는 위치 기반 알림 서비스의 백엔드다.
+사용자가 지정한 위치에 도착하거나 이탈하면, 등록된 대상에게 알림을 보낸다.
 
-연동 클라이언트: [ImHere AOS](https://github.com/kdongsu5509/ImHere-AOS) *(Android)*
+모바일 클라이언트는 Flutter로 만든 ImHere이며, 설치는 [플레이스토어](https://play.google.com/store/apps/details?id=com.kdongsu5509.iamhere)에서
+한다.
+
+<p>
+  <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"/>
+  <img src="https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot"/>
+  <img src="https://img.shields.io/badge/Spring%20Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security"/>
+  <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white" alt="Gradle"/>
+</p>
+<p>
+  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"/>
+  <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"/>
+  <img src="https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white" alt="RabbitMQ"/>
+  <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT"/>
+</p>
+<p>
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
+  <img src="https://img.shields.io/badge/Amazon%20AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white" alt="AWS"/>
+  <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx"/>
+  <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions"/>
+</p>
+<p>
+  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"/>
+  <img src="https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white" alt="Grafana"/>
+  <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger/OpenAPI"/>
+  <img src="https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white" alt="JUnit5"/>
+</p>
+
+---
+
+## 개요
+
+- 위치 기반 도착/이탈 알림 처리
+- Kakao/Google OIDC 로그인
+- JWT 발급 및 Refresh Token 재발급
+- 사용자, 친구, 약관, 알림, 기록, 운영 도메인 분리
+- RabbitMQ 기반 비동기 알림 처리
+- FCM, SMS, Discord, Grafana Cloud 연동
+- REST Docs + OpenAPI 기반 API 문서화
+- 로그, 메트릭, 트레이스, 에러 알림 운영
 
 ---
 
 ## 기술 스택
 
-| 분류            | 기술                                        |
-|---------------|-------------------------------------------|
-| Language      | Kotlin 2.x                                |
-| Runtime       | Java 21                                   |
-| Framework     | Spring Boot 4.0.x                         |
-| Architecture  | Hexagonal (Ports & Adapters)              |
-| DB            | MySQL + Spring Data JPA + QueryDSL (KSP)  |
-| Cache         | Redis                                     |
-| Message Queue | RabbitMQ                                  |
-| Auth          | Kakao OIDC + JJWT + Spring Security       |
-| Admin Auth    | Spring Security OTT (One-Time Token)      |
-| Push          | Firebase Admin SDK (FCM)                  |
-| SMS           | Solapi SDK                                |
-| Alerting      | Discord Webhook                           |
-| API Docs      | Spring REST Docs + OpenAPI 3 (Swagger UI) |
-| Monitoring    | Micrometer + Prometheus                   |
-| Test          | JUnit 5, Mockito-Kotlin, Testcontainers   |
-| Coverage      | JaCoCo                                    |
-| Infra         | AWS EC2 + ECR, Docker                     |
+| 분류            | 기술                                                 |
+|---------------|----------------------------------------------------|
+| Language      | Kotlin                                             |
+| Runtime       | Java                                               |
+| Framework     | Spring Boot                                        |
+| Architecture  | Hybrid MVC + Hexagonal                             |
+| DB            | MySQL, Spring Data JPA, QueryDSL                   |
+| Cache         | Redis                                              |
+| Queue         | RabbitMQ                                           |
+| Auth          | Kakao OIDC, Google OIDC, JWT, Spring Security      |
+| Admin Auth    | Spring Security OTT                                |
+| Push          | Firebase Admin SDK (FCM)                           |
+| SMS           | Solapi SDK                                         |
+| Alerting      | Discord Webhook                                    |
+| API Docs      | Spring REST Docs, OpenAPI 3                        |
+| Observability | Micrometer, Prometheus, Grafana Alloy, Loki, Tempo |
+| Test          | JUnit 5, Mockito, AssertJ, MockMvc, Testcontainers |
+| Coverage      | JaCoCo                                             |
+| Infra         | AWS EC2, ECR, Docker                               |
+
+---
+
+## 서비스 도메인
+
+### 인증
+
+- Kakao OIDC 로그인
+- Google OIDC 로그인
+- JWT 발급/재발급
+- Redis 기반 공개키 캐시
+- 어드민 OTT 로그인
+
+### 사용자
+
+- 회원 정보 조회/수정
+- 활성화/비활성화 흐름
+
+### 친구
+
+- 친구 요청, 수락, 거절
+- 차단, 제한, 해제
+
+### 약관
+
+- 필수 약관 동의
+- 약관 버전 관리
+
+### 알림
+
+- FCM 푸시
+- SMS 발송
+- RabbitMQ 비동기 큐
+- 멱등성 및 DLQ 재시도
+
+### 운영
+
+- 구조화 로그
+- 에러 코드 체계
+- 모니터링/트레이싱
+- 배포/롤백/인증서 운영
 
 ---
 
 ## 아키텍처
 
-비즈니스 로직의 변경 빈도와 복잡도에 따라 두 가지 아키텍처 중 하나를 선택적으로 적용하는 **하이브리드 아키텍처**를 사용합니다.
+프로젝트는 하이브리드 구조를 사용한다.
 
-1. **MVC (Layered Architecture)** (`user`, `friends`, `terms` 도메인)
-    - 변경이 적고 단순한 CRUD 중심의 도메인에 적용
-    - `Controller` -> `Service` -> `Repository` 계층형 구조
-2. **Hexagonal Architecture (Ports and Adapters)** (`auth`, `notifications` 도메인)
-    - 외부 시스템 연동이 잦고 복잡한 비즈니스 로직이 포함된 도메인에 적용
-    - 프레임워크 의존성 없이 순수한 도메인/애플리케이션 레이어를 유지하며 외부 의존성은 `adapter`로 분리
+### MVC
 
-```
+단순 CRUD 성격의 도메인에 적용한다.
+
+- `user`
+- `friends`
+- `terms`
+
+### Hexagonal
+
+외부 연동이 많고 비즈니스 복잡도가 높은 도메인에 적용한다.
+
+- `auth`
+- `notifications`
+
+### 패키지 구조
+
+```text
 src/main/kotlin/com/kdongsu5509/
-├── auth/                          # 인증 도메인 (Hexagonal)
-├── friends/                       # 친구 도메인 (MVC)
-├── notifications/                 # 알림 도메인 (Hexagonal)
-├── terms/                         # 약관 도메인 (MVC)
-├── user/                          # 사용자 도메인 (MVC)
-├── shared/                        # 도메인 간 공통 객체 (BaseEntity 등)
-└── support/                       # 횡단 관심사
-    ├── config/                    # Security, Redis, RabbitMQ 설정
-    ├── exception/                 # 글로벌 예외 처리, 에러 코드
-    ├── external/                  # 외부 시스템 연동 (Discord Webhook 등)
-    ├── logger/                    # HTTP 접근 로그, 데이터 마스킹
-    └── response/                  # 공통 API 응답 래퍼
+├── auth/
+├── friends/
+├── notifications/
+├── terms/
+├── user/
+├── shared/
+└── support/
+    ├── config/
+    ├── exception/
+    ├── external/
+    ├── logger/
+    └── response/
 ```
+
+### 레이어 책임
+
+- Controller: HTTP 입출력, 검증, DTO 변환
+- Service: 유스케이스, 트랜잭션, 비즈니스 로직
+- Repository: 영속성 접근
+- Domain: 순수 비즈니스 규칙
 
 ---
 
-## 주요 기능
+## 데이터 모델
 
-### 인증
+### 공통 베이스
 
-- **Kakao OIDC 로그인** — 카카오 공개키 검증 후 자체 JWT 발급
-- **JWT 재발급** — Redis 기반 Refresh Token 관리
-- **어드민 OTT 로그인** — Spring Security One-Time Token + Discord 알림
-- 카카오 공개키 7일 주기 자동 갱신 (스케쥴러 + Redis 캐시)
+- `BaseTimeEntity`: `createdAt`, `updatedAt`
+- `BaseEntity`: `createdAt`, `updatedAt`, `createdBy`, `updatedBy`
 
-### 사용자 / 친구
+### 테이블 요약
 
-- 사용자 닉네임 조회/수정
-- 친구 요청 · 수락 · 거절
-- 친구 차단/해제
-- 이용 약관 동의
+| 테이블                    | 도메인           | 역할                  |
+|------------------------|---------------|---------------------|
+| `users`                | User          | 사용자 계정과 OIDC 식별자 저장 |
+| `friend_relationships` | Friends       | 수락된 친구 관계 저장        |
+| `friend_request`       | Friends       | 대기 중인 친구 요청 저장      |
+| `friend_restrictions`  | Friends       | 차단/거절 제한 저장         |
+| `fcm_token`            | Notifications | FCM 디바이스 토큰 저장      |
+| `notification_history` | Notifications | 발송 이력 저장            |
+| `terms`                | Terms         | 약관 버전과 본문 저장        |
+| `user_agreement`       | Terms         | 사용자별 약관 동의 이력 저장    |
 
-### 알림
+### 관계 요약
 
-- **FCM 푸시 알림** — 위치 도착/출발 알림 (Retryable 재시도 포함)
-- **SMS 알림** — Solapi 단일/다중 발송
-- RabbitMQ를 통한 비동기 알림 전달 (메시지 멱등성 보장 및 DLQ 관리자 기능 포함)
+- `users`는 모든 도메인의 기준 엔티티다.
+- `friend_relationships`는 수락 시 양방향 행을 저장한다.
+- `friend_request`는 요청자/수신자를 구분해 보관한다.
+- `friend_restrictions`는 `REJECT`, `BLOCK` 타입으로 제한 상태를 저장한다.
+- `terms`는 약관 타입과 버전을 관리한다.
+- `notification_history`는 알림 제목, 본문, 타입, path, 읽음 여부를 저장한다.
 
-### 운영
+---
 
-- **HTTP 접근 로그** — MDC(traceId/method/uri/status/durationMs) + ECS JSON 구조화 로그
-- **에러 로그 분리** — WARN 이상 전용 롤링 파일 (90일 보존)
-- **Discord 알림** — 5xx 서버 에러 즉시 알림 (비동기 발송)
-- **API 문서** — Spring REST Docs 기반 OpenAPI 3 spec + Swagger UI (`/swagger-ui/index.html`)
-- **모니터링** — Prometheus 메트릭 (`/actuator/prometheus`)
+## 인증과 보안
+
+### OIDC
+
+- Kakao와 Google 모두 `nonce`를 사용한다.
+- 로그인 및 회원가입 요청에서 `nonce`를 토큰의 `nonce` 클레임과 대조한다.
+- Google issuer는 Google 계정 발급자 형식을 허용한다.
+
+### JWT
+
+- Access Token과 Refresh Token을 분리한다.
+- Refresh Token은 Redis 기반으로 관리한다.
+
+### 어드민
+
+- 어드민 로그인은 OTT(One-Time Token) 흐름을 사용한다.
+- 어드민 API와 뷰가 공존할 때는 세션과 JWT를 함께 고려한다.
+
+### 역할
+
+- `ROLE_NORMAL`: 일반 사용자
+- `ROLE_ADMIN`: 관리자
+
+### 보안 정책 핵심
+
+- JWT Secret과 OTT Webhook은 환경변수로 관리한다.
+- 공개 경로와 테스트 필터 체인을 일치시킨다.
+- 인증/인가 실패는 전역 예외 규칙을 따른다.
+
+---
+
+## API 규칙
+
+### 응답 형식
+
+- 모든 응답은 `ApiResponse<T>` 하나로 통일된다: `imhereResponseCode`, `message`, `data`.
+- 성공은 `imhereResponseCode = "SUCCESS"`, 실패는 도메인별 에러 코드 문자열이다.
+
+### 에러 코드 체계
+
+- `GLOBAL-*`
+- `AUTH-*` / `TOKEN-*` (인증/토큰 분리)
+- `USER-*`
+- `FRIEND-*`
+- `TERM-*`
+- `SMS-*`
+- `FCM-*`
+
+엔드포인트별 실제 코드 예시는 자동 생성 API 문서(`src/main/resources/static/docs/openapi3.yaml`, RestDocs 기반)에 들어 있다.
+
+### 예외 처리
+
+- 도메인 예외는 enum과 `.throwIt()` 흐름을 사용한다.
+- 컨트롤러에서 try-catch를 남용하지 않는다.
+- 전역 예외 핸들러가 응답과 로그를 함께 정리한다.
+
+---
+
+## 알림 시스템
+
+### 발송 구조
+
+- HTTP 요청에서 바로 외부 발송하지 않는다.
+- RabbitMQ 큐에 먼저 적재한다.
+- Consumer가 비동기로 처리한다.
+- 동일 요청 중복 처리 방지를 위해 멱등성을 유지한다.
+
+### 채널
+
+- FCM: 앱 푸시 알림
+- SMS: 문자 알림
+
+### FCM 라우팅
+
+- 알림 클릭 후 앱 내부 화면 이동은 `extraData.path`로 전달한다.
+- `path`는 `/`로 시작해야 한다.
+- 페이지 이름이 아니라 실제 경로 문자열을 사용한다.
+
+### 알림 이력
+
+- `notification_history`에 수신자, 발신자, 제목, 본문, 타입, 경로, 읽음 여부를 저장한다.
+- 시스템 알림의 발신자 표시는 `ImHere`를 사용한다.
+
+---
+
+## 관측성과 로깅
+
+- 로그는 구조화해서 남긴다.
+- 민감 정보는 마스킹한다.
+- traceId로 요청 흐름을 추적한다.
+- 앱 로그, 메트릭, 트레이스는 Grafana Alloy를 통해 수집한다.
+- Loki, Prometheus, Tempo를 Grafana Cloud로 보낸다.
+
+---
+
+## 인프라
+
+### 현재 구성
+
+- App Server
+    - Spring Boot
+    - Nginx
+    - Grafana Alloy
+- Database Server
+    - MySQL
+- Middleware Server
+    - Redis
+    - RabbitMQ
+
+### Compose 파일
+
+- `docker-compose.yml`: 로컬 앱, Prometheus, Grafana
+- `docker-compose.infra.yml`: Redis, RabbitMQ
+- `docker-compose.prod.yml`: 운영용 app, Nginx, Alloy
+
+### 배포 관련 파일
+
+- `Dockerfile.release`
+- `nginx/nginx.conf`
+- `alloy-config.alloy`
+- `config/`
+- `secrets/`
+
+---
+
+## 환경 설정
+
+### 프로파일
+
+- `application.yaml`
+- `application-secret.yaml`
+- `application-monitoring.yaml`
+- `application-datasource.yaml`
+- `application-prod.yaml`
+
+### 운영 변수
+
+- DB 접속 정보
+- Redis 접속 정보
+- RabbitMQ 접속 정보
+- Grafana Cloud 자격증명
+- Firebase 키 경로
+- OIDC 관련 설정
+
+### 운영용 compose 변수 예시
+
+- `ECR_REGISTRY`
+- `ECR_REPOSITORY`
+- `INFRA_HOST`
+- `DB_HOST`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- `REDIS_PASSWORD`
+- `RABBITMQ_USER`
+- `RABBITMQ_PASSWORD`
 
 ---
 
 ## 로컬 실행
 
-### 사전 요구사항
+### 필요 환경
 
-- JDK 21
-- Docker & Docker Compose
+- JDK
+- Docker
+- Docker Compose
 
-### 인프라 실행
+### 로컬 인프라
 
 ```bash
-docker-compose up -d redis
+docker compose up -d
 ```
 
-> MySQL, RabbitMQ는 별도 설치 또는 컨테이너로 실행 필요
+Redis와 RabbitMQ는 별도 인프라 compose로 실행할 수 있다.
 
-### 환경 변수 설정
-
-`src/main/resources/application-secret.yaml` 생성:
-
-```yaml
-jwt:
-  secret: <32자 이상 랜덤 문자열>
-  access-expiration-minutes: 30
-  refresh-expiration-days: 7
-  access-header-name: Authorization
-
-oidc:
-  kakao:
-    issuer: "https://kauth.kakao.com"
-    audience: <카카오 REST API 키>
-    cacheKey: "kakaoOidcKeys::kakaoPublicKeySet"
-
-discord:
-  url:
-    error: <5xx 에러 알림 Discord Webhook URL>
-    ott: <어드민 OTT 토큰 알림 Discord Webhook URL>
-
-security:
-  whitelist:
-    - "/api/user/auth/login"
-    - "/swagger-ui/**"
-    - "/v3/api-docs/**"
-  admin:
-    secret: <어드민 요청 헤더 시크릿>
+```bash
+docker compose -f docker-compose.infra.yml up -d
 ```
 
-### 빌드 및 실행
+### 애플리케이션 실행
 
 ```bash
 ./gradlew bootRun
 ```
 
-서버 기본 포트: `8080`
-API 문서: `http://localhost:8080/swagger-ui/index.html`
-
----
-
-## 테스트
+### 테스트
 
 ```bash
-# 전체 테스트 + 커버리지 리포트 + API 문서 생성
 ./gradlew test
-
-# 커버리지 리포트 확인
-open build/jacocoHtml/index.html
 ```
-
-> Testcontainers를 사용하므로 Docker 데몬이 실행 중이어야 합니다.
 
 ---
 
-## 배포
+## 테스트 전략
 
-### Docker 이미지 빌드
+### 단계
 
-```bash
-docker build -t iamhere:latest .
-```
+- Unit Test: 도메인, 독립 서비스
+- Slice Test: Controller, Repository
+- Integration Test: 실제 DB/Redis/RabbitMQ 포함 E2E
 
-### AWS ECR 푸시
+### 규칙
 
-```bash
-aws ecr get-login-password --region ap-northeast-2 \
-  | docker login --username AWS --password-stdin <ECR_REGISTRY>
+- Controller는 슬라이스 테스트로 검증한다.
+- 실제 인증/인가와 비즈니스 에러는 통합 테스트로 검증한다.
+- 새로운 API 엔드포인트는 Integration Test와 RestDocs를 함께 작성한다.
+- Testcontainers 사용 시 Docker 데몬이 필요하다.
 
-docker tag iamhere:latest <ECR_REGISTRY>/iamhere:latest
-docker push <ECR_REGISTRY>/iamhere:latest
-```
+---
 
-### 운영 배포
+## 운영 절차
 
-```bash
-docker-compose up -d
-```
+- 초기 배포는 필요한 설정 파일을 EC2에 반영한 뒤 수행한다.
+- 인증서 갱신은 호스트의 Certbot과 Nginx 조합을 사용한다.
+- 장애 시 로그와 traceId로 원인을 추적한다.
+- 알림 실패는 RabbitMQ/DLQ 흐름과 외부 서비스 상태를 함께 본다.
 
+---
 
+## 문서 인덱스
+
+상세 설계/운영 문서는 `docs/`에 있다.
+
+| 문서 | 내용 |
+|---|---|
+| [docs/architecture.md](./docs/architecture.md) | 전체 시스템 토폴로지, 배포 구조, 외부 의존성 |
+| [docs/domain.md](./docs/domain.md) | Auth/Friends/Notifications/Terms 비즈니스 규칙 |
+| [docs/security.md](./docs/security.md) | OIDC/JWT/Admin OTT 인증 정책 |
+| [docs/error-handling.md](./docs/error-handling.md) | 응답 포맷, 도메인 에러 코드 패턴 |
+| [docs/api-spec.md](./docs/api-spec.md) | 엔드포인트 그룹, 자동생성 API 문서 위치 |
+| [docs/db-schema.md](./docs/db-schema.md) | DDL, ERD, 테이블별 참고사항 |
+| [docs/flows.md](./docs/flows.md) | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/DLQ) |
+| [docs/deployment.md](./docs/deployment.md) | Docker, CI/CD, AWS, 도메인/DB 호스팅 |
+| [docs/observability.md](./docs/observability.md) | 로그/메트릭/트레이스 파이프라인, 알림 채널 |
+| [docs/test-guideline.md](./docs/test-guideline.md) | 테스트 네이밍/전략/도구 |
+
+모바일 클라이언트 저장소: <https://github.com/kdongsu5509/imhere_mobile>

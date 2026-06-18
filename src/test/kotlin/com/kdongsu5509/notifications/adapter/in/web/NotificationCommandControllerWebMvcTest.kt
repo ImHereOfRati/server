@@ -94,6 +94,30 @@ class NotificationCommandControllerWebMvcTest {
     }
 
     @Test
+    @DisplayName("출발 알림 요청도 클라이언트가 발송할 수 있다")
+    fun send_departure_success() {
+        val request = NotificationRequest(
+            notificationMethod = NotificationMethod.FCM,
+            targetId = "target@example.com",
+            type = NotificationType.DEPARTURE,
+            extraData = mapOf("body" to "[ImHere]\n우리집 출발")
+        )
+
+        mockMvc.perform(
+            post("/api/notifications")
+                .with(csrf())
+                .with(user(userDetails))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request))
+        ).andExpect(status().isAccepted)
+
+        val captor = argumentCaptor<NotificationCommand>()
+        verify(notificationEnqueueUseCase).enqueue(captor.capture())
+
+        assertThat(captor.firstValue.type).isEqualTo(NotificationType.DEPARTURE.name)
+    }
+
+    @Test
     @DisplayName("다건 알림 발송 요청 시 202 ACCEPTED를 반환한다")
     fun sendMultiple_success() {
         val request = MultiNotificationRequest(

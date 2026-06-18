@@ -30,10 +30,10 @@ jobs:
           SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
           echo "tag=${DATE}-${SHORT_SHA}" >> $GITHUB_OUTPUT
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "corretto"
 
       - name: Cache Gradle dependencies and wrapper

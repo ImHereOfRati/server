@@ -46,7 +46,7 @@ configurations {
 }
 
 dependencies {
-    implementation platform("org.springframework.boot:spring-boot-dependencies")
+    implementation platform("org.springframework.boot:spring-boot-dependencies:4.1.0")
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 
     // KOTLIN
@@ -177,7 +177,7 @@ tasks.named("asciidoctor") {
 }
 
 jacoco {
-    toolVersion = "0.8.11"
+    toolVersion = "0.8.15"
 }
 
 jacocoTestReport {

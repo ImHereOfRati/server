@@ -10,7 +10,7 @@ buildscript {
 
 plugins {
     //spring
-    id 'org.springframework.boot' version '4.0.6'
+    id 'org.springframework.boot' version '4.1.0'
 
     id 'org.jetbrains.kotlin.jvm' version '2.3.21'
     id 'com.google.devtools.ksp' version '2.3.7'
@@ -29,7 +29,7 @@ description = 'ImHere Integrated Project'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -46,8 +46,8 @@ configurations {
 }
 
 dependencies {
-    implementation platform("org.springframework.boot:spring-boot-dependencies:4.0.6")
-    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor:4.0.0'
+    implementation platform("org.springframework.boot:spring-boot-dependencies")
+    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 
     // KOTLIN
     implementation 'tools.jackson.module:jackson-module-kotlin'
@@ -106,7 +106,7 @@ dependencies {
     // TEST Docs
     testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.20.0'
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc:4.0.0'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 }
 
 kotlin {

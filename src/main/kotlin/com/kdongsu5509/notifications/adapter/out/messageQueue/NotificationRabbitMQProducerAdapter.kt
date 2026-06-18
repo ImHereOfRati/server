@@ -41,6 +41,7 @@ class NotificationRabbitMQProducerAdapter(
             NotificationType.FRIEND_REQUEST_ACCEPTED -> RabbitMQConfig.ROUTING_KEY_FRIEND_REQUEST_ACCEPTED
             NotificationType.LOCATION_SHARE_RECEIVED -> RabbitMQConfig.ROUTING_KEY_LOCATION_SHARE
             NotificationType.ARRIVAL, NotificationType.ARRIVAL_CONFIRMATION -> RabbitMQConfig.ROUTING_KEY_ARRIVAL_CONFIRMATION
+            NotificationType.DEPARTURE -> RabbitMQConfig.ROUTING_KEY_DEPARTURE_CONFIRMATION
             NotificationType.TERMS_UPDATE_NOTICE -> RabbitMQConfig.ROUTING_KEY_TERMS_UPDATE
             NotificationType.DELIVERY_RESULT_NOTICE -> RabbitMQConfig.ROUTING_KEY_DELIVERY_RESULT
         }

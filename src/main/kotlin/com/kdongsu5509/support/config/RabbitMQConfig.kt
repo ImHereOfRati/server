@@ -30,6 +30,7 @@ class RabbitMQConfig {
         const val ROUTING_KEY_FRIEND_REQUEST_ACCEPTED: String = "noti.friend.request.accepted"
         const val ROUTING_KEY_LOCATION_SHARE: String = "noti.service.location.share"
         const val ROUTING_KEY_ARRIVAL_CONFIRMATION: String = "noti.service.location.arrival"
+        const val ROUTING_KEY_DEPARTURE_CONFIRMATION: String = "noti.service.location.departure"
         const val ROUTING_KEY_TERMS_UPDATE: String = "noti.service.terms.update"
         const val ROUTING_KEY_DELIVERY_RESULT: String = "noti.service.delivery.result"
 

@@ -1,0 +1,27 @@
+- name: feat
+  color: "0075ca"
+  description: "새로운 기능"
+
+- name: fix
+  color: "d73a4a"
+  description: "버그 수정"
+
+- name: docs
+  color: "006b75"
+  description: "문서"
+
+- name: style
+  color: "e4e669"
+  description: "포맷, 세미콜론 등 로직 변경 없음"
+
+- name: refactor
+  color: "a2eeef"
+  description: "리팩토링"
+
+- name: test
+  color: "0e8a16"
+  description: "테스트 추가 또는 수정"
+
+- name: chore
+  color: "cfd3d7"
+  description: "빌드, 의존성, 설정"

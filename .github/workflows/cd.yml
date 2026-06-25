@@ -315,7 +315,8 @@ jobs:
           PY
 
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
-            "mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
+            "mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets && \
+            rm -rf ${EC2_DEPLOY_PATH}/secrets/imhereFirebaseKey.json"
 
           scp -i ~/.ssh/deploy_key docker-compose.yml /tmp/imhere-runtime/prod.env "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/"
           scp -i ~/.ssh/deploy_key /tmp/imhere-runtime/infra/nginx/nginx.conf "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/nginx/nginx.conf"

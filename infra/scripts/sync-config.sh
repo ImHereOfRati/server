@@ -52,23 +52,25 @@ if [[ -z "$repo_url" ]]; then
 fi
 
 temp_dir="$(mktemp -d)"
+config_dir="$temp_dir/config"
+
 cleanup() {
   rm -rf "$temp_dir"
 }
 trap cleanup EXIT
 
-git clone --depth 1 --branch "$branch" "$repo_url" "$temp_dir"
+git clone --depth 1 --branch "$branch" "$repo_url" "$config_dir"
 
-if [[ ! -f "$temp_dir/prod.env" ]]; then
+if [[ ! -f "$config_dir/prod.env" ]]; then
   echo "prod.env not found in config repo" >&2
   exit 1
 fi
 
-if [[ ! -f "$temp_dir/imhereFirebaseKey.json" ]]; then
+if [[ ! -f "$config_dir/imhereFirebaseKey.json" ]]; then
   echo "imhereFirebaseKey.json not found in config repo" >&2
   exit 1
 fi
 
 mkdir -p "$output_dir/secrets"
-cp "$temp_dir/prod.env" "$output_dir/prod.env"
-cp "$temp_dir/imhereFirebaseKey.json" "$output_dir/secrets/imhereFirebaseKey.json"
+cp "$config_dir/prod.env" "$output_dir/prod.env"
+cp "$config_dir/imhereFirebaseKey.json" "$output_dir/secrets/imhereFirebaseKey.json"

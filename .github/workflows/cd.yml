@@ -288,9 +288,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Validate config repo PAT
+        run: |
+          if [ -z "$CONFIG_REPO_PAT" ]; then
+            echo "CONFIG_REPO_PAT is empty"
+            exit 1
+          fi
+
       - name: Prepare runtime files from config repo
         run: |
-          ./infra/scripts/sync-config.sh --output-dir /tmp/imhere-secrets
+          CONFIG_REPO_PAT="$CONFIG_REPO_PAT" \
+            ./infra/scripts/sync-config.sh --output-dir /tmp/imhere-secrets
 
       - name: Upload runtime files artifact
         uses: actions/upload-artifact@v7

@@ -91,6 +91,7 @@ services:
     profiles:
       - prod
     mem_limit: 1.5g
+    pull_policy: always
     labels:
       - "imhere_log_scope=external"
     env_file:

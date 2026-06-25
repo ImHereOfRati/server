@@ -353,18 +353,9 @@ jobs:
             set +a
 
             CERT_ALT_DOMAIN="www.$CERT_DOMAIN"
-            sudo mkdir -p /etc/letsencrypt/live/"$CERT_DOMAIN"
-            if [ ! -f /etc/letsencrypt/options-ssl-nginx.conf ]; then
-              sudo curl -fsSL \
-                https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf \
-                -o /etc/letsencrypt/options-ssl-nginx.conf
-            fi
-            if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
-              sudo curl -fsSL \
-                https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem \
-                -o /etc/letsencrypt/ssl-dhparams.pem
-            fi
-            if [ ! -f /etc/letsencrypt/live/"$CERT_DOMAIN"/fullchain.pem ] || [ ! -f /etc/letsencrypt/live/"$CERT_DOMAIN"/privkey.pem ]; then
+
+            generate_bootstrap_cert() {
+              sudo mkdir -p /etc/letsencrypt/live/"$CERT_DOMAIN"
               sudo sh -c "printf '%s\n' \
                 '[req]' \
                 'distinguished_name = req_distinguished_name' \
@@ -387,6 +378,20 @@ jobs:
                 -config /tmp/imhere-cert.cnf \
                 -extensions v3_req
               sudo rm -f /tmp/imhere-cert.cnf
+            }
+
+            if [ ! -f /etc/letsencrypt/options-ssl-nginx.conf ]; then
+              sudo curl -fsSL \
+                https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf \
+                -o /etc/letsencrypt/options-ssl-nginx.conf
+            fi
+            if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
+              sudo curl -fsSL \
+                https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem \
+                -o /etc/letsencrypt/ssl-dhparams.pem
+            fi
+            if [ ! -f /etc/letsencrypt/live/"$CERT_DOMAIN"/fullchain.pem ] || [ ! -f /etc/letsencrypt/live/"$CERT_DOMAIN"/privkey.pem ]; then
+              generate_bootstrap_cert
             fi
 
             sudo env ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
@@ -399,6 +404,9 @@ jobs:
             if sudo test -f /etc/letsencrypt/renewal/"$CERT_DOMAIN".conf; then
               sudo certbot renew --quiet
             else
+              # live/archive에 남은 부트스트랩 self-signed는 certbot lineage가 아니라서
+              # 그대로 두면 certbot이 "live directory exists"로 발급을 거부한다.
+              sudo rm -rf /etc/letsencrypt/live/"$CERT_DOMAIN" /etc/letsencrypt/archive/"$CERT_DOMAIN"
               if sudo certbot certonly --standalone \
                 --non-interactive \
                 --agree-tos \
@@ -408,7 +416,8 @@ jobs:
                 -d "$CERT_ALT_DOMAIN"; then
                 echo "Issued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
               else
-                echo "Let's Encrypt issuance failed. Using bootstrap certificate."
+                echo "Let's Encrypt issuance failed. Restoring bootstrap certificate."
+                generate_bootstrap_cert
               fi
             fi
 

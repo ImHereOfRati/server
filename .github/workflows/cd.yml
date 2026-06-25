@@ -324,27 +324,27 @@ jobs:
           printf '\nRABBITMQ_HOST=%s\n' "$RABBITMQ_HOST" >> "$RUNTIME_DIR/prod.env"
 
           python3 - <<'PY'
-from pathlib import Path
-import os
+          from pathlib import Path
+          import os
 
-runtime_dir = Path('/tmp/imhere-runtime')
-templates = {
-    'infra/nginx/nginx.conf.template': 'infra/nginx/nginx.conf',
-    'infra/alloy/alloy-config.alloy.template': 'infra/alloy/alloy-config.alloy',
-}
+          runtime_dir = Path('/tmp/imhere-runtime')
+          templates = {
+              'infra/nginx/nginx.conf.template': 'infra/nginx/nginx.conf',
+              'infra/alloy/alloy-config.alloy.template': 'infra/alloy/alloy-config.alloy',
+          }
 
-for source, target in templates.items():
-    text = Path(source).read_text(encoding='utf-8')
-    for key in ('SERVER_NAME', 'CERT_DOMAIN', 'NGINX_ALLOWED_ORIGIN', 'MGMT_BASE_PATH'):
-        value = os.environ.get(key)
-        if not value:
-            raise SystemExit(f'{key} is required to render {source}')
-        text = text.replace(f'${{{key}}}', value)
+          for source, target in templates.items():
+              text = Path(source).read_text(encoding='utf-8')
+              for key in ('SERVER_NAME', 'CERT_DOMAIN', 'NGINX_ALLOWED_ORIGIN', 'MGMT_BASE_PATH'):
+                  value = os.environ.get(key)
+                  if not value:
+                      raise SystemExit(f'{key} is required to render {source}')
+                  text = text.replace('${' + key + '}', value)
 
-    output = runtime_dir / target
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(text, encoding='utf-8')
-PY
+              output = runtime_dir / target
+              output.parent.mkdir(parents=True, exist_ok=True)
+              output.write_text(text, encoding='utf-8')
+          PY
 
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
             "mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"

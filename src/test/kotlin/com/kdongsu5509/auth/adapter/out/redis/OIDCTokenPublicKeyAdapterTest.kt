@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.adapter.out.redis
+package com.kdongsu5509.auth.adapter.out.oauth
 
 import com.kdongsu5509.auth.adapter.out.oauth.OIDCProperties
 import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKey
@@ -54,13 +54,13 @@ class OIDCTokenPublicKeyAdapterTest {
     }
 
     @Test
-    @DisplayName("캐시된 키가 없으면 OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED 예외를 발생시킨다")
+    @DisplayName("캐시된 키가 없으면 OIDC_PUBLIC_KEY_FETCH_FROM_CACHE_FAILED 예외를 발생시킨다")
     fun findByKeyId_cacheFetchFail() {
         whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(null)
 
         assertThatThrownBy { adapter.findByKeyId(com.kdongsu5509.auth.domain.OAuth2Provider.KAKAO, "kid1") }
             .isInstanceOf(ImHereBaseException::class.java)
-            .hasFieldOrPropertyWithValue("errorCode", AuthException.OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED)
+            .hasFieldOrPropertyWithValue("errorCode", AuthException.OIDC_PUBLIC_KEY_FETCH_FROM_CACHE_FAILED)
     }
 
     @Test

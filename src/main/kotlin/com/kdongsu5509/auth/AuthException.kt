@@ -28,7 +28,7 @@ enum class AuthException(
     IMHERE_EXPIRED_TOKEN(CommonErrorCode.UNAUTHORIZED, "TOKEN-100", "만료된 토큰입니다."),
     IMHERE_INVALID_TOKEN(CommonErrorCode.UNAUTHORIZED, "TOKEN-101", "유효하지 않은 토큰입니다."),
     IMHERE_INVALID_TOKEN_SIG(CommonErrorCode.UNAUTHORIZED, "TOKEN-102", "토큰의 서명 정보가 일치하지 않습니다."),
-    IMHERE_KEY_NOT_FOUND_IN_REDIS(CommonErrorCode.UNAUTHORIZED, "TOKEN-103", "인증 정보를 찾을 수 없거나 만료되었습니다."),
+    IMHERE_KEY_NOT_FOUND_IN_CACHE(CommonErrorCode.UNAUTHORIZED, "TOKEN-103", "인증 정보를 찾을 수 없거나 만료되었습니다."),
 
     // --- 2xx: Forbidden (403) ---
     IMHERE_ACCESS_DENIED(CommonErrorCode.FORBIDDEN, "AUTH-200", "해당 기능에 대한 권한이 없습니다."),
@@ -43,10 +43,10 @@ enum class AuthException(
         "AUTH-900",
         "OIDC 서버로부터 공개키를 가져오는데 실패했습니다."
     ),
-    OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED(
+    OIDC_PUBLIC_KEY_FETCH_FROM_CACHE_FAILED(
         CommonErrorCode.INFRA_FAILURE,
         "AUTH-901",
-        "Redis로부터 OIDC 공개키를 가져오는데 실패했습니다."
+        "캐시로부터 OIDC 공개키를 가져오는데 실패했습니다."
     ),
     OIDC_PUBLIC_KEY_NOT_FOUND(CommonErrorCode.INFRA_FAILURE, "AUTH-902", "공개키 목록에서 일치하는 키를 찾을 수 없습니다."),
     OIDC_KEY_PARSING_ERROR(CommonErrorCode.INTERNAL_SERVER_ERROR, "AUTH-903", "OIDC 키 파싱 중 오류가 발생했습니다"),

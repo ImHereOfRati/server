@@ -1,0 +1,128 @@
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # 접근 로그는 요청-응답 흐름과 클라이언트 정보를 추적할 때만 쓴다.
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+
+    # 기본 성능 설정. 정적 파일 전달과 keep-alive를 무리 없이 처리하도록 둔다.
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    server_tokens off;
+
+    # 응답 압축은 켜 두되, 구형 브라우저 전용 예외만 제외한다.
+    gzip on;
+    gzip_disable "msie6";
+
+    # TLS는 1.2 이상만 허용한다. 1.0/1.1은 호환성보다 보안을 우선해 제거한다.
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    # 운영용 서버 블록. 외부 공개 포트는 443만 둔다.
+    server {
+        listen 443 ssl;
+        server_name ${SERVER_NAME};
+
+        # 인증서는 호스트의 /etc/letsencrypt 에서 마운트해 사용한다.
+        ssl_certificate /etc/letsencrypt/live/${CERT_DOMAIN}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/${CERT_DOMAIN}/privkey.pem;
+        include /etc/letsencrypt/options-ssl-nginx.conf;
+        ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+        # 랜딩 페이지는 정적 파일로 서빙한다.
+        location = / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files /index.html =404;
+        }
+
+        # 운영 API / 관리자 / swagger / actuator 는 Spring Boot 로 넘긴다.
+        location ^~ /api/ {
+            # CORS는 프런트 도메인 1개만 허용한다.
+            # 자격 증명을 쓰므로 Origin 을 고정하고, 캐시가 엇갈리지 않게 Vary 를 남긴다.
+            add_header 'Access-Control-Allow-Origin' '${NGINX_ALLOWED_ORIGIN}' always;
+            add_header 'Vary' 'Origin' always;
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, PATCH, OPTIONS' always;
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With' always;
+            add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+            if ($request_method = 'OPTIONS') {
+                # 프리플라이트는 백엔드로 넘기지 않고 Nginx에서 즉시 종료한다.
+                add_header 'Access-Control-Allow-Origin' '${NGINX_ALLOWED_ORIGIN}';
+                add_header 'Vary' 'Origin';
+                add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, PATCH, OPTIONS';
+                add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With';
+                add_header 'Access-Control-Max-Age' 1728000;
+                add_header 'Content-Type' 'text/plain; charset=utf-8';
+                add_header 'Content-Length' 0;
+                return 204;
+            }
+
+            # 실제 API 요청은 Docker 네트워크 내부의 Spring Boot 컨테이너로 보낸다.
+            proxy_pass http://dsko:8080;
+            
+            # Spring 이 중복 CORS 헤더를 내려도 최종 응답은 Nginx 기준으로 정리한다.
+            proxy_hide_header 'Access-Control-Allow-Origin';
+
+            # 원본 클라이언트 정보와 프로토콜을 백엔드에 전달한다.
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location ^~ /admin/ {
+            proxy_pass http://dsko:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location ^~ /swagger-ui/ {
+            proxy_pass http://dsko:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location ^~ /docs/ {
+            proxy_pass http://dsko:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location ^~ ${MGMT_BASE_PATH}/ {
+            proxy_pass http://dsko:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files $uri $uri/ /index.html;
+        }
+    }
+}

@@ -17,9 +17,11 @@ import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.SliceImpl
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -71,8 +73,8 @@ class UserAdminControllerWebMvcTest {
         const val BASE_PATH = "/api/admin/users"
     }
 
-    @org.springframework.boot.test.context.TestConfiguration
-    @org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+    @TestConfiguration
+    @EnableMethodSecurity
     class MethodSecurityConfig
 
     @Test

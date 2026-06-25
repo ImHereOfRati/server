@@ -116,7 +116,7 @@ class ImHereTokenProviderAdapterTest {
     }
 
     @Test
-    @DisplayName("Redis에 저장된 토큰이 없는 경우 재발급 시 예외가 발생한다")
+    @DisplayName("Cache에 저장된 토큰이 없는 경우 재발급 시 예외가 발생한다")
     fun reissue_refreshTokenNotFound_throwsException() {
         // given
         given(cachePort.find(REDIS_KEY, String::class.java))
@@ -126,12 +126,12 @@ class ImHereTokenProviderAdapterTest {
         assertThrows<UnauthorizedException> {
             tokenProvider.reissueByEmail(USER_EMAIL)
         }.also {
-            assertThat(it.message).isEqualTo(AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.errorMessage)
+        assertThat(it.message).isEqualTo(AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.errorMessage)
         }
     }
 
     @Test
-    @DisplayName("Redis에 저장된 토큰과 일치하지 않는 리프시 토큰으로 재발급 시 예외가 발생한다")
+    @DisplayName("Cache에 저장된 토큰과 일치하지 않는 리프시 토큰으로 재발급 시 예외가 발생한다")
     fun reissue_mismatchedRefreshToken_throwsException() {
         // given
         given(tokenParser.parse(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
@@ -161,7 +161,7 @@ class ImHereTokenProviderAdapterTest {
     }
 
     @Test
-    @DisplayName("이메일로 재발급 시 Redis에 토큰이 없으면 예외가 발생한다")
+    @DisplayName("이메일로 재발급 시 Cache에 토큰이 없으면 예외가 발생한다")
     fun reissue_by_email_notFound_throwsException() {
         // given
         given(
@@ -172,7 +172,7 @@ class ImHereTokenProviderAdapterTest {
         assertThrows<UnauthorizedException> {
             tokenProvider.reissueByEmail(USER_EMAIL)
         }.also {
-            assertThat(it.message).isEqualTo(AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.errorMessage)
+        assertThat(it.message).isEqualTo(AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.errorMessage)
         }
     }
 

@@ -2,11 +2,29 @@ server:
   forward-headers-strategy: native
 
 spring:
+  # Default profile for local development. Production activates the separate
+  # document below by injecting SPRING_PROFILES_ACTIVE=prod from prod.env.
+  profiles:
+    default: local
+
   application:
     name: imhere
-  profiles:
-    include: secret, monitoring, datasource
+
+  # DB_* values come from application-local.yaml in local and prod.env in production.
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE}
+      minimum-idle: 5
+      idle-timeout: 600000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+
   jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: true
@@ -15,15 +33,34 @@ spring:
         format_sql: true
         naming:
           physical-strategy: org.hibernate.boot.model.naming.CamelToUnderscoresNamingStrategy
+        type:
+          preferred_uuid_jdbc_type: CHAR
+
+  # RABBITMQ_* values come from application-local.yaml in local and prod.env in production.
+  # RABBITMQ_HOST is not stored in prod.env itself. CD appends it from CloudFormation output.
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST}
+    listener:
+      simple:
+        concurrency: ${RABBITMQ_CONCURRENCY}
+        max-concurrency: ${RABBITMQ_MAX_CONCURRENCY}
+        acknowledge-mode: auto
+
+  batch:
+    job:
+      enabled: false
 
 logging:
-  pattern:
-    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
-  structured:
-    format:
-      file: ecs
+  # LOG_FILE comes from prod.env in production.
   file:
     name: logs/imhere.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [${spring.application.name:},%X{traceId:-},%X{spanId:-}] [%thread] %logger{40} - %message%n%exception"
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
   logback:
     rollingpolicy:
       file-name-pattern: "${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz"
@@ -34,20 +71,126 @@ logging:
     org.springframework.security: TRACE
     root: INFO
     com.kdongsu5509: INFO
-    # silence noisy frameworks
     org.springframework: WARN
     org.hibernate: WARN
     com.zaxxer.hikari: WARN
     io.lettuce: WARN
     com.google.firebase: WARN
-    p6spy: WARN               # SQL logging — enable in dev profile if needed
+    p6spy: WARN
 
 management:
+  server:
+    port: 4861
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  endpoints:
+    web:
+      # MGMT_BASE_PATH comes from application-local.yaml in local and prod.env in production.
+      base-path: ${MGMT_BASE_PATH}
+      exposure:
+        include: "prometheus,health,info"
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  opentelemetry:
+    resource-attributes:
+      service.name: ${spring.application.name}
+    tracing:
+      export:
+        otlp:
+          # Local default: send traces to an OTLP HTTP receiver on localhost.
+          # Production overrides this endpoint in the prod profile document below.
+          endpoint: http://localhost:4318/v1/traces
+          transport: http
   tracing:
     sampling:
       probability: 0.1
     baggage:
       enabled: true
-  otlp:
+
+# JWT_SECRET comes from application-local.yaml in local and prod.env in production.
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration-minutes: 720
+  refresh-expiration-days: 7
+  access-header-name: Authorization
+  admin-expiration-minutes: 60
+
+oidc:
+  providers:
+    kakao:
+      issuer: "https://kauth.kakao.com"
+      audience: "840e16595771540d4b1056238cbb6b51"
+      cacheKey: "kakaoOidcKeys::kakaoPublicKeySet"
+      jwksUri: "https://kauth.kakao.com/.well-known/jwks.json"
+    google:
+      issuer: "https://accounts.google.com"
+      audience: "190429362894-488cdf8tegm4c81qrta3pns04ot12c25.apps.googleusercontent.com"
+      cacheKey: "googleOidcKeys::googlePublicKeySet"
+      jwksUri: "https://www.googleapis.com/oauth2/v3/certs"
+
+# External integration credentials come from application-local.yaml in local
+# and prod.env in production. FIREBASE_PATH points to the JSON key copied by deploy-app.
+solapi:
+  sender: ${SOLAPI_SENDER}
+  apiKey: ${SOLAPI_API_KEY}
+  apiSecret: ${SOLAPI_API_SECRET}
+
+firebase:
+  path: ${FIREBASE_PATH}
+
+discord:
+  url:
+    error:
+      server: ${DISCORD_WEBHOOK_ERROR_SERVER}
+      client: ${DISCORD_WEBHOOK_ERROR_CLIENT}
+    ott: ${DISCORD_WEBHOOK_OTT}
+
+# SECURITY_* and ADMIN_* come from application-local.yaml in local and prod.env in production.
+security:
+  whitelist: ${SECURITY_WHITELIST}
+  cors-allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+admin:
+  id: ${ADMIN_ID}
+  nickname: rati
+  allowed-ips: ${ADMIN_ALLOWED_IPS}
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+management:
+  opentelemetry:
     tracing:
-      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+      export:
+        otlp:
+          # Production: send traces only to the alloy container on the same compose network.
+          # Grafana Cloud credentials are handled by alloy, not by the app.
+          endpoint: http://alloy:4318/v1/traces
+
+logging:
+  structured:
+    format:
+      console: ecs
+  level:
+    org.springframework.security: INFO
+    p6spy: WARN

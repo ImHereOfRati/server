@@ -254,7 +254,19 @@ jobs:
       - name: Prepare EC2 runtime directory
         run: |
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
-            "command -v docker >/dev/null 2>&1 || sudo dnf install -y docker docker-compose-plugin certbot; sudo systemctl enable --now docker; mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
+            "set -e; \
+            if ! command -v docker >/dev/null 2>&1; then sudo dnf install -y docker certbot; fi; \
+            if ! sudo docker compose version >/dev/null 2>&1; then \
+              sudo mkdir -p /usr/local/lib/docker/cli-plugins; \
+              sudo curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+                -o /usr/local/lib/docker/cli-plugins/docker-compose; \
+              sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose; \
+            fi; \
+            sudo systemctl enable --now docker; \
+            sudo docker --version; \
+            sudo docker compose version; \
+            certbot --version; \
+            mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
 
       - name: Derive ECR registry
         run: |

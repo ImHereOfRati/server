@@ -158,9 +158,14 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
           dnf update -y
-          dnf install -y docker docker-compose-plugin certbot
+          dnf install -y docker certbot
           systemctl enable --now docker
           usermod -aG docker ec2-user || true
+          mkdir -p /usr/local/lib/docker/cli-plugins
+          curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+            -o /usr/local/lib/docker/cli-plugins/docker-compose
+          chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+          docker compose version
           mkdir -p /opt/imhere /home/ec2-user/imhere
 
   AppElasticIp:

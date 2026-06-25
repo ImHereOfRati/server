@@ -14,7 +14,7 @@ ImHere Server는 위치 기반 알림 서비스의 백엔드다.
 </p>
 <p>
   <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"/>
-  <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"/>
+  <img src="https://img.shields.io/badge/Caffeine-FF9F1C?style=for-the-badge&logo=coffeescript&logoColor=white" alt="Caffeine"/>
   <img src="https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white" alt="RabbitMQ"/>
   <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT"/>
 </p>
@@ -55,7 +55,7 @@ ImHere Server는 위치 기반 알림 서비스의 백엔드다.
 | Framework     | Spring Boot                                        |
 | Architecture  | Hybrid MVC + Hexagonal                             |
 | DB            | MySQL, Spring Data JPA, QueryDSL                   |
-| Cache         | Redis                                              |
+| Cache         | Caffeine                                           |
 | Queue         | RabbitMQ                                           |
 | Auth          | Kakao OIDC, Google OIDC, JWT, Spring Security      |
 | Admin Auth    | Spring Security OTT                                |
@@ -77,7 +77,7 @@ ImHere Server는 위치 기반 알림 서비스의 백엔드다.
 - Kakao OIDC 로그인
 - Google OIDC 로그인
 - JWT 발급/재발급
-- Redis 기반 공개키 캐시
+- Caffeine 기반 공개키 캐시
 - 어드민 OTT 로그인
 
 ### 사용자
@@ -199,7 +199,7 @@ src/main/kotlin/com/kdongsu5509/
 ### JWT
 
 - Access Token과 Refresh Token을 분리한다.
-- Refresh Token은 Redis 기반으로 관리한다.
+- Refresh Token은 앱 메모리 Caffeine 기반으로 관리한다.
 
 ### 어드민
 
@@ -294,21 +294,23 @@ src/main/kotlin/com/kdongsu5509/
 - Database Server
     - MySQL
 - Middleware Server
-    - Redis
+    - Caffeine
     - RabbitMQ
 
 ### Compose 파일
 
-- `docker-compose.yml`: 로컬 앱, Prometheus, Grafana
-- `docker-compose.infra.yml`: Redis, RabbitMQ
-- `docker-compose.prod.yml`: 운영용 app, Nginx, Alloy
+- `docker-compose.yml`: 단일 원본, `local` / `infra` / `prod` profile로 분기
 
 ### 배포 관련 파일
 
 - `Dockerfile.release`
-- `nginx/nginx.conf`
-- `alloy-config.alloy`
-- `config/`
+- `infra/nginx/nginx.conf.template`
+- `infra/nginx/nginx.conf`
+- `infra/alloy/alloy-config.alloy.template`
+- `infra/alloy/alloy-config.alloy`
+- `infra/nginx/website.html`
+- runtime `prod.env` (config repo)
+- `infra/scripts/sync-config.sh`
 - `secrets/`
 
 ---
@@ -318,15 +320,24 @@ src/main/kotlin/com/kdongsu5509/
 ### 프로파일
 
 - `application.yaml`
-- `application-secret.yaml`
-- `application-monitoring.yaml`
-- `application-datasource.yaml`
-- `application-prod.yaml`
+- 로컬 기본값은 `application-local.yaml`에서 읽는다(`spring.profiles.default=local`).
+
+### 런타임 설정
+
+- `prod.env`
+- `application-local.yaml`
+- `secrets/imhereFirebaseKey.json`
+
+### config repo
+
+- `C:\Project\ImHere\config`
+- `prod.env`
+- `imhereFirebaseKey.json`
 
 ### 운영 변수
 
 - DB 접속 정보
-- Redis 접속 정보
+- Caffeine 설정
 - RabbitMQ 접속 정보
 - Grafana Cloud 자격증명
 - Firebase 키 경로
@@ -334,16 +345,14 @@ src/main/kotlin/com/kdongsu5509/
 
 ### 운영용 compose 변수 예시
 
-- `ECR_REGISTRY`
-- `ECR_REPOSITORY`
-- `INFRA_HOST`
-- `DB_HOST`
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `REDIS_PASSWORD`
-- `RABBITMQ_USER`
-- `RABBITMQ_PASSWORD`
+- `CONFIG_REPO_PAT`
+- `prod.env`에 들어가는 DB/RabbitMQ/Grafana Cloud 값들
+
+### 로컬에서 설정이 들어가는 방식
+
+- `./gradlew bootRun`은 `application.yaml` + `application-local.yaml` 조합으로 뜬다.
+- `docker compose --profile local --profile infra up -d`는 `docker-compose.yml`에 적힌 기본값으로 뜬다.
+- config repo의 `prod.env` / `imhereFirebaseKey.json`은 운영 배포 전용이다.
 
 ---
 
@@ -358,13 +367,7 @@ src/main/kotlin/com/kdongsu5509/
 ### 로컬 인프라
 
 ```bash
-docker compose up -d
-```
-
-Redis와 RabbitMQ는 별도 인프라 compose로 실행할 수 있다.
-
-```bash
-docker compose -f docker-compose.infra.yml up -d
+docker compose --profile local --profile infra up -d
 ```
 
 ### 애플리케이션 실행
@@ -387,7 +390,7 @@ docker compose -f docker-compose.infra.yml up -d
 
 - Unit Test: 도메인, 독립 서비스
 - Slice Test: Controller, Repository
-- Integration Test: 실제 DB/Redis/RabbitMQ 포함 E2E
+- Integration Test: 실제 DB/RabbitMQ 포함 E2E
 
 ### 규칙
 
@@ -411,17 +414,17 @@ docker compose -f docker-compose.infra.yml up -d
 
 상세 설계/운영 문서는 `docs/`에 있다.
 
-| 문서 | 내용 |
-|---|---|
-| [docs/architecture.md](./docs/architecture.md) | 전체 시스템 토폴로지, 배포 구조, 외부 의존성 |
-| [docs/domain.md](./docs/domain.md) | Auth/Friends/Notifications/Terms 비즈니스 규칙 |
-| [docs/security.md](./docs/security.md) | OIDC/JWT/Admin OTT 인증 정책 |
-| [docs/error-handling.md](./docs/error-handling.md) | 응답 포맷, 도메인 에러 코드 패턴 |
-| [docs/api-spec.md](./docs/api-spec.md) | 엔드포인트 그룹, 자동생성 API 문서 위치 |
-| [docs/db-schema.md](./docs/db-schema.md) | DDL, ERD, 테이블별 참고사항 |
-| [docs/flows.md](./docs/flows.md) | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/DLQ) |
-| [docs/deployment.md](./docs/deployment.md) | Docker, CI/CD, AWS, 도메인/DB 호스팅 |
-| [docs/observability.md](./docs/observability.md) | 로그/메트릭/트레이스 파이프라인, 알림 채널 |
-| [docs/test-guideline.md](./docs/test-guideline.md) | 테스트 네이밍/전략/도구 |
+| 문서                                                 | 내용                                       |
+|----------------------------------------------------|------------------------------------------|
+| [docs/architecture.md](./docs/architecture.md)     | 전체 시스템 토폴로지, 배포 구조, 외부 의존성               |
+| [docs/domain.md](./docs/domain.md)                 | Auth/Friends/Notifications/Terms 비즈니스 규칙 |
+| [docs/security.md](./docs/security.md)             | OIDC/JWT/Admin OTT 인증 정책                 |
+| [docs/error-handling.md](./docs/error-handling.md) | 응답 포맷, 도메인 에러 코드 패턴                      |
+| [docs/api-spec.md](./docs/api-spec.md)             | 엔드포인트 그룹, 자동생성 API 문서 위치                 |
+| [docs/db-schema.md](docs/infra/db-schema.md)       | DDL, ERD, 테이블별 참고사항                      |
+| [docs/flows.md](./docs/flows.md)                   | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/DLQ)           |
+| [docs/deployment.md](docs/infra/README.md)         | Docker, CI/CD, AWS, 도메인/DB 호스팅           |
+| [docs/observability/README.md](./docs/observability/README.md)   | 로그/메트릭/트레이스 파이프라인, 알림 채널                 |
+| [docs/test-guideline.md](./docs/test-guideline.md) | 테스트 네이밍/전략/도구                            |
 
 모바일 클라이언트 저장소: <https://github.com/kdongsu5509/imhere_mobile>

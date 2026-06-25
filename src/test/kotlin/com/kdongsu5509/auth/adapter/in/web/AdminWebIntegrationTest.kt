@@ -254,11 +254,11 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     fun adminApiCorsPreflightAllowed() {
         mockMvc.perform(
             options("/api/admin/users")
-                .header("Origin", "https://fortuneki.site")
+                .header("Origin", "https://ratiko.co.kr")
                 .header("Access-Control-Request-Method", "GET")
                 .header("Access-Control-Request-Headers", "Authorization")
         )
             .andExpect(status().isOk)
-            .andExpect(header().string("Access-Control-Allow-Origin", "https://fortuneki.site"))
+            .andExpect(header().string("Access-Control-Allow-Origin", "https://ratiko.co.kr"))
     }
 }

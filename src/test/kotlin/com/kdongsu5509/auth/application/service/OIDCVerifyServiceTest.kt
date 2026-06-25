@@ -119,10 +119,10 @@ class OIDCVerifyServiceTest {
 
         // given
         given(oidcIdTokenVerifyPort.getKid(ID_TOKEN)).willReturn(KID)
-        given(publicKeyLoadPort.findByKeyId(OAuth2Provider.KAKAO, KID)).willThrow(UnauthorizedException(AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.errorMessage))
+        given(publicKeyLoadPort.findByKeyId(OAuth2Provider.KAKAO, KID)).willThrow(UnauthorizedException(AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.errorMessage))
 
         // when & then
-        assertUnauthorizedException(AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.errorMessage) {
+        assertUnauthorizedException(AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.errorMessage) {
             verifyService.verify(OAuth2Provider.KAKAO, ID_TOKEN, NONCE)
         }
     }

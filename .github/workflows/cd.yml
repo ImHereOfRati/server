@@ -175,22 +175,54 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  prepare-server:
-    name: Prepare Server
+  sync-config:
+    name: Sync Config
     runs-on: ubuntu-latest
-    needs: resolve-infra
+    needs: [ resolve-infra ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Prepare runtime files from config repo
+        run: |
+          chmod +x ./infra/scripts/sync-config.sh
+          CONFIG_REPO_PAT="$CONFIG_REPO_PAT" \
+            ./infra/scripts/sync-config.sh --output-dir /tmp/imhere-secrets
+        env:
+          CONFIG_REPO_PAT: ${{ secrets.CONFIG_REPO_PAT }}
+
+      - name: Upload runtime files artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: runtime-files
+          path: /tmp/imhere-secrets/
+          retention-days: 1
+
+  deploy-app:
+    name: Deploy App
+    runs-on: ubuntu-latest
+    needs: [ docker-push, resolve-infra, sync-config ]
+
+    env:
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
+      EC2_HOST: ${{ needs.resolve-infra.outputs.ec2_host }}
+      RABBITMQ_HOST: ${{ needs.resolve-infra.outputs.rabbitmq_host }}
+      ECR_REPOSITORY: ${{ needs.resolve-infra.outputs.ecr_repository_name }}
+      EC2_SECURITY_GROUP_ID: ${{ needs.resolve-infra.outputs.security_group_id }}
 
     permissions:
       id-token: write
       contents: read
 
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
-      EC2_HOST: ${{ needs.resolve-infra.outputs.ec2_host }}
-      EC2_SECURITY_GROUP_ID: ${{ needs.resolve-infra.outputs.security_group_id }}
-
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -224,71 +256,10 @@ jobs:
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
             "command -v docker >/dev/null 2>&1 || sudo dnf install -y docker docker-compose-plugin certbot; sudo systemctl enable --now docker; mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
 
-  sync-config:
-    name: Sync Config
-    runs-on: ubuntu-latest
-    needs: [ prepare-server, resolve-infra ]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Prepare runtime files from config repo
-        run: |
-          chmod +x ./infra/scripts/sync-config.sh
-          CONFIG_REPO_PAT="$CONFIG_REPO_PAT" \
-            ./infra/scripts/sync-config.sh --output-dir /tmp/imhere-secrets
-        env:
-          CONFIG_REPO_PAT: ${{ secrets.CONFIG_REPO_PAT }}
-
-      - name: Upload runtime files artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: runtime-files
-          path: /tmp/imhere-secrets/
-          retention-days: 1
-
-  deploy-app:
-    name: Deploy App
-    runs-on: ubuntu-latest
-    needs: [ docker-push, prepare-server, resolve-infra, sync-config ]
-
-    env:
-      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
-      EC2_HOST: ${{ needs.resolve-infra.outputs.ec2_host }}
-      RABBITMQ_HOST: ${{ needs.resolve-infra.outputs.rabbitmq_host }}
-      ECR_REPOSITORY: ${{ needs.resolve-infra.outputs.ecr_repository_name }}
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ env.SOURCE_SHA }}
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          role-session-name: imhere-github-actions-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
-
       - name: Derive ECR registry
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           echo "ECR_REGISTRY=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" >> "$GITHUB_ENV"
-
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "StrictHostKeyChecking no" >> ~/.ssh/config
 
       - name: Download runtime files artifact
         uses: actions/download-artifact@v7
@@ -375,51 +346,18 @@ jobs:
             rm -f prod.env secrets/imhereFirebaseKey.json infra/nginx/nginx.conf infra/nginx/website.html infra/alloy/alloy-config.alloy
             docker image prune -f
 
-      - name: Cleanup runner temp files
-        if: always()
-        run: |
-          rm -f ~/.ssh/deploy_key
-          rm -rf /tmp/imhere-secrets
-          rm -rf /tmp/imhere-runtime
-
-  cleanup:
-    name: Cleanup Infra Access
-    runs-on: ubuntu-latest
-    needs: [ resolve-infra, deploy-app ]
-    if: always()
-
-    env:
-      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      EC2_SECURITY_GROUP_ID: ${{ needs.resolve-infra.outputs.security_group_id }}
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ env.SOURCE_SHA }}
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          role-session-name: imhere-github-actions-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Get GitHub Actions runner public IP
-        id: ip
-        run: |
-          RUNNER_IP=$(curl -sf https://api.ipify.org)
-          echo "runner_ip=${RUNNER_IP}" >> "$GITHUB_OUTPUT"
-
       - name: Remove runner IP from EC2 security group
+        if: always()
         run: |
           aws ec2 revoke-security-group-ingress \
             --group-id "$EC2_SECURITY_GROUP_ID" \
             --protocol tcp \
             --port 22 \
             --cidr ${{ steps.ip.outputs.runner_ip }}/32 || true
+
+      - name: Cleanup runner temp files
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
+          rm -rf /tmp/imhere-secrets
+          rm -rf /tmp/imhere-runtime

@@ -7,6 +7,7 @@ import com.kdongsu5509.notifications.application.port.`in`.NotificationDispatche
 import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
 import com.kdongsu5509.notifications.application.service.MessageIdempotencyService
 import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
+import com.kdongsu5509.support.external.DiscordMessageSendPort
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -34,6 +35,9 @@ class FriendNotificationConsumerTest {
     @Mock
     private lateinit var notificationEnqueueUseCase: NotificationEnqueueUseCase
 
+    @Mock
+    private lateinit var discordMessageSendPort: DiscordMessageSendPort
+
     private lateinit var consumer: FriendNotificationConsumer
 
     @BeforeEach
@@ -41,7 +45,8 @@ class FriendNotificationConsumerTest {
         consumer = FriendNotificationConsumer(
             notificationDispatcherUseCase,
             messageIdempotencyService,
-            notificationEnqueueUseCase
+            notificationEnqueueUseCase,
+            discordMessageSendPort
         )
     }
 

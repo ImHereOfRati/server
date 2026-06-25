@@ -154,6 +154,7 @@ erDiagram
     * `ARRIVAL_CONFIRMATION`
     * `TERMS_UPDATE_NOTICE`
     * `DELIVERY_RESULT_NOTICE`
+    * `DELIVERY_FAILED_NOTICE`
 
 ### one_time_tokens
 

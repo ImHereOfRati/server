@@ -33,6 +33,7 @@ class RabbitMQConfig {
         const val ROUTING_KEY_DEPARTURE_CONFIRMATION: String = "noti.service.location.departure"
         const val ROUTING_KEY_TERMS_UPDATE: String = "noti.service.terms.update"
         const val ROUTING_KEY_DELIVERY_RESULT: String = "noti.service.delivery.result"
+        const val ROUTING_KEY_DELIVERY_FAILED: String = "noti.service.delivery.failed"
 
         // ── Dead Letter Exchange / Queue ───────────────
         const val DLX_NAME: String = "imhere.noti.dlx"

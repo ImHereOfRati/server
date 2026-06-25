@@ -44,6 +44,7 @@ class NotificationRabbitMQProducerAdapter(
             NotificationType.DEPARTURE -> RabbitMQConfig.ROUTING_KEY_DEPARTURE_CONFIRMATION
             NotificationType.TERMS_UPDATE_NOTICE -> RabbitMQConfig.ROUTING_KEY_TERMS_UPDATE
             NotificationType.DELIVERY_RESULT_NOTICE -> RabbitMQConfig.ROUTING_KEY_DELIVERY_RESULT
+            NotificationType.DELIVERY_FAILED_NOTICE -> RabbitMQConfig.ROUTING_KEY_DELIVERY_FAILED
         }
     }
 }

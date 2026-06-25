@@ -7,6 +7,7 @@ import com.kdongsu5509.notifications.application.port.`in`.NotificationDispatche
 import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
 import com.kdongsu5509.notifications.application.service.MessageIdempotencyService
 import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
+import com.kdongsu5509.support.external.DiscordMessageSendPort
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -34,6 +35,9 @@ class ServiceNotificationConsumerTest {
     @Mock
     private lateinit var notificationEnqueueUseCase: NotificationEnqueueUseCase
 
+    @Mock
+    private lateinit var discordMessageSendPort: DiscordMessageSendPort
+
     private lateinit var consumer: ServiceNotificationConsumer
 
     @BeforeEach
@@ -41,7 +45,8 @@ class ServiceNotificationConsumerTest {
         consumer = ServiceNotificationConsumer(
             notificationDispatcherUseCase,
             messageIdempotencyService,
-            notificationEnqueueUseCase
+            notificationEnqueueUseCase,
+            discordMessageSendPort
         )
     }
 
@@ -92,5 +97,24 @@ class ServiceNotificationConsumerTest {
             .hasMessage("Dispatch error")
 
         verify(messageIdempotencyService, never()).markAsProcessed(dto.messageId.toString())
+    }
+
+    @Test
+    @DisplayName("dispatch 실패 시 sender에게 FCM으로 발송 실패 알림을 큐에 등록한다")
+    fun receiveMessage_exception_notifiesSenderViaFcm() {
+        val dto = createDto()
+        whenever(messageIdempotencyService.isAlreadyProcessed(dto.messageId.toString())).thenReturn(false)
+        doThrow(RuntimeException("Dispatch error")).whenever(notificationDispatcherUseCase).dispatch(any<NotificationCommand>())
+
+        assertThatThrownBy { consumer.receiveMessage(dto) }
+            .isInstanceOf(RuntimeException::class.java)
+
+        verify(notificationEnqueueUseCase).enqueue(
+            org.mockito.kotlin.argThat {
+                type == NotificationType.DELIVERY_FAILED_NOTICE.name &&
+                    notificationMethod == com.kdongsu5509.notifications.domain.NotificationMethod.FCM &&
+                    targetIdentifier == dto.sender.email
+            }
+        )
     }
 }

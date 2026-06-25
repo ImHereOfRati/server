@@ -401,12 +401,15 @@ jobs:
               -v "$PWD/infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" \
               -v /etc/letsencrypt:/etc/letsencrypt:ro \
               nginx:alpine nginx -t
-            if sudo test -f /etc/letsencrypt/renewal/"$CERT_DOMAIN".conf; then
-              sudo certbot renew --quiet
+            if sudo test -f /etc/letsencrypt/renewal/"$CERT_DOMAIN".conf && \
+               sudo certbot renew --quiet --cert-name "$CERT_DOMAIN"; then
+              echo "Renewed existing Let's Encrypt certificate for $CERT_DOMAIN."
             else
-              # live/archive에 남은 부트스트랩 self-signed는 certbot lineage가 아니라서
-              # 그대로 두면 certbot이 "live directory exists"로 발급을 거부한다.
-              sudo rm -rf /etc/letsencrypt/live/"$CERT_DOMAIN" /etc/letsencrypt/archive/"$CERT_DOMAIN"
+              # live/archive/renewal에 남은 부트스트랩 self-signed나 이전에 실패하며 남긴
+              # 불완전한 renewal conf는 certbot 정식 lineage가 아니라서, 그대로 두면
+              # "live directory exists"나 renewal conf parse 에러로 매번 막힌다.
+              sudo rm -rf /etc/letsencrypt/live/"$CERT_DOMAIN" /etc/letsencrypt/archive/"$CERT_DOMAIN" \
+                /etc/letsencrypt/renewal/"$CERT_DOMAIN".conf
               if sudo certbot certonly --standalone \
                 --non-interactive \
                 --agree-tos \

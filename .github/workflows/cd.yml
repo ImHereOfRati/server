@@ -343,6 +343,7 @@ jobs:
             . ./prod.env
             set +a
 
+            CERT_ALT_DOMAIN="www.$CERT_DOMAIN"
             sudo mkdir -p /etc/letsencrypt/live/"$CERT_DOMAIN"
             if [ ! -f /etc/letsencrypt/options-ssl-nginx.conf ]; then
               sudo curl -fsSL \
@@ -355,29 +356,59 @@ jobs:
                 -o /etc/letsencrypt/ssl-dhparams.pem
             fi
             if [ ! -f /etc/letsencrypt/live/"$CERT_DOMAIN"/fullchain.pem ] || [ ! -f /etc/letsencrypt/live/"$CERT_DOMAIN"/privkey.pem ]; then
+              sudo tee /tmp/imhere-cert.cnf >/dev/null <<EOF
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+CN = $CERT_DOMAIN
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = $CERT_DOMAIN
+DNS.2 = $CERT_ALT_DOMAIN
+EOF
               sudo openssl req -x509 -nodes -newkey rsa:2048 -days 30 \
                 -keyout /etc/letsencrypt/live/"$CERT_DOMAIN"/privkey.pem \
                 -out /etc/letsencrypt/live/"$CERT_DOMAIN"/fullchain.pem \
-                -subj "/CN=$CERT_DOMAIN"
+                -config /tmp/imhere-cert.cnf \
+                -extensions v3_req
+              sudo rm -f /tmp/imhere-cert.cnf
             fi
 
-            sudo docker compose -f docker-compose.yml --profile prod config >/dev/null
+            sudo env ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
+              docker compose -f docker-compose.yml --profile prod config >/dev/null
             sudo docker run --rm \
               --add-host dsko:127.0.0.1 \
               -v "$PWD/infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" \
               -v /etc/letsencrypt:/etc/letsencrypt:ro \
               nginx:alpine nginx -t
-            if sudo find /etc/letsencrypt/renewal -maxdepth 1 -name '*.conf' -print -quit 2>/dev/null | grep -q .; then
+            if sudo test -f /etc/letsencrypt/renewal/"$CERT_DOMAIN".conf; then
               sudo certbot renew --quiet
             else
-              echo "No existing Let's Encrypt renewal config found. Using bootstrap certificate."
+              if sudo certbot certonly --standalone \
+                --preferred-challenges tls-alpn-01 \
+                --non-interactive \
+                --agree-tos \
+                --register-unsafely-without-email \
+                --cert-name "$CERT_DOMAIN" \
+                -d "$CERT_DOMAIN" \
+                -d "$CERT_ALT_DOMAIN"; then
+                echo "Issued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
+              else
+                echo "Let's Encrypt issuance failed. Using bootstrap certificate."
+              fi
             fi
 
-            ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
-              sudo docker compose -f docker-compose.yml --profile prod pull
+            sudo env ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
+              docker compose -f docker-compose.yml --profile prod pull
 
-            ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
-              sudo docker compose -f docker-compose.yml --profile prod up -d
+            sudo env ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
+              docker compose -f docker-compose.yml --profile prod up -d
 
             sudo docker exec nginx-container nginx -s reload || true
 

@@ -6,6 +6,8 @@ CREATE DATABASE rati
 
 USE rati;
 
+SET time_zone = '+09:00';
+
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS user_agreement;

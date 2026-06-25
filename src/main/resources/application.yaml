@@ -18,15 +18,14 @@ spring:
     password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: ${DB_POOL_SIZE}
-      minimum-idle: 5
+      minimum-idle: 1
       idle-timeout: 600000
       connection-timeout: 30000
-      max-lifetime: 1800000
-      keepalive-time: 120000
+      max-lifetime: 110000
+      keepalive-time: 30000
       connection-test-query: "SELECT 1"
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: true

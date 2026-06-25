@@ -77,7 +77,6 @@ jobs:
       security_group_id: ${{ steps.resolve.outputs.security_group_id }}
       instance_id: ${{ steps.resolve.outputs.instance_id }}
       ecr_repository_name: ${{ steps.resolve.outputs.ecr_repository_name }}
-      ecr_repository_uri: ${{ steps.resolve.outputs.ecr_repository_uri }}
 
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -113,7 +112,6 @@ jobs:
           echo "security_group_id=$SECURITY_GROUP_ID" >> "$GITHUB_OUTPUT"
           echo "instance_id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
           echo "ecr_repository_name=$ECR_REPOSITORY_NAME" >> "$GITHUB_OUTPUT"
-          echo "ecr_repository_uri=$ECR_REPOSITORY_URI" >> "$GITHUB_OUTPUT"
 
   docker-push:
     name: Build & Push Docker Image
@@ -151,6 +149,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Validate Docker image tags
@@ -160,7 +159,7 @@ jobs:
           echo "Image tag: ${ECR_REPOSITORY_URI}:${IMAGE_TAG}"
           echo "Latest tag: ${ECR_REPOSITORY_URI}:latest"
         env:
-          ECR_REPOSITORY_URI: ${{ needs.resolve-infra.outputs.ecr_repository_uri }}
+          ECR_REPOSITORY_URI: ${{ steps.login-ecr.outputs.registry }}/${{ needs.resolve-infra.outputs.ecr_repository_name }}
           IMAGE_TAG: ${{ needs.build-jar.outputs.tag }}
 
       - name: Build and push Docker image to ECR
@@ -171,8 +170,8 @@ jobs:
           file: Dockerfile.release
           push: true
           tags: |
-            ${{ needs.resolve-infra.outputs.ecr_repository_uri }}:${{ needs.build-jar.outputs.tag }}
-            ${{ needs.resolve-infra.outputs.ecr_repository_uri }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ needs.resolve-infra.outputs.ecr_repository_name }}:${{ needs.build-jar.outputs.tag }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ needs.resolve-infra.outputs.ecr_repository_name }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

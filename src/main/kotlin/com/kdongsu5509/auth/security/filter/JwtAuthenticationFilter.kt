@@ -3,7 +3,6 @@ package com.kdongsu5509.auth.security.filter
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.shared.response.APIResponseSerializers
 import com.kdongsu5509.support.exception.ImHereBaseException
 import jakarta.servlet.FilterChain
@@ -18,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 class JwtAuthenticationFilter(
     private val tokenParser: ImHereTokenParserPort,
-    private val securityWhiteList: SecurityWhiteList
+    private val permitAllPaths: List<String>
 ) : OncePerRequestFilter() {
 
     companion object {
@@ -30,11 +29,11 @@ class JwtAuthenticationFilter(
     private val pathMatcher = AntPathMatcher()
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
-        val shouldSkip = securityWhiteList.whitelist.any { path ->
+        val shouldSkip = permitAllPaths.any { path ->
             pathMatcher.match(path, request.servletPath)
         }
         if (shouldSkip) {
-            log.debug("JWT filter skipped for whitelisted path: {}", request.servletPath)
+            log.debug("JWT filter skipped for permit-all path: {}", request.servletPath)
         }
         return shouldSkip
     }

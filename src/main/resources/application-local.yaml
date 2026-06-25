@@ -1,0 +1,34 @@
+# 로컬 DB 기본값
+DB_HOST: localhost
+DB_PORT: 3306
+DB_NAME: rati
+DB_USER: root
+DB_PASSWORD: ""
+DB_POOL_SIZE: 10
+
+# 로컬 RabbitMQ 기본값
+RABBITMQ_HOST: localhost
+RABBITMQ_PORT: 5672
+RABBITMQ_USER: guest
+RABBITMQ_PASSWORD: guest
+RABBITMQ_VHOST: /main
+RABBITMQ_CONCURRENCY: 3
+RABBITMQ_MAX_CONCURRENCY: 10
+
+# 로컬 앱/보안/외부 연동 기본값
+MGMT_BASE_PATH: /actuator
+JWT_SECRET: testSecretKeyForJwtAuthenticationTesting12345678901234567890
+SOLAPI_SENDER: "01012341234"
+SOLAPI_API_KEY: local-solapi-key
+SOLAPI_API_SECRET: local-solapi-secret
+FIREBASE_PATH: file:src/test/resources/dummy-firebase-key.json
+DISCORD_WEBHOOK_ERROR_SERVER: http://localhost
+DISCORD_WEBHOOK_ERROR_CLIENT: http://localhost
+DISCORD_WEBHOOK_OTT: http://localhost
+SECURITY_WHITELIST: /api/auth/login,/api/auth/registration,/api/auth/refresh,/swagger-ui/**,/docs/**,/admin/ott/request,/admin/ott/verify,/css/**,/js/**,/images/**,/webjars/**,/favicon.ico
+CORS_ALLOWED_ORIGINS: http://localhost:3000
+ADMIN_ID: test-admin
+ADMIN_ALLOWED_IPS: 127.0.0.1,::1,0:0:0:0:0:0:0:1
+SERVER_NAME: localhost
+CERT_DOMAIN: localhost
+NGINX_ALLOWED_ORIGIN: http://localhost:3000

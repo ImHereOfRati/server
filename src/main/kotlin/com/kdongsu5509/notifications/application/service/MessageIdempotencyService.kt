@@ -1,12 +1,12 @@
 package com.kdongsu5509.notifications.application.service
 
-import org.springframework.data.redis.core.StringRedisTemplate
+import com.kdongsu5509.auth.application.port.out.CachePort
 import org.springframework.stereotype.Service
 import java.time.Duration
 
 @Service
 class MessageIdempotencyService(
-    private val stringRedisTemplate: StringRedisTemplate
+    private val cachePort: CachePort
 ) {
     companion object {
         private const val KEY_PREFIX = "msg:processed:"
@@ -14,10 +14,10 @@ class MessageIdempotencyService(
     }
 
     fun isAlreadyProcessed(messageId: String): Boolean {
-        return stringRedisTemplate.hasKey(KEY_PREFIX + messageId) ?: false
+        return cachePort.find(KEY_PREFIX + messageId, String::class.java) != null
     }
 
     fun markAsProcessed(messageId: String) {
-        stringRedisTemplate.opsForValue().set(KEY_PREFIX + messageId, "1", TTL)
+        cachePort.save(KEY_PREFIX + messageId, "1", TTL)
     }
 }

@@ -23,8 +23,8 @@ class ImHereTokenProviderAdapter(
         val accessToken = tokenIssuer.createAccessToken(claims)
         val refreshToken = tokenIssuer.createRefreshToken(claims)
 
-        val redisKey = getTokenRedisKey(claims.email)
-        cachePort.save(redisKey, refreshToken, Duration.ofDays(imHereJwtProperties.refreshExpirationDays))
+        val tokenKey = getTokenCacheKey(claims.email)
+        cachePort.save(tokenKey, refreshToken, Duration.ofDays(imHereJwtProperties.refreshExpirationDays))
 
         return ImHereJwtToken(accessToken, refreshToken, claims.status)
     }
@@ -33,25 +33,25 @@ class ImHereTokenProviderAdapter(
         tokenParser.validate(refreshToken)
 
         val claims = tokenParser.parse(refreshToken)
-        val refreshTokenSavedAtRedis = findTokenFromRedisWithUserEmail(claims.email)
+        val refreshTokenSavedAtCache = findTokenFromCacheWithUserEmail(claims.email)
 
-        if (refreshTokenSavedAtRedis != refreshToken) AuthException.IMHERE_INVALID_TOKEN.throwIt()
+        if (refreshTokenSavedAtCache != refreshToken) AuthException.IMHERE_INVALID_TOKEN.throwIt()
 
         return issue(claims)
     }
 
     override fun reissueByEmail(email: String): ImHereJwtToken {
-        val refreshTokenFromRedis = findTokenFromRedisWithUserEmail(email)
-        val claims = tokenParser.parse(refreshTokenFromRedis)
+        val refreshTokenFromCache = findTokenFromCacheWithUserEmail(email)
+        val claims = tokenParser.parse(refreshTokenFromCache)
 
         return issue(claims)
     }
 
-    private fun findTokenFromRedisWithUserEmail(email: String): String {
-        val redisKey = getTokenRedisKey(email)
-        return cachePort.find(redisKey, String::class.java) ?: AuthException.IMHERE_KEY_NOT_FOUND_IN_REDIS.throwIt()
+    private fun findTokenFromCacheWithUserEmail(email: String): String {
+        val tokenKey = getTokenCacheKey(email)
+        return cachePort.find(tokenKey, String::class.java) ?: AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.throwIt()
     }
 
-    private fun getTokenRedisKey(userEmail: String): String = "refresh:$userEmail"
+    private fun getTokenCacheKey(userEmail: String): String = "refresh:$userEmail"
 }
 

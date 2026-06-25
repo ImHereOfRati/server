@@ -49,11 +49,14 @@ class SecurityConfig(
     private val ottLoginSuccessHandler: OttLoginSuccessHandler,
     @Value("\${admin.id}") private val adminId: String,
     @Value("\${admin.allowed-ips:127.0.0.1}") private val allowedIps: List<String>,
+    @Value("\${management.endpoints.web.base-path:/actuator}") private val managementBasePath: String,
 ) {
+
+    private val permitAllPaths by lazy { securityWhiteList.permitAllPaths(managementBasePath) }
 
     @Bean
     fun jwtAuthenticationFilter(): JwtAuthenticationFilter =
-        JwtAuthenticationFilter(imHereJwtTokenParserPort, securityWhiteList)
+        JwtAuthenticationFilter(imHereJwtTokenParserPort, permitAllPaths)
 
     @Bean
     fun userDetailsService(): UserDetailsService = UserDetailsService { email ->
@@ -206,7 +209,7 @@ class SecurityConfig(
             }
 
             authorizeHttpRequests {
-                securityWhiteList.whitelist.forEach { authorize(it, permitAll) }
+                permitAllPaths.forEach { authorize(it, permitAll) }
                 authorize("/error", permitAll)
                 authorize(HttpMethod.OPTIONS, "/**", permitAll)
                 authorize("/api/admin/**", hasRole(UserRole.ADMIN.name))

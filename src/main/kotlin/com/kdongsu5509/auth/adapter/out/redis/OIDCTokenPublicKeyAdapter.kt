@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.adapter.out.redis
+package com.kdongsu5509.auth.adapter.out.oauth
 
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.adapter.out.oauth.OIDCProperties
@@ -19,7 +19,7 @@ class OIDCTokenPublicKeyAdapter(
         val providerProperties = oidcProperties.get(provider)
 
         val cachedKeys = oauthClientPort.fetch(providerProperties.cacheKey, providerProperties.jwksUri)
-            ?: AuthException.OIDC_PUBLIC_KEY_FETCH_FROM_REDIS_FAILED.throwIt()
+            ?: AuthException.OIDC_PUBLIC_KEY_FETCH_FROM_CACHE_FAILED.throwIt()
 
         cachedKeys.keys.firstOrNull { it.kid == kid }?.let { return it }
 

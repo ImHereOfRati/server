@@ -1,0 +1,307 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "ImHere production infra (two EC2: app medium + rabbitmq small, EIP, ECR, GitHub Actions OIDC role)"
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 SSH key pair name
+  AppInstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+    Description: App EC2 instance type
+  RabbitMqInstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+    Description: RabbitMQ EC2 instance type
+  VpcCidr:
+    Type: String
+    Default: 10.50.0.0/16
+  PublicSubnetCidr:
+    Type: String
+    Default: 10.50.1.0/24
+  RepositorySlug:
+    Type: String
+    Default: ImHereOfRati/server
+  MainBranchRef:
+    Type: String
+    Default: refs/heads/main
+  EcrRepositoryName:
+    Type: String
+    Default: imhere/dsko
+    Description: ECR repository name for the app image
+  RabbitMqUser:
+    Type: String
+    Default: imhere
+  RabbitMqPassword:
+    Type: String
+    NoEcho: true
+    Default: imhere-rabbit
+  RabbitMqVHost:
+    Type: String
+    Default: /main
+
+Resources:
+  AppVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: imhere-prod-vpc
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: imhere-prod-igw
+
+  VpcGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref AppVpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref AppVpc
+      CidrBlock: !Ref PublicSubnetCidr
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: imhere-prod-public-subnet
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AppVpc
+      Tags:
+        - Key: Name
+          Value: imhere-prod-public-rt
+
+  DefaultInternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ImHere production app security group
+      VpcId: !Ref AppVpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: imhere-prod-app-sg
+
+  RabbitMqSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ImHere RabbitMQ security group
+      VpcId: !Ref AppVpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5672
+          ToPort: 5672
+          SourceSecurityGroupId: !Ref AppSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 15672
+          ToPort: 15672
+          SourceSecurityGroupId: !Ref AppSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: imhere-prod-rabbitmq-sg
+
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref AppInstanceType
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      KeyName: !Ref KeyName
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref AppSecurityGroup
+      Tags:
+        - Key: Name
+          Value: imhere-prod-app
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          dnf update -y
+          dnf install -y docker docker-compose-plugin certbot
+          systemctl enable --now docker
+          usermod -aG docker ec2-user || true
+          mkdir -p /opt/imhere /home/ec2-user/imhere
+
+  AppElasticIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  AppElasticIpAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt AppElasticIp.AllocationId
+      InstanceId: !Ref AppInstance
+
+  RabbitMqInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref RabbitMqInstanceType
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      KeyName: !Ref KeyName
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref RabbitMqSecurityGroup
+      Tags:
+        - Key: Name
+          Value: imhere-prod-rabbitmq
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          dnf update -y
+          dnf install -y docker
+          systemctl enable --now docker
+          usermod -aG docker ec2-user || true
+          docker volume create rabbitmq_data || true
+          docker rm -f rabbitmq-container || true
+          docker run -d --name rabbitmq-container --restart unless-stopped \
+            -p 5672:5672 \
+            -p 15672:15672 \
+            -e RABBITMQ_DEFAULT_USER='${RabbitMqUser}' \
+            -e RABBITMQ_DEFAULT_PASS='${RabbitMqPassword}' \
+            -e RABBITMQ_DEFAULT_VHOST='${RabbitMqVHost}' \
+            -v rabbitmq_data:/var/lib/rabbitmq \
+            rabbitmq:4-management-alpine
+
+  GitHubActionsDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: imhere-github-actions-deploy
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${RepositorySlug}:ref:${MainBranchRef}
+      Policies:
+        - PolicyName: imhere-github-actions-deploy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:DescribeStacks
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/imhere-prod-infra/*
+              - Effect: Allow
+                Action:
+                  - ec2:AuthorizeSecurityGroupIngress
+                  - ec2:RevokeSecurityGroupIngress
+                  - ec2:DescribeSecurityGroups
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:security-group/${AppSecurityGroup}
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:CompleteLayerUpload
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Resource: !GetAtt AppEcrRepository.Arn
+
+  AppEcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref EcrRepositoryName
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      EncryptionConfiguration:
+        EncryptionType: AES256
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep latest 30 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 30
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+Outputs:
+  ElasticIp:
+    Description: Public EIP for the app instance
+    Value: !Ref AppElasticIp
+  Ec2InstanceId:
+    Description: App EC2 instance ID
+    Value: !Ref AppInstance
+  RabbitMqInstanceId:
+    Description: RabbitMQ EC2 instance ID
+    Value: !Ref RabbitMqInstance
+  RabbitMqPrivateIp:
+    Description: RabbitMQ private IP for the app host to reach
+    Value: !GetAtt RabbitMqInstance.PrivateIp
+  SecurityGroupId:
+    Description: App security group ID
+    Value: !Ref AppSecurityGroup
+  RabbitMqSecurityGroupId:
+    Description: RabbitMQ security group ID
+    Value: !Ref RabbitMqSecurityGroup
+  GitHubActionsRoleArn:
+    Description: GitHub Actions deploy role ARN
+    Value: !GetAtt GitHubActionsDeployRole.Arn
+  EcrRepositoryName:
+    Description: ECR repository name
+    Value: !Ref EcrRepositoryName
+  EcrRepositoryUri:
+    Description: ECR repository URI
+    Value: !GetAtt AppEcrRepository.RepositoryUri

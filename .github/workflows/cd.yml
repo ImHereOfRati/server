@@ -1,6 +1,7 @@
 name: IMHERE_GITHUB_ACTION_CD
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: [ "IMHERE_GITHUB_ACTION_CI" ]
     branches:
@@ -12,7 +13,10 @@ jobs:
   build-jar:
     name: Build JAR
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+
+    env:
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
 
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
@@ -21,13 +25,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ env.SOURCE_SHA }}
 
       - name: Generate image tag
         id: tag
         run: |
           DATE=$(TZ='Asia/Seoul' date +'%Y%m%d-%H%M')
-          SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+          SHORT_SHA=$(echo "$SOURCE_SHA" | cut -c1-7)
           echo "tag=${DATE}-${SHORT_SHA}" >> $GITHUB_OUTPUT
 
       - name: Set up JDK 25
@@ -55,7 +59,7 @@ jobs:
             build/generated
             build/kotlin
             build/tmp
-          key: gradle-build-${{ runner.os }}-${{ github.event.workflow_run.head_sha }}
+          key: gradle-build-${{ runner.os }}-${{ env.SOURCE_SHA }}
           restore-keys: |
             gradle-build-${{ runner.os }}-
 
@@ -74,22 +78,21 @@ jobs:
   docker-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: build-jar
+    needs: [build-jar, resolve-infra]
+
+    env:
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
 
     permissions:
       id-token: write
       contents: read
 
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
-      ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ env.SOURCE_SHA }}
 
       - name: Download JAR artifact
         uses: actions/download-artifact@v7
@@ -119,15 +122,79 @@ jobs:
           file: Dockerfile.release
           push: true
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ needs.build-jar.outputs.tag }}
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+            ${{ needs.resolve-infra.outputs.ecr_repository_uri }}:${{ needs.build-jar.outputs.tag }}
+            ${{ needs.resolve-infra.outputs.ecr_repository_uri }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
-    name: Deploy to EC2
+  resolve-infra:
+    name: Resolve Infra Outputs
     runs-on: ubuntu-latest
-    needs: docker-push
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    outputs:
+      ec2_host: ${{ steps.outputs.outputs.ec2_host }}
+      rabbitmq_host: ${{ steps.outputs.outputs.rabbitmq_host }}
+      security_group_id: ${{ steps.outputs.outputs.security_group_id }}
+      instance_id: ${{ steps.outputs.outputs.instance_id }}
+      ecr_repository_name: ${{ steps.outputs.outputs.ecr_repository_name }}
+      ecr_repository_uri: ${{ steps.outputs.outputs.ecr_repository_uri }}
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      STACK_NAME: imhere-prod-infra
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: imhere-github-actions-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read CloudFormation outputs
+        id: outputs
+        run: |
+          EC2_HOST=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='ElasticIp'].OutputValue | [0]" \
+            --output text)
+          SECURITY_GROUP_ID=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='SecurityGroupId'].OutputValue | [0]" \
+            --output text)
+          RABBITMQ_HOST=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='RabbitMqPrivateIp'].OutputValue | [0]" \
+            --output text)
+          INSTANCE_ID=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='Ec2InstanceId'].OutputValue | [0]" \
+            --output text)
+          ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryName'].OutputValue | [0]" \
+            --output text)
+          ECR_REPOSITORY_URI=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryUri'].OutputValue | [0]" \
+            --output text)
+
+          echo "ec2_host=$EC2_HOST" >> $GITHUB_OUTPUT
+          echo "rabbitmq_host=$RABBITMQ_HOST" >> $GITHUB_OUTPUT
+          echo "security_group_id=$SECURITY_GROUP_ID" >> $GITHUB_OUTPUT
+          echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+          echo "ecr_repository_name=$ECR_REPOSITORY_NAME" >> $GITHUB_OUTPUT
+          echo "ecr_repository_uri=$ECR_REPOSITORY_URI" >> $GITHUB_OUTPUT
+
+  prepare-server:
+    name: Prepare Server
+    runs-on: ubuntu-latest
+    needs: resolve-infra
 
     permissions:
       id-token: write
@@ -135,9 +202,9 @@ jobs:
 
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
-      ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
-      ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
       EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
+      EC2_HOST: ${{ needs.resolve-infra.outputs.ec2_host }}
+      EC2_SECURITY_GROUP_ID: ${{ needs.resolve-infra.outputs.security_group_id }}
 
     steps:
       - name: Configure AWS credentials (OIDC)
@@ -156,7 +223,7 @@ jobs:
       - name: Add runner IP to EC2 security group (SSH port)
         run: |
           aws ec2 authorize-security-group-ingress \
-            --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+            --group-id "$EC2_SECURITY_GROUP_ID" \
             --protocol tcp \
             --port 22 \
             --cidr ${{ steps.ip.outputs.runner_ip }}/32
@@ -168,38 +235,135 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           echo "StrictHostKeyChecking no" >> ~/.ssh/config
 
-      - name: Write secret config files to runner temp dir
+      - name: Prepare EC2 runtime directory
         run: |
-          mkdir -p /tmp/imhere-secrets/config /tmp/imhere-secrets/secrets
-          cat << 'EOF' > /tmp/imhere-secrets/config/application-datasource.yaml
-          ${{ secrets.APP_DATASOURCE_YAML }}
-          EOF
-          cat << 'EOF' > /tmp/imhere-secrets/config/application-monitoring.yaml
-          ${{ secrets.APP_MONITORING_YAML }}
-          EOF
-          cat << 'EOF' > /tmp/imhere-secrets/config/application-secret.yaml
-          ${{ secrets.APP_SECRET_YAML }}
-          EOF
-          cat << 'EOF' > /tmp/imhere-secrets/config/application-prod.yaml
-          ${{ secrets.APP_PROD_YAML }}
-          EOF
-          cat << 'EOF' > /tmp/imhere-secrets/secrets/imhereFirebaseKey.json
-          ${{ secrets.FIREBASE_JSON_KEY }}
-          EOF
+          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
+            "command -v docker >/dev/null 2>&1 || sudo dnf install -y docker docker-compose-plugin certbot; sudo systemctl enable --now docker; mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
 
-      - name: Copy secret config files to EC2
+  sync-config:
+    name: Sync Config
+    runs-on: ubuntu-latest
+    needs: [prepare-server, resolve-infra]
+
+    env:
+      CONFIG_REPO_PAT: ${{ secrets.CONFIG_REPO_PAT }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Prepare runtime files from config repo
         run: |
-          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-            "mkdir -p ${EC2_DEPLOY_PATH}/config ${EC2_DEPLOY_PATH}/secrets"
+          ./infra/scripts/sync-config.sh --output-dir /tmp/imhere-secrets
+
+      - name: Upload runtime files artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: runtime-files
+          path: /tmp/imhere-secrets/
+          retention-days: 1
+
+  deploy-app:
+    name: Deploy App
+    runs-on: ubuntu-latest
+    needs: [docker-push, prepare-server, resolve-infra, sync-config]
+
+    env:
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
+      EC2_HOST: ${{ needs.resolve-infra.outputs.ec2_host }}
+      RABBITMQ_HOST: ${{ needs.resolve-infra.outputs.rabbitmq_host }}
+      ECR_REPOSITORY: ${{ needs.resolve-infra.outputs.ecr_repository_name }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: imhere-github-actions-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Derive ECR registry
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ECR_REGISTRY=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+
+      - name: Download runtime files artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: runtime-files
+          path: /tmp/imhere-secrets
+
+      - name: Render and copy runtime files to EC2
+        run: |
+          set -e
+          set -a
+          . /tmp/imhere-secrets/prod.env
+          set +a
+
+          RUNTIME_DIR=/tmp/imhere-runtime
+          mkdir -p "$RUNTIME_DIR/infra/nginx" "$RUNTIME_DIR/infra/alloy"
+          cp /tmp/imhere-secrets/prod.env "$RUNTIME_DIR/prod.env"
+          printf '\nRABBITMQ_HOST=%s\n' "$RABBITMQ_HOST" >> "$RUNTIME_DIR/prod.env"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          runtime_dir = Path('/tmp/imhere-runtime')
+          templates = {
+              'infra/nginx/nginx.conf.template': 'infra/nginx/nginx.conf',
+              'infra/alloy/alloy-config.alloy.template': 'infra/alloy/alloy-config.alloy',
+          }
+
+          for source, target in templates.items():
+              text = Path(source).read_text(encoding='utf-8')
+              for key in ('SERVER_NAME', 'CERT_DOMAIN', 'NGINX_ALLOWED_ORIGIN', 'MGMT_BASE_PATH'):
+                  value = os.environ.get(key)
+                  if not value:
+                      raise SystemExit(f'{key} is required to render {source}')
+                  text = text.replace('${' + key + '}', value)
+
+              output = runtime_dir / target
+              output.parent.mkdir(parents=True, exist_ok=True)
+              output.write_text(text, encoding='utf-8')
+          PY
+
+          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
+            "mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
           scp -i ~/.ssh/deploy_key \
-            /tmp/imhere-secrets/config/application-datasource.yaml \
-            /tmp/imhere-secrets/config/application-monitoring.yaml \
-            /tmp/imhere-secrets/config/application-secret.yaml \
-            /tmp/imhere-secrets/config/application-prod.yaml \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${EC2_DEPLOY_PATH}/config/"
+            docker-compose.yml \
+            /tmp/imhere-runtime/prod.env \
+            "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/"
+          scp -i ~/.ssh/deploy_key \
+            /tmp/imhere-runtime/infra/nginx/nginx.conf \
+            "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/nginx/nginx.conf"
+          scp -i ~/.ssh/deploy_key \
+            infra/nginx/website.html \
+            "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/nginx/website.html"
+          scp -i ~/.ssh/deploy_key \
+            /tmp/imhere-runtime/infra/alloy/alloy-config.alloy \
+            "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/alloy/alloy-config.alloy"
           scp -i ~/.ssh/deploy_key \
             /tmp/imhere-secrets/secrets/imhereFirebaseKey.json \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${EC2_DEPLOY_PATH}/secrets/"
+            "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/secrets/"
 
       - name: Get ECR Login Password
         run: |
@@ -208,34 +372,78 @@ jobs:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ needs.resolve-infra.outputs.ec2_host }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           envs: ECR_REGISTRY,ECR_REPOSITORY,AWS_REGION,EC2_DEPLOY_PATH,ECR_PASSWORD
           script: |
+            set -e
             echo "$ECR_PASSWORD" | docker login --username AWS --password-stdin $ECR_REGISTRY
 
             cd $EC2_DEPLOY_PATH
+            set -a
+            . ./prod.env
+            set +a
+
+            docker compose -f docker-compose.yml --profile prod config >/dev/null
+            docker run --rm -v "$PWD/infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" nginx:alpine nginx -t
+            sudo certbot renew --quiet
 
             ECR_REGISTRY=$ECR_REGISTRY ECR_REPOSITORY=$ECR_REPOSITORY \
-              docker compose -f docker-compose.prod.yml pull dsko
+              docker compose -f docker-compose.yml --profile prod pull
 
             ECR_REGISTRY=$ECR_REGISTRY ECR_REPOSITORY=$ECR_REPOSITORY \
-              docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.yml --profile prod up -d
 
+            docker exec nginx-container nginx -s reload || true
+
+            rm -f prod.env secrets/imhereFirebaseKey.json infra/nginx/nginx.conf infra/nginx/website.html infra/alloy/alloy-config.alloy
             docker image prune -f
-
-      - name: Remove runner IP from EC2 security group
-        if: always()
-        run: |
-          aws ec2 revoke-security-group-ingress \
-            --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
-            --protocol tcp \
-            --port 22 \
-            --cidr ${{ steps.ip.outputs.runner_ip }}/32
 
       - name: Cleanup runner temp files
         if: always()
         run: |
           rm -f ~/.ssh/deploy_key
           rm -rf /tmp/imhere-secrets
+
+  cleanup:
+    name: Cleanup Infra Access
+    runs-on: ubuntu-latest
+    needs: [resolve-infra, deploy-app]
+    if: always()
+
+    env:
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      EC2_SECURITY_GROUP_ID: ${{ needs.resolve-infra.outputs.security_group_id }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: imhere-github-actions-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get GitHub Actions runner public IP
+        id: ip
+        run: |
+          RUNNER_IP=$(curl -sf https://api.ipify.org)
+          echo "runner_ip=${RUNNER_IP}" >> $GITHUB_OUTPUT
+
+      - name: Remove runner IP from EC2 security group
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id "$EC2_SECURITY_GROUP_ID" \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.ip.outputs.runner_ip }}/32

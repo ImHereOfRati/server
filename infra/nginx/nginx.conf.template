@@ -75,7 +75,9 @@ http {
             }
 
             # 실제 API 요청은 Docker 네트워크 내부의 Spring Boot 컨테이너로 보낸다.
-            proxy_pass http://dsko:8080;
+            # 서비스명 dsko 대신 container_name을 쓴다 — compose 서비스명 alias가
+            # 네트워크 재생성 후 등록되지 않는 경우가 있어, 항상 보장되는 컨테이너 이름으로 고정한다.
+            proxy_pass http://iamhere-server-container:8080;
             
             # Spring 이 중복 CORS 헤더를 내려도 최종 응답은 Nginx 기준으로 정리한다.
             proxy_hide_header 'Access-Control-Allow-Origin';
@@ -88,7 +90,7 @@ http {
         }
 
         location ^~ /admin/ {
-            proxy_pass http://dsko:8080;
+            proxy_pass http://iamhere-server-container:8080;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -96,7 +98,7 @@ http {
         }
 
         location ^~ /swagger-ui/ {
-            proxy_pass http://dsko:8080;
+            proxy_pass http://iamhere-server-container:8080;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -104,7 +106,7 @@ http {
         }
 
         location ^~ /docs/ {
-            proxy_pass http://dsko:8080;
+            proxy_pass http://iamhere-server-container:8080;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -112,7 +114,7 @@ http {
         }
 
         location ^~ ${MGMT_BASE_PATH}/ {
-            proxy_pass http://dsko:8080;
+            proxy_pass http://iamhere-server-container:8080;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

@@ -32,7 +32,7 @@ jobs:
         run: |
           DATE=$(TZ='Asia/Seoul' date +'%Y%m%d-%H%M')
           SHORT_SHA=$(echo "$SOURCE_SHA" | cut -c1-7)
-          echo "tag=${DATE}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "tag=${DATE}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -75,10 +75,92 @@ jobs:
           path: build/libs/*.jar
           retention-days: 1
 
+  resolve-infra:
+    name: Resolve Infra Outputs
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    outputs:
+      ec2_host: ${{ steps.outputs.outputs.ec2_host }}
+      rabbitmq_host: ${{ steps.outputs.outputs.rabbitmq_host }}
+      security_group_id: ${{ steps.outputs.outputs.security_group_id }}
+      instance_id: ${{ steps.outputs.outputs.instance_id }}
+      ecr_repository_name: ${{ steps.outputs.outputs.ecr_repository_name }}
+      ecr_repository_uri: ${{ steps.outputs.outputs.ecr_repository_uri }}
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      STACK_NAME: imhere-prod-infra
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: imhere-github-actions-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read CloudFormation outputs
+        id: outputs
+        run: |
+          EC2_HOST=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='ElasticIp'].OutputValue | [0]" \
+            --output text)
+          
+          SECURITY_GROUP_ID=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='SecurityGroupId'].OutputValue | [0]" \
+            --output text)
+          
+          RABBITMQ_HOST=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='RabbitMqPrivateIp'].OutputValue | [0]" \
+            --output text)
+          
+          INSTANCE_ID=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='Ec2InstanceId'].OutputValue | [0]" \
+            --output text)
+          
+          ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryName'].OutputValue | [0]" \
+            --output text)
+          
+          ECR_REPOSITORY_URI=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryUri'].OutputValue | [0]" \
+            --output text)
+          
+          for value in "$EC2_HOST" "$SECURITY_GROUP_ID" "$RABBITMQ_HOST" "$INSTANCE_ID" "$ECR_REPOSITORY_NAME" "$ECR_REPOSITORY_URI"; do
+            if [ -z "$value" ] || [ "$value" = "None" ]; then
+              echo "Required CloudFormation output is empty."
+              exit 1
+            fi
+          done
+          
+          echo "ec2_host=$EC2_HOST" >> "$GITHUB_OUTPUT"
+          echo "rabbitmq_host=$RABBITMQ_HOST" >> "$GITHUB_OUTPUT"
+          echo "security_group_id=$SECURITY_GROUP_ID" >> "$GITHUB_OUTPUT"
+          echo "instance_id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
+          echo "ecr_repository_name=$ECR_REPOSITORY_NAME" >> "$GITHUB_OUTPUT"
+          echo "ecr_repository_uri=$ECR_REPOSITORY_URI" >> "$GITHUB_OUTPUT"
+
   docker-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: [build-jar, resolve-infra]
+    needs: [ build-jar, resolve-infra ]
 
     env:
       SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
@@ -114,6 +196,24 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Validate Docker image tags
+        run: |
+          if [ -z "${ECR_REPOSITORY_URI}" ]; then
+            echo "ECR_REPOSITORY_URI is empty"
+            exit 1
+          fi
+          
+          if [ -z "${IMAGE_TAG}" ]; then
+            echo "IMAGE_TAG is empty"
+            exit 1
+          fi
+          
+          echo "Image tag: ${ECR_REPOSITORY_URI}:${IMAGE_TAG}"
+          echo "Latest tag: ${ECR_REPOSITORY_URI}:latest"
+        env:
+          ECR_REPOSITORY_URI: ${{ needs.resolve-infra.outputs.ecr_repository_uri }}
+          IMAGE_TAG: ${{ needs.build-jar.outputs.tag }}
+
       - name: Build and push Docker image to ECR
         uses: docker/build-push-action@v6
         timeout-minutes: 15
@@ -126,70 +226,6 @@ jobs:
             ${{ needs.resolve-infra.outputs.ecr_repository_uri }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  resolve-infra:
-    name: Resolve Infra Outputs
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-
-    permissions:
-      id-token: write
-      contents: read
-
-    outputs:
-      ec2_host: ${{ steps.outputs.outputs.ec2_host }}
-      rabbitmq_host: ${{ steps.outputs.outputs.rabbitmq_host }}
-      security_group_id: ${{ steps.outputs.outputs.security_group_id }}
-      instance_id: ${{ steps.outputs.outputs.instance_id }}
-      ecr_repository_name: ${{ steps.outputs.outputs.ecr_repository_name }}
-      ecr_repository_uri: ${{ steps.outputs.outputs.ecr_repository_uri }}
-
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      STACK_NAME: imhere-prod-infra
-
-    steps:
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          role-session-name: imhere-github-actions-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Read CloudFormation outputs
-        id: outputs
-        run: |
-          EC2_HOST=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='ElasticIp'].OutputValue | [0]" \
-            --output text)
-          SECURITY_GROUP_ID=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='SecurityGroupId'].OutputValue | [0]" \
-            --output text)
-          RABBITMQ_HOST=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='RabbitMqPrivateIp'].OutputValue | [0]" \
-            --output text)
-          INSTANCE_ID=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='Ec2InstanceId'].OutputValue | [0]" \
-            --output text)
-          ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryName'].OutputValue | [0]" \
-            --output text)
-          ECR_REPOSITORY_URI=$(aws cloudformation describe-stacks \
-            --stack-name "$STACK_NAME" \
-            --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryUri'].OutputValue | [0]" \
-            --output text)
-
-          echo "ec2_host=$EC2_HOST" >> $GITHUB_OUTPUT
-          echo "rabbitmq_host=$RABBITMQ_HOST" >> $GITHUB_OUTPUT
-          echo "security_group_id=$SECURITY_GROUP_ID" >> $GITHUB_OUTPUT
-          echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
-          echo "ecr_repository_name=$ECR_REPOSITORY_NAME" >> $GITHUB_OUTPUT
-          echo "ecr_repository_uri=$ECR_REPOSITORY_URI" >> $GITHUB_OUTPUT
 
   prepare-server:
     name: Prepare Server
@@ -218,7 +254,7 @@ jobs:
         id: ip
         run: |
           RUNNER_IP=$(curl -sf https://api.ipify.org)
-          echo "runner_ip=${RUNNER_IP}" >> $GITHUB_OUTPUT
+          echo "runner_ip=${RUNNER_IP}" >> "$GITHUB_OUTPUT"
 
       - name: Add runner IP to EC2 security group (SSH port)
         run: |
@@ -243,7 +279,7 @@ jobs:
   sync-config:
     name: Sync Config
     runs-on: ubuntu-latest
-    needs: [prepare-server, resolve-infra]
+    needs: [ prepare-server, resolve-infra ]
 
     env:
       CONFIG_REPO_PAT: ${{ secrets.CONFIG_REPO_PAT }}
@@ -266,7 +302,7 @@ jobs:
   deploy-app:
     name: Deploy App
     runs-on: ubuntu-latest
-    needs: [docker-push, prepare-server, resolve-infra, sync-config]
+    needs: [ docker-push, prepare-server, resolve-infra, sync-config ]
 
     env:
       SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
@@ -296,7 +332,7 @@ jobs:
       - name: Derive ECR registry
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "ECR_REGISTRY=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
+          echo "ECR_REGISTRY=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" >> "$GITHUB_ENV"
 
       - name: Setup SSH key
         run: |
@@ -317,22 +353,22 @@ jobs:
           set -a
           . /tmp/imhere-secrets/prod.env
           set +a
-
+          
           RUNTIME_DIR=/tmp/imhere-runtime
           mkdir -p "$RUNTIME_DIR/infra/nginx" "$RUNTIME_DIR/infra/alloy"
           cp /tmp/imhere-secrets/prod.env "$RUNTIME_DIR/prod.env"
           printf '\nRABBITMQ_HOST=%s\n' "$RABBITMQ_HOST" >> "$RUNTIME_DIR/prod.env"
-
+          
           python3 - <<'PY'
           from pathlib import Path
           import os
-
+          
           runtime_dir = Path('/tmp/imhere-runtime')
           templates = {
               'infra/nginx/nginx.conf.template': 'infra/nginx/nginx.conf',
               'infra/alloy/alloy-config.alloy.template': 'infra/alloy/alloy-config.alloy',
           }
-
+          
           for source, target in templates.items():
               text = Path(source).read_text(encoding='utf-8')
               for key in ('SERVER_NAME', 'CERT_DOMAIN', 'NGINX_ALLOWED_ORIGIN', 'MGMT_BASE_PATH'):
@@ -340,34 +376,39 @@ jobs:
                   if not value:
                       raise SystemExit(f'{key} is required to render {source}')
                   text = text.replace('${' + key + '}', value)
-
+          
               output = runtime_dir / target
               output.parent.mkdir(parents=True, exist_ok=True)
               output.write_text(text, encoding='utf-8')
           PY
-
+          
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
             "mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
+          
           scp -i ~/.ssh/deploy_key \
             docker-compose.yml \
             /tmp/imhere-runtime/prod.env \
             "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/"
+          
           scp -i ~/.ssh/deploy_key \
             /tmp/imhere-runtime/infra/nginx/nginx.conf \
             "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/nginx/nginx.conf"
+          
           scp -i ~/.ssh/deploy_key \
             infra/nginx/website.html \
             "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/nginx/website.html"
+          
           scp -i ~/.ssh/deploy_key \
             /tmp/imhere-runtime/infra/alloy/alloy-config.alloy \
             "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/alloy/alloy-config.alloy"
+          
           scp -i ~/.ssh/deploy_key \
             /tmp/imhere-secrets/secrets/imhereFirebaseKey.json \
             "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/secrets/"
 
       - name: Get ECR Login Password
         run: |
-          echo "ECR_PASSWORD=$(aws ecr get-login-password --region ${{ env.AWS_REGION }})" >> $GITHUB_ENV
+          echo "ECR_PASSWORD=$(aws ecr get-login-password --region ${{ env.AWS_REGION }})" >> "$GITHUB_ENV"
 
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -378,25 +419,25 @@ jobs:
           envs: ECR_REGISTRY,ECR_REPOSITORY,AWS_REGION,EC2_DEPLOY_PATH,ECR_PASSWORD
           script: |
             set -e
-            echo "$ECR_PASSWORD" | docker login --username AWS --password-stdin $ECR_REGISTRY
-
-            cd $EC2_DEPLOY_PATH
+            echo "$ECR_PASSWORD" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+            
+            cd "$EC2_DEPLOY_PATH"
             set -a
             . ./prod.env
             set +a
-
+            
             docker compose -f docker-compose.yml --profile prod config >/dev/null
             docker run --rm -v "$PWD/infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" nginx:alpine nginx -t
             sudo certbot renew --quiet
-
-            ECR_REGISTRY=$ECR_REGISTRY ECR_REPOSITORY=$ECR_REPOSITORY \
+            
+            ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
               docker compose -f docker-compose.yml --profile prod pull
-
-            ECR_REGISTRY=$ECR_REGISTRY ECR_REPOSITORY=$ECR_REPOSITORY \
-            docker compose -f docker-compose.yml --profile prod up -d
-
+            
+            ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
+              docker compose -f docker-compose.yml --profile prod up -d
+            
             docker exec nginx-container nginx -s reload || true
-
+            
             rm -f prod.env secrets/imhereFirebaseKey.json infra/nginx/nginx.conf infra/nginx/website.html infra/alloy/alloy-config.alloy
             docker image prune -f
 
@@ -405,11 +446,12 @@ jobs:
         run: |
           rm -f ~/.ssh/deploy_key
           rm -rf /tmp/imhere-secrets
+          rm -rf /tmp/imhere-runtime
 
   cleanup:
     name: Cleanup Infra Access
     runs-on: ubuntu-latest
-    needs: [resolve-infra, deploy-app]
+    needs: [ resolve-infra, deploy-app ]
     if: always()
 
     env:
@@ -438,7 +480,7 @@ jobs:
         id: ip
         run: |
           RUNNER_IP=$(curl -sf https://api.ipify.org)
-          echo "runner_ip=${RUNNER_IP}" >> $GITHUB_OUTPUT
+          echo "runner_ip=${RUNNER_IP}" >> "$GITHUB_OUTPUT"
 
       - name: Remove runner IP from EC2 security group
         run: |
@@ -446,4 +488,4 @@ jobs:
             --group-id "$EC2_SECURITY_GROUP_ID" \
             --protocol tcp \
             --port 22 \
-            --cidr ${{ steps.ip.outputs.runner_ip }}/32
+            --cidr ${{ steps.ip.outputs.runner_ip }}/32 || true

@@ -19,4 +19,17 @@ class SecurityWhiteListTest {
         val list = SecurityWhiteList(whitelist = listOf("/api/test"))
         assertThat(list.whitelist).containsExactly("/api/test")
     }
+
+    @Test
+    @DisplayName("관리자 actuator base-path를 permitAll 경로에 합칠 수 있다")
+    fun permitAllPathsIncludesActuatorPaths() {
+        val list = SecurityWhiteList(whitelist = listOf("/api/test"))
+
+        assertThat(list.permitAllPaths("/custom-actuator"))
+            .containsExactly(
+                "/api/test",
+                "/custom-actuator",
+                "/custom-actuator/**"
+            )
+    }
 }

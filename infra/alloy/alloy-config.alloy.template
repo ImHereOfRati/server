@@ -1,0 +1,127 @@
+// Grafana Alloy 설정
+// 이 파일은 Docker 컨테이너 로그, 메트릭, 트레이스를 Grafana Cloud 로 보내는 경로만 정의한다.
+// 민감한 값(엔드포인트, 사용자명, API 키)은 환경변수로 주입한다.
+
+// ---------------------------------------------------------
+// 1) 로그: 외부 공개 대상 컨테이너만 Docker stdout/stderr -> Loki
+// ---------------------------------------------------------
+
+// Docker 데몬에서 현재 실행 중인 컨테이너 목록과 메타데이터를 읽어 온다.
+discovery.docker "containers" {
+	host = "unix:///var/run/docker.sock"
+}
+
+// 컨테이너 메타데이터를 Loki 라벨로 바꿔서, 어떤 컨테이너의 로그인지 식별 가능하게 만든다.
+// `imhere_log_scope=external` 이 붙은 컨테이너만 외부 수집 대상으로 본다.
+discovery.relabel "containers" {
+	targets = discovery.docker.containers.targets
+
+	// 내부 전용 컨테이너는 외부 전송 대상에서 제외한다.
+	rule {
+		source_labels = ["__meta_docker_container_label_imhere_log_scope"]
+		regex         = "external"
+		action        = "keep"
+	}
+
+	// 컨테이너 이름을 container 라벨로 옮긴다.
+	// Docker 가 붙이는 앞의 슬래시(/)는 제거한다.
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/?(.*)"
+		target_label  = "container"
+	}
+
+	// stdout / stderr 구분값은 stream 라벨로 유지한다.
+	rule {
+		source_labels = ["__meta_docker_container_log_stream"]
+		target_label  = "stream"
+	}
+
+	// 동일 서비스의 재기동/재배포를 추적할 수 있도록 compose service 도 남긴다.
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		target_label  = "service"
+	}
+}
+
+// 실제 로그 수집기. Docker 로그를 따라가며 Loki 로 보낸다.
+loki.source.docker "default" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.containers.output
+	forward_to = [loki.write.grafana_cloud.receiver]
+
+	labels = {
+		"job" = "imhere-server",
+	}
+}
+
+// Grafana Cloud Loki 로 전송한다.
+loki.write "grafana_cloud" {
+	endpoint {
+		url = sys.env("GRAFANA_CLOUD_LOKI_ENDPOINT")
+
+		basic_auth {
+			username = sys.env("GRAFANA_CLOUD_LOKI_USER")
+			password = sys.env("GRAFANA_CLOUD_LOKI_API_KEY")
+		}
+	}
+}
+
+// ---------------------------------------------------------
+// 2) 메트릭: Actuator /prometheus -> Grafana Cloud Prometheus
+// ---------------------------------------------------------
+
+// Spring Boot actuator 메트릭을 Docker 네트워크 내부에서 스크랩한다.
+// dsko:4861 은 호스트 공개 포트가 아니라 컨테이너 간 통신 전용이다.
+prometheus.scrape "imhere" {
+	targets = [{
+		__address__ = "dsko:4861",
+	}]
+	scrape_interval = "30s"
+	metrics_path = "${MGMT_BASE_PATH}/prometheus"
+	forward_to    = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+// Grafana Cloud Prometheus 로 전송한다.
+prometheus.remote_write "grafana_cloud" {
+	endpoint {
+		url = sys.env("GRAFANA_CLOUD_PROM_ENDPOINT")
+
+		basic_auth {
+			username = sys.env("GRAFANA_CLOUD_PROM_USER")
+			password = sys.env("GRAFANA_CLOUD_PROM_API_KEY")
+		}
+	}
+}
+
+// ---------------------------------------------------------
+// 3) 트레이스: OTLP -> Grafana Cloud Tempo
+// ---------------------------------------------------------
+
+// 앱이 보내는 OTLP 트레이스를 수신한다.
+// gRPC 4317 과 HTTP 4318 을 모두 열어 두되, 실제로 필요한 프로토콜만 사용하면 된다.
+otelcol.receiver.otlp "otlp_receiver" {
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		traces = [otelcol.exporter.otlp.grafanacloud.input]
+	}
+}
+
+// 수신한 트레이스를 Grafana Cloud Tempo 로 전달한다.
+otelcol.exporter.otlp "grafanacloud" {
+	client {
+		endpoint = sys.env("GRAFANA_CLOUD_TEMPO_ENDPOINT")
+		auth     = otelcol.auth.basic.grafanacloud.handler
+	}
+}
+
+otelcol.auth.basic "grafanacloud" {
+	username = sys.env("GRAFANA_CLOUD_TEMPO_USER")
+	password = sys.env("GRAFANA_CLOUD_TEMPO_API_KEY")
+}

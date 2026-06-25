@@ -2,9 +2,9 @@ package com.common.testsupport
 
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
+import com.kdongsu5509.support.config.LocalCacheConfig
 import com.kdongsu5509.support.config.QueryDslConfig
 import com.kdongsu5509.support.config.RabbitMQConfig
-import com.kdongsu5509.support.config.RedisConfig
 import com.kdongsu5509.user.repository.jpa.SpringQueryDSLUserRepository
 import com.solapi.sdk.message.service.DefaultMessageService
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,9 +22,9 @@ import org.springframework.transaction.annotation.Transactional
     SpringQueryDSLUserRepository::class,
     QueryDslConfig::class,
     RabbitMQConfig::class,
-    RedisConfig::class
+    LocalCacheConfig::class
 )
-abstract class PersistenceTestSupport : TestRedisContainer() {
+abstract class PersistenceTestSupport : TestRabbitMQContainer() {
 
     @MockitoBean
     lateinit var firebaseMessaging: FirebaseMessaging

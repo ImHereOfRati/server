@@ -3,7 +3,6 @@ package com.kdongsu5509.auth.security.filter
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
-import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.support.exception.ImHereBaseException
 import jakarta.servlet.FilterChain
 import org.assertj.core.api.Assertions.assertThat
@@ -26,17 +25,29 @@ class JwtAuthenticationFilterTest {
     @Mock
     private lateinit var tokenParser: ImHereTokenParserPort
 
-    @Mock
-    private lateinit var securityWhiteList: SecurityWhiteList
-
     private lateinit var filterChain: FilterChain
     private lateinit var filter: JwtAuthenticationFilter
 
     @BeforeEach
     fun setUp() {
         filterChain = mock(FilterChain::class.java)
-        filter = JwtAuthenticationFilter(tokenParser, securityWhiteList)
+        filter = JwtAuthenticationFilter(tokenParser, listOf("/api/auth/login", "/actuator/**"))
         SecurityContextHolder.clearContext()
+    }
+
+    @Test
+    @DisplayName("permit-all 경로는 JWT 검증 없이 통과한다")
+    fun doFilterInternal_permitAllPath() {
+        val request = MockHttpServletRequest().apply {
+            servletPath = "/api/auth/login"
+            addHeader("Authorization", "Bearer invalidToken")
+        }
+        val response = MockHttpServletResponse()
+
+        filter.doFilter(request, response, filterChain)
+
+        verify(filterChain).doFilter(request, response)
+        verify(tokenParser, never()).validate(anyString())
     }
 
     @Test

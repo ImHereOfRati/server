@@ -412,7 +412,6 @@ jobs:
 
             sudo docker exec nginx-container nginx -s reload || true
 
-            rm -f prod.env secrets/imhereFirebaseKey.json infra/nginx/nginx.conf infra/nginx/website.html infra/alloy/alloy-config.alloy
             sudo docker image prune -f
 
       - name: Remove runner IP from EC2 security group

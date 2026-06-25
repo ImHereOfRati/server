@@ -95,7 +95,6 @@ bin/
 *.pem
 
 # 도커 컴포즈 파일
-docker-compose.yml
 /src/main/resources/application-secret.yaml
 
 # 클로드 설정 파일

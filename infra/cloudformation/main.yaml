@@ -193,16 +193,38 @@ Resources:
           dnf install -y docker
           systemctl enable --now docker
           usermod -aG docker ec2-user || true
+          RABBITMQ_IMAGE='rabbitmq:4-management-alpine'
+          RABBITMQ_CONTAINER='rabbitmq-container'
+          RABBITMQ_USER='${RabbitMqUser}'
+          RABBITMQ_PASSWORD='${RabbitMqPassword}'
+          RABBITMQ_VHOST='${RabbitMqVHost}'
           docker volume create rabbitmq_data || true
-          docker rm -f rabbitmq-container || true
-          docker run -d --name rabbitmq-container --restart unless-stopped \
+          docker rm -f "$RABBITMQ_CONTAINER" || true
+          docker run -d --name "$RABBITMQ_CONTAINER" --restart unless-stopped \
             -p 5672:5672 \
             -p 15672:15672 \
-            -e RABBITMQ_DEFAULT_USER='${RabbitMqUser}' \
-            -e RABBITMQ_DEFAULT_PASS='${RabbitMqPassword}' \
-            -e RABBITMQ_DEFAULT_VHOST='${RabbitMqVHost}' \
+            --health-cmd='rabbitmq-diagnostics -q ping' \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=12 \
             -v rabbitmq_data:/var/lib/rabbitmq \
-            rabbitmq:4-management-alpine
+            "$RABBITMQ_IMAGE"
+
+          for attempt in $(seq 1 30); do
+            if docker exec "$RABBITMQ_CONTAINER" rabbitmq-diagnostics -q ping; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "RabbitMQ did not become ready in time" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+
+          docker exec "$RABBITMQ_CONTAINER" rabbitmqctl add_vhost "$RABBITMQ_VHOST" || true
+          docker exec "$RABBITMQ_CONTAINER" rabbitmqctl add_user "$RABBITMQ_USER" "$RABBITMQ_PASSWORD" || true
+          docker exec "$RABBITMQ_CONTAINER" rabbitmqctl change_password "$RABBITMQ_USER" "$RABBITMQ_PASSWORD"
+          docker exec "$RABBITMQ_CONTAINER" rabbitmqctl set_permissions -p "$RABBITMQ_VHOST" "$RABBITMQ_USER" ".*" ".*" ".*"
 
   GitHubActionsDeployRole:
     Type: AWS::IAM::Role

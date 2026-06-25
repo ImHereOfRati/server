@@ -120,7 +120,7 @@ docker compose --profile prod up -d
 | `nginx` | HTTPS 진입점 및 Reverse Proxy |
 | `alloy` | 로그, 메트릭, 트레이스 수집          |
 
-RabbitMQ는 앱 서버의 Compose에서 실행하지 않습니다. 별도의 EC2에서 UserData를 통해 실행합니다.
+RabbitMQ는 앱 서버의 Compose에서 실행하지 않습니다. 별도의 EC2에서 UserData를 통해 컨테이너를 올리고, 부팅 시 `vhost`/`user`/권한을 다시 적용합니다.
 
 ---
 

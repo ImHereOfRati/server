@@ -30,9 +30,10 @@
 2. `deploy-app` job이 GitHub runner에서 `prod.env`를 `source`한다.
 3. 그 값으로 `nginx.conf.template`, `alloy-config.alloy.template`를 렌더링한다.
 4. `RABBITMQ_HOST`는 `prod.env` 원본에 없고 CloudFormation output으로 append 한다.
-5. 렌더링된 파일과 `prod.env`를 EC2에 복사한다.
-6. `docker compose --profile prod`가 `env_file: ./prod.env`로 `dsko`, `nginx`, `alloy`에 같은 값을 넣는다.
-7. compose up 뒤 EC2에 복사한 `prod.env`와 렌더링 파일은 삭제한다.
+5. RabbitMQ 브로커의 `user`/`password`/`vhost`는 CloudFormation `UserData`가 EC2 부팅 시 다시 맞춘다. 앱은 여전히 `prod.env`의 동일 값을 사용해 접속한다.
+6. 렌더링된 파일과 `prod.env`를 EC2에 복사한다.
+7. `docker compose --profile prod`가 `env_file: ./prod.env`로 `dsko`, `nginx`, `alloy`에 같은 값을 넣는다.
+8. compose up 뒤 EC2에 복사한 `prod.env`와 렌더링 파일은 삭제한다.
 
 ## 앱 설정
 

@@ -81,7 +81,8 @@ App -- " pull " --> ECR
 
 * AMI는 SSM Parameter(`al2023-ami-kernel-default-x86_64`)를 사용하여 최신 Amazon Linux 2023 이미지를 조회합니다.
 * App EC2는 Docker, Docker Compose Plugin, Certbot만 설치하며 실제 애플리케이션 배포는 CD가 수행합니다.
-* RabbitMQ EC2는 UserData에서 컨테이너를 직접 실행하며 `rabbitmq_data` 볼륨을 통해 데이터를 유지합니다.
+* RabbitMQ EC2는 UserData에서 컨테이너를 직접 실행하고, 기동 후 `vhost`/`user`/권한을 idempotent 하게 다시 적용합니다.
+* RabbitMQ 데이터는 `rabbitmq_data` 볼륨을 통해 유지되며, 인스턴스 재기동이나 교체 후에도 동일한 브로커 접속 설정을 다시 맞춥니다.
 * 기본 인스턴스 타입은 운영 비용과 Free Tier 제한을 고려하여 `t3.small`, `t3.micro`를 사용합니다.
 
 ---

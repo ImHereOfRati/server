@@ -297,6 +297,14 @@ jobs:
 
       - name: Prepare runtime files from config repo
         run: |
+          chmod +x ./infra/scripts/sync-config.sh
+          CONFIG_REPO_PAT="$CONFIG_REPO_PAT" \
+            ./infra/scripts/sync-config.sh --output-dir /tmp/imhere-secrets
+        env:
+          CONFIG_REPO_PAT: ${{ secrets.CONFIG_REPO_PAT }}
+
+      - name: Prepare runtime files from config repo
+        run: |
           CONFIG_REPO_PAT="$CONFIG_REPO_PAT" \
             ./infra/scripts/sync-config.sh --output-dir /tmp/imhere-secrets
 

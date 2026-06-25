@@ -72,10 +72,10 @@ loki.write "grafana_cloud" {
 // ---------------------------------------------------------
 
 // Spring Boot actuator 메트릭을 Docker 네트워크 내부에서 스크랩한다.
-// dsko:4861 은 호스트 공개 포트가 아니라 컨테이너 간 통신 전용이다.
+// iamhere-server-container:4861 은 호스트 공개 포트가 아니라 컨테이너 간 통신 전용이다.
 prometheus.scrape "imhere" {
 	targets = [{
-		__address__ = "dsko:4861",
+		__address__ = "iamhere-server-container:4861",
 	}]
 	scrape_interval = "30s"
 	metrics_path = "${MGMT_BASE_PATH}/prometheus"

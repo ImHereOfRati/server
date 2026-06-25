@@ -109,12 +109,15 @@ otelcol.receiver.otlp "otlp_receiver" {
 	}
 
 	output {
-		traces = [otelcol.exporter.otlp.grafanacloud.input]
+		traces = [otelcol.exporter.otlphttp.grafanacloud.input]
 	}
 }
 
 // 수신한 트레이스를 Grafana Cloud Tempo 로 전달한다.
-otelcol.exporter.otlp "grafanacloud" {
+// GRAFANA_CLOUD_TEMPO_ENDPOINT는 OTLP HTTP 게이트웨이 URL(scheme+path 포함)이라
+// gRPC exporter(otelcol.exporter.otlp)로는 호스트를 못 찾는다(resolver: "no children to pick from").
+// otlphttp exporter는 endpoint에 /v1/traces 를 자동으로 붙여서 보낸다.
+otelcol.exporter.otlphttp "grafanacloud" {
 	client {
 		endpoint = sys.env("GRAFANA_CLOUD_TEMPO_ENDPOINT")
 		auth     = otelcol.auth.basic.grafanacloud.handler

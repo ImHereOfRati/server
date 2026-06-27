@@ -244,7 +244,7 @@ jobs:
             --port 22 \
             --cidr ${{ steps.ip.outputs.runner_ip }}/32 || true
 
-      - name: Open port 80 for HTTP and Let's Encrypt
+      - name: Open port 80 for Let's Encrypt HTTP-01 challenge
         run: |
           aws ec2 authorize-security-group-ingress \
             --group-id "$EC2_SECURITY_GROUP_ID" \
@@ -275,7 +275,7 @@ jobs:
             sudo docker --version; \
             sudo docker compose version; \
             certbot --version; \
-            mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
+            mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx/certbot ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
 
       - name: Derive ECR registry
         run: |
@@ -324,7 +324,7 @@ jobs:
           PY
 
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
-            "mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets && \
+            "mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx/certbot ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets && \
             rm -rf ${EC2_DEPLOY_PATH}/secrets/imhereFirebaseKey.json"
 
           scp -i ~/.ssh/deploy_key docker-compose.yml /tmp/imhere-runtime/prod.env "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/"
@@ -355,8 +355,20 @@ jobs:
 
             CERT_ALT_DOMAIN="www.$CERT_DOMAIN"
 
+            CERT_LIVE_DIR=/etc/letsencrypt/live/"$CERT_DOMAIN"
+            CERT_ARCHIVE_DIR=/etc/letsencrypt/archive/"$CERT_DOMAIN"
+            CERT_RENEWAL_CONF=/etc/letsencrypt/renewal/"$CERT_DOMAIN".conf
+
+            force_reset_lineage() {
+              sudo rm -rf "$CERT_LIVE_DIR" "$CERT_ARCHIVE_DIR" "$CERT_RENEWAL_CONF"
+            }
+
             generate_bootstrap_cert() {
-              sudo mkdir -p /etc/letsencrypt/live/"$CERT_DOMAIN"
+              # bootstrap self-signed는 certbot lineage가 아니다. 과거 renewal/archive가
+              # 남아 있으면 certbot renew가 이 self-signed를 정식 cert로 착각해 desync
+              # (fullchain does not match cert + chain) 된다. 항상 lineage 먼저 비운다.
+              force_reset_lineage
+              sudo mkdir -p "$CERT_LIVE_DIR"
               sudo sh -c "printf '%s\n' \
                 '[req]' \
                 'distinguished_name = req_distinguished_name' \
@@ -374,11 +386,22 @@ jobs:
                 'DNS.2 = $CERT_ALT_DOMAIN' \
                 > /tmp/imhere-cert.cnf"
               sudo openssl req -x509 -nodes -newkey rsa:2048 -days 30 \
-                -keyout /etc/letsencrypt/live/"$CERT_DOMAIN"/privkey.pem \
-                -out /etc/letsencrypt/live/"$CERT_DOMAIN"/fullchain.pem \
+                -keyout "$CERT_LIVE_DIR"/privkey.pem \
+                -out "$CERT_LIVE_DIR"/fullchain.pem \
                 -config /tmp/imhere-cert.cnf \
                 -extensions v3_req
               sudo rm -f /tmp/imhere-cert.cnf
+            }
+
+            # lineage_is_valid: renewal conf가 있고 certbot이 정상 lineage로 인정할 때만 true.
+            # test -f 만으로는 fullchain desync(does not match)를 못 잡아 과거 장애가 반복됐다.
+            lineage_is_valid() {
+              sudo test -f "$CERT_RENEWAL_CONF" || return 1
+              CERT_STATUS=$(sudo certbot certificates --cert-name "$CERT_DOMAIN" 2>&1) || return 1
+              if echo "$CERT_STATUS" | grep -qE "does not match|INVALID|No certificates found"; then
+                return 1
+              fi
+              return 0
             }
 
             if [ ! -f /etc/letsencrypt/options-ssl-nginx.conf ]; then
@@ -402,35 +425,48 @@ jobs:
               -v "$PWD/infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" \
               -v /etc/letsencrypt:/etc/letsencrypt:ro \
               nginx:alpine nginx -t
-            sudo docker rm -f nginx-container || true
-            if sudo test -f /etc/letsencrypt/renewal/"$CERT_DOMAIN".conf && \
-               sudo certbot renew --quiet; then
-              echo "Renewed existing Let's Encrypt certificate for $CERT_DOMAIN."
-            else
-              # live/archive/renewal에 남은 부트스트랩 self-signed나 이전에 실패하며 남긴
-              # 불완전한 renewal conf는 certbot 정식 lineage가 아니라서, 그대로 두면
-              # "live directory exists"나 renewal conf parse 에러로 매번 막힌다.
-              sudo rm -rf /etc/letsencrypt/live/"$CERT_DOMAIN" /etc/letsencrypt/archive/"$CERT_DOMAIN" \
-                /etc/letsencrypt/renewal/"$CERT_DOMAIN".conf
-              if sudo certbot certonly --standalone \
-                --non-interactive \
-                --agree-tos \
-                --register-unsafely-without-email \
-                --cert-name "$CERT_DOMAIN" \
-                -d "$CERT_DOMAIN" \
-                -d "$CERT_ALT_DOMAIN"; then
-                echo "Issued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
-              else
-                echo "Let's Encrypt issuance failed. Restoring bootstrap certificate."
-                generate_bootstrap_cert
-              fi
-            fi
 
             sudo env ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
               docker compose -f docker-compose.yml --profile prod pull
 
             sudo env ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
               docker compose -f docker-compose.yml --profile prod up -d
+
+            issue_certificate() {
+              sudo certbot certonly --webroot \
+                -w "$EC2_DEPLOY_PATH/infra/nginx/certbot" \
+                --non-interactive \
+                --agree-tos \
+                --register-unsafely-without-email \
+                --keep-until-expiring \
+                --cert-name "$CERT_DOMAIN" \
+                -d "$CERT_DOMAIN" \
+                -d "$CERT_ALT_DOMAIN"
+            }
+
+            if lineage_is_valid; then
+              if sudo certbot renew --quiet --webroot -w "$EC2_DEPLOY_PATH/infra/nginx/certbot"; then
+                echo "Validated existing Let's Encrypt lineage for $CERT_DOMAIN."
+              else
+                echo "Renew failed on a valid lineage. Reissuing certificate."
+                force_reset_lineage
+                if issue_certificate; then
+                  echo "Reissued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
+                else
+                  echo "Let's Encrypt reissuance failed. Restoring bootstrap certificate."
+                  generate_bootstrap_cert
+                fi
+              fi
+            else
+              echo "No valid lineage (missing or corrupted). Reissuing certificate."
+              force_reset_lineage
+              if issue_certificate; then
+                echo "Issued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
+              else
+                echo "Let's Encrypt issuance failed. Restoring bootstrap certificate."
+                generate_bootstrap_cert
+              fi
+            fi
 
             sudo docker exec nginx-container nginx -s reload || true
 
@@ -445,14 +481,18 @@ jobs:
             --port 22 \
             --cidr ${{ steps.ip.outputs.runner_ip }}/32 || true
 
+      - name: Close port 80 opened for Let's Encrypt
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id "$EC2_SECURITY_GROUP_ID" \
+            --protocol tcp \
+            --port 80 \
+            --cidr 0.0.0.0/0 || true
+
       - name: Cleanup runner temp files
         if: always()
         run: |
           rm -f ~/.ssh/deploy_key
           rm -rf /tmp/imhere-secrets
           rm -rf /tmp/imhere-runtime
-
-      - name: Cleanup runner Secret files
-        if: always()
-        run: |
-          rm -rf prod.env secrets

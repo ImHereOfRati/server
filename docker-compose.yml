@@ -114,6 +114,7 @@ services:
     labels:
       - "imhere_log_scope=internal"
     ports:
+      - "80:80"
       - "443:443"
     env_file:
       - ./prod.env

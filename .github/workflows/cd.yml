@@ -244,7 +244,7 @@ jobs:
             --port 22 \
             --cidr ${{ steps.ip.outputs.runner_ip }}/32 || true
 
-      - name: Open port 80 for Let's Encrypt HTTP-01 challenge
+      - name: Open port 80 for HTTP and Let's Encrypt
         run: |
           aws ec2 authorize-security-group-ingress \
             --group-id "$EC2_SECURITY_GROUP_ID" \
@@ -263,7 +263,8 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
             "set -e; \
-            if ! command -v docker >/dev/null 2>&1; then sudo dnf install -y docker certbot; fi; \
+            if ! command -v docker >/dev/null 2>&1; then sudo dnf install -y docker; fi; \
+            if ! command -v certbot >/dev/null 2>&1; then sudo dnf install -y certbot; fi; \
             if ! sudo docker compose version >/dev/null 2>&1; then \
               sudo mkdir -p /usr/local/lib/docker/cli-plugins; \
               sudo curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
@@ -401,8 +402,9 @@ jobs:
               -v "$PWD/infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" \
               -v /etc/letsencrypt:/etc/letsencrypt:ro \
               nginx:alpine nginx -t
+            sudo docker rm -f nginx-container || true
             if sudo test -f /etc/letsencrypt/renewal/"$CERT_DOMAIN".conf && \
-               sudo certbot renew --quiet --cert-name "$CERT_DOMAIN"; then
+               sudo certbot renew --quiet; then
               echo "Renewed existing Let's Encrypt certificate for $CERT_DOMAIN."
             else
               # live/archive/renewal에 남은 부트스트랩 self-signed나 이전에 실패하며 남긴
@@ -442,15 +444,6 @@ jobs:
             --protocol tcp \
             --port 22 \
             --cidr ${{ steps.ip.outputs.runner_ip }}/32 || true
-
-      - name: Close port 80 opened for Let's Encrypt
-        if: always()
-        run: |
-          aws ec2 revoke-security-group-ingress \
-            --group-id "$EC2_SECURITY_GROUP_ID" \
-            --protocol tcp \
-            --port 80 \
-            --cidr 0.0.0.0/0 || true
 
       - name: Cleanup runner temp files
         if: always()

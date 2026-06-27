@@ -34,7 +34,16 @@ http {
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
 
-    # 운영용 서버 블록. 외부 공개 포트는 443만 둔다.
+    # 운영용 서버 블록. 80은 HTTPS 리다이렉트, 443은 실제 트래픽을 처리한다.
+    server {
+        listen 80;
+        server_name ${SERVER_NAME} www.${SERVER_NAME};
+
+        location / {
+            return 301 https://$host$request_uri;
+        }
+    }
+
     server {
         listen 443 ssl;
         server_name ${SERVER_NAME} www.${SERVER_NAME};

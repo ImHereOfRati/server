@@ -11,6 +11,7 @@ import com.kdongsu5509.auth.security.handler.ImHereOttSuccessHandler
 import com.kdongsu5509.auth.security.handler.OttLoginSuccessHandler
 import com.kdongsu5509.shared.response.APIResponseSerializers
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -87,6 +88,15 @@ class SecurityConfig(
     @Bean
     fun ottIpValidationFilter(config: OttIpFilterConfig): OttIpValidationFilter {
         return OttIpValidationFilter(config)
+    }
+
+    @Bean
+    fun ottIpValidationFilterRegistration(
+        ottIpValidationFilter: OttIpValidationFilter
+    ): FilterRegistrationBean<OttIpValidationFilter> {
+        return FilterRegistrationBean(ottIpValidationFilter).apply {
+            isEnabled = false
+        }
     }
 
     @Bean

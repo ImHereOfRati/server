@@ -24,8 +24,8 @@ class OttIpValidationFilter(
         val httpRequest = request as HttpServletRequest
         val httpResponse = response as HttpServletResponse
 
-        // 이 필터는 SecurityConfig의 admin 체인(/admin/**, /api/admin/**)에만 wiring되어 있으므로
-        // 도달한 모든 요청을 검사하면 admin 전 경로(로그인 페이지 포함)가 allowlist로 잠긴다.
+        // 이 필터는 SecurityConfig의 /admin/** 웹 체인에만 wiring되어 있으므로
+        // 도달한 모든 요청을 검사하면 관리자 웹 전 경로(로그인 페이지 포함)가 allowlist로 잠긴다.
         val clientIp = ClientIpResolver.resolve(httpRequest)
         if (!isIpAllowed(clientIp)) {
             httpResponse.status = HttpStatus.FORBIDDEN.value()

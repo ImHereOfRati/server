@@ -83,4 +83,13 @@ class AdminApiSecurityIntegrationTest : WebIntegrationTestSupport() {
                 .with(user(adminDetails))
         ).andExpect(status().isBadRequest)
     }
+
+    @Test
+    @DisplayName("관리자 API는 비허용 IP면 IP 필터에서 403으로 차단한다")
+    fun adminApiIsBlockedByIpAllowlist() {
+        mockMvc.perform(
+            get("/api/admin/users")
+                .header("X-Real-IP", "198.51.100.7")
+        ).andExpect(status().isForbidden)
+    }
 }

@@ -268,4 +268,26 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
                 )
             )
     }
+
+    @Test
+    @DisplayName("일반 로그인 API는 관리자 IP allowlist의 영향을 받지 않는다")
+    fun loginIgnoresAdminIpAllowlist() {
+        val email = "public-login@example.com"
+        val user = User.createWithPendingStatus(email, "Public Login User", OAuth2Provider.KAKAO)
+        userRepository.save(user.activate())
+
+        val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
+
+        given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
+            OIDCUserInfo(email = email, nickname = "Public Login User")
+        )
+
+        mockMvc.perform(
+            post("/api/auth/login")
+                .header("X-Real-IP", "198.51.100.7")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(request))
+        )
+            .andExpect(status().isOk)
+    }
 }

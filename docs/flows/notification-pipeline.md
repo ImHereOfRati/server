@@ -59,12 +59,27 @@ sequenceDiagram
 2. 전송 실패는 여기서 끝나지 않고 retry/DLQ 정책으로 이어진다.
 3. 전송 성공도 후속 이력 반영을 위해 다시 이벤트화한다.
 
+
+### Android channel policy
+
+`FirebaseAdapter` resolves `data.type` into `NotificationType` and derives Android channel ID and priority from that enum. If the value is missing or invalid, it falls back to `DELIVERY_RESULT_NOTICE`.
+
+| NotificationType | Android channel | Priority |
+|---|---|---|
+| `ARRIVAL`, `ARRIVAL_CONFIRMATION`, `DEPARTURE` | `fcm_critical_channel` | `HIGH` |
+| `FRIEND_REQUEST_RECEIVED`, `LOCATION_SHARE_RECEIVED` | `fcm_high_channel` | `HIGH` |
+| `FRIEND_REQUEST_ACCEPTED`, `DELIVERY_FAILED_NOTICE` | `fcm_normal_channel` | `HIGH` |
+| `TERMS_UPDATE_NOTICE`, `DELIVERY_RESULT_NOTICE` | `fcm_silent_channel` | `NORMAL` |
+
+This policy lets the server map notification semantics to Android system channels instead of treating every push as the same class of alert.
 ---
 
 ## 코드 기준점
 
 - `src/main/kotlin/com/kdongsu5509/notifications/adapter/in/messageQueue/AbstractNotificationConsumer.kt`
 - `src/main/kotlin/com/kdongsu5509/notifications/application/service/FCMNotificationService.kt`
+- `src/main/kotlin/com/kdongsu5509/notifications/adapter/in/messageQueue/dto/NotificationType.kt`
+- `src/main/kotlin/com/kdongsu5509/notifications/adapter/out/firebase/FirebaseAdapter.kt`
 - `src/main/kotlin/com/kdongsu5509/support/config/RabbitMQConfig.kt`
 
 ---

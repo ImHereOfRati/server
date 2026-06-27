@@ -101,6 +101,7 @@ val user = userRepository.findByEmail(email)
 * 프레임워크 예외도 동일 응답 포맷으로 변환합니다.
 * 인증 실패와 권한 실패도 도메인 코드로 통일합니다.
 * context 데이터는 FCM 토큰 만료 같은 후속 분기 판단에 사용합니다.
+* 스케줄러/벌크 삭제·수정 쿼리(`@Modifying`)는 호출 지점에 `@Transactional`이 있어야 합니다. HTTP 요청 밖(`@Scheduled`)에서는 트랜잭션이 자동으로 열리지 않아 `No active transaction for update or delete query` 예외가 납니다. 예: `FriendRestrictionScheduler.kt:13`의 `@Transactional`이 `deleteExpired`(`SpringDataFriendRestrictionRepository.kt:23` `@Modifying`)를 감쌉니다.
 
 ---
 

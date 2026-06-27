@@ -458,3 +458,8 @@ jobs:
           rm -f ~/.ssh/deploy_key
           rm -rf /tmp/imhere-secrets
           rm -rf /tmp/imhere-runtime
+
+      - name: Cleanup runner Secret files
+        if: always()
+        run: |
+          rm -rf prod.env secrets

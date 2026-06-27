@@ -14,10 +14,12 @@
 ### 도메인
 
 * `ratiko.co.kr`
+* `www.ratiko.co.kr`
 
 ### 설정
 
-* A 레코드는 애플리케이션 EC2의 퍼블릭 IP(CloudFormation `AppElasticIp`)를 가리키도록 설정합니다.
+* `ratiko.co.kr` 와 `www.ratiko.co.kr` A 레코드는 애플리케이션 EC2의 퍼블릭 IP(CloudFormation `AppElasticIp`)를 가리키도록 설정합니다.
+* CD 가 `CERT_DOMAIN` 과 `www.$CERT_DOMAIN` 을 함께 발급하므로 두 이름 모두 같은 서버로 해석되어야 합니다.
 
 ---
 
@@ -36,3 +38,4 @@
 
 * TLS 인증서는 Let's Encrypt(Certbot)를 통해 발급합니다.
 * 가비아는 도메인(DNS) 관리만 담당합니다.
+* 현재 방식은 `DNS-01` 이 아니라 `HTTP-01(webroot)` 이므로, 인증서 발급 시점에는 외부에서 `http://<domain>/.well-known/acme-challenge/...` 접근이 가능해야 합니다.

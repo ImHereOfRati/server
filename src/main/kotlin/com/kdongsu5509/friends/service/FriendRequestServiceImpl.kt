@@ -9,6 +9,10 @@ import com.kdongsu5509.friends.domain.Friendship
 import com.kdongsu5509.friends.repository.FriendRequestRepository
 import com.kdongsu5509.friends.repository.FriendRestrictionRepository
 import com.kdongsu5509.friends.repository.FriendshipRepository
+import com.kdongsu5509.shared.notification.NotificationPort
+import com.kdongsu5509.shared.notification.dto.NotificationCategory
+import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
+import com.kdongsu5509.shared.notification.dto.NotificationSendRequest
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.service.UserService
 import com.kdongsu5509.user.service.dto.UserResult
@@ -26,6 +30,7 @@ class FriendRequestServiceImpl(
     private val friendRequestRepository: FriendRequestRepository,
     private val friendRestrictionRepository: FriendRestrictionRepository,
     private val friendshipRepository: FriendshipRepository,
+    private val notificationPort: NotificationPort,
 ) : FriendRequestService {
 
     @Transactional
@@ -39,6 +44,14 @@ class FriendRequestServiceImpl(
 
         val friendRequest = FriendRequest.createWithNullId(me.toDomain(), target.toDomain(), message)
         val result = friendRequestRepository.save(friendRequest)
+
+        notificationPort.send(
+            NotificationSendRequest(
+                category = NotificationCategory.FRIEND_REQUEST_RECEIVED,
+                sender = NotificationPersonInfo(me.email, me.nickname),
+                receiver = NotificationPersonInfo(target.email, target.nickname)
+            )
+        )
 
         return result
     }
@@ -107,6 +120,14 @@ class FriendRequestServiceImpl(
         friendshipRepository.save(requesterFriendship)
         val result = friendshipRepository.save(receiverFriendship)
         friendRequestRepository.deleteById(id)
+
+        notificationPort.send(
+            NotificationSendRequest(
+                category = NotificationCategory.FRIEND_REQUEST_ACCEPTED,
+                sender = NotificationPersonInfo(friendRequest.receiver.email, friendRequest.receiver.nickname),
+                receiver = NotificationPersonInfo(friendRequest.requester.email, friendRequest.requester.nickname)
+            )
+        )
 
         return result
     }

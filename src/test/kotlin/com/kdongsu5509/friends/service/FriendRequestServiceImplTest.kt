@@ -114,6 +114,7 @@ class FriendRequestServiceImplTest {
 
             assertThat(result).isEqualTo(friendRequest)
             verify(friendRequestRepository).save(any())
+            verify(notificationPort).send(any())
         }
 
         @Test
@@ -361,6 +362,7 @@ class FriendRequestServiceImplTest {
 
             assertThat(result).isEqualTo(savedFriendship)
             verify(friendRequestRepository).deleteById(id)
+            verify(notificationPort).send(any())
         }
 
         @Test

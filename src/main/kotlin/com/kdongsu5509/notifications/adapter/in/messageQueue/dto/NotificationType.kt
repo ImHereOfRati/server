@@ -6,6 +6,7 @@ enum class NotificationType(val appPath: String) {
     FRIEND_REQUEST_RECEIVED("/contact/requests"),
     FRIEND_REQUEST_ACCEPTED("/friend/list"),
     LOCATION_SHARE_RECEIVED("/record/notifications"),
+    LOCATION_TARGET("/record/notifications"),
     ARRIVAL("/record/notifications"),
     DEPARTURE("/record/notifications"),
     ARRIVAL_CONFIRMATION("/record/notifications"),
@@ -16,6 +17,7 @@ enum class NotificationType(val appPath: String) {
     companion object {
         val CLIENT_ALLOWED = setOf(
             LOCATION_SHARE_RECEIVED,
+            LOCATION_TARGET,
             ARRIVAL,
             DEPARTURE,
             ARRIVAL_CONFIRMATION
@@ -28,7 +30,7 @@ enum class NotificationType(val appPath: String) {
     val androidChannelId: String
         get() = when (this) {
             ARRIVAL, ARRIVAL_CONFIRMATION, DEPARTURE -> "fcm_critical_channel"
-            FRIEND_REQUEST_RECEIVED, LOCATION_SHARE_RECEIVED -> "fcm_high_channel"
+            FRIEND_REQUEST_RECEIVED, LOCATION_SHARE_RECEIVED, LOCATION_TARGET -> "fcm_high_channel"
             FRIEND_REQUEST_ACCEPTED, DELIVERY_FAILED_NOTICE -> "fcm_normal_channel"
             TERMS_UPDATE_NOTICE, DELIVERY_RESULT_NOTICE -> "fcm_silent_channel"
         }

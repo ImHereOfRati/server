@@ -356,18 +356,32 @@ jobs:
             CERT_ALT_DOMAIN="www.$CERT_DOMAIN"
 
             CERT_LIVE_DIR=/etc/letsencrypt/live/"$CERT_DOMAIN"
-            CERT_ARCHIVE_DIR=/etc/letsencrypt/archive/"$CERT_DOMAIN"
             CERT_RENEWAL_CONF=/etc/letsencrypt/renewal/"$CERT_DOMAIN".conf
 
-            force_reset_lineage() {
-              sudo rm -rf "$CERT_LIVE_DIR" "$CERT_ARCHIVE_DIR" "$CERT_RENEWAL_CONF"
+            has_live_cert() {
+              sudo test -f "$CERT_LIVE_DIR/fullchain.pem" && sudo test -f "$CERT_LIVE_DIR/privkey.pem"
+            }
+
+            has_renewal_conf() {
+              sudo test -s "$CERT_RENEWAL_CONF"
+            }
+
+            cert_issuer() {
+              sudo openssl x509 -in "$CERT_LIVE_DIR/fullchain.pem" -noout -issuer 2>/dev/null || true
+            }
+
+            is_letsencrypt_cert() {
+              cert_issuer | grep -q "Let's Encrypt"
+            }
+
+            is_bootstrap_cert() {
+              cert_issuer | grep -q "CN=$CERT_DOMAIN"
             }
 
             generate_bootstrap_cert() {
               # bootstrap self-signed는 certbot lineage가 아니다. 과거 renewal/archive가
               # 남아 있으면 certbot renew가 이 self-signed를 정식 cert로 착각해 desync
               # (fullchain does not match cert + chain) 된다. 항상 lineage 먼저 비운다.
-              force_reset_lineage
               sudo mkdir -p "$CERT_LIVE_DIR"
               sudo sh -c "printf '%s\n' \
                 '[req]' \
@@ -396,7 +410,7 @@ jobs:
             # lineage_is_valid: renewal conf가 있고 certbot이 정상 lineage로 인정할 때만 true.
             # test -f 만으로는 fullchain desync(does not match)를 못 잡아 과거 장애가 반복됐다.
             lineage_is_valid() {
-              sudo test -f "$CERT_RENEWAL_CONF" || return 1
+              has_renewal_conf || return 1
               CERT_STATUS=$(sudo certbot certificates --cert-name "$CERT_DOMAIN" 2>&1) || return 1
               if echo "$CERT_STATUS" | grep -qE "does not match|INVALID|No certificates found"; then
                 return 1
@@ -414,7 +428,7 @@ jobs:
                 https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem \
                 -o /etc/letsencrypt/ssl-dhparams.pem
             fi
-            if [ ! -f /etc/letsencrypt/live/"$CERT_DOMAIN"/fullchain.pem ] || [ ! -f /etc/letsencrypt/live/"$CERT_DOMAIN"/privkey.pem ]; then
+            if ! has_live_cert && ! has_renewal_conf; then
               generate_bootstrap_cert
             fi
 
@@ -448,27 +462,35 @@ jobs:
               if sudo certbot renew --quiet --webroot -w "$EC2_DEPLOY_PATH/infra/nginx/certbot"; then
                 echo "Validated existing Let's Encrypt lineage for $CERT_DOMAIN."
               else
-                echo "Renew failed on a valid lineage. Reissuing certificate."
-                force_reset_lineage
-                if issue_certificate; then
-                  echo "Reissued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
-                else
-                  echo "Let's Encrypt reissuance failed. Restoring bootstrap certificate."
-                  generate_bootstrap_cert
-                fi
+                echo "Renew failed on an existing Let's Encrypt lineage. Keeping current certificate and failing deploy."
+                exit 1
               fi
-            else
-              echo "No valid lineage (missing or corrupted). Reissuing certificate."
-              force_reset_lineage
+            elif has_renewal_conf; then
+              echo "Existing Let's Encrypt lineage is corrupted. Refusing automatic cleanup to avoid replacing production TLS with self-signed."
+              exit 1
+            elif has_live_cert && is_letsencrypt_cert; then
+              echo "Let's Encrypt certificate exists without renewal metadata. Refusing automatic mutation."
+              exit 1
+            elif has_live_cert && is_bootstrap_cert; then
+              echo "Bootstrap certificate detected. Attempting first Let's Encrypt issuance."
               if issue_certificate; then
                 echo "Issued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
               else
-                echo "Let's Encrypt issuance failed. Restoring bootstrap certificate."
-                generate_bootstrap_cert
+                echo "Let's Encrypt issuance failed during bootstrap. Keeping bootstrap certificate and failing deploy."
+                exit 1
+              fi
+            else
+              echo "No existing certificate found. Bootstrapping HTTPS and attempting first Let's Encrypt issuance."
+              generate_bootstrap_cert
+              if issue_certificate; then
+                echo "Issued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
+              else
+                echo "Let's Encrypt issuance failed on first bootstrap. Keeping bootstrap certificate and failing deploy."
+                exit 1
               fi
             fi
 
-            sudo docker exec nginx-container nginx -s reload || true
+            sudo docker exec nginx-container nginx -s reload
 
             sudo docker image prune -f
 

@@ -27,6 +27,6 @@ class AdminWebController(
         return "admin/ott"
     }
 
-    @GetMapping("/admin")
+    @GetMapping("/admin", "/admin/")
     fun dashboard(): String = "admin/dashboard"
 }

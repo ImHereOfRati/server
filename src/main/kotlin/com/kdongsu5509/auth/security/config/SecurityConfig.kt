@@ -75,7 +75,12 @@ class SecurityConfig(
         JdbcOneTimeTokenService(jdbcOperation)
 
     @Bean
-    fun ottIpFilterConfig(): OttIpFilterConfig {
+    fun ottIpFilterConfig(environment: org.springframework.core.env.Environment): OttIpFilterConfig {
+        // prod에서 admin.allowed-ips가 비어 있으면 IP allowlist가 무력화되므로
+        // 조용히 통과시키지 않고 startup을 실패시킨다(fail-closed).
+        if (environment.activeProfiles.contains("prod") && allowedIps.none { it.isNotBlank() }) {
+            throw IllegalStateException("prod 프로파일에는 admin.allowed-ips가 반드시 설정되어야 합니다.")
+        }
         return OttIpFilterConfig(adminId, "", allowedIps)
     }
 

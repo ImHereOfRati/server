@@ -43,4 +43,22 @@ class ImHereOttSuccessHandlerTest {
         assert(response.status == 302)
         assert(response.redirectedUrl == "/admin/ott?username=admin")
     }
+
+    @Test
+    @DisplayName("같은 관리자가 윈도우 내 4회째 요청하면 429로 차단한다")
+    fun rateLimit() {
+        repeat(3) {
+            val request = MockHttpServletRequest()
+            val response = MockHttpServletResponse()
+            val token: OneTimeToken = DefaultOneTimeToken("token-$it", "admin", Instant.now().plusSeconds(60))
+            handler.handle(request, response, token)
+            assert(response.status == 302)
+        }
+
+        val response = MockHttpServletResponse()
+        val token: OneTimeToken = DefaultOneTimeToken("token-4", "admin", Instant.now().plusSeconds(60))
+        handler.handle(MockHttpServletRequest(), response, token)
+
+        assert(response.status == 429)
+    }
 }

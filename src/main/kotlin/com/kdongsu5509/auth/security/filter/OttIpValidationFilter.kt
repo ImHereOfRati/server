@@ -1,5 +1,6 @@
 package com.kdongsu5509.auth.security.filter
 
+import com.kdongsu5509.auth.security.ClientIpResolver
 import jakarta.servlet.Filter
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletRequest
@@ -15,12 +16,6 @@ class OttIpValidationFilter(
 
     private val log = LoggerFactory.getLogger(OttIpValidationFilter::class.java)
 
-    companion object {
-        private const val OTT_REQUEST_URL = "/admin/ott/request"
-        private const val X_FORWARDED_FOR = "X-Forwarded-For"
-        private const val X_REAL_IP = "X-Real-IP"
-    }
-
     override fun doFilter(
         request: ServletRequest,
         response: ServletResponse,
@@ -29,32 +24,17 @@ class OttIpValidationFilter(
         val httpRequest = request as HttpServletRequest
         val httpResponse = response as HttpServletResponse
 
-        if (shouldValidateIp(httpRequest)) {
-            val clientIp = extractClientIp(httpRequest)
-            if (!isIpAllowed(clientIp)) {
-                httpResponse.status = HttpStatus.FORBIDDEN.value()
-                httpResponse.contentType = "application/json"
-                httpResponse.writer.write("""{"error": "Forbidden"}""")
-                return
-            }
+        // 이 필터는 SecurityConfig의 admin 체인(/admin/**, /api/admin/**)에만 wiring되어 있으므로
+        // 도달한 모든 요청을 검사하면 admin 전 경로(로그인 페이지 포함)가 allowlist로 잠긴다.
+        val clientIp = ClientIpResolver.resolve(httpRequest)
+        if (!isIpAllowed(clientIp)) {
+            httpResponse.status = HttpStatus.FORBIDDEN.value()
+            httpResponse.contentType = "application/json"
+            httpResponse.writer.write("""{"error": "Forbidden"}""")
+            return
         }
 
         chain.doFilter(request, response)
-    }
-
-    private fun shouldValidateIp(request: HttpServletRequest): Boolean {
-        return request.requestURI == OTT_REQUEST_URL && request.method == "POST"
-    }
-
-    private fun extractClientIp(request: HttpServletRequest): String {
-        var ip = request.getHeader(X_FORWARDED_FOR)
-        if (ip.isNullOrEmpty() || ip.contains("unknown")) {
-            ip = request.getHeader(X_REAL_IP)
-        }
-        if (ip.isNullOrEmpty() || ip.contains("unknown")) {
-            ip = request.remoteAddr
-        }
-        return ip?.split(",")?.firstOrNull()?.trim() ?: request.remoteAddr
     }
 
     private fun isIpAllowed(clientIp: String): Boolean {

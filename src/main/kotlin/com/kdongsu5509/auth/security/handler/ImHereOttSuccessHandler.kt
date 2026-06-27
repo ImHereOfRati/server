@@ -1,6 +1,8 @@
 package com.kdongsu5509.auth.security.handler
 
-import com.kdongsu5509.shared.response.APIResponseSerializers
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.kdongsu5509.auth.security.ClientIpResolver
 import com.kdongsu5509.support.external.DiscordMessageDto
 import com.kdongsu5509.support.external.DiscordMessageSender
 import jakarta.servlet.http.HttpServletRequest
@@ -13,7 +15,7 @@ import org.springframework.stereotype.Component
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 @Component
 class ImHereOttSuccessHandler(
@@ -33,12 +35,19 @@ class ImHereOttSuccessHandler(
             > 해당 토큰을 사용하여 로그인을 완료해주세요.
         """
         private const val OTT_VALIDITY_MINUTES = 5L
+        private const val MAX_OTT_REQUESTS = 3
     }
 
-    private val ottRequestTracker = ConcurrentHashMap<String, OttRequestInfo>()
+    // Caffeine expireAfterWrite로 rate limit 윈도우(5분) 만료를 위임한다.
+    // 수동 시간 비교 불필요, eviction 자동.
+    private val ottRequestTracker: Cache<String, OttRequestInfo> =
+        Caffeine.newBuilder()
+            .expireAfterWrite(OTT_VALIDITY_MINUTES, TimeUnit.MINUTES)
+            .maximumSize(10_000)
+            .build()
 
     override fun handle(request: HttpServletRequest, response: HttpServletResponse, oneTimeToken: OneTimeToken) {
-        val clientIp = extractClientIp(request)
+        val clientIp = ClientIpResolver.resolve(request)
 
         if (!canIssueOtt(oneTimeToken.username, clientIp)) {
             response.status = HttpStatus.TOO_MANY_REQUESTS.value()
@@ -52,39 +61,20 @@ class ImHereOttSuccessHandler(
     }
 
     private fun canIssueOtt(username: String, clientIp: String): Boolean {
-        val now = Instant.now().toEpochMilli()
-        val requestInfo = ottRequestTracker[username]
+        // 만료는 캐시가 처리하므로, 존재하면 윈도우 내 요청이다.
+        val requestInfo = ottRequestTracker.getIfPresent(username)
 
         if (requestInfo == null) {
-            ottRequestTracker[username] = OttRequestInfo(now, clientIp, 1)
+            ottRequestTracker.put(username, OttRequestInfo(clientIp, 1))
             return true
         }
 
-        if (now - requestInfo.lastRequestTime > OTT_VALIDITY_MINUTES * 60 * 1000) {
-            ottRequestTracker[username] = OttRequestInfo(now, clientIp, 1)
-            return true
-        }
-
-        if (requestInfo.requestCount >= 3) {
+        if (requestInfo.requestCount >= MAX_OTT_REQUESTS) {
             return false
         }
 
-        ottRequestTracker[username] = requestInfo.copy(requestCount = requestInfo.requestCount + 1)
+        ottRequestTracker.put(username, requestInfo.copy(requestCount = requestInfo.requestCount + 1))
         return true
-    }
-
-    private fun extractClientIp(request: HttpServletRequest): String {
-        val xForwardedFor = request.getHeader("X-Forwarded-For")
-        if (!xForwardedFor.isNullOrEmpty() && !xForwardedFor.contains("unknown")) {
-            return xForwardedFor.split(",")[0].trim()
-        }
-
-        val xRealIp = request.getHeader("X-Real-IP")
-        if (!xRealIp.isNullOrEmpty() && !xRealIp.contains("unknown")) {
-            return xRealIp
-        }
-
-        return request.remoteAddr
     }
 
     private fun createOTTMessage(oneTimeToken: OneTimeToken, clientIp: String): String {
@@ -95,7 +85,6 @@ class ImHereOttSuccessHandler(
     }
 
     private data class OttRequestInfo(
-        val lastRequestTime: Long,
         val clientIp: String,
         val requestCount: Int
     )

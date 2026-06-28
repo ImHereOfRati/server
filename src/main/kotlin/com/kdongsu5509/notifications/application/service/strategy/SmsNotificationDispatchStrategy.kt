@@ -15,7 +15,7 @@ class SmsNotificationDispatchStrategy(
     override val notificationMethod: NotificationMethod = NotificationMethod.SMS
 
     override fun dispatch(command: NotificationCommand) {
-        val body = command.extraData["body"]?.takeIf { it.isNotBlank() }
+        val body = command.body
             ?: throw InvalidInputException("SMS 본문이 누락되었습니다.")
         smsService.send(
             senderNickname = command.senderNickname,
@@ -25,7 +25,7 @@ class SmsNotificationDispatchStrategy(
     }
 
     override fun dispatchMultiple(command: MultipleNotificationCommand) {
-        val body = command.extraData["body"]?.takeIf { it.isNotBlank() }
+        val body = command.body
             ?: throw InvalidInputException("SMS 본문이 누락되었습니다.")
         smsService.sendMultiple(
             senderNickname = command.senderNickname,

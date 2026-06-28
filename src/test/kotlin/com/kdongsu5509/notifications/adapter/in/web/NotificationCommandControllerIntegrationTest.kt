@@ -3,7 +3,7 @@ package com.kdongsu5509.notifications.adapter.`in`.web
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationType
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.MultiNotificationRequest
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationRequest
 import com.kdongsu5509.notifications.application.dto.NotificationCommand

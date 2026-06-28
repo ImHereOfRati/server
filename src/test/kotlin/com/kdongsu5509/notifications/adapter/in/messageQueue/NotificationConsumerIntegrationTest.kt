@@ -2,7 +2,7 @@ package com.kdongsu5509.notifications.adapter.`in`.messageQueue
 
 import com.common.testsupport.PersistenceTestSupport
 import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationMessageDto
-import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationType
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.application.port.`in`.NotificationDispatcherUseCase
 import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
 import com.kdongsu5509.support.config.RabbitMQConfig

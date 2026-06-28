@@ -1,7 +1,7 @@
 package com.kdongsu5509.notifications.adapter.out.messageQueue
 
 import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationMessageDto
-import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationType
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.out.NotificationProducePort
 import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo

@@ -16,6 +16,8 @@ enum class NotificationException(
     SMS_NOT_ALLOW_EMPTY(CommonErrorCode.INVALID_INPUT, "SMS-000", "전송할 메시지 내용이 비어있습니다."),
     SMS_BODY_TOO_LONG(CommonErrorCode.INVALID_INPUT, "SMS-001", "SMS 본문은 개행 포함 45자를 초과할 수 없습니다."),
     UNSUPPORTED_TARGET_TYPE(CommonErrorCode.INVALID_INPUT, "NOTI-001", "지원하지 않는 알림 수단입니다."),
+    NOTIFICATION_INVALID_FIELD(CommonErrorCode.INVALID_INPUT, "NOTI-002", "알림 필수 항목이 비어있습니다."),
+    FCM_TOKEN_EMPTY(CommonErrorCode.INVALID_INPUT, "FCM-000", "FCM 토큰 또는 이메일은 공백일 수 없습니다."),
 
     // ---2xx: UNAUTHORIZE(403) ---
     NOT_MY_NOTIFICATION(CommonErrorCode.FORBIDDEN, "NOTI-200", "해당 알람에 대한 작업 권한이 없습니다."),

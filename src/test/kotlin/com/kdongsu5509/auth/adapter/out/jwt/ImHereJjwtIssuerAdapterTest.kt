@@ -35,7 +35,8 @@ class ImHereJjwtIssuerAdapterTest {
         email = "test@example.com",
         nickname = "tester",
         role = "NORMAL",
-        status = "ACTIVE"
+        status = "ACTIVE",
+        refreshTokenVersion = 3
     )
 
     @BeforeEach
@@ -64,6 +65,7 @@ class ImHereJjwtIssuerAdapterTest {
         assertThat(parsedClaims[JwtClaimKeys.CLAIM_USER_ID]).isEqualTo(claims.uid.toString())
         assertThat(parsedClaims[JwtClaimKeys.CLAIM_EMAIL]).isEqualTo(claims.email)
         assertThat(parsedClaims[JwtClaimKeys.CLAIM_ROLE]).isEqualTo("ROLE_${claims.role}")
+        assertThat((parsedClaims[JwtClaimKeys.CLAIM_REFRESH_TOKEN_VERSION] as Number).toLong()).isEqualTo(3L)
         assertThat(parsedClaims.expiration).isAfter(Date())
     }
 
@@ -85,6 +87,7 @@ class ImHereJjwtIssuerAdapterTest {
 
         assertThat(parsedClaims[JwtClaimKeys.CLAIM_CATEGORY]).isEqualTo(JwtClaimKeys.REFRESH_TOKEN)
         assertThat(parsedClaims[JwtClaimKeys.CLAIM_USER_ID]).isEqualTo(claims.uid.toString())
+        assertThat((parsedClaims[JwtClaimKeys.CLAIM_REFRESH_TOKEN_VERSION] as Number).toLong()).isEqualTo(3L)
         assertThat(parsedClaims.expiration).isAfter(Date())
     }
 

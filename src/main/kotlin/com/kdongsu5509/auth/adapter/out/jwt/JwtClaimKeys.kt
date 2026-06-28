@@ -9,4 +9,5 @@ object JwtClaimKeys {
     const val CLAIM_NICKNAME = "nickname"
     const val CLAIM_ROLE = "role"
     const val CLAIM_STATUS = "status"
+    const val CLAIM_REFRESH_TOKEN_VERSION = "refreshTokenVersion"
 }

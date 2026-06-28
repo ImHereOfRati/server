@@ -56,6 +56,7 @@ class ImHereJjwtParserAdapterTest {
         assertThat(result.role).isEqualTo(role)
         assertThat(result.status).isEqualTo(status)
         assertThat(result.uid).isEqualTo(uid)
+        assertThat(result.refreshTokenVersion).isZero()
         assertThat(result.expiration).isNotNull()
     }
 

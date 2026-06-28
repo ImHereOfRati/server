@@ -28,7 +28,8 @@ class ImHereJjwtParserAdapter(
             nickname = claims[JwtClaimKeys.CLAIM_NICKNAME] as String,
             role = (claims[JwtClaimKeys.CLAIM_ROLE] as String).removePrefix("ROLE_"),
             status = claims[JwtClaimKeys.CLAIM_STATUS] as String,
-            expiration = LocalDateTime.ofInstant(claims.expiration.toInstant(), zoneID)
+            expiration = LocalDateTime.ofInstant(claims.expiration.toInstant(), zoneID),
+            refreshTokenVersion = (claims[JwtClaimKeys.CLAIM_REFRESH_TOKEN_VERSION] as? Number)?.toLong() ?: 0L
         )
     }
 

@@ -1,30 +1,25 @@
 package com.kdongsu5509.auth.adapter.out.jwt
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.auth.application.port.out.CachePort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.support.exception.throwIt
+import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.stereotype.Component
-import java.time.Duration
 
 @Component
 class ImHereTokenProviderAdapter(
     private val tokenIssuer: ImHereTokenIssuerPort,
     private val tokenParser: ImHereTokenParserPort,
-    private val cachePort: CachePort,
-    private val imHereJwtProperties: ImHereJwtProperties
+    private val userRepository: UserRepository
 ) : ImHereTokenProviderPort {
 
     override fun issue(claims: JwtTokenClaims): ImHereJwtToken {
         val accessToken = tokenIssuer.createAccessToken(claims)
         val refreshToken = tokenIssuer.createRefreshToken(claims)
-
-        val tokenKey = getTokenCacheKey(claims.email)
-        cachePort.save(tokenKey, refreshToken, Duration.ofDays(imHereJwtProperties.refreshExpirationDays))
 
         return ImHereJwtToken(accessToken, refreshToken, claims.status)
     }
@@ -33,25 +28,19 @@ class ImHereTokenProviderAdapter(
         tokenParser.validate(refreshToken)
 
         val claims = tokenParser.parse(refreshToken)
-        val refreshTokenSavedAtCache = findTokenFromCacheWithUserEmail(claims.email)
 
-        if (refreshTokenSavedAtCache != refreshToken) AuthException.IMHERE_INVALID_TOKEN.throwIt()
+        val user = findUserByEmail(claims.email)
+        if (user.refreshTokenVersion != claims.refreshTokenVersion) AuthException.IMHERE_INVALID_TOKEN.throwIt()
 
-        return issue(claims)
+        return issue(claims.copy(refreshTokenVersion = user.refreshTokenVersion))
     }
 
     override fun reissueByEmail(email: String): ImHereJwtToken {
-        val refreshTokenFromCache = findTokenFromCacheWithUserEmail(email)
-        val claims = tokenParser.parse(refreshTokenFromCache)
-
-        return issue(claims)
+        val user = findUserByEmail(email)
+        return issue(JwtTokenClaims.fromUser(user))
     }
 
-    private fun findTokenFromCacheWithUserEmail(email: String): String {
-        val tokenKey = getTokenCacheKey(email)
-        return cachePort.find(tokenKey, String::class.java) ?: AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.throwIt()
-    }
-
-    private fun getTokenCacheKey(userEmail: String): String = "refresh:$userEmail"
+    private fun findUserByEmail(email: String) =
+        userRepository.findByEmail(email) ?: AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.throwIt()
 }
 

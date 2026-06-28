@@ -39,7 +39,10 @@ class UserJpaEntity(
     var status: UserStatus,
 
     @Column(name = "oidc_subject")
-    var oidcSubject: String? = null
+    var oidcSubject: String? = null,
+
+    @Column(nullable = false)
+    var refreshTokenVersion: Long = 0
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue
@@ -49,5 +52,6 @@ class UserJpaEntity(
     fun update(user: User) {
         this.nickname = user.nickname
         this.status = user.status
+        this.refreshTokenVersion = user.refreshTokenVersion
     }
 }

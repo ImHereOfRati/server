@@ -2,11 +2,13 @@ package com.kdongsu5509.auth.adapter.out.jwt
 
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.auth.application.port.out.CachePort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.support.exception.type.UnauthorizedException
+import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.user.repository.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -17,7 +19,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.then
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import java.time.Duration
+import org.mockito.kotlin.any
 import java.time.LocalDateTime
 import java.util.*
 
@@ -41,7 +43,7 @@ class ImHereTokenProviderAdapterTest {
     private lateinit var tokenParser: ImHereTokenParserPort
 
     @Mock
-    private lateinit var cachePort: CachePort
+    private lateinit var userRepository: UserRepository
 
     private lateinit var tokenProvider: ImHereTokenProviderAdapter
     private lateinit var jwtTokenClaims: JwtTokenClaims
@@ -54,7 +56,7 @@ class ImHereTokenProviderAdapterTest {
             refreshExpirationDays = REFRESH_EXP_DAYS
         )
 
-        tokenProvider = ImHereTokenProviderAdapter(tokenIssuer, tokenParser, cachePort, properties)
+        tokenProvider = ImHereTokenProviderAdapter(tokenIssuer, tokenParser, userRepository)
 
         jwtTokenClaims = JwtTokenClaims(
             uid = TEST_UUID,
@@ -79,8 +81,6 @@ class ImHereTokenProviderAdapterTest {
         // then
         assertThat(result.accessToken).isEqualTo(ACCESS_TOKEN)
         assertThat(result.refreshToken).isEqualTo(REFRESH_TOKEN)
-
-        then(cachePort).should().save(REDIS_KEY, REFRESH_TOKEN, Duration.ofDays(REFRESH_EXP_DAYS))
     }
 
     @Test
@@ -88,7 +88,7 @@ class ImHereTokenProviderAdapterTest {
     fun reissue_validRefreshToken_success() {
         // given
         given(tokenParser.parse(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
-        given(cachePort.find(REDIS_KEY, String::class.java)).willReturn(REFRESH_TOKEN)
+        given(userRepository.findByEmail(USER_EMAIL)).willReturn(createUser(refreshTokenVersion = 0))
         given(tokenIssuer.createAccessToken(jwtTokenClaims)).willReturn(ACCESS_TOKEN)
         given(tokenIssuer.createRefreshToken(jwtTokenClaims)).willReturn(REFRESH_TOKEN)
 
@@ -119,8 +119,7 @@ class ImHereTokenProviderAdapterTest {
     @DisplayName("Cache에 저장된 토큰이 없는 경우 재발급 시 예외가 발생한다")
     fun reissue_refreshTokenNotFound_throwsException() {
         // given
-        given(cachePort.find(REDIS_KEY, String::class.java))
-            .willReturn(null)
+        given(userRepository.findByEmail(USER_EMAIL)).willReturn(null)
 
         // when & then
         assertThrows<UnauthorizedException> {
@@ -135,7 +134,7 @@ class ImHereTokenProviderAdapterTest {
     fun reissue_mismatchedRefreshToken_throwsException() {
         // given
         given(tokenParser.parse(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
-        given(cachePort.find(REDIS_KEY, String::class.java)).willReturn("different-token")
+        given(userRepository.findByEmail(USER_EMAIL)).willReturn(createUser(refreshTokenVersion = 1))
 
         // when & then
         assertAuthError(AuthException.IMHERE_INVALID_TOKEN) {
@@ -147,10 +146,9 @@ class ImHereTokenProviderAdapterTest {
     @DisplayName("이메일 기반으로 성공적으로 토큰을 재발급한다")
     fun reissue_by_email_success() {
         // given
-        given(cachePort.find(REDIS_KEY, String::class.java)).willReturn(REFRESH_TOKEN)
-        given(tokenParser.parse(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
-        given(tokenIssuer.createAccessToken(jwtTokenClaims)).willReturn(ACCESS_TOKEN)
-        given(tokenIssuer.createRefreshToken(jwtTokenClaims)).willReturn(REFRESH_TOKEN)
+        given(userRepository.findByEmail(USER_EMAIL)).willReturn(createUser(refreshTokenVersion = 0))
+        given(tokenIssuer.createAccessToken(any())).willReturn(ACCESS_TOKEN)
+        given(tokenIssuer.createRefreshToken(any())).willReturn(REFRESH_TOKEN)
 
         // when
         val result = tokenProvider.reissueByEmail(USER_EMAIL)
@@ -164,9 +162,7 @@ class ImHereTokenProviderAdapterTest {
     @DisplayName("이메일로 재발급 시 Cache에 토큰이 없으면 예외가 발생한다")
     fun reissue_by_email_notFound_throwsException() {
         // given
-        given(
-            cachePort.find(REDIS_KEY, String::class.java)
-        ).willReturn(null)
+        given(userRepository.findByEmail(USER_EMAIL)).willReturn(null)
 
         // when & then
         assertThrows<UnauthorizedException> {
@@ -175,6 +171,16 @@ class ImHereTokenProviderAdapterTest {
         assertThat(it.message).isEqualTo(AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.errorMessage)
         }
     }
+
+    private fun createUser(refreshTokenVersion: Long): User = User(
+        id = TEST_UUID,
+        email = USER_EMAIL,
+        nickname = "테스트",
+        role = com.kdongsu5509.auth.domain.UserRole.NORMAL,
+        oauthProvider = com.kdongsu5509.auth.domain.OAuth2Provider.KAKAO,
+        status = UserStatus.ACTIVE,
+        refreshTokenVersion = refreshTokenVersion
+    )
 
     private fun assertAuthError(expectedError: AuthException, block: () -> Unit) {
         val exception = assertThrows<UnauthorizedException>(block)

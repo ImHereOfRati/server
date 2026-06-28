@@ -3,6 +3,7 @@ package com.kdongsu5509.auth.adapter.`in`.web
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.adapter.`in`.web.dto.TokenRefreshRequest
+import com.kdongsu5509.auth.application.port.`in`.ForceLogoutUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.domain.OAuth2Provider
@@ -29,6 +30,9 @@ class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
 
     @Autowired
     private lateinit var tokenProviderPort: ImHereTokenProviderPort
+
+    @Autowired
+    private lateinit var forceLogoutUseCase: ForceLogoutUseCase
 
     @Test
     @DisplayName("정상적인 리프레시 토큰으로 액세스 토큰을 재발급받고 200 OK를 반환하며 문서화한다")
@@ -124,31 +128,30 @@ class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
     }
 
     @Test
-    @DisplayName("Cache에 존재하지 않는(로그아웃된) 리프레시 토큰으로 재발급 시 401 Unauthorized와 에러를 반환하며 문서화한다")
-    fun refreshFailWhenTokenNotFoundInCache() {
-        // given - 유효한 서명이지만 cache에 없는 토큰 (로그아웃 후 재사용 시도 시나리오)
+    @DisplayName("강제 로그아웃된 리프레시 토큰으로 재발급 시 401 Unauthorized와 에러를 반환하며 문서화한다")
+    fun refreshFailWhenTokenRevoked() {
+        // given - 유효한 서명이지만 강제 로그아웃으로 더 이상 사용할 수 없는 토큰
         val email = "logout@example.com"
         val user = User.createWithPendingStatus(email, "Logout User", OAuth2Provider.KAKAO).activate()
         val savedUser = userRepository.save(user)
 
         val claims = JwtTokenClaims.fromUser(savedUser)
         val token = tokenProviderPort.issue(claims)
-        // 정상 발급 후 cache에서 제거하지 않고 직접 다른 refreshToken 값을 구성하는 대신,
-        // cache에 없는 상황을 재현하기 위해 서명이 올바르지 않은 토큰을 사용한다.
-        val invalidToken = token.refreshToken + "_tampered"
+
+        forceLogoutUseCase.logout(email)
 
         mockMvc.perform(
             post("/api/auth/refresh")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(TokenRefreshRequest(refreshToken = invalidToken)))
+                .content(jsonMapper.writeValueAsString(TokenRefreshRequest(refreshToken = token.refreshToken)))
         )
             .andExpect(status().isUnauthorized)
             .andDo(
                 MockMvcRestDocumentationWrapper.document(
-                    identifier = "auth-refresh-fail-token-not-in-cache",
+                    identifier = "auth-refresh-fail-token-revoked",
                     snippets = arrayOf(
                         responseFields(
-                            fieldWithPath("imhereResponseCode").description("에러 코드 (TOKEN-103: 인증 정보를 찾을 수 없거나 만료되었습니다)"),
+                            fieldWithPath("imhereResponseCode").description("에러 코드 (TOKEN-101: 유효하지 않은 토큰입니다)"),
                             fieldWithPath("message").description("에러 상세 메시지"),
                             fieldWithPath("data").description("데이터는 없음").optional()
                         )

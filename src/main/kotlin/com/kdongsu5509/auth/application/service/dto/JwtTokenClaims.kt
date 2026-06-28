@@ -10,7 +10,8 @@ data class JwtTokenClaims(
     val nickname: String,
     val role: String,
     val status: String,
-    val expiration: LocalDateTime? = null
+    val expiration: LocalDateTime? = null,
+    val refreshTokenVersion: Long = 0
 ) {
     companion object {
         fun fromUser(user: User): JwtTokenClaims {
@@ -19,7 +20,8 @@ data class JwtTokenClaims(
                 email = user.email,
                 nickname = user.nickname,
                 role = user.roleName(),
-                status = user.statusName()
+                status = user.statusName(),
+                refreshTokenVersion = user.refreshTokenVersion
             )
         }
     }

@@ -13,7 +13,8 @@ data class UserResult(
     val oauthProvider: OAuth2Provider,
     val role: UserRole,
     val status: UserStatus,
-    val oidcSubject: String? = null
+    val oidcSubject: String? = null,
+    val refreshTokenVersion: Long = 0
 ) {
     companion object {
         fun fromDomain(user: User): UserResult = UserResult(
@@ -23,7 +24,8 @@ data class UserResult(
             oauthProvider = user.oauthProvider,
             role = user.role,
             status = user.status,
-            oidcSubject = user.oidcSubject
+            oidcSubject = user.oidcSubject,
+            refreshTokenVersion = user.refreshTokenVersion
         )
     }
 
@@ -34,6 +36,7 @@ data class UserResult(
         role = role,
         oauthProvider = oauthProvider,
         status = status,
-        oidcSubject = oidcSubject
+        oidcSubject = oidcSubject,
+        refreshTokenVersion = refreshTokenVersion
     )
 }

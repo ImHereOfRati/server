@@ -13,7 +13,8 @@ data class User(
     var role: UserRole,
     val oauthProvider: OAuth2Provider,
     var status: UserStatus,
-    val oidcSubject: String? = null
+    val oidcSubject: String? = null,
+    val refreshTokenVersion: Long = 0
 ) {
     companion object {
         fun createWithPendingStatus(
@@ -45,7 +46,8 @@ data class User(
             role = role,
             oauthProvider = oauthProvider,
             status = UserStatus.ACTIVE,
-            oidcSubject = oidcSubject
+            oidcSubject = oidcSubject,
+            refreshTokenVersion = refreshTokenVersion
         )
     }
 
@@ -60,7 +62,8 @@ data class User(
             role = role,
             oauthProvider = oauthProvider,
             status = UserStatus.BLOCKED,
-            oidcSubject = oidcSubject
+            oidcSubject = oidcSubject,
+            refreshTokenVersion = refreshTokenVersion
         )
     }
 
@@ -75,7 +78,8 @@ data class User(
             role = role,
             oauthProvider = oauthProvider,
             status = UserStatus.ACTIVE,
-            oidcSubject = oidcSubject
+            oidcSubject = oidcSubject,
+            refreshTokenVersion = refreshTokenVersion
         )
     }
 
@@ -90,7 +94,8 @@ data class User(
             role = role,
             oauthProvider = oauthProvider,
             status = UserStatus.WITHDRAWN,
-            oidcSubject = oidcSubject
+            oidcSubject = oidcSubject,
+            refreshTokenVersion = refreshTokenVersion
         )
     }
 
@@ -101,8 +106,11 @@ data class User(
         role = role,
         oauthProvider = oauthProvider,
         status = status,
-        oidcSubject = oidcSubject
+        oidcSubject = oidcSubject,
+        refreshTokenVersion = refreshTokenVersion
     )
+
+    fun rotateRefreshTokenVersion(): User = copy(refreshTokenVersion = refreshTokenVersion + 1)
 
     fun validateDuplicateEmailAllowed(isExistingEmail: Boolean) {
         if (isExistingEmail) {

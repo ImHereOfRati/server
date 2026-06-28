@@ -24,15 +24,16 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users
 (
-    id           CHAR(36)                                              NOT NULL,
-    email        VARCHAR(255)                                          NOT NULL,
-    nickname     VARCHAR(255)                                          NOT NULL,
-    role         ENUM ('NORMAL', 'ADMIN')                              NOT NULL,
-    provider     ENUM ('KAKAO', 'GOOGLE', 'NAVER')                    NOT NULL,
-    status       ENUM ('PENDING', 'ACTIVE', 'BLOCKED', 'WITHDRAWN')    NOT NULL,
-    oidc_subject VARCHAR(255)                                          NULL,
-    created_at   DATETIME(6)                                           NOT NULL,
-    updated_at   DATETIME(6)                                           NOT NULL,
+    id                    CHAR(36)                                           NOT NULL,
+    email                 VARCHAR(255)                                       NOT NULL,
+    nickname              VARCHAR(255)                                       NOT NULL,
+    role                  ENUM ('NORMAL', 'ADMIN')                           NOT NULL,
+    provider              ENUM ('KAKAO', 'GOOGLE', 'NAVER')                  NOT NULL,
+    status                ENUM ('PENDING', 'ACTIVE', 'BLOCKED', 'WITHDRAWN') NOT NULL,
+    oidc_subject          VARCHAR(255)                                       NULL,
+    refresh_token_version BIGINT                                             NOT NULL DEFAULT 0,
+    created_at            DATETIME(6)                                        NOT NULL,
+    updated_at            DATETIME(6)                                        NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_users_email (email),
     KEY idx_users_nickname (nickname)
@@ -75,12 +76,12 @@ CREATE TABLE user_agreement
 
 CREATE TABLE friend_request
 (
-    friend_request_id CHAR(36)                     NOT NULL,
-    requester_id      CHAR(36)                     NOT NULL,
-    receiver_id       CHAR(36) NOT NULL,
-    message           VARCHAR(255)                 NOT NULL,
-    created_at        DATETIME(6)                  NOT NULL,
-    updated_at        DATETIME(6)                  NOT NULL,
+    friend_request_id CHAR(36)     NOT NULL,
+    requester_id      CHAR(36)     NOT NULL,
+    receiver_id       CHAR(36)     NOT NULL,
+    message           VARCHAR(255) NOT NULL,
+    created_at        DATETIME(6)  NOT NULL,
+    updated_at        DATETIME(6)  NOT NULL,
     PRIMARY KEY (friend_request_id),
     CONSTRAINT fk_friend_request_requester FOREIGN KEY (requester_id) REFERENCES users (id),
     CONSTRAINT fk_friend_request_receiver FOREIGN KEY (receiver_id) REFERENCES users (id)
@@ -90,13 +91,13 @@ CREATE TABLE friend_request
 
 CREATE TABLE friend_restrictions
 (
-    friend_restriction_id CHAR(36) NOT NULL,
-    restrictor_id         CHAR(36) NULL,
-    restricted_id         CHAR(36) NULL,
-    type                  ENUM ('BLOCK', 'REJECT')     NOT NULL,
-    expired_at            DATETIME(6)                  NULL,
-    created_at            DATETIME(6)                  NOT NULL,
-    updated_at            DATETIME(6)                  NOT NULL,
+    friend_restriction_id CHAR(36)                 NOT NULL,
+    restrictor_id         CHAR(36)                 NULL,
+    restricted_id         CHAR(36)                 NULL,
+    type                  ENUM ('BLOCK', 'REJECT') NOT NULL,
+    expired_at            DATETIME(6)              NULL,
+    created_at            DATETIME(6)              NOT NULL,
+    updated_at            DATETIME(6)              NOT NULL,
     PRIMARY KEY (friend_restriction_id),
     CONSTRAINT fk_friend_restrictions_restrictor FOREIGN KEY (restrictor_id) REFERENCES users (id),
     CONSTRAINT fk_friend_restrictions_restricted FOREIGN KEY (restricted_id) REFERENCES users (id)
@@ -200,7 +201,7 @@ VALUES (1,
       제4조 (면책)
       1. 서비스 제공자는 천재지변, 통신 장애 등 불가항력으로 인한 서비스 중단에 대하여 책임을 지지 않습니다.
       2. 이용자의 기기 설정, 네트워크 환경 또는 운영체제 정책으로 인해 알림이 정상 동작하지 않는 경우 책임을 지지 않습니다.',
-        '2026-01-01 00:00:00',
+        '2026-06-29 00:00:00',
         b'1',
         NOW(6),
         NOW(6),
@@ -231,7 +232,7 @@ VALUES (1,
 
     5. 이용자의 권리
     이용자는 언제든지 개인정보 열람, 정정, 삭제 및 처리 정지를 요청할 수 있습니다.',
-        '2026-01-01 00:00:00',
+        '2026-06-29 00:00:00',
         b'1',
         NOW(6),
         NOW(6),
@@ -260,7 +261,7 @@ VALUES (1,
 
     5. 동의 거부
     위치정보 제공에 동의하지 않을 수 있으며, 이 경우 위치 기반 기능의 이용이 제한될 수 있습니다.',
-        '2026-01-01 00:00:00',
+        '2026-06-29 00:00:00',
         b'1',
         NOW(6),
         NOW(6),
@@ -284,7 +285,7 @@ VALUES (1,
 
     4. 광고성 정보 발송
     - 서비스는 정보통신망법 등 관련 법령을 준수하여 광고성 정보를 발송합니다.',
-        '2026-01-01 00:00:00',
+        '2026-06-29 00:00:00',
         b'0',
         NOW(6),
         NOW(6),

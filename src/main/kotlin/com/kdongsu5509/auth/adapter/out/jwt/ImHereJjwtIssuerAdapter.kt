@@ -43,6 +43,7 @@ class ImHereJjwtIssuerAdapter(
             .claim(JwtClaimKeys.CLAIM_NICKNAME, claims.nickname)
             .claim(JwtClaimKeys.CLAIM_ROLE, "ROLE_${claims.role}")
             .claim(JwtClaimKeys.CLAIM_STATUS, claims.status)
+            .claim(JwtClaimKeys.CLAIM_REFRESH_TOKEN_VERSION, claims.refreshTokenVersion)
             .issuedAt(Date.from(Instant.now()))
             .expiration(Date.from(expiredTime.atZone(ZONE_ID).toInstant()))
             .signWith(keyProvider.secretKey)

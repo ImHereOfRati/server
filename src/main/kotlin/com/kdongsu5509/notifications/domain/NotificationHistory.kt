@@ -1,5 +1,7 @@
 package com.kdongsu5509.notifications.domain
 
+import com.kdongsu5509.notifications.exception.NotificationException
+import com.kdongsu5509.support.exception.throwIt
 import java.time.LocalDateTime
 
 /**
@@ -29,17 +31,41 @@ class NotificationHistory internal constructor(
             body: String,
             type: String,
             path: String?
-        ): NotificationHistory = NotificationHistory(
-            id = null,
-            receiverEmail = receiverEmail,
-            senderNickname = senderNickname,
-            title = title,
-            body = body,
-            type = type,
-            path = path,
-            isRead = false,
-            createdAt = null
-        )
+        ): NotificationHistory {
+            requireNotBlank(receiverEmail, senderNickname, title, body, type)
+            return NotificationHistory(
+                id = null,
+                receiverEmail = receiverEmail,
+                senderNickname = senderNickname,
+                title = title,
+                body = body,
+                type = type,
+                path = path,
+                isRead = false,
+                createdAt = null
+            )
+        }
+
+        private fun requireNotBlank(
+            receiverEmail: String,
+            senderNickname: String,
+            title: String,
+            body: String,
+            type: String
+        ) {
+            val blankFields = buildList {
+                if (receiverEmail.isBlank()) add("receiverEmail")
+                if (senderNickname.isBlank()) add("senderNickname")
+                if (title.isBlank()) add("title")
+                if (body.isBlank()) add("body")
+                if (type.isBlank()) add("type")
+            }
+            if (blankFields.isNotEmpty()) {
+                NotificationException.NOTIFICATION_INVALID_FIELD.throwIt(
+                    contextData = mapOf("blankFields" to blankFields)
+                )
+            }
+        }
 
         /** 영속성 레이어에서 복원 시 사용 */
         fun reconstruct(

@@ -2,6 +2,7 @@ package com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
 import java.time.LocalDateTime
 import java.util.*

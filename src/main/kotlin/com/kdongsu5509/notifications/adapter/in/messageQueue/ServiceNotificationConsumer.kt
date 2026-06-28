@@ -5,7 +5,6 @@ import com.kdongsu5509.notifications.application.port.`in`.NotificationDispatche
 import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
 import com.kdongsu5509.notifications.application.service.MessageIdempotencyService
 import com.kdongsu5509.support.config.RabbitMQConfig
-import com.kdongsu5509.support.external.DiscordMessageSendPort
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Component
 
@@ -14,8 +13,8 @@ class ServiceNotificationConsumer(
     notificationDispatcherUseCase: NotificationDispatcherUseCase,
     messageIdempotencyService: MessageIdempotencyService,
     notificationEnqueueUseCase: NotificationEnqueueUseCase,
-    discordMessageSendPort: DiscordMessageSendPort
-) : AbstractNotificationConsumer(notificationDispatcherUseCase, messageIdempotencyService, notificationEnqueueUseCase, discordMessageSendPort) {
+    failureNotifier: ConsumerFailureNotifier
+) : AbstractNotificationConsumer(notificationDispatcherUseCase, messageIdempotencyService, notificationEnqueueUseCase, failureNotifier) {
     companion object {
         const val QUEUE_LABEL = "SERVICE"
     }

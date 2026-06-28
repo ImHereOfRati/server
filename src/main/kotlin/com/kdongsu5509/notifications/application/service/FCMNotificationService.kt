@@ -1,6 +1,6 @@
 package com.kdongsu5509.notifications.application.service
 
-import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationType
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.application.port.`in`.NotificationUseCase
 import com.kdongsu5509.notifications.application.port.out.FcmTokenPersistencePort
 import com.kdongsu5509.notifications.application.port.out.FirebasePort
@@ -32,8 +32,8 @@ class FCMNotificationService(
         val notificationType = parseNotificationType(type)
         val data = buildData(senderNickname, senderEmail, notificationType, extraData)
 
-        val title = NotificationMessageGenerator.getMessageTitle(notificationType)
-        val body = NotificationMessageGenerator.getMessageBody(notificationType, senderNickname)
+        val title = notificationType.titleText
+        val body = notificationType.bodyText(senderNickname, extraData)
 
         try {
             firebasePort.send(
@@ -72,7 +72,7 @@ class FCMNotificationService(
         notificationType: NotificationType,
         extraData: Map<String, String>
     ): Map<String, String> {
-        val resolvedPath = resolvePath(notificationType.appPath, extraData)
+        val resolvedPath = notificationType.resolvePath(extraData)
         return extraData + mapOf(
             "senderNickname" to senderNickname,
             "senderEmail" to senderEmail,
@@ -81,23 +81,11 @@ class FCMNotificationService(
         )
     }
 
-    private fun resolvePath(template: String, extraData: Map<String, String>): String {
-        val resolved = PLACEHOLDER_REGEX.replace(template) { match ->
-            val key = match.groupValues[1]
-            extraData[key] ?: throw InvalidInputException("알림 경로 생성 중 필수 데이터($key)가 누락되었습니다.")
-        }
-        return resolved
-    }
-
     private fun findReceiverFcmToken(receiverEmail: String): FcmToken {
         return fcmTokenPersistencePort.findByUserEmail(receiverEmail)
             ?: throw NotFoundException(
                 "수신자의 FCM 토큰을 찾을 수 없습니다.",
                 contextData = mapOf("receiverEmail" to receiverEmail)
             )
-    }
-
-    companion object {
-        private val PLACEHOLDER_REGEX = Regex("\\{(\\w+)\\}")
     }
 }

@@ -1,7 +1,7 @@
 package com.kdongsu5509.notifications.adapter.`in`.messageQueue
 
 import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationMessageDto
-import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationType
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.`in`.NotificationDispatcherUseCase
 import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
@@ -42,11 +42,12 @@ class FriendNotificationConsumerTest {
 
     @BeforeEach
     fun setUp() {
+        val failureNotifier = ConsumerFailureNotifier(notificationEnqueueUseCase, discordMessageSendPort)
         consumer = FriendNotificationConsumer(
             notificationDispatcherUseCase,
             messageIdempotencyService,
             notificationEnqueueUseCase,
-            discordMessageSendPort
+            failureNotifier
         )
     }
 

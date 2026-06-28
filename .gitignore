@@ -103,6 +103,8 @@ bin/
 /infra/.claude/
 /infra/.omc/
 /_workspace/
+CLAUDE.md
+AGENTS.md
 /prod.env.example
 
 # nginx/alloy 렌더링 산출물 (CI가 .template에서 생성/삭제함)

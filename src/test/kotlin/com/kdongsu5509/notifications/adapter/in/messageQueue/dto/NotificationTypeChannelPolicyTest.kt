@@ -1,5 +1,6 @@
 package com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto
 
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

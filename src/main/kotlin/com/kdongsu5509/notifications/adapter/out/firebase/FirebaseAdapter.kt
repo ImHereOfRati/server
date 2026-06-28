@@ -1,7 +1,8 @@
 package com.kdongsu5509.notifications.adapter.out.firebase
 
 import com.google.firebase.messaging.*
-import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationType
+import com.kdongsu5509.notifications.domain.AndroidPushPriority
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.application.port.out.FirebasePort
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.exception.type.InternalServerException
@@ -65,7 +66,7 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
         val notificationType = NotificationType.fromName(data["type"]) ?: NotificationType.DELIVERY_RESULT_NOTICE
 
         return AndroidConfig.builder()
-            .setPriority(notificationType.androidPriority)
+            .setPriority(toFirebasePriority(notificationType.pushPriority))
             .setNotification(
                 AndroidNotification.builder()
                     .setChannelId(notificationType.androidChannelId)
@@ -73,6 +74,12 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
             )
             .build()
     }
+
+    private fun toFirebasePriority(priority: AndroidPushPriority): AndroidConfig.Priority =
+        when (priority) {
+            AndroidPushPriority.HIGH -> AndroidConfig.Priority.HIGH
+            AndroidPushPriority.NORMAL -> AndroidConfig.Priority.NORMAL
+        }
 
     private fun logAndThrow(exception: ImHereBaseException, ex: Exception): Nothing {
         log.error("[${exception.errorCode}] ${exception.message}", ex)

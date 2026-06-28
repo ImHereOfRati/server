@@ -9,6 +9,8 @@ RUN chmod +x ./gradlew
 RUN ./gradlew build -x test
 
 FROM amazoncorretto:25-alpine-jdk
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Seoul
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 8080

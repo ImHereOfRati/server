@@ -11,7 +11,6 @@ class NotificationTypeRoutePolicyTest {
     fun appPathMatchesMobileRoutes() {
         assertThat(NotificationType.FRIEND_REQUEST_RECEIVED.appPath).isEqualTo("/friend/requests")
         assertThat(NotificationType.FRIEND_REQUEST_ACCEPTED.appPath).isEqualTo("/friend")
-        assertThat(NotificationType.LOCATION_SHARE_RECEIVED.appPath).isEqualTo("/record/notifications")
         assertThat(NotificationType.LOCATION_TARGET.appPath).isEqualTo("/record/notifications")
         assertThat(NotificationType.ARRIVAL.appPath).isEqualTo("/record/notifications")
         assertThat(NotificationType.DEPARTURE.appPath).isEqualTo("/record/notifications")

@@ -19,7 +19,6 @@ class NotificationTypeChannelPolicyTest {
     @DisplayName("친구 요청/위치 공유는 high 채널을 사용한다")
     fun channelId_high() {
         assertThat(NotificationType.FRIEND_REQUEST_RECEIVED.androidChannelId).isEqualTo("fcm_high_channel")
-        assertThat(NotificationType.LOCATION_SHARE_RECEIVED.androidChannelId).isEqualTo("fcm_high_channel")
     }
 
     @Test

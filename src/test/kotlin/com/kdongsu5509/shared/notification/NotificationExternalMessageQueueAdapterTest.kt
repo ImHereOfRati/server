@@ -35,7 +35,6 @@ class NotificationExternalMessageQueueAdapterTest {
     @CsvSource(
         "FRIEND_REQUEST_RECEIVED, noti.friend.request.received",
         "FRIEND_REQUEST_ACCEPTED, noti.friend.request.accepted",
-        "LOCATION_SHARE_RECEIVED, noti.service.location.share",
         "ARRIVAL_CONFIRMATION, noti.service.location.arrival",
         "TERMS_UPDATE_NOTICE, noti.service.terms.update",
         "DELIVERY_RESULT_NOTICE, noti.service.delivery.result"

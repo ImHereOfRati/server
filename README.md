@@ -1,10 +1,29 @@
-# 📍 ImHere Server
+# ImHere Server
 
-ImHere Server는 위치 기반 알림 서비스의 백엔드다.
-사용자가 지정한 위치에 도착하거나 이탈하면, 등록된 대상에게 알림을 보낸다.
+ImHere의 서버 애플리케이션입니다.
 
-모바일 클라이언트는 Flutter로 만든 ImHere이며, 설치는 [플레이스토어](https://play.google.com/store/apps/details?id=com.kdongsu5509.iamhere)에서
-한다.
+사용자의 도착/출발 알림 요청을 처리하며,
+인증, 문자 발송, 푸시 알림 등의 기능을 제공합니다.
+
+> 홈페이지 : https://ratiko.co.kr
+
+> 모바일 레포지토리 : https://github.com/ImHereOfRati/mobile
+
+> 플레이 스토어 : https://play.google.com/store/apps/details?id=com.kdongsu5509.iamhere
+
+---
+
+## 기술 스택
+
+## 아키텍처
+
+## 프로젝트 구조
+
+## 실행 방법
+
+## 환경 변수
+
+---
 
 <p>
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"/>
@@ -414,17 +433,17 @@ docker compose --profile local --profile infra up -d
 
 상세 설계/운영 문서는 `docs/`에 있다.
 
-| 문서                                                 | 내용                                       |
-|----------------------------------------------------|------------------------------------------|
-| [docs/architecture.md](./docs/architecture.md)     | 전체 시스템 토폴로지, 배포 구조, 외부 의존성               |
-| [docs/domain.md](./docs/domain.md)                 | Auth/Friends/Notifications/Terms 비즈니스 규칙 |
-| [docs/security.md](./docs/security.md)             | OIDC/JWT/Admin OTT 인증 정책                 |
-| [docs/error-handling.md](./docs/error-handling.md) | 응답 포맷, 도메인 에러 코드 패턴                      |
-| [docs/api-spec.md](./docs/api-spec.md)             | 엔드포인트 그룹, 자동생성 API 문서 위치                 |
-| [docs/db-schema.md](docs/infra/db-schema.md)       | DDL, ERD, 테이블별 참고사항                      |
-| [docs/flows.md](./docs/flows.md)                   | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/DLQ)           |
-| [docs/deployment.md](docs/infra/README.md)         | Docker, CI/CD, AWS, 도메인/DB 호스팅           |
-| [docs/observability/README.md](./docs/observability/README.md)   | 로그/메트릭/트레이스 파이프라인, 알림 채널                 |
-| [docs/test-guideline.md](./docs/test-guideline.md) | 테스트 네이밍/전략/도구                            |
+| 문서                                                             | 내용                                       |
+|----------------------------------------------------------------|------------------------------------------|
+| [docs/architecture.md](./docs/architecture.md)                 | 전체 시스템 토폴로지, 배포 구조, 외부 의존성               |
+| [docs/domain.md](./docs/domain.md)                             | Auth/Friends/Notifications/Terms 비즈니스 규칙 |
+| [docs/security.md](./docs/security.md)                         | OIDC/JWT/Admin OTT 인증 정책                 |
+| [docs/error-handling.md](./docs/error-handling.md)             | 응답 포맷, 도메인 에러 코드 패턴                      |
+| [docs/api-spec.md](./docs/api-spec.md)                         | 엔드포인트 그룹, 자동생성 API 문서 위치                 |
+| [docs/db-schema.md](docs/infra/db-schema.md)                   | DDL, ERD, 테이블별 참고사항                      |
+| [docs/flows.md](./docs/flows.md)                               | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/DLQ)           |
+| [docs/deployment.md](docs/infra/README.md)                     | Docker, CI/CD, AWS, 도메인/DB 호스팅           |
+| [docs/observability/README.md](./docs/observability/README.md) | 로그/메트릭/트레이스 파이프라인, 알림 채널                 |
+| [docs/test-guideline.md](./docs/test-guideline.md)             | 테스트 네이밍/전략/도구                            |
 
 모바일 클라이언트 저장소: <https://github.com/kdongsu5509/imhere_mobile>

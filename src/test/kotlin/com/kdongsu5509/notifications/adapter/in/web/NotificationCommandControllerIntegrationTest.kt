@@ -46,7 +46,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val request = NotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetId = "target@example.com",
-            type = NotificationType.LOCATION_SHARE_RECEIVED,
+            type = NotificationType.LOCATION_TARGET,
             extraData = mapOf("key" to "value")
         )
 
@@ -85,7 +85,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         assertThat(command.senderEmail).isEqualTo("sender@example.com")
         assertThat(command.notificationMethod).isEqualTo(NotificationMethod.FCM)
         assertThat(command.targetIdentifier).isEqualTo("target@example.com")
-        assertThat(command.type).isEqualTo(NotificationType.LOCATION_SHARE_RECEIVED.name)
+        assertThat(command.type).isEqualTo(NotificationType.LOCATION_TARGET.name)
         assertThat(command.extraData).containsEntry("key", "value")
     }
 
@@ -95,7 +95,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val request = MultiNotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetIds = listOf("target1@example.com", "target2@example.com"),
-            type = NotificationType.LOCATION_SHARE_RECEIVED,
+            type = NotificationType.LOCATION_TARGET,
             extraData = mapOf("key" to "value")
         )
 
@@ -134,7 +134,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
             "target1@example.com",
             "target2@example.com"
         )
-        assertThat(captor.allValues.map { it.type }).containsOnly(NotificationType.LOCATION_SHARE_RECEIVED.name)
+        assertThat(captor.allValues.map { it.type }).containsOnly(NotificationType.LOCATION_TARGET.name)
     }
 
     @Test
@@ -143,7 +143,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val request = NotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetId = "",
-            type = NotificationType.LOCATION_SHARE_RECEIVED,
+            type = NotificationType.LOCATION_TARGET,
             extraData = emptyMap()
         )
 
@@ -181,7 +181,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val requestJson = """
             {
               "targetId": "target@example.com",
-              "type": "LOCATION_SHARE_RECEIVED",
+              "type": "LOCATION_TARGET",
               "extraData": {"key":"value"}
             }
         """.trimIndent()
@@ -214,7 +214,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val request = MultiNotificationRequest(
             notificationMethod = NotificationMethod.FCM,
             targetIds = emptyList(),
-            type = NotificationType.LOCATION_SHARE_RECEIVED,
+            type = NotificationType.LOCATION_TARGET,
             extraData = emptyMap()
         )
 
@@ -252,7 +252,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         val requestJson = """
             {
               "targetIds": ["target1@example.com", "target2@example.com"],
-              "type": "LOCATION_SHARE_RECEIVED",
+              "type": "LOCATION_TARGET",
               "extraData": {"key":"value"}
             }
         """.trimIndent()

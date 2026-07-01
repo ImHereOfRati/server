@@ -1,14 +1,14 @@
 package com.kdongsu5509.notifications.adapter.out.messageQueue
 
 import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationMessageDto
-import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.out.NotificationProducePort
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
 import com.kdongsu5509.support.config.RabbitMQConfig
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
-import java.util.UUID
+import java.util.*
 
 @Component
 class NotificationRabbitMQProducerAdapter(
@@ -39,7 +39,7 @@ class NotificationRabbitMQProducerAdapter(
         return when (category) {
             NotificationType.FRIEND_REQUEST_RECEIVED -> RabbitMQConfig.ROUTING_KEY_FRIEND_REQUEST_RECEIVED
             NotificationType.FRIEND_REQUEST_ACCEPTED -> RabbitMQConfig.ROUTING_KEY_FRIEND_REQUEST_ACCEPTED
-            NotificationType.LOCATION_SHARE_RECEIVED, NotificationType.LOCATION_TARGET -> RabbitMQConfig.ROUTING_KEY_LOCATION_SHARE
+            NotificationType.LOCATION_TARGET -> RabbitMQConfig.ROUTING_KEY_LOCATION_SHARE
             NotificationType.ARRIVAL, NotificationType.ARRIVAL_CONFIRMATION -> RabbitMQConfig.ROUTING_KEY_ARRIVAL_CONFIRMATION
             NotificationType.DEPARTURE -> RabbitMQConfig.ROUTING_KEY_DEPARTURE_CONFIRMATION
             NotificationType.TERMS_UPDATE_NOTICE -> RabbitMQConfig.ROUTING_KEY_TERMS_UPDATE

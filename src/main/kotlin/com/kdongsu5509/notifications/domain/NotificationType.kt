@@ -1,5 +1,6 @@
 package com.kdongsu5509.notifications.domain
 
+import com.kdongsu5509.notifications.domain.NotificationType.Companion.PLACE_NAME_KEY
 import com.kdongsu5509.support.exception.type.InvalidInputException
 
 /**
@@ -36,17 +37,10 @@ enum class NotificationType(
         androidChannelId = "fcm_normal_channel",
         pushPriority = AndroidPushPriority.HIGH,
     ),
-    LOCATION_SHARE_RECEIVED(
-        appPath = "/record/notifications",
-        titleText = "위치 공유 알림",
-        bodyTemplate = { sender, _ -> "${sender}님이 위치를 공유했습니다." },
-        androidChannelId = "fcm_high_channel",
-        pushPriority = AndroidPushPriority.HIGH,
-    ),
     LOCATION_TARGET(
         appPath = "/record/notifications",
-        titleText = "위치 공유 알림",
-        bodyTemplate = { sender, _ -> "${sender}님이 위치를 공유했습니다." },
+        titleText = "위치 공유 대상자 알림",
+        bodyTemplate = { sender, data -> "${sender}님이 ${requirePlaceName(data)}에 도착/출발하면 알람을 다시 보내드릴게요." },
         androidChannelId = "fcm_high_channel",
         pushPriority = AndroidPushPriority.HIGH,
     ),
@@ -91,8 +85,7 @@ enum class NotificationType(
         bodyTemplate = { _, _ -> "요청하신 발송 작업이 실패했습니다. 잠시 후 다시 시도해 주세요." },
         androidChannelId = "fcm_normal_channel",
         pushPriority = AndroidPushPriority.HIGH,
-    ),
-    ;
+    ), ;
 
     /**
      * 발송자 닉네임과 추가 데이터로 이 종류의 알림 본문을 만든다.
@@ -118,7 +111,6 @@ enum class NotificationType(
         private val PLACEHOLDER_REGEX = Regex("\\{(\\w+)\\}")
 
         val CLIENT_ALLOWED = setOf(
-            LOCATION_SHARE_RECEIVED,
             LOCATION_TARGET,
             ARRIVAL,
             DEPARTURE,

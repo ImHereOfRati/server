@@ -13,7 +13,6 @@ class NotificationTypeMessageTest {
     fun titleText() {
         assertThat(NotificationType.FRIEND_REQUEST_RECEIVED.titleText).isEqualTo("새로운 친구 요청")
         assertThat(NotificationType.FRIEND_REQUEST_ACCEPTED.titleText).isEqualTo("친구 요청 수락")
-        assertThat(NotificationType.LOCATION_SHARE_RECEIVED.titleText).isEqualTo("위치 공유 알림")
         assertThat(NotificationType.ARRIVAL.titleText).isEqualTo("도착 안내")
         assertThat(NotificationType.DEPARTURE.titleText).isEqualTo("출발 안내")
         assertThat(NotificationType.TERMS_UPDATE_NOTICE.titleText).isEqualTo("서비스 공지사항")
@@ -23,18 +22,27 @@ class NotificationTypeMessageTest {
 
     @Test
     @DisplayName("장소가 필요 없는 알림은 발송자 닉네임으로 본문을 만든다")
-    fun bodyText_withoutPlace() {
+    fun bodyText_senderOnly() {
         val sender = "테스터"
         assertThat(NotificationType.FRIEND_REQUEST_RECEIVED.bodyText(sender))
             .isEqualTo("${sender}님이 친구 요청을 보냈습니다.")
         assertThat(NotificationType.FRIEND_REQUEST_ACCEPTED.bodyText(sender))
             .isEqualTo("${sender}님이 친구 요청을 수락했습니다.")
-        assertThat(NotificationType.LOCATION_SHARE_RECEIVED.bodyText(sender))
-            .isEqualTo("${sender}님이 위치를 공유했습니다.")
         assertThat(NotificationType.TERMS_UPDATE_NOTICE.bodyText(sender))
             .isEqualTo("이용약관이 업데이트되었습니다. 내용을 확인해 주세요.")
         assertThat(NotificationType.DELIVERY_RESULT_NOTICE.bodyText(sender))
             .isEqualTo("요청하신 발송 작업이 완료되었습니다.")
+    }
+
+    @Test
+    @DisplayName("위치 대상 알림 본문은 발송자와 장소를 포함한다")
+    fun bodyText_locationTarget_includesPlace() {
+        assertThat(
+            NotificationType.LOCATION_TARGET.bodyText(
+                "민수",
+                mapOf(NotificationType.PLACE_NAME_KEY to "우리집")
+            )
+        ).isEqualTo("민수님이 우리집에 도착/출발하면 알람을 다시 보내드릴게요.")
     }
 
     @Test

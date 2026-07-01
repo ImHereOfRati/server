@@ -16,7 +16,6 @@ class NotificationExternalMessageQueueAdapter(
         val routingKey = when (request.category) {
             NotificationCategory.FRIEND_REQUEST_RECEIVED -> RabbitMQConfig.ROUTING_KEY_FRIEND_REQUEST_RECEIVED
             NotificationCategory.FRIEND_REQUEST_ACCEPTED -> RabbitMQConfig.ROUTING_KEY_FRIEND_REQUEST_ACCEPTED
-            NotificationCategory.LOCATION_SHARE_RECEIVED -> RabbitMQConfig.ROUTING_KEY_LOCATION_SHARE
             NotificationCategory.ARRIVAL_CONFIRMATION -> RabbitMQConfig.ROUTING_KEY_ARRIVAL_CONFIRMATION
             NotificationCategory.TERMS_UPDATE_NOTICE -> RabbitMQConfig.ROUTING_KEY_TERMS_UPDATE
             NotificationCategory.DELIVERY_RESULT_NOTICE -> RabbitMQConfig.ROUTING_KEY_DELIVERY_RESULT

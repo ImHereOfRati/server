@@ -185,7 +185,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val (requester, token) = createUserAndToken("req3@example.com", "req3")
         val (receiver, _) = createUserAndToken("rec3@example.com", "rec3")
 
-        friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "첫번째 요청"))
+        friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "첫번째 요청"))
 
         val requestDto = NewFriendRequest(targetId = receiver.id!!, message = "이것은 두번째 보내는 10자 이상의 요청입니다!")
 
@@ -259,7 +259,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
     fun findSentRequestsSuccess() {
         val (requester, token) = createUserAndToken("req-sent@example.com", "req-sent")
         val (receiver, _) = createUserAndToken("rec-sent@example.com", "rec-sent")
-        friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "보낸 요청 목록용 메시지"))
+        friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "보낸 요청 목록용 메시지"))
 
         mockMvc.perform(
             get("/api/friends/requests")
@@ -290,7 +290,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
     fun readByIdSuccess() {
         val (requester, token) = createUserAndToken("req-read@example.com", "req-read")
         val (receiver, _) = createUserAndToken("rec-read@example.com", "rec-read")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "단건 조회용 메시지"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "단건 조회용 메시지"))
 
         mockMvc.perform(
             get("/api/friends/requests/{id}", request.id)
@@ -335,7 +335,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val (requester, _) = createUserAndToken("req-read-bad@example.com", "req-read-bad")
         val (receiver, _) = createUserAndToken("rec-read-bad@example.com", "rec-read-bad")
         val (_, otherToken) = createUserAndToken("other-read-bad@example.com", "other-read-bad")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "타인 조회 차단 메시지"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "타인 조회 차단 메시지"))
 
         mockMvc.perform(
             get("/api/friends/requests/{id}", request.id)
@@ -356,7 +356,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val (requester, _) = createUserAndToken("req6@example.com", "req6")
         val (receiver, token) = createUserAndToken("rec6@example.com", "rec6")
 
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "안녕"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "안녕"))
 
         mockMvc.perform(
             post("/api/friends/requests/{id}/accept", request.id)
@@ -382,7 +382,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val (requester, token) = createUserAndToken("req7@example.com", "req7")
         val (receiver, _) = createUserAndToken("rec7@example.com", "rec7")
 
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "안녕"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "안녕"))
 
         mockMvc.perform(
             post("/api/friends/requests/{id}/accept", request.id)
@@ -420,7 +420,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
     fun rejectRequestSuccess() {
         val (requester, _) = createUserAndToken("req-reject@example.com", "req-reject")
         val (receiver, token) = createUserAndToken("rec-reject@example.com", "rec-reject")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "거절해주세요"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "거절해주세요"))
 
         mockMvc.perform(
             post("/api/friends/requests/{id}/reject", request.id)
@@ -445,7 +445,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
     fun rejectRequestFailBadRequest() {
         val (requester, token) = createUserAndToken("req-reject-bad@example.com", "req-reject-bad")
         val (receiver, _) = createUserAndToken("rec-reject-bad@example.com", "rec-reject-bad")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "거절 실패 테스트"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "거절 실패 테스트"))
 
         mockMvc.perform(
             post("/api/friends/requests/{id}/reject", request.id)
@@ -483,7 +483,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
     fun deleteReceivedRequestSuccess() {
         val (requester, _) = createUserAndToken("req-delete-received@example.com", "req-delete-received")
         val (receiver, token) = createUserAndToken("rec-delete-received@example.com", "rec-delete-received")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "받은 요청 삭제"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "받은 요청 삭제"))
 
         mockMvc.perform(
             delete("/api/friends/requests/{id}", request.id)
@@ -526,7 +526,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val (requester, _) = createUserAndToken("req-delete-forbidden@example.com", "req-delete-forbidden")
         val (receiver, _) = createUserAndToken("rec-delete-forbidden@example.com", "rec-delete-forbidden")
         val (_, otherToken) = createUserAndToken("other-delete-forbidden@example.com", "other-delete-forbidden")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "권한 없는 삭제"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "권한 없는 삭제"))
 
         mockMvc.perform(
             delete("/api/friends/requests/{id}", request.id)
@@ -546,7 +546,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
     fun cancelSentRequestSuccess() {
         val (requester, token) = createUserAndToken("req-cancel@example.com", "req-cancel")
         val (receiver, _) = createUserAndToken("rec-cancel@example.com", "rec-cancel")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "보낸 요청 취소"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "보낸 요청 취소"))
 
         mockMvc.perform(
             delete("/api/friends/requests/{id}/sent", request.id)
@@ -589,7 +589,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val (requester, _) = createUserAndToken("req-cancel-forbidden@example.com", "req-cancel-forbidden")
         val (receiver, _) = createUserAndToken("rec-cancel-forbidden@example.com", "rec-cancel-forbidden")
         val (_, otherToken) = createUserAndToken("other-cancel-forbidden@example.com", "other-cancel-forbidden")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "타인 요청 취소"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "타인 요청 취소"))
 
         mockMvc.perform(
             delete("/api/friends/requests/{id}/sent", request.id)

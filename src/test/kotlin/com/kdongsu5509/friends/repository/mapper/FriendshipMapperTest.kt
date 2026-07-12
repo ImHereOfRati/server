@@ -66,7 +66,7 @@ class FriendshipMapperTest {
         // then
         assertThat(result.id).isEqualTo(relationshipId)
         assertThat(result.friend.email).isEqualTo(friendEntity.email)
-        assertThat(result.friendAlias).isEqualTo("friendAlias")
+        assertThat(result.friendAlias.value).isEqualTo("friendAlias")
         assertThat(result.createdAt).isEqualTo(testTime)
     }
 

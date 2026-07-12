@@ -2,6 +2,7 @@ package com.kdongsu5509.friends.controller
 
 import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.friends.controller.dto.*
+import com.kdongsu5509.friends.domain.FriendRequestViewType
 import com.kdongsu5509.friends.service.FriendRequestService
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.SliceResponse

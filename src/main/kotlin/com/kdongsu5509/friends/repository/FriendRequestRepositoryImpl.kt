@@ -22,7 +22,7 @@ class FriendRequestRepositoryImpl(
         val requesterRef = entityManager.getReference(UserJpaEntity::class.java, friendRequest.requesterId())
         val receiverRef = entityManager.getReference(UserJpaEntity::class.java, friendRequest.receiverId())
 
-        val entity = FriendRequestJpaEntity(requesterRef, receiverRef, friendRequest.message)
+        val entity = FriendRequestJpaEntity(requesterRef, receiverRef, friendRequest.message.value)
         val result = springDataFriendRequestRepository.save(entity)
 
         return friendRequestMapper.toDomain(result)

@@ -6,18 +6,16 @@ import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.within
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.*
 
 class FriendRestrictionJpaEntityTest {
 
     @Test
-    @DisplayName("거절(REJECT) 타입의 제한을 생성하면 만료일이 30일 뒤로 자동 설정된다")
-    fun createFromRejection_setsExpiredAtTo30Days() {
+    @DisplayName("expiredAt을 넘겨서 생성하면 계산 없이 그 값을 그대로 저장한다")
+    fun create_storesGivenExpiredAtAsIs() {
         // given
         val actor = UserJpaEntity(
             email = "actor@test.com",
@@ -37,15 +35,14 @@ class FriendRestrictionJpaEntityTest {
         )
         target.id = UUID.randomUUID()
 
+        val givenExpiredAt = LocalDateTime.now().plusDays(30)
+
         // when
-        val restriction = FriendRestrictionJpaEntity.createRejectionType(actor, target)
+        val restriction = FriendRestrictionJpaEntity.create(actor, target, FriendRestrictionType.REJECT, givenExpiredAt)
 
         // then
         assertThat(restriction.type).isEqualTo(FriendRestrictionType.REJECT)
-        assertThat(restriction.expiredAt).isNotNull()
-
-        val expectedExpiration = LocalDateTime.now().plusDays(30)
-        assertThat(restriction.expiredAt).isCloseTo(expectedExpiration, within(1, ChronoUnit.MINUTES))
+        assertThat(restriction.expiredAt).isEqualTo(givenExpiredAt)
     }
 
     @Test

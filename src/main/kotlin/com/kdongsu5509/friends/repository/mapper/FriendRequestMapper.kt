@@ -23,6 +23,6 @@ class FriendRequestMapper(
         FriendRequestJpaEntity(
             requester = userMapper.toEntity(domain.requester),
             receiver = userMapper.toEntity(domain.receiver),
-            message = domain.message
+            message = domain.message.value
         )
 }

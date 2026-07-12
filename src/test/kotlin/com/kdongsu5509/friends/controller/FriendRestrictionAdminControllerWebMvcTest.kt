@@ -7,7 +7,7 @@ import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
-import com.kdongsu5509.friends.service.FriendRestrictionService
+import com.kdongsu5509.friends.service.FriendRestrictionAdminService
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import com.kdongsu5509.support.logger.AccessLogPrinter
 import com.kdongsu5509.user.domain.User
@@ -45,7 +45,7 @@ class FriendRestrictionAdminControllerWebMvcTest {
     private lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    private lateinit var friendRestrictionService: FriendRestrictionService
+    private lateinit var friendRestrictionAdminService: FriendRestrictionAdminService
 
     @MockitoBean
     private lateinit var accessLogPrinter: AccessLogPrinter
@@ -103,7 +103,7 @@ class FriendRestrictionAdminControllerWebMvcTest {
         )
         val slice = SliceImpl(listOf(restriction), PageRequest.of(0, 10), false)
 
-        given(friendRestrictionService.findAll(any())).willReturn(slice)
+        given(friendRestrictionAdminService.findAll(any())).willReturn(slice)
 
         mockMvc.perform(
             get(BASE_PATH)

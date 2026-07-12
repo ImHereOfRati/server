@@ -68,7 +68,7 @@ class FriendRequestAdminControllerIntegrationTest : WebIntegrationTestSupport() 
         val (requester, _) = createUserAndToken("req-admin-list@example.com", "req-admin-list")
         val (receiver, _) = createUserAndToken("rec-admin-list@example.com", "rec-admin-list")
         val (_, adminToken) = createAdminUserAndToken("friend-request-admin@example.com", "friend-request-admin")
-        friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "관리자 조회용 요청입니다"))
+        friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "관리자 조회용 요청입니다"))
 
         mockMvc.perform(
             get("/api/admin/friend-requests")
@@ -116,7 +116,7 @@ class FriendRequestAdminControllerIntegrationTest : WebIntegrationTestSupport() 
         val (requester, _) = createUserAndToken("req-delete-admin@example.com", "req-delete-admin")
         val (receiver, _) = createUserAndToken("rec-delete-admin@example.com", "rec-delete-admin")
         val (_, adminToken) = createAdminUserAndToken("friend-request-delete-admin@example.com", "friend-request-delete-admin")
-        val request = friendRequestRepository.save(FriendRequest.createWithNullId(requester, receiver, "관리자 삭제"))
+        val request = friendRequestRepository.save(FriendRequest.newRequest(requester, receiver, "관리자 삭제"))
 
         mockMvc.perform(
             delete("/api/admin/friend-requests/{id}", request.id)

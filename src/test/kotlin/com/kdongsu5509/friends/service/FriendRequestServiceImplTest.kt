@@ -2,7 +2,7 @@ package com.kdongsu5509.friends.service
 
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.friends.controller.dto.FriendRequestViewType
+import com.kdongsu5509.friends.domain.FriendRequestViewType
 import com.kdongsu5509.friends.domain.FriendRequest
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
@@ -202,25 +202,6 @@ class FriendRequestServiceImplTest {
             assertThrows<ImHereBaseException> {
                 friendRequestServiceImpl.request(requesterEmail, receiverId, "안녕")
             }
-        }
-    }
-
-    @Nested
-    @DisplayName("findAll 메서드는")
-    inner class FindAllTest {
-        @Test
-        @DisplayName("전체 친구 요청 슬라이스를 반환한다")
-        fun success() {
-            val pageable = PageRequest.of(0, 10)
-            val friendRequest = createTestFriendRequest()
-            val slice = PageImpl(listOf(friendRequest), pageable, 1L)
-
-            `when`(friendRequestRepository.findAll(pageable)).thenReturn(slice)
-
-            val result = friendRequestServiceImpl.findAll(pageable)
-
-            assertThat(result.content).hasSize(1)
-            assertThat(result.content[0]).isEqualTo(friendRequest)
         }
     }
 
@@ -429,18 +410,6 @@ class FriendRequestServiceImplTest {
             assertThrows<ImHereBaseException> {
                 friendRequestServiceImpl.rejectRequest("rec@test.com", id)
             }
-        }
-    }
-
-    @Nested
-    @DisplayName("deleteById 메서드는")
-    inner class DeleteByIdTest {
-        @Test
-        @DisplayName("ID로 친구 요청을 삭제한다")
-        fun success() {
-            val id = UUID.randomUUID()
-            friendRequestServiceImpl.deleteById(id)
-            verify(friendRequestRepository).deleteById(id)
         }
     }
 

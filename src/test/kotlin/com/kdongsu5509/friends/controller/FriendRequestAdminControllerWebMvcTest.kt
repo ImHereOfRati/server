@@ -6,7 +6,7 @@ import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.friends.domain.FriendRequest
-import com.kdongsu5509.friends.service.FriendRequestService
+import com.kdongsu5509.friends.service.FriendRequestAdminService
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import com.kdongsu5509.support.logger.AccessLogPrinter
 import com.kdongsu5509.user.domain.User
@@ -44,7 +44,7 @@ class FriendRequestAdminControllerWebMvcTest {
     private lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    private lateinit var friendRequestService: FriendRequestService
+    private lateinit var friendRequestAdminService: FriendRequestAdminService
 
     @MockitoBean
     private lateinit var accessLogPrinter: AccessLogPrinter
@@ -102,7 +102,7 @@ class FriendRequestAdminControllerWebMvcTest {
         )
         val slice = SliceImpl(listOf(friendRequest), PageRequest.of(0, 10), false)
 
-        given(friendRequestService.findAll(any())).willReturn(slice)
+        given(friendRequestAdminService.findAll(any())).willReturn(slice)
 
         mockMvc.perform(
             get(BASE_PATH)

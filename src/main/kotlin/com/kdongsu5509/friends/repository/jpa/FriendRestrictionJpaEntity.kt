@@ -32,31 +32,15 @@ class FriendRestrictionJpaEntity(
     var id: UUID? = null
 
     companion object {
-        fun createRejectionType(
-            actor: UserJpaEntity,
-            target: UserJpaEntity
-        ): FriendRestrictionJpaEntity {
-            return FriendRestrictionJpaEntity(
-                restrictor = actor,
-                restricted = target,
-                type = FriendRestrictionType.REJECT,
-                expiredAt = LocalDateTime.now().plusDays(30)
-            )
-        }
-
         fun create(
-            actor: UserJpaEntity,
-            target: UserJpaEntity,
-            type: FriendRestrictionType
+            restrictor: UserJpaEntity,
+            restricted: UserJpaEntity,
+            type: FriendRestrictionType,
+            expiredAt: LocalDateTime? = null
         ): FriendRestrictionJpaEntity {
-            val expiredAt = if (type == FriendRestrictionType.REJECT) {
-                LocalDateTime.now().plusDays(30)
-            } else {
-                null
-            }
             return FriendRestrictionJpaEntity(
-                restrictor = actor,
-                restricted = target,
+                restrictor = restrictor,
+                restricted = restricted,
                 type = type,
                 expiredAt = expiredAt
             )

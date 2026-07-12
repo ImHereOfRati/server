@@ -17,7 +17,7 @@ data class FriendRequestResponse(
             id = domain.id!!,
             requester = FriendRequestUserResponse.from(domain.requester),
             receiver = FriendRequestUserResponse.from(domain.receiver),
-            message = domain.message,
+            message = domain.message.value,
             createdAt = domain.createdAt!!,
             updatedAt = domain.updatedAt!!
         )

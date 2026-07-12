@@ -22,7 +22,12 @@ class FriendRestrictionRepositoryImpl(
     override fun save(friendRestriction: FriendRestriction): FriendRestriction {
         val restrictor = entityManager.getReference(UserJpaEntity::class.java, friendRestriction.restrictor.id!!)
         val restricted = entityManager.getReference(UserJpaEntity::class.java, friendRestriction.restricted.id!!)
-        val entity = FriendRestrictionJpaEntity.create(restrictor, restricted, friendRestriction.type)
+        val entity = FriendRestrictionJpaEntity.create(
+            restrictor,
+            restricted,
+            friendRestriction.type,
+            friendRestriction.expiredAt
+        )
 
         return friendRestrictionMapper.toDomain(springDataFriendRestrictionRepository.save(entity))
     }

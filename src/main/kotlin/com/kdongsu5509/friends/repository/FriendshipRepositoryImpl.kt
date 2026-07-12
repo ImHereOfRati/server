@@ -47,15 +47,15 @@ class FriendshipRepositoryImpl(
             newFriendship.id!!
         )
 
-        friendshipJpaEntity.friendAlias = newFriendship.friendAlias
+        friendshipJpaEntity.friendAlias = newFriendship.friendAlias.value
 
         return friendshipMapper.toDomain(friendshipJpaEntity)
     }
 
     override fun save(friendship: Friendship): Friendship {
-        val owner = entityManager.getReference(UserJpaEntity::class.java, friendship.owner.id!!)
-        val friend = entityManager.getReference(UserJpaEntity::class.java, friendship.friend.id!!)
-        val entity = FriendshipJpaEntity.create(owner, friend, friendship.friendAlias)
+        val owner = entityManager.getReference(UserJpaEntity::class.java, friendship.ownerId())
+        val friend = entityManager.getReference(UserJpaEntity::class.java, friendship.friendId())
+        val entity = FriendshipJpaEntity.create(owner, friend, friendship.friendAlias.value)
 
         return friendshipMapper.toDomain(springDataFriendshipRepository.save(entity))
     }

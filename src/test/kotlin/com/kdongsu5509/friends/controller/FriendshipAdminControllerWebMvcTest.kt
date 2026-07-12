@@ -6,7 +6,7 @@ import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.friends.domain.Friendship
-import com.kdongsu5509.friends.service.FriendshipService
+import com.kdongsu5509.friends.service.FriendshipAdminService
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import com.kdongsu5509.support.logger.AccessLogPrinter
 import com.kdongsu5509.user.domain.User
@@ -44,7 +44,7 @@ class FriendshipAdminControllerWebMvcTest {
     private lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    private lateinit var friendshipService: FriendshipService
+    private lateinit var friendshipAdminService: FriendshipAdminService
 
     @MockitoBean
     private lateinit var accessLogPrinter: AccessLogPrinter
@@ -95,7 +95,7 @@ class FriendshipAdminControllerWebMvcTest {
         val friendship = Friendship(UUID.randomUUID(), owner, friend, "베프", LocalDateTime.now(), LocalDateTime.now())
         val slice = SliceImpl(listOf(friendship), PageRequest.of(0, 10), false)
 
-        given(friendshipService.findAll(any())).willReturn(slice)
+        given(friendshipAdminService.findAll(any())).willReturn(slice)
 
         mockMvc.perform(
             get(BASE_PATH)

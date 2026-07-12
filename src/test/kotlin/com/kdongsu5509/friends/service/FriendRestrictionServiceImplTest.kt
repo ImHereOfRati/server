@@ -10,7 +10,9 @@ import com.kdongsu5509.friends.repository.FriendshipRepository
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.repository.UserRepository
+import com.kdongsu5509.user.exception.UserException
+import com.kdongsu5509.user.service.UserService
+import com.kdongsu5509.user.service.dto.UserResult
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -35,7 +37,7 @@ class FriendRestrictionServiceImplTest {
     lateinit var friendRestrictionRepository: FriendRestrictionRepository
 
     @Mock
-    lateinit var userRepository: UserRepository
+    lateinit var userService: UserService
 
     @Mock
     lateinit var friendshipRepository: FriendshipRepository
@@ -54,6 +56,17 @@ class FriendRestrictionServiceImplTest {
         oauthProvider = OAuth2Provider.KAKAO,
         status = UserStatus.ACTIVE
     )
+
+    private fun toResult(user: User): UserResult = UserResult(
+        id = user.id!!,
+        email = user.email,
+        nickname = user.nickname,
+        role = user.role,
+        oauthProvider = user.oauthProvider,
+        status = user.status
+    )
+
+    private fun userNotFound(): ImHereBaseException = ImHereBaseException(UserException.USER_NOT_FOUND)
 
     private fun createTestRestriction(
         id: UUID = UUID.randomUUID(),
@@ -85,37 +98,6 @@ class FriendRestrictionServiceImplTest {
 
             assertThat(result.content).hasSize(1)
             assertThat(result.content[0]).isEqualTo(restriction)
-        }
-    }
-
-    @Nested
-    @DisplayName("findAll 메서드는")
-    inner class FindAllTest {
-        @Test
-        @DisplayName("전체 차단 목록 슬라이스를 반환한다")
-        fun success() {
-            val pageable = PageRequest.of(0, 10)
-            val restriction = createTestRestriction()
-            val slice = PageImpl(listOf(restriction), pageable, 1L)
-
-            `when`(friendRestrictionRepository.findAll(pageable)).thenReturn(slice)
-
-            val result = friendRestrictionServiceImpl.findAll(pageable)
-
-            assertThat(result.content).hasSize(1)
-            assertThat(result.content[0]).isEqualTo(restriction)
-        }
-    }
-
-    @Nested
-    @DisplayName("deleteById 메서드는")
-    inner class DeleteByIdTest {
-        @Test
-        @DisplayName("ID로 차단 관계를 삭제한다")
-        fun success() {
-            val id = UUID.randomUUID()
-            friendRestrictionServiceImpl.deleteById(id)
-            verify(friendRestrictionRepository).deleteById(id)
         }
     }
 
@@ -192,8 +174,8 @@ class FriendRestrictionServiceImplTest {
             val restricted = createTestUser(id = restrictedId)
             val restriction = createTestRestriction(restrictor = restrictor, restricted = restricted)
 
-            `when`(userRepository.findByEmail(restrictorEmail)).thenReturn(restrictor)
-            `when`(userRepository.findById(restrictedId)).thenReturn(restricted)
+            `when`(userService.findByEmail(restrictorEmail)).thenReturn(toResult(restrictor))
+            `when`(userService.findById(restrictedId)).thenReturn(toResult(restricted))
             `when`(friendRestrictionRepository.save(any())).thenReturn(restriction)
 
             val result = friendRestrictionServiceImpl.restrictUser(restrictorEmail, restrictedId)
@@ -207,7 +189,7 @@ class FriendRestrictionServiceImplTest {
         @Test
         @DisplayName("차단하는 사용자를 찾을 수 없으면 예외를 발생시킨다")
         fun restrictorNotFound() {
-            `when`(userRepository.findByEmail("test@test.com")).thenReturn(null)
+            `when`(userService.findByEmail("test@test.com")).thenThrow(userNotFound())
 
             assertThrows<ImHereBaseException> {
                 friendRestrictionServiceImpl.restrictUser("test@test.com", UUID.randomUUID())
@@ -218,8 +200,8 @@ class FriendRestrictionServiceImplTest {
         @DisplayName("차단 당할 사용자를 찾을 수 없으면 예외를 발생시킨다")
         fun restrictedNotFound() {
             val restrictor = createTestUser()
-            `when`(userRepository.findByEmail("test@test.com")).thenReturn(restrictor)
-            `when`(userRepository.findById(any())).thenReturn(null)
+            `when`(userService.findByEmail("test@test.com")).thenReturn(toResult(restrictor))
+            `when`(userService.findById(any())).thenThrow(userNotFound())
 
             assertThrows<ImHereBaseException> {
                 friendRestrictionServiceImpl.restrictUser("test@test.com", UUID.randomUUID())
@@ -238,7 +220,7 @@ class FriendRestrictionServiceImplTest {
             val targetEmail = "target@test.com"
             val targetUser = createTestUser(id = targetId, email = targetEmail)
 
-            `when`(userRepository.findById(targetId)).thenReturn(targetUser)
+            `when`(userService.findById(targetId)).thenReturn(toResult(targetUser))
             `when`(friendRestrictionRepository.existsRestriction(restrictorEmail, targetEmail)).thenReturn(true)
 
             val result = friendRestrictionServiceImpl.existRestricted(restrictorEmail, targetId)
@@ -254,7 +236,7 @@ class FriendRestrictionServiceImplTest {
             val targetEmail = "target@test.com"
             val targetUser = createTestUser(id = targetId, email = targetEmail)
 
-            `when`(userRepository.findById(targetId)).thenReturn(targetUser)
+            `when`(userService.findById(targetId)).thenReturn(toResult(targetUser))
             `when`(friendRestrictionRepository.existsRestriction(restrictorEmail, targetEmail)).thenReturn(false)
 
             val result = friendRestrictionServiceImpl.existRestricted(restrictorEmail, targetId)
@@ -266,7 +248,7 @@ class FriendRestrictionServiceImplTest {
         @DisplayName("대상이 존재하지 않으면 false를 반환한다")
         fun targetNotFound() {
             val targetId = UUID.randomUUID()
-            `when`(userRepository.findById(targetId)).thenReturn(null)
+            `when`(userService.findById(targetId)).thenThrow(userNotFound())
 
             val result = friendRestrictionServiceImpl.existRestricted("test@test.com", targetId)
 

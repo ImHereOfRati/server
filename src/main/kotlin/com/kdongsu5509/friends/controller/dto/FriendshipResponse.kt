@@ -17,7 +17,7 @@ data class FriendshipResponse(
             id = domain.id,
             owner = FriendRequestUserResponse.from(domain.owner),
             friend = FriendRequestUserResponse.from(domain.friend),
-            friendAlias = domain.friendAlias,
+            friendAlias = domain.friendAlias.value,
             createdAt = domain.createdAt,
             updatedAt = domain.updatedAt
         )

@@ -1,6 +1,6 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.friends.service.FriendRestrictionService
+import com.kdongsu5509.friends.service.FriendRestrictionAdminService
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -15,7 +15,7 @@ import java.util.UUID
 @Controller
 @RequestMapping("/admin/friend-restrictions")
 class FriendRestrictionAdminPageController(
-    private val friendRestrictionService: FriendRestrictionService
+    private val friendRestrictionAdminService: FriendRestrictionAdminService
 ) {
     @GetMapping
     fun page(
@@ -23,7 +23,7 @@ class FriendRestrictionAdminPageController(
         @RequestParam(defaultValue = "20") size: Int,
         model: Model
     ): String {
-        val result = friendRestrictionService.findAll(PageRequest.of(page, size))
+        val result = friendRestrictionAdminService.findAll(PageRequest.of(page, size))
         model.addAttribute("restrictions", result.content)
         model.addAttribute("hasNext", result.hasNext())
         return "admin/friend-restrictions"
@@ -34,7 +34,7 @@ class FriendRestrictionAdminPageController(
         @PathVariable id: UUID,
         redirectAttributes: RedirectAttributes
     ): String {
-        friendRestrictionService.deleteById(id)
+        friendRestrictionAdminService.deleteById(id)
         redirectAttributes.addFlashAttribute("message", "차단 정보를 삭제했습니다.")
         return "redirect:/admin/friend-restrictions"
     }

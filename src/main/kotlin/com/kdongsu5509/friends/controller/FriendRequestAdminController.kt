@@ -1,7 +1,7 @@
 package com.kdongsu5509.friends.controller
 
 import com.kdongsu5509.friends.controller.dto.FriendRequestResponse
-import com.kdongsu5509.friends.service.FriendRequestService
+import com.kdongsu5509.friends.service.FriendRequestAdminService
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.SliceResponse
 import com.kdongsu5509.shared.response.toOkResponse
@@ -18,17 +18,17 @@ import java.util.UUID
 @RestController
 @RequestMapping("/api/admin/friend-requests", version = "1")
 class FriendRequestAdminController(
-    private val friendRequestService: FriendRequestService
+    private val friendRequestAdminService: FriendRequestAdminService
 ) {
     @GetMapping
     fun findAll(
         @PageableDefault pageable: Pageable
     ): ResponseEntity<ApiResponse<SliceResponse<FriendRequestResponse>>> {
-        val requests = friendRequestService.findAll(pageable)
+        val requests = friendRequestAdminService.findAll(pageable)
         val sliceResponse = SliceResponse.from(requests.map { FriendRequestResponse.from(it) })
         return sliceResponse.toOkResponse()
     }
 
     @DeleteMapping("/{id}")
-    fun deleteById(@PathVariable id: UUID) = friendRequestService.deleteById(id)
+    fun deleteById(@PathVariable id: UUID) = friendRequestAdminService.deleteById(id)
 }

@@ -1,6 +1,6 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.friends.service.FriendshipService
+import com.kdongsu5509.friends.service.FriendshipAdminService
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -15,7 +15,7 @@ import java.util.UUID
 @Controller
 @RequestMapping("/admin/friendships")
 class FriendshipAdminPageController(
-    private val friendshipService: FriendshipService
+    private val friendshipAdminService: FriendshipAdminService
 ) {
     @GetMapping
     fun page(
@@ -23,7 +23,7 @@ class FriendshipAdminPageController(
         @RequestParam(defaultValue = "20") size: Int,
         model: Model
     ): String {
-        val result = friendshipService.findAll(PageRequest.of(page, size))
+        val result = friendshipAdminService.findAll(PageRequest.of(page, size))
         model.addAttribute("friendships", result.content)
         model.addAttribute("hasNext", result.hasNext())
         return "admin/friendships"
@@ -34,7 +34,7 @@ class FriendshipAdminPageController(
         @PathVariable id: UUID,
         redirectAttributes: RedirectAttributes
     ): String {
-        friendshipService.deleteById(id)
+        friendshipAdminService.deleteById(id)
         redirectAttributes.addFlashAttribute("message", "친구 관계를 삭제했습니다.")
         return "redirect:/admin/friendships"
     }

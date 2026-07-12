@@ -7,8 +7,6 @@ import java.util.*
 
 interface FriendRestrictionService {
     fun findAllByRestrictorEmail(email: String, pageable: Pageable): Slice<FriendRestriction>
-    fun findAll(pageable: Pageable): Slice<FriendRestriction>
-    fun deleteById(id: UUID)
     fun deleteByIdAndRestrictorEmail(id: UUID, restrictorEmail: String)
     fun unblockByRestrictorEmailAndRestrictedId(restrictorEmail: String, restrictedId: UUID)
     fun restrictUser(restrictorEmail: String, targetUserId: UUID): FriendRestriction

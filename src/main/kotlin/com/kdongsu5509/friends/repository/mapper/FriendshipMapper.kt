@@ -23,6 +23,6 @@ class FriendshipMapper(
         FriendshipJpaEntity(
             ownerUser = userMapper.toEntity(domain.owner),
             friendUser = userMapper.toEntity(domain.friend),
-            friendAlias = domain.friendAlias
+            friendAlias = domain.friendAlias.value
         )
 }

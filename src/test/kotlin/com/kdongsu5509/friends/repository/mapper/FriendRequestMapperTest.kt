@@ -85,7 +85,7 @@ class FriendRequestMapperTest {
         assertThat(domain.id).isEqualTo(id)
         assertThat(domain.requester).isEqualTo(requesterDomain)
         assertThat(domain.receiver).isEqualTo(receiverDomain)
-        assertThat(domain.message).isEqualTo("안녕")
+        assertThat(domain.message.value).isEqualTo("안녕")
         assertThat(domain.createdAt).isEqualTo(now)
         assertThat(domain.updatedAt).isEqualTo(now)
     }

@@ -5,9 +5,9 @@ import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
-import com.kdongsu5509.friends.controller.dto.FriendRequestViewType
 import com.kdongsu5509.friends.controller.dto.NewFriendRequest
 import com.kdongsu5509.friends.domain.FriendRequest
+import com.kdongsu5509.friends.domain.FriendRequestViewType
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.friends.domain.Friendship

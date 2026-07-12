@@ -1,7 +1,6 @@
 package com.kdongsu5509.friends.repository.mapper
 
 import com.kdongsu5509.friends.domain.FriendRestriction
-import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.friends.repository.jpa.FriendRestrictionJpaEntity
 import com.kdongsu5509.user.repository.UserMapper
 import org.springframework.stereotype.Component
@@ -21,13 +20,10 @@ class FriendRestrictionMapper(
         expiredAt = entity.expiredAt
     )
 
-    fun toEntity(domain: FriendRestriction) =
-        if (domain.type == FriendRestrictionType.REJECT) FriendRestrictionJpaEntity.createRejectionType(
-            actor = userMapper.toEntity(domain.restrictor),
-            target = userMapper.toEntity(domain.restricted)
-        ) else FriendRestrictionJpaEntity.create(
-            actor = userMapper.toEntity(domain.restrictor),
-            target = userMapper.toEntity(domain.restricted),
-            type = domain.type
-        )
+    fun toEntity(domain: FriendRestriction) = FriendRestrictionJpaEntity.create(
+        restrictor = userMapper.toEntity(domain.restrictor),
+        restricted = userMapper.toEntity(domain.restricted),
+        type = domain.type,
+        expiredAt = domain.expiredAt
+    )
 }

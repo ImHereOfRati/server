@@ -10,16 +10,25 @@ data class FriendRequest(
     val id: UUID? = null,
     val requester: User,
     val receiver: User,
-    val message: String,
+    val message: RequestMessage,
     val createdAt: LocalDateTime? = null,
     val updatedAt: LocalDateTime? = null
 ) {
+    constructor(
+        id: UUID? = null,
+        requester: User,
+        receiver: User,
+        message: String,
+        createdAt: LocalDateTime? = null,
+        updatedAt: LocalDateTime? = null
+    ) : this(id, requester, receiver, RequestMessage(message), createdAt, updatedAt)
+
     init {
         if (requester.id == receiver.id) FriendException.SELF_FRIENDSHIP.throwIt()
     }
 
     companion object {
-        fun createWithNullId(requester: User, receiver: User, message: String): FriendRequest = FriendRequest(
+        fun newRequest(requester: User, receiver: User, message: String): FriendRequest = FriendRequest(
             requester = requester,
             receiver = receiver,
             message = message
@@ -29,4 +38,24 @@ data class FriendRequest(
     fun requesterId() = requester.id
     fun receiverId() = receiver.id
     fun receiverEmail() = receiver.email
+
+    fun isReceivedBy(email: String) = receiver.email == email
+    fun isRequestedBy(email: String) = requester.email == email
+    fun involves(email: String) = isReceivedBy(email) || isRequestedBy(email)
+
+    fun accept(): Pair<Friendship, Friendship> {
+        val requesterFriendship = Friendship(
+            owner = requester,
+            friend = receiver,
+            friendAlias = FriendAlias.fromNickname(receiver.nickname)
+        )
+        val receiverFriendship = Friendship(
+            owner = receiver,
+            friend = requester,
+            friendAlias = FriendAlias.fromNickname(requester.nickname)
+        )
+        return requesterFriendship to receiverFriendship
+    }
+
+    fun reject(): FriendRestriction = FriendRestriction.reject(restrictor = receiver, restricted = requester)
 }

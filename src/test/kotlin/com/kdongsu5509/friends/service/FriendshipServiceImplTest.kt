@@ -80,25 +80,6 @@ class FriendshipServiceImplTest {
     }
 
     @Nested
-    @DisplayName("findAll 메서드는")
-    inner class FindAllTest {
-        @Test
-        @DisplayName("모든 친구 관계 슬라이스를 반환한다")
-        fun success() {
-            val pageable = PageRequest.of(0, 10)
-            val friendship = createTestFriendship()
-            val slice = PageImpl(listOf(friendship), pageable, 1L)
-
-            `when`(friendshipRepository.findAll(pageable)).thenReturn(slice)
-
-            val result = friendshipServiceImpl.findAll(pageable)
-
-            assertThat(result.content).hasSize(1)
-            assertThat(result.content[0]).isEqualTo(friendship)
-        }
-    }
-
-    @Nested
     @DisplayName("findByOwnerEmailAndFriendId 메서드는")
     inner class FindByOwnerEmailAndFriendIdTest {
         @Test
@@ -178,38 +159,6 @@ class FriendshipServiceImplTest {
             val result = friendshipServiceImpl.updateAliasByIdAndOwnerEmail(id, email, "newAlias")
 
             assertThat(result).isEqualTo(updatedFriendship)
-        }
-    }
-
-    @Nested
-    @DisplayName("deleteById 메서드는")
-    inner class DeleteByIdTest {
-        @Test
-        @DisplayName("존재하는 ID에 대해 친구 관계를 삭제한다")
-        fun success() {
-            val id = UUID.randomUUID()
-            val ownerId = UUID.randomUUID()
-            val friendId = UUID.randomUUID()
-            val owner = createTestUser(id = ownerId)
-            val friend = createTestUser(id = friendId)
-            val friendship = createTestFriendship(id = id, owner = owner, friend = friend)
-
-            `when`(friendshipRepository.findById(id)).thenReturn(friendship)
-
-            friendshipServiceImpl.deleteById(id)
-
-            verify(friendshipRepository).delete(ownerId, friendId)
-        }
-
-        @Test
-        @DisplayName("존재하지 않는 ID면 예외를 발생시킨다")
-        fun notFound() {
-            val id = UUID.randomUUID()
-            `when`(friendshipRepository.findById(id)).thenReturn(null)
-
-            assertThrows<ImHereBaseException> {
-                friendshipServiceImpl.deleteById(id)
-            }
         }
     }
 

@@ -2,14 +2,12 @@ package com.kdongsu5509.friends.service
 
 import com.kdongsu5509.friends.FriendException
 import com.kdongsu5509.friends.domain.FriendRestriction
-import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.friends.domain.Friendship
 import com.kdongsu5509.friends.repository.FriendRestrictionRepository
 import com.kdongsu5509.friends.repository.FriendshipRepository
 import com.kdongsu5509.support.exception.throwIt
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -25,11 +23,6 @@ class FriendshipServiceImpl(
         return friendshipRepository.findByOwnerEmail(ownerEmail, pageable)
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    override fun findAll(pageable: Pageable): Slice<Friendship> {
-        return friendshipRepository.findAll(pageable)
-    }
-
     override fun findByOwnerEmailAndFriendId(ownerEmail: String, friendId: UUID): Friendship? {
         return friendshipRepository.findByOwnerEmailAndFriendId(ownerEmail, friendId)
     }
@@ -37,7 +30,7 @@ class FriendshipServiceImpl(
     override fun findByIdAndOwnerEmail(id: UUID, ownerEmail: String): Friendship {
         val friendship = friendshipRepository.findById(id)
             ?: FriendException.FRIEND_RELATIONSHIP_NOT_FOUND.throwIt()
-        if (friendship.owner.email != ownerEmail) {
+        if (!friendship.isOwnedBy(ownerEmail)) {
             FriendException.FRIEND_RELATIONSHIP_OWNER_MISS_MATCH.throwIt()
         }
 
@@ -50,19 +43,10 @@ class FriendshipServiceImpl(
         return friendshipRepository.updateAlias(found.updateFriendAlias(alias))
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
-    override fun deleteById(id: UUID) {
-        val friendship = friendshipRepository.findById(id)
-            ?: FriendException.FRIEND_RELATIONSHIP_NOT_FOUND.throwIt()
-
-        friendshipRepository.delete(friendship.owner.id!!, friendship.friend.id!!)
-    }
-
     @Transactional
     override fun deleteByIdAndOwnerEmail(id: UUID, ownerEmail: String) {
         val friendship = findByIdAndOwnerEmail(id, ownerEmail)
-        friendshipRepository.delete(friendship.owner.id!!, friendship.friend.id!!)
+        friendshipRepository.delete(friendship.ownerId(), friendship.friendId())
     }
 
     @Transactional
@@ -70,12 +54,11 @@ class FriendshipServiceImpl(
         val friendship = findByIdAndOwnerEmail(id, ownerEmail)
 
         friendRestrictionRepository.save(
-            FriendRestriction(
+            FriendRestriction.block(
                 restrictor = friendship.owner,
-                restricted = friendship.friend,
-                type = FriendRestrictionType.BLOCK
+                restricted = friendship.friend
             )
         )
-        friendshipRepository.delete(friendship.owner.id!!, friendship.friend.id!!)
+        friendshipRepository.delete(friendship.ownerId(), friendship.friendId())
     }
 }

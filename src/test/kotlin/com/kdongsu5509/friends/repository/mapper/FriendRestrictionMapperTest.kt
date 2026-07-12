@@ -65,8 +65,8 @@ class FriendRestrictionMapperTest {
         `when`(userMapper.toDomain(restrictedEntity)).thenReturn(restrictedDomain)
 
         val entity = FriendRestrictionJpaEntity.create(
-            actor = restrictorEntity,
-            target = restrictedEntity,
+            restrictor = restrictorEntity,
+            restricted = restrictedEntity,
             type = FriendRestrictionType.BLOCK
         )
         val id = UUID.randomUUID()
@@ -141,7 +141,7 @@ class FriendRestrictionMapperTest {
     }
 
     @Test
-    @DisplayName("FriendRestriction(REJECT) 도메인 객체를 엔티티로 변환 시 createRejectionType을 통해 14일의 만료 시간을 설정한다")
+    @DisplayName("FriendRestriction(REJECT) 도메인 객체를 엔티티로 변환 시 도메인이 계산한 만료일을 그대로 전달한다")
     fun toEntity_reject_success() {
         // given
         val restrictorDomain = User(
@@ -171,29 +171,16 @@ class FriendRestrictionMapperTest {
         `when`(userMapper.toEntity(restrictorDomain)).thenReturn(restrictorEntity)
         `when`(userMapper.toEntity(restrictedDomain)).thenReturn(restrictedEntity)
 
-        val domain = FriendRestriction(
-            id = UUID.randomUUID(),
-            restrictor = restrictorDomain,
-            restricted = restrictedDomain,
-            type = FriendRestrictionType.REJECT,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now(),
-            expiredAt = LocalDateTime.now()
-        )
-
-        val before = LocalDateTime.now()
+        // 도메인 팩토리가 만료일(30일 뒤)을 이미 계산해서 갖고 있는 상태
+        val domain = FriendRestriction.reject(restrictorDomain, restrictedDomain)
 
         // when
         val entity = mapper.toEntity(domain)
-
-        val after = LocalDateTime.now()
 
         // then
         assertThat(entity.restrictor).isEqualTo(restrictorEntity)
         assertThat(entity.restricted).isEqualTo(restrictedEntity)
         assertThat(entity.type).isEqualTo(FriendRestrictionType.REJECT)
-        // 거절의 경우 만료일자가 30일 이후로 자동 지정됨
-        assertThat(entity.expiredAt).isAfterOrEqualTo(before.plusDays(30))
-        assertThat(entity.expiredAt).isBeforeOrEqualTo(after.plusDays(30))
+        assertThat(entity.expiredAt).isEqualTo(domain.expiredAt)
     }
 }

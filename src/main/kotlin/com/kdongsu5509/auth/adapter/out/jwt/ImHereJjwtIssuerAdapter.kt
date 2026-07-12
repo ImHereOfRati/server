@@ -2,6 +2,7 @@ package com.kdongsu5509.auth.adapter.out.jwt
 
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
+import com.kdongsu5509.auth.domain.RoleAuthority
 import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -41,7 +42,7 @@ class ImHereJjwtIssuerAdapter(
             .claim(JwtClaimKeys.CLAIM_USER_ID, claims.uid.toString())
             .claim(JwtClaimKeys.CLAIM_EMAIL, claims.email)
             .claim(JwtClaimKeys.CLAIM_NICKNAME, claims.nickname)
-            .claim(JwtClaimKeys.CLAIM_ROLE, "ROLE_${claims.role}")
+            .claim(JwtClaimKeys.CLAIM_ROLE, RoleAuthority.toAuthority(claims.role))
             .claim(JwtClaimKeys.CLAIM_STATUS, claims.status)
             .claim(JwtClaimKeys.CLAIM_REFRESH_TOKEN_VERSION, claims.refreshTokenVersion)
             .issuedAt(Date.from(Instant.now()))

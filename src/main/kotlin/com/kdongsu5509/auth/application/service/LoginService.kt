@@ -7,9 +7,9 @@ import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
+import com.kdongsu5509.auth.domain.LoginEligibilityPolicy
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -26,14 +26,10 @@ class LoginService(
         val userInformation = verifyOIDCToken(provider, idToken, nonce)
         val user = userRepository.findByEmail(userInformation.email) ?: AuthException.USER_NOT_REGISTER.throwIt()
 
-        when (user.status) {
-            UserStatus.BLOCKED -> AuthException.USER_DISABLED.throwIt()
-            UserStatus.WITHDRAWN -> AuthException.USER_WITHDRAWN.throwIt()
-            UserStatus.PENDING, UserStatus.ACTIVE -> {
-                val newUserClaims = JwtTokenClaims.fromUser(user)
-                return tokenProviderPort.issue(newUserClaims)
-            }
-        }
+        LoginEligibilityPolicy.assertLoginable(user.status)
+
+        val newUserClaims = JwtTokenClaims.fromUser(user)
+        return tokenProviderPort.issue(newUserClaims)
     }
 
     private fun verifyOIDCToken(provider: OAuth2Provider, idToken: String, nonce: String?): OIDCUserInfo {

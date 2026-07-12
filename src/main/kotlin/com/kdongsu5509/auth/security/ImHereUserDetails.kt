@@ -1,5 +1,6 @@
 package com.kdongsu5509.auth.security
 
+import com.kdongsu5509.auth.domain.RoleAuthority
 import com.kdongsu5509.user.domain.UserStatus
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -12,7 +13,7 @@ data class ImHereUserDetails(
     val status: String
 ) : UserDetails {
     override fun getAuthorities(): Collection<GrantedAuthority> {
-        val authorities = mutableListOf(SimpleGrantedAuthority("ROLE_$role"))
+        val authorities = mutableListOf(SimpleGrantedAuthority(RoleAuthority.toAuthority(role)))
         return authorities
     }
 

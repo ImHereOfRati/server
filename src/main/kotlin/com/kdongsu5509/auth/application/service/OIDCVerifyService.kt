@@ -1,9 +1,9 @@
 package com.kdongsu5509.auth.application.service
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.auth.adapter.out.oauth.OIDCProperties
 import com.kdongsu5509.auth.application.port.out.OIDCIdTokenVerifyPort
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
+import com.kdongsu5509.auth.application.port.out.OidcProviderConfigPort
 import com.kdongsu5509.auth.application.port.out.PublicKeyLoadPort
 import com.kdongsu5509.auth.application.service.dto.OIDCDecodePayload
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
@@ -17,11 +17,11 @@ import org.springframework.transaction.annotation.Transactional
 class OIDCVerifyService(
     private val oidcIdTokenVerifyPort: OIDCIdTokenVerifyPort,
     private val publicKeyLoadPort: PublicKeyLoadPort,
-    private val oidcProperties: OIDCProperties,
+    private val providerConfigPort: OidcProviderConfigPort,
 ) : OIDCVerifyPort {
 
     override fun verify(provider: OAuth2Provider, idToken: String, nonce: String?): OIDCUserInfo {
-        val providerProperties = oidcProperties.get(provider)
+        val providerProperties = providerConfigPort.get(provider)
         val kid = oidcIdTokenVerifyPort.getKid(idToken)
         val publicKey = publicKeyLoadPort.findByKeyId(provider, kid)
 

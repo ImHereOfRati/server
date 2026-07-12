@@ -3,6 +3,7 @@ package com.kdongsu5509.auth.adapter.out.jwt
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
+import com.kdongsu5509.auth.domain.RoleAuthority
 import com.kdongsu5509.support.exception.throwIt
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
@@ -26,7 +27,7 @@ class ImHereJjwtParserAdapter(
             uid = UUID.fromString(claims[JwtClaimKeys.CLAIM_USER_ID] as String),
             email = claims[JwtClaimKeys.CLAIM_EMAIL] as String,
             nickname = claims[JwtClaimKeys.CLAIM_NICKNAME] as String,
-            role = (claims[JwtClaimKeys.CLAIM_ROLE] as String).removePrefix("ROLE_"),
+            role = RoleAuthority.fromAuthority(claims[JwtClaimKeys.CLAIM_ROLE] as String),
             status = claims[JwtClaimKeys.CLAIM_STATUS] as String,
             expiration = LocalDateTime.ofInstant(claims.expiration.toInstant(), zoneID),
             refreshTokenVersion = (claims[JwtClaimKeys.CLAIM_REFRESH_TOKEN_VERSION] as? Number)?.toLong() ?: 0L

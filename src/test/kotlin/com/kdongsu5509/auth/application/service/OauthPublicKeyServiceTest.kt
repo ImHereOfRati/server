@@ -2,13 +2,17 @@ package com.kdongsu5509.auth.application.service
 
 import com.kdongsu5509.auth.adapter.out.oauth.OIDCProperties
 import com.kdongsu5509.auth.application.port.out.OauthClientPort
+import com.kdongsu5509.auth.application.port.out.OidcProviderConfig
+import com.kdongsu5509.auth.application.port.out.OidcProviderConfigPort
 import com.kdongsu5509.auth.domain.OAuth2Provider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.then
 import org.mockito.Mock
+import org.mockito.Mockito.mock
 import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)
@@ -61,5 +65,21 @@ class OauthPublicKeyServiceTest {
         // then
         then(oauthClientPort).should().refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")
         then(oauthClientPort).should().refresh("google-cache", "https://www.googleapis.com/oauth2/v3/certs")
+    }
+
+    @Test
+    @DisplayName("서비스는 구체 설정 클래스가 아닌 OidcProviderConfigPort(모의)에 의존한다")
+    fun fetch_dependsOnConfigPort() {
+        // given
+        val configPort = mock(OidcProviderConfigPort::class.java)
+        given(configPort.get(OAuth2Provider.KAKAO))
+            .willReturn(OidcProviderConfig("iss", "aud", "cache-k", "uri-k"))
+        val service = OauthPublicKeyService(oauthClientPort, configPort)
+
+        // when
+        service.fetch(OAuth2Provider.KAKAO)
+
+        // then
+        then(oauthClientPort).should().refresh("cache-k", "uri-k")
     }
 }

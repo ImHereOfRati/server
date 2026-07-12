@@ -6,6 +6,7 @@ import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
+import com.kdongsu5509.auth.domain.RefreshTokenVersionPolicy
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.stereotype.Component
@@ -30,7 +31,7 @@ class ImHereTokenProviderAdapter(
         val claims = tokenParser.parse(refreshToken)
 
         val user = findUserByEmail(claims.email)
-        if (user.refreshTokenVersion != claims.refreshTokenVersion) AuthException.IMHERE_INVALID_TOKEN.throwIt()
+        RefreshTokenVersionPolicy.assertMatches(user.refreshTokenVersion, claims.refreshTokenVersion)
 
         return issue(claims.copy(refreshTokenVersion = user.refreshTokenVersion))
     }

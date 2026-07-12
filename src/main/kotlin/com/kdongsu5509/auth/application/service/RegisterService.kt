@@ -1,16 +1,14 @@
 package com.kdongsu5509.auth.application.service
 
-import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.`in`.RegisterUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
+import com.kdongsu5509.auth.domain.LoginEligibilityPolicy
 import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.User
-import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -38,12 +36,9 @@ class RegisterService(
     private fun saveNewUser(email: String, nickname: String, sub: String?, provider: OAuth2Provider): User {
         val existingUser = userRepository.findByEmail(email)
 
-        when (existingUser?.status) {
-            UserStatus.BLOCKED -> AuthException.USER_DISABLED.throwIt()
-            UserStatus.WITHDRAWN -> AuthException.USER_WITHDRAWN.throwIt()
-            UserStatus.PENDING, UserStatus.ACTIVE -> {} // Allow re-registration attempt, validation happens below
-            null -> {} // New user, proceed
-        }
+        // 기존 계정이 있으면 로그인 자격 정책으로 재가입 가능 여부를 판정한다.
+        // (신규 계정이면 existingUser == null 이므로 통과, 중복 검증은 아래에서 수행)
+        existingUser?.let { LoginEligibilityPolicy.assertLoginable(it.status) }
 
         val newUser = User.createWithPendingStatus(email, nickname, provider, sub)
         newUser.validateDuplicateEmailAllowed(existingUser != null)

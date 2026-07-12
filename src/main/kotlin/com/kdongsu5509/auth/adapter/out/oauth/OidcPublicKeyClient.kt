@@ -16,6 +16,11 @@ class OidcPublicKeyClient(
 
     companion object {
         private val CACHE_DURATION = Duration.ofDays(8)
+
+        // Kakao JWKS는 전용 API 클라이언트로 조회한다. jwksUri에 provider 정보가
+        // 실려있지 않아 호스트로 식별한다. provider를 명시적으로 넘기려면 OauthClientPort.fetch
+        // 시그니처를 바꿔야 해(경계 제약) 보류 — 우선 호스트 문자열만 상수로 명시한다.
+        private const val KAKAO_JWKS_HOST = "kauth.kakao.com"
     }
 
     override fun fetch(cacheKey: String, jwksUri: String): OIDCPublicKeyResponse? {
@@ -39,7 +44,7 @@ class OidcPublicKeyClient(
     }
 
     private fun fetchRemote(jwksUri: String): OIDCPublicKeyResponse? {
-        if (jwksUri.contains("kauth.kakao.com")) {
+        if (jwksUri.contains(KAKAO_JWKS_HOST)) {
             return runCatching { oidcPublicKeyApiClient.fetchPublicKey() }.getOrNull()
         }
 

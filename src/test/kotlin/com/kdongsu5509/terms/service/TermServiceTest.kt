@@ -1,14 +1,10 @@
 package com.kdongsu5509.terms.service
 
-import com.kdongsu5509.support.exception.ImHereBaseException
-import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.domain.Term
 import com.kdongsu5509.terms.domain.TermTypes
-import com.kdongsu5509.terms.repository.TermPersistenceAdapter
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -22,7 +18,7 @@ import java.time.LocalDateTime
 class TermServiceTest {
 
     @Mock
-    lateinit var termPersistenceAdapter: TermPersistenceAdapter
+    lateinit var termPersistenceAdapter: TermRepository
 
     @InjectMocks
     lateinit var termService: TermService
@@ -40,7 +36,7 @@ class TermServiceTest {
         )
         given(termPersistenceAdapter.findLatestByType(command.type)).willReturn(null)
         given(termPersistenceAdapter.save(any())).willReturn(
-            Term(1L, 1L, command.type, command.title, command.content, command.effectiveDate, command.isRequired)
+            Term.reconstruct(1L, 1L, command.type, command.title, command.content, command.effectiveDate, command.isRequired)
         )
 
         // when
@@ -63,7 +59,7 @@ class TermServiceTest {
             effectiveDate = LocalDateTime.now(),
             isRequired = true
         )
-        val existingTerm = Term(
+        val existingTerm = Term.reconstruct(
             id = 1L,
             version = 1L,
             type = TermTypes.SERVICE,
@@ -74,7 +70,7 @@ class TermServiceTest {
         )
         given(termPersistenceAdapter.findLatestByType(command.type)).willReturn(existingTerm)
         given(termPersistenceAdapter.save(any())).willReturn(
-            Term(2L, 2L, command.type, command.title, command.content, command.effectiveDate, command.isRequired)
+            Term.reconstruct(2L, 2L, command.type, command.title, command.content, command.effectiveDate, command.isRequired)
         )
 
         // when
@@ -91,7 +87,7 @@ class TermServiceTest {
     fun findAll_success() {
         // given
         val terms = listOf(
-            Term(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
+            Term.reconstruct(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
         )
         given(termPersistenceAdapter.findAll()).willReturn(terms)
 
@@ -104,30 +100,19 @@ class TermServiceTest {
     }
 
     @Test
-    @DisplayName("isActive가 true일 때 활성화된 약관만 조회한다")
-    fun findAll_active_true() {
+    @DisplayName("발효 중인 약관만 조회한다")
+    fun findEffectiveTerms_success() {
         // given
         val terms = listOf(
-            Term(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
+            Term.reconstruct(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
         )
         given(termPersistenceAdapter.findActiveAll()).willReturn(terms)
 
         // when
-        val results = termService.findAll(true)
+        val results = termService.findEffectiveTerms()
 
         // then
         assertThat(results).hasSize(1)
         then(termPersistenceAdapter).should().findActiveAll()
-    }
-
-    @Test
-    @DisplayName("isActive가 false일 때 예외가 발생한다")
-    fun findAll_active_false_throws_exception() {
-        // when & then
-        assertThrows<ImHereBaseException> {
-            termService.findAll(false)
-        }.also {
-            assertThat(it.errorCode).isEqualTo(TermException.NON_ACTIVE_TERM_NOT_ALLOWED)
-        }
     }
 }

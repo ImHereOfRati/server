@@ -24,7 +24,7 @@ class UserAgreementService(
     fun consentAll(email: String, multiTermsConsentCommand: MultiTermsConsentCommand): User {
         val consents = multiTermsConsentCommand.consents
 
-        val activeTerms = termService.findAll(isActive = true)
+        val activeTerms = termService.findEffectiveTerms()
         val activeTermIds = activeTerms.map { it.id }.toSet()
 
         if (consents.any { it.id !in activeTermIds }) {
@@ -46,7 +46,7 @@ class UserAgreementService(
 
     @Transactional
     fun consent(email: String, id: Long) {
-        val activeTermIds = termService.findAll(isActive = true).map { it.id }.toSet()
+        val activeTermIds = termService.findEffectiveTerms().map { it.id }.toSet()
         if (id !in activeTermIds) {
             TermException.TERM_NOT_FOUND.throwIt()
         }

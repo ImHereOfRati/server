@@ -68,7 +68,7 @@ class UserAgreementServiceTest {
         val termResult3 = TermResult(3L, 1L, TermTypes.MARKETING, "마케팅 약관", "내용", LocalDateTime.now(), false)
 
         val pendingUser = createPendingUser()
-        `when`(termService.findAll(true)).thenReturn(listOf(termResult1, termResult2, termResult3))
+        `when`(termService.findEffectiveTerms()).thenReturn(listOf(termResult1, termResult2, termResult3))
         `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(pendingUser)
 
         val command = MultiTermsConsentCommand(
@@ -95,7 +95,7 @@ class UserAgreementServiceTest {
         val termResult1 = TermResult(1L, 1L, TermTypes.SERVICE, "서비스 약관", "내용", LocalDateTime.now(), true)
         val termResult2 = TermResult(2L, 1L, TermTypes.PRIVACY, "개인정보 약관", "내용", LocalDateTime.now(), true)
 
-        `when`(termService.findAll(true)).thenReturn(listOf(termResult1, termResult2))
+        `when`(termService.findEffectiveTerms()).thenReturn(listOf(termResult1, termResult2))
 
         val command = MultiTermsConsentCommand(
             consents = listOf(
@@ -117,7 +117,7 @@ class UserAgreementServiceTest {
     fun consentAll_fail_user_not_found() {
         // given
         val termResult1 = TermResult(1L, 1L, TermTypes.SERVICE, "서비스 약관", "내용", LocalDateTime.now(), true)
-        `when`(termService.findAll(true)).thenReturn(listOf(termResult1))
+        `when`(termService.findEffectiveTerms()).thenReturn(listOf(termResult1))
         `when`(userRepository.findByEmail(TEST_EMAIL)).thenReturn(null)
 
         val command = MultiTermsConsentCommand(
@@ -142,7 +142,7 @@ class UserAgreementServiceTest {
         val termResult1 = TermResult(1L, 1L, TermTypes.SERVICE, "서비스 약관", "내용", LocalDateTime.now(), true)
 
         given(userRepository.findByEmail(TEST_EMAIL)).willReturn(pendingUser)
-        given(termService.findAll(true)).willReturn(listOf(termResult1))
+        given(termService.findEffectiveTerms()).willReturn(listOf(termResult1))
 
         // when
         userAgreementService.consent(TEST_EMAIL, 1L)
@@ -156,7 +156,7 @@ class UserAgreementServiceTest {
     fun consent_fail_user_not_found() {
         // given
         val termResult1 = TermResult(1L, 1L, TermTypes.SERVICE, "서비스 약관", "내용", LocalDateTime.now(), true)
-        given(termService.findAll(true)).willReturn(listOf(termResult1))
+        given(termService.findEffectiveTerms()).willReturn(listOf(termResult1))
 
         given(userRepository.findByEmail(TEST_EMAIL)).willReturn(null)
 

@@ -1,8 +1,6 @@
 package com.kdongsu5509.terms.controller
 
-import com.kdongsu5509.support.exception.type.UnprocessableEntityException
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
-import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
 import com.kdongsu5509.terms.service.TermService
@@ -42,7 +40,7 @@ class TermsControllerTest {
         val results = listOf(
             TermResult(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
         )
-        BDDMockito.given(termService.findAll(true)).willReturn(results)
+        BDDMockito.given(termService.findEffectiveTerms()).willReturn(results)
 
         // when & then
         mockMvc.perform(
@@ -56,14 +54,6 @@ class TermsControllerTest {
     @Test
     @DisplayName("isActive 파라미터가 false이면 422 오류를 반환한다")
     fun readAllByActive_fail_when_inactive() {
-        // given
-        BDDMockito.given(termService.findAll(false))
-            .willThrow(
-                UnprocessableEntityException(
-                    message = TermException.NON_ACTIVE_TERM_NOT_ALLOWED.errorMessage
-                )
-            )
-
         // when & then
         mockMvc.perform(
             MockMvcRequestBuilders.get(TERM_CONTROLLER_URL)

@@ -23,5 +23,7 @@ data class TermResponse(
             result.effectiveDate,
             result.isRequired
         )
+
+        fun listFrom(results: List<TermResult>): List<TermResponse> = results.map { from(it) }
     }
 }

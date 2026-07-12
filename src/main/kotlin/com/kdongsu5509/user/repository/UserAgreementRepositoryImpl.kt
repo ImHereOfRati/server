@@ -2,8 +2,8 @@ package com.kdongsu5509.user.repository
 
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.TermException
-import com.kdongsu5509.terms.repository.TermMapper
-import com.kdongsu5509.terms.repository.TermPersistenceAdapter
+import com.kdongsu5509.terms.repository.TermJpaEntity
+import com.kdongsu5509.terms.service.TermRepository
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.jpa.SpringDataUserAgreementRepository
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
@@ -14,8 +14,7 @@ import java.util.*
 @Component
 class UserAgreementRepositoryImpl(
     private val userRepository: SpringDataUserRepository,
-    private val termPersistenceAdapter: TermPersistenceAdapter,
-    private val termMapper: TermMapper,
+    private val termRepository: TermRepository,
     private val userAgreementRepository: SpringDataUserAgreementRepository
 ) : UserAgreementRepository {
 
@@ -23,10 +22,10 @@ class UserAgreementRepositoryImpl(
         val userEntity = userRepository.findById(userId).orElseThrow {
             UserException.USER_NOT_FOUND.throwIt()
         }
-        val term = termPersistenceAdapter.findById(id) ?: TermException.TERM_NOT_FOUND.throwIt()
+        val term = termRepository.findById(id) ?: TermException.TERM_NOT_FOUND.throwIt()
 
         userAgreementRepository.save(
-            UserAgreementJpaEntity(userEntity, termMapper.toEntity(term))
+            UserAgreementJpaEntity(userEntity, TermJpaEntity.from(term))
         )
     }
 
@@ -34,11 +33,11 @@ class UserAgreementRepositoryImpl(
         val userEntity = userRepository.findById(userId).orElseThrow {
             UserException.USER_NOT_FOUND.throwIt()
         }
-        val latestTerms = termPersistenceAdapter.findActiveAll()
+        val latestTerms = termRepository.findActiveAll()
 
         userAgreementRepository.saveAll(
             latestTerms.map {
-                UserAgreementJpaEntity(userEntity, termMapper.toEntity(it))
+                UserAgreementJpaEntity(userEntity, TermJpaEntity.from(it))
             }
         )
     }

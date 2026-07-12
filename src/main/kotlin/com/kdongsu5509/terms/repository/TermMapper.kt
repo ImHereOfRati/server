@@ -9,7 +9,7 @@ class TermMapper {
         if (entity == null) {
             return null
         }
-        return Term(
+        return Term.reconstruct(
             id = entity.id,
             version = entity.version,
             type = entity.type,
@@ -20,15 +20,5 @@ class TermMapper {
         )
     }
 
-    fun toEntity(term: Term): TermJpaEntity {
-        return TermJpaEntity(
-            id = term.id,
-            version = term.version,
-            type = term.type,
-            title = term.title,
-            content = term.content,
-            effectiveDate = term.effectiveDate,
-            isRequired = term.isRequired
-        )
-    }
+    fun toEntity(term: Term): TermJpaEntity = TermJpaEntity.from(term)
 }

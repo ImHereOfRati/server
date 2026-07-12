@@ -1,6 +1,7 @@
 package com.kdongsu5509.terms.repository
 
 import com.kdongsu5509.shared.BaseEntity
+import com.kdongsu5509.terms.domain.Term
 import com.kdongsu5509.terms.domain.TermTypes
 import jakarta.persistence.*
 import java.time.LocalDateTime
@@ -38,4 +39,16 @@ class TermJpaEntity(
 
     @Column(nullable = false)
     var isRequired: Boolean
-) : BaseEntity()
+) : BaseEntity() {
+    companion object {
+        fun from(term: Term): TermJpaEntity = TermJpaEntity(
+            id = term.id,
+            version = term.version.value,
+            type = term.type,
+            title = term.title,
+            content = term.content,
+            effectiveDate = term.effectiveDate,
+            isRequired = term.isRequired,
+        )
+    }
+}

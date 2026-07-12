@@ -1,6 +1,7 @@
 package com.kdongsu5509.terms.controller.dto
 
 import com.kdongsu5509.terms.domain.TermTypes
+import com.kdongsu5509.terms.service.TermCreateCommand
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import java.time.LocalDateTime
@@ -21,4 +22,12 @@ data class TermCreateRequest(
 
     @field:NotNull(message = "필수 여부는 빈 값일 수 없습니다")
     var isRequired: Boolean
-)
+) {
+    fun toCommand(): TermCreateCommand = TermCreateCommand(
+        type = type,
+        title = title,
+        content = content,
+        effectiveDate = effectiveDate,
+        isRequired = isRequired,
+    )
+}

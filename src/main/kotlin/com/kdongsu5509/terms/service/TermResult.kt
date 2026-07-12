@@ -16,7 +16,7 @@ data class TermResult(
     companion object {
         fun from(domain: Term): TermResult = TermResult(
             domain.id!!,
-            domain.version,
+            domain.version.value,
             domain.type,
             domain.title,
             domain.content,

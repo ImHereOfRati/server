@@ -2,6 +2,7 @@ package com.kdongsu5509.terms.repository
 
 import com.kdongsu5509.terms.domain.Term
 import com.kdongsu5509.terms.domain.TermTypes
+import com.kdongsu5509.terms.service.TermRepository
 import org.springframework.stereotype.Component
 
 /**
@@ -13,27 +14,27 @@ import org.springframework.stereotype.Component
 class TermPersistenceAdapter(
     private val termMapper: TermMapper,
     private val termRepository: SpringDataTermRepository
-) {
-    fun save(term: Term): Term {
+) : TermRepository {
+    override fun save(term: Term): Term {
         val entity = termMapper.toEntity(term)
         val savedEntity = termRepository.save(entity)
         return termMapper.toDomain(savedEntity)!!
     }
 
-    fun findLatestByType(type: TermTypes): Term? {
+    override fun findLatestByType(type: TermTypes): Term? {
         val entity = termRepository.findLatestByType(type)
         return termMapper.toDomain(entity)
     }
 
-    fun findAll(): List<Term> = termRepository.findAll()
+    override fun findAll(): List<Term> = termRepository.findAll()
         .map { termMapper.toDomain(it)!! }
         .toList()
 
-    fun findActiveAll() = termRepository.findActiveAll()
+    override fun findActiveAll() = termRepository.findActiveAll()
         .map { termMapper.toDomain(it)!! }
         .toList()
 
-    fun findById(id: Long): Term? {
+    override fun findById(id: Long): Term? {
         val foundTermEntity: TermJpaEntity? = termRepository.findById(id).orElse(null)
         return termMapper.toDomain(foundTermEntity)
     }

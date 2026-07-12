@@ -23,7 +23,7 @@ class TermMapperTest {
         // then
         assertThat(domain).isNotNull
         assertThat(domain?.id).isEqualTo(1L)
-        assertThat(domain?.version).isEqualTo(1L)
+        assertThat(domain?.version?.value).isEqualTo(1L)
         assertThat(domain?.type).isEqualTo(TermTypes.SERVICE)
         assertThat(domain?.title).isEqualTo("제목")
         assertThat(domain?.content).isEqualTo("내용")
@@ -34,7 +34,7 @@ class TermMapperTest {
     @DisplayName("도메인 객체를 엔티티로 변환한다")
     fun toEntity() {
         // given
-        val domain = Term(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
+        val domain = Term.reconstruct(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
 
         // when
         val entity = termMapper.toEntity(domain)

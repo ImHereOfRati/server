@@ -6,7 +6,7 @@ import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.toOkResponse
 import com.kdongsu5509.user.controller.dto.CompactUserResponse
 import com.kdongsu5509.user.controller.dto.UserUpdateRequest
-import com.kdongsu5509.user.service.UserService
+import com.kdongsu5509.user.service.UserSelfService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/users", version = "1")
 class UserCommandController(
-    private val userService: UserService,
+    private val userService: UserSelfService,
     private val forceLogoutUseCase: ForceLogoutUseCase
 ) {
     @PatchMapping("/my")

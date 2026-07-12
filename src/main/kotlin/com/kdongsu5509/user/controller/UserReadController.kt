@@ -5,7 +5,7 @@ import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.SliceResponse
 import com.kdongsu5509.shared.response.toOkResponse
 import com.kdongsu5509.user.controller.dto.CompactUserResponse
-import com.kdongsu5509.user.service.UserService
+import com.kdongsu5509.user.service.UserSelfService
 import com.kdongsu5509.user.service.dto.UserResult
 import jakarta.validation.constraints.NotBlank
 import org.springframework.data.domain.Pageable
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @Validated
 @RequestMapping("/api/users", version = "1")
 class UserReadController(
-    private val userService: UserService
+    private val userService: UserSelfService
 ) {
 
     @GetMapping("/my")

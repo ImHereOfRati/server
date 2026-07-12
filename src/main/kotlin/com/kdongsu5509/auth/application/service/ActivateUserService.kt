@@ -8,14 +8,14 @@ import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.service.UserAgreementService
+import com.kdongsu5509.user.service.UserAgreementUseCase
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ActivateUserService(
-    private val userAgreementService: UserAgreementService,
+    private val userAgreementService: UserAgreementUseCase,
     private val tokenProviderPort: ImHereTokenProviderPort
 ) : ActivateUserUseCase {
 

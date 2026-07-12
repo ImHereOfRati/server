@@ -8,6 +8,7 @@ import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
 import com.kdongsu5509.auth.domain.LoginEligibilityPolicy
 import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.EmailRegistrationPolicy
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.stereotype.Service
@@ -40,8 +41,8 @@ class RegisterService(
         // (신규 계정이면 existingUser == null 이므로 통과, 중복 검증은 아래에서 수행)
         existingUser?.let { LoginEligibilityPolicy.assertLoginable(it.status) }
 
+        EmailRegistrationPolicy.assertNotDuplicated(existingUser != null)
         val newUser = User.createWithPendingStatus(email, nickname, provider, sub)
-        newUser.validateDuplicateEmailAllowed(existingUser != null)
         return userRepository.save(newUser)
     }
 }

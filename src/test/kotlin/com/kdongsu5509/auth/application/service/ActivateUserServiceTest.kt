@@ -9,7 +9,7 @@ import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.support.exception.type.ForbiddenException
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.service.UserAgreementService
+import com.kdongsu5509.user.service.UserAgreementUseCase
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -27,7 +27,7 @@ import java.util.*
 class ActivateUserServiceTest {
 
     @Mock
-    lateinit var userAgreementService: UserAgreementService
+    lateinit var userAgreementService: UserAgreementUseCase
 
     @Mock
     lateinit var tokenProviderPort: ImHereTokenProviderPort

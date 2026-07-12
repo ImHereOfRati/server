@@ -1,6 +1,6 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.user.service.UserService
+import com.kdongsu5509.user.service.UserAdminService
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam
 @Controller
 @RequestMapping("/admin/users")
 class UserAdminPageController(
-    private val userService: UserService
+    private val userService: UserAdminService
 ) {
     @GetMapping
     fun page(

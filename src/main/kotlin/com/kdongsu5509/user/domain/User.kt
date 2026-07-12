@@ -39,82 +39,31 @@ data class User(
         if (this.status != UserStatus.PENDING) {
             UserException.INVALID_USER_STATUS.throwIt()
         }
-        return User(
-            id = id,
-            email = email,
-            nickname = nickname,
-            role = role,
-            oauthProvider = oauthProvider,
-            status = UserStatus.ACTIVE,
-            oidcSubject = oidcSubject,
-            refreshTokenVersion = refreshTokenVersion
-        )
+        return copy(status = UserStatus.ACTIVE)
     }
 
     fun block(): User {
         if (this.status == UserStatus.BLOCKED) {
             UserException.INVALID_USER_STATUS.throwIt()
         }
-        return User(
-            id = id,
-            email = email,
-            nickname = nickname,
-            role = role,
-            oauthProvider = oauthProvider,
-            status = UserStatus.BLOCKED,
-            oidcSubject = oidcSubject,
-            refreshTokenVersion = refreshTokenVersion
-        )
+        return copy(status = UserStatus.BLOCKED)
     }
 
     fun unblock(): User {
         if (this.status != UserStatus.BLOCKED) {
             UserException.INVALID_USER_STATUS.throwIt()
         }
-        return User(
-            id = id,
-            email = email,
-            nickname = nickname,
-            role = role,
-            oauthProvider = oauthProvider,
-            status = UserStatus.ACTIVE,
-            oidcSubject = oidcSubject,
-            refreshTokenVersion = refreshTokenVersion
-        )
+        return copy(status = UserStatus.ACTIVE)
     }
 
     fun withdraw(): User {
         if (this.status == UserStatus.WITHDRAWN) {
             UserException.INVALID_USER_STATUS.throwIt()
         }
-        return User(
-            id = id,
-            email = email,
-            nickname = nickname,
-            role = role,
-            oauthProvider = oauthProvider,
-            status = UserStatus.WITHDRAWN,
-            oidcSubject = oidcSubject,
-            refreshTokenVersion = refreshTokenVersion
-        )
+        return copy(status = UserStatus.WITHDRAWN)
     }
 
-    fun updateNickname(newNickname: String) = User(
-        id = id,
-        email = email,
-        nickname = newNickname,
-        role = role,
-        oauthProvider = oauthProvider,
-        status = status,
-        oidcSubject = oidcSubject,
-        refreshTokenVersion = refreshTokenVersion
-    )
+    fun updateNickname(newNickname: String) = copy(nickname = newNickname)
 
     fun rotateRefreshTokenVersion(): User = copy(refreshTokenVersion = refreshTokenVersion + 1)
-
-    fun validateDuplicateEmailAllowed(isExistingEmail: Boolean) {
-        if (isExistingEmail) {
-            UserException.DUPLICATE_EMAIL.throwIt()
-        }
-    }
 }

@@ -5,7 +5,7 @@ import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.SliceResponse
 import com.kdongsu5509.shared.response.toOkResponse
 import com.kdongsu5509.user.controller.dto.DetailUserResponse
-import com.kdongsu5509.user.service.UserService
+import com.kdongsu5509.user.service.UserAdminService
 import com.kdongsu5509.user.service.dto.UserResult
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/admin/users", version = "1")
 class UserAdminController(
-    private val userService: UserService,
+    private val userService: UserAdminService,
     private val forceLogoutUseCase: ForceLogoutUseCase
 ) {
 

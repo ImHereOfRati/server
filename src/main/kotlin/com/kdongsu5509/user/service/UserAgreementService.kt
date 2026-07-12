@@ -3,12 +3,12 @@ package com.kdongsu5509.user.service
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.service.TermService
+import com.kdongsu5509.user.domain.Consent
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.UserAgreementRepository
 import com.kdongsu5509.user.repository.UserRepository
 import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand
-import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand.TermConsentCommand
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -18,25 +18,21 @@ class UserAgreementService(
     private val userRepository: UserRepository,
     private val termService: TermService,
     private val userAgreementRepository: UserAgreementRepository,
-) {
+) : UserAgreementUseCase {
 
     @Transactional
-    fun consentAll(email: String, multiTermsConsentCommand: MultiTermsConsentCommand): User {
-        val consents = multiTermsConsentCommand.consents
-
+    override fun consentAll(email: String, multiTermsConsentCommand: MultiTermsConsentCommand): User {
         val activeTerms = termService.findEffectiveTerms()
-        val activeTermIds = activeTerms.map { it.id }.toSet()
 
-        if (consents.any { it.id !in activeTermIds }) {
-            TermException.TERM_NOT_FOUND.throwIt()
-        }
-
-        verifyRequiredTerms(consents, activeTerms)
+        val consent = Consent(
+            multiTermsConsentCommand.consents.map { Consent.Item(it.id, it.isAgreed) }
+        )
+        consent.validateAgainst(activeTerms)
+        consent.assertRequiredAgreed(activeTerms)
 
         val user = userRepository.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
 
-        val agreedIds = consents.filter { it.isAgreed }.map { it.id }
-        userAgreementRepository.saveAll(user.id!!, agreedIds)
+        userAgreementRepository.saveAll(user.id!!, consent.agreedTermIds())
 
         val activeUser = user.activate()
         userRepository.update(activeUser)
@@ -45,7 +41,7 @@ class UserAgreementService(
     }
 
     @Transactional
-    fun consent(email: String, id: Long) {
+    override fun consent(email: String, id: Long) {
         val activeTermIds = termService.findEffectiveTerms().map { it.id }.toSet()
         if (id !in activeTermIds) {
             TermException.TERM_NOT_FOUND.throwIt()
@@ -53,15 +49,5 @@ class UserAgreementService(
 
         val user = userRepository.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
         userAgreementRepository.save(user.id!!, id)
-    }
-
-    private fun verifyRequiredTerms(consents: List<TermConsentCommand>, activeTerms: List<com.kdongsu5509.terms.service.TermResult>) {
-        val requiredTerms = activeTerms.filter { it.isRequired }
-        val consentMap = consents.associate { it.id to it.isAgreed }
-        val allRequiredTermsAgreed = requiredTerms.all { consentMap[it.id] == true }
-
-        if (!allRequiredTermsAgreed) {
-            TermException.OBLIGATORY_TERM_NOT_AGREED.throwIt()
-        }
     }
 }

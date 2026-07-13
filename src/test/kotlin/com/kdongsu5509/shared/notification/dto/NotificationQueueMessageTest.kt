@@ -1,6 +1,7 @@
 package com.kdongsu5509.shared.notification.dto
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
@@ -37,5 +38,32 @@ class NotificationQueueMessageTest {
         val message = NotificationQueueMessage.from(request)
 
         assertThat(message.data).isNull()
+    }
+
+    @Test
+    @DisplayName("필수 데이터(placeName)가 누락된 ARRIVAL_CONFIRMATION은 발행 시점에 거부한다")
+    fun from_rejectsMissingRequiredData() {
+        val request = NotificationSendRequest(
+            category = NotificationCategory.ARRIVAL_CONFIRMATION,
+            sender = NotificationPersonInfo("sender@test.com", "sender"),
+            receiver = NotificationPersonInfo("receiver@test.com", "receiver")
+        )
+
+        assertThatThrownBy { NotificationQueueMessage.from(request) }
+            .isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
+    @DisplayName("필수 데이터(placeName)가 있으면 ARRIVAL_CONFIRMATION을 생성한다")
+    fun from_acceptsWithRequiredData() {
+        val request = NotificationSendRequest(
+            category = NotificationCategory.ARRIVAL_CONFIRMATION,
+            sender = NotificationPersonInfo("sender@test.com", "sender"),
+            receiver = NotificationPersonInfo("receiver@test.com", "receiver")
+        )
+
+        val message = NotificationQueueMessage.from(request, mapOf("placeName" to "강남역"))
+
+        assertThat(message.data).containsEntry("placeName", "강남역")
     }
 }

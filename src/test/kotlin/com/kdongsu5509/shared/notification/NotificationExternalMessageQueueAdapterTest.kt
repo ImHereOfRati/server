@@ -31,11 +31,13 @@ class NotificationExternalMessageQueueAdapterTest {
         adapter = NotificationExternalMessageQueueAdapter(rabbitTemplate)
     }
 
+    // 라우팅 키 전수 매핑은 NotificationCategoryTest.routingKey가 담당한다.
+    // 여기서는 데이터 없이 발행 가능한(requiredDataKeys 없는) 분류만 어댑터 경로로 검증한다.
+    // ARRIVAL_CONFIRMATION 등 필수 데이터가 있는 분류는 data-less 어댑터(send)로 발행할 수 없다(발행 측 fail-fast).
     @ParameterizedTest
     @CsvSource(
         "FRIEND_REQUEST_RECEIVED, noti.friend.request.received",
         "FRIEND_REQUEST_ACCEPTED, noti.friend.request.accepted",
-        "ARRIVAL_CONFIRMATION, noti.service.location.arrival",
         "TERMS_UPDATE_NOTICE, noti.service.terms.update",
         "DELIVERY_RESULT_NOTICE, noti.service.delivery.result"
     )

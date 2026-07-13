@@ -140,26 +140,7 @@ class GlobalExceptionHandler(
         )
     }
 
-    // --- Security Exceptions (401/403) ---
-    @ExceptionHandler(
-        org.springframework.security.authorization.AuthorizationDeniedException::class,
-        org.springframework.security.access.AccessDeniedException::class
-    )
-    fun handleAuthorizationDeniedException(e: Exception): ResponseEntity<ApiResponse<Unit>> {
-        val authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().authentication
-        if (authentication == null || authentication.name == "anonymousUser" || authentication is org.springframework.security.authentication.AnonymousAuthenticationToken) {
-            return null.toFailResponse(
-                status = HttpStatus.UNAUTHORIZED,
-                imhereErrorCode = com.kdongsu5509.auth.AuthException.IMHERE_INVALID_TOKEN.imhereErrorCode,
-                errorMessage = "인증이 필요합니다."
-            )
-        }
-        return null.toFailResponse(
-            status = HttpStatus.FORBIDDEN,
-            imhereErrorCode = com.kdongsu5509.auth.AuthException.IMHERE_ACCESS_DENIED.imhereErrorCode,
-            errorMessage = "접근 권한이 없습니다."
-        )
-    }
+    // 인증/인가 실패(401/403)는 auth 모듈의 AuthAccessDeniedExceptionHandler가 소유한다(support→auth 순환 제거).
 
     // --- 409 Conflict ---
     @ExceptionHandler(DataIntegrityViolationException::class)

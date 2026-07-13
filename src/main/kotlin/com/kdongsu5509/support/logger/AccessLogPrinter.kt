@@ -1,5 +1,6 @@
 package com.kdongsu5509.support.logger
 
+import com.kdongsu5509.support.external.DiscordAlertMessage
 import com.kdongsu5509.support.external.DiscordMessageDto
 import com.kdongsu5509.support.external.DiscordMessageSendPort
 import org.slf4j.LoggerFactory
@@ -33,16 +34,14 @@ class AccessLogPrinter(
 
     private fun build5xxAlert(accessLog: AccessLog, formatted: String): DiscordMessageDto {
         val uri = accessLog.uri + (accessLog.queryString?.let { "?$it" } ?: "")
-        val content = """
-            ## 🔥 Server Error (${accessLog.status})
-            **TraceId:** `${accessLog.traceId}`
-            **${accessLog.method}** `$uri` — ${accessLog.durationMs}ms
-            **IP:** ${accessLog.remoteIp}
-
-            ```
-            $formatted
-            ```
-        """.trimIndent()
-        return DiscordMessageDto(content)
+        return DiscordAlertMessage.serverError(
+            status = accessLog.status,
+            traceId = accessLog.traceId,
+            method = accessLog.method,
+            uri = uri,
+            durationMs = accessLog.durationMs,
+            ip = accessLog.remoteIp,
+            formatted = formatted,
+        ).toDto()
     }
 }

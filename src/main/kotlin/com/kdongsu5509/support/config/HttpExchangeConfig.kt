@@ -1,6 +1,5 @@
 package com.kdongsu5509.support.config
 
-import com.kdongsu5509.auth.adapter.out.oauth.OidcPublicKeyApiClient
 import com.kdongsu5509.support.external.DiscordApiClient
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -9,6 +8,10 @@ import org.springframework.web.client.support.RestClientAdapter
 import org.springframework.web.service.invoker.HttpServiceProxyFactory
 import org.springframework.web.service.invoker.createClient
 
+/**
+ * support 소유의 HTTP 클라이언트 빈(Discord)만 제공한다.
+ * auth의 OIDC 클라이언트 조립은 auth 모듈(AuthClientConfig)이 소유한다(support→auth 결합 제거).
+ */
 @Configuration
 class HttpExchangeConfig {
 
@@ -21,19 +24,5 @@ class HttpExchangeConfig {
         )
 
         return httpServiceProxyFactory.build().createClient<DiscordApiClient>()
-    }
-
-    @Bean
-    fun oidcPublicKeyApiClient(restClientBuilder: Builder): OidcPublicKeyApiClient {
-
-        val restClient = restClientBuilder
-            .baseUrl("https://kauth.kakao.com")
-            .build()
-
-        val adapter = RestClientAdapter.create(restClient)
-
-        val httpServiceProxyFactory = HttpServiceProxyFactory.builderFor(adapter)
-
-        return httpServiceProxyFactory.build().createClient<OidcPublicKeyApiClient>()
     }
 }

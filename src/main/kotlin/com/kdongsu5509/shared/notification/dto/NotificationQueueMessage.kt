@@ -15,6 +15,14 @@ data class NotificationQueueMessage(
 
     val messageId: UUID = UUID.randomUUID()
 ) {
+    init {
+        val payload = data ?: emptyMap()
+        val missing = category.requiredDataKeys.filter { payload[it].isNullOrBlank() }
+        require(missing.isEmpty()) {
+            "알림 분류 ${category}에 필요한 데이터가 누락되었습니다: $missing"
+        }
+    }
+
     companion object {
         fun from(request: NotificationSendRequest, data: Map<String, String>? = null) = NotificationQueueMessage(
             category = request.category,

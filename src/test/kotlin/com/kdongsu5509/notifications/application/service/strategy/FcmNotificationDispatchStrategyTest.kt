@@ -4,6 +4,7 @@ import com.kdongsu5509.notifications.application.dto.MultipleNotificationCommand
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.`in`.NotificationUseCase
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -40,7 +41,7 @@ class FcmNotificationDispatchStrategyTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.FCM,
             targetIdentifier = "receiver@example.com",
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = mapOf("key" to "value")
         )
 
@@ -50,7 +51,7 @@ class FcmNotificationDispatchStrategyTest {
             senderNickname = "sender",
             senderEmail = "sender@example.com",
             receiverEmail = "receiver@example.com",
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = mapOf("key" to "value")
         )
     }
@@ -63,7 +64,7 @@ class FcmNotificationDispatchStrategyTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.FCM,
             targetIdentifiers = listOf("receiver1@example.com", "receiver2@example.com"),
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = mapOf("key" to "value")
         )
 
@@ -73,14 +74,14 @@ class FcmNotificationDispatchStrategyTest {
             senderNickname = "sender",
             senderEmail = "sender@example.com",
             receiverEmail = "receiver1@example.com",
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = mapOf("key" to "value")
         )
         verify(fcmNotificationService).send(
             senderNickname = "sender",
             senderEmail = "sender@example.com",
             receiverEmail = "receiver2@example.com",
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = mapOf("key" to "value")
         )
     }

@@ -1,5 +1,6 @@
 package com.kdongsu5509.notifications.adapter.out.solapi
 
+import com.kdongsu5509.notifications.domain.MessageSendResult
 import com.kdongsu5509.notifications.domain.SMS
 import com.kdongsu5509.support.config.ExternalSMSProperties
 import com.solapi.sdk.message.exception.SolapiBadRequestException
@@ -51,7 +52,7 @@ class SolapiAdapterTest {
         Mockito.doReturn(mockResponse).`when`(solapiService).send(any<Message>(), isNull())
 
         val result = adapter.send(sms)
-        assertThat(result.status).isEqualTo(SolapiResponse.SUCCESS_STATUS)
+        assertThat(result.status).isEqualTo(MessageSendResult.SUCCESS_STATUS)
     }
 
     @Test
@@ -61,7 +62,7 @@ class SolapiAdapterTest {
         Mockito.doThrow(RuntimeException("Test Exception")).`when`(solapiService).send(any<Message>(), isNull())
 
         val result = adapter.send(sms)
-        assertThat(result.status).isEqualTo(SolapiResponse.FAIL_STATUS)
+        assertThat(result.status).isEqualTo(MessageSendResult.FAIL_STATUS)
         assertThat(result.message).contains("Test Exception")
     }
 
@@ -76,8 +77,8 @@ class SolapiAdapterTest {
 
         val result = adapter.sendMultiple(smsList)
         assertThat(result).hasSize(2)
-        assertThat(result[0].status).isEqualTo(SolapiResponse.FAIL_STATUS)
-        assertThat(result[1].status).isEqualTo(SolapiResponse.FAIL_STATUS)
+        assertThat(result[0].status).isEqualTo(MessageSendResult.FAIL_STATUS)
+        assertThat(result[1].status).isEqualTo(MessageSendResult.FAIL_STATUS)
     }
 
     @Test
@@ -104,7 +105,7 @@ class SolapiAdapterTest {
 
         val result = adapter.sendMultiple(smsList)
         assertThat(result).hasSize(1)
-        assertThat(result[0].status).isEqualTo(SolapiResponse.FAIL_STATUS)
+        assertThat(result[0].status).isEqualTo(MessageSendResult.FAIL_STATUS)
         assertThat(result[0].message).contains("응답 데이터가 비어있습니다.")
     }
 
@@ -145,8 +146,8 @@ class SolapiAdapterTest {
 
         val result = adapter.sendMultiple(smsList)
         assertThat(result).hasSize(2)
-        assertThat(result[0].status).isEqualTo(SolapiResponse.SUCCESS_STATUS)
-        assertThat(result[1].status).isEqualTo(SolapiResponse.FAIL_STATUS)
+        assertThat(result[0].status).isEqualTo(MessageSendResult.SUCCESS_STATUS)
+        assertThat(result[1].status).isEqualTo(MessageSendResult.FAIL_STATUS)
         assertThat(result[1].message).contains("Not Found")
     }
 

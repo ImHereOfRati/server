@@ -1,6 +1,6 @@
 package com.kdongsu5509.notifications.application.service
 
-import com.kdongsu5509.notifications.adapter.out.solapi.SolapiResponse
+import com.kdongsu5509.notifications.domain.MessageSendResult
 import com.kdongsu5509.notifications.application.port.out.ExternalMessagePort
 import com.kdongsu5509.notifications.domain.SMS
 import com.kdongsu5509.support.exception.type.InvalidInputException
@@ -30,7 +30,7 @@ class SMSServiceTest {
     @Test
     @DisplayName("단건 SMS를 전송한다")
     fun send_success() {
-        whenever(externalMessagePort.send(any())).thenReturn(SolapiResponse.success())
+        whenever(externalMessagePort.send(any())).thenReturn(MessageSendResult.success())
 
         service.send(
             senderNickname = "sender",
@@ -51,7 +51,7 @@ class SMSServiceTest {
     @DisplayName("다건 SMS를 전송한다")
     fun sendMultiple_success() {
         whenever(externalMessagePort.sendMultiple(any())).thenReturn(
-            listOf(SolapiResponse.success(), SolapiResponse.success())
+            listOf(MessageSendResult.success(), MessageSendResult.success())
         )
 
         service.sendMultiple(
@@ -87,7 +87,7 @@ class SMSServiceTest {
     @DisplayName("다건 SMS 응답에 실패가 포함되면 전송을 실패로 처리한다")
     fun sendMultiple_rejectsFailedResponse() {
         whenever(externalMessagePort.sendMultiple(any())).thenReturn(
-            listOf(SolapiResponse.success(), SolapiResponse.fail("boom"))
+            listOf(MessageSendResult.success(), MessageSendResult.fail("boom"))
         )
 
         assertThatThrownBy {

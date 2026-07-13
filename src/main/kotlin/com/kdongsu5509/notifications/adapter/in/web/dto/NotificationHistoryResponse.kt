@@ -19,7 +19,7 @@ data class NotificationHistoryResponse(
             senderNickname = domain.senderNickname,
             title = domain.title,
             body = domain.body,
-            type = domain.type,
+            type = domain.type.name,
             path = domain.path,
             isRead = domain.isRead,
             createdAt = domain.createdAt

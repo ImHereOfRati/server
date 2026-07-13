@@ -9,15 +9,15 @@ import org.junit.jupiter.api.Test
 class SMSTest {
 
     @Test
-    @DisplayName("SMS 본문은 전달된 body 그대로 사용한다")
-    fun buildMessageText_success() {
+    @DisplayName("SMS 본문은 전달된 body 그대로 보유한다")
+    fun body_success() {
         val sms = SMS(
             senderNickname = "sender",
             receiverNumber = "01012345678",
             body = "[ImHere]\nSeoul 도착"
         )
 
-        assertThat(sms.buildMessageText()).isEqualTo("[ImHere]\nSeoul 도착")
+        assertThat(sms.body).isEqualTo("[ImHere]\nSeoul 도착")
     }
 
     @Test

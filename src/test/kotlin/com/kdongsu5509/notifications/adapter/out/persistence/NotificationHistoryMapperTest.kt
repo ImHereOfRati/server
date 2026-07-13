@@ -1,6 +1,7 @@
 package com.kdongsu5509.notifications.adapter.out.persistence
 
 import com.kdongsu5509.notifications.domain.NotificationHistory
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -20,7 +21,7 @@ class NotificationHistoryMapperTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = "path",
             isRead = false,
             createdAt = LocalDateTime.now()
@@ -35,7 +36,7 @@ class NotificationHistoryMapperTest {
         assertThat(entity.senderNickname).isEqualTo(domain.senderNickname)
         assertThat(entity.title).isEqualTo(domain.title)
         assertThat(entity.body).isEqualTo(domain.body)
-        assertThat(entity.type).isEqualTo(domain.type)
+        assertThat(entity.type).isEqualTo(domain.type.name)
         assertThat(entity.path).isEqualTo(domain.path)
         assertThat(entity.isRead).isEqualTo(domain.isRead)
     }
@@ -50,7 +51,7 @@ class NotificationHistoryMapperTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = "TERMS_UPDATE_NOTICE",
             path = "path",
             isRead = false
         ).apply {
@@ -66,7 +67,7 @@ class NotificationHistoryMapperTest {
         assertThat(domain.senderNickname).isEqualTo(entity.senderNickname)
         assertThat(domain.title).isEqualTo(entity.title)
         assertThat(domain.body).isEqualTo(entity.body)
-        assertThat(domain.type).isEqualTo(entity.type)
+        assertThat(domain.type.name).isEqualTo(entity.type)
         assertThat(domain.path).isEqualTo(entity.path)
         assertThat(domain.isRead).isEqualTo(entity.isRead)
         assertThat(domain.createdAt).isEqualTo(entity.createdAt)

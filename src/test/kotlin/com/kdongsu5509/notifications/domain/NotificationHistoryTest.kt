@@ -17,7 +17,7 @@ class NotificationHistoryTest {
                 senderNickname = "sender",
                 title = "title",
                 body = "body",
-                type = "NOTICE",
+                type = NotificationType.TERMS_UPDATE_NOTICE,
                 path = null
             )
         }.isInstanceOf(InvalidInputException::class.java)
@@ -32,7 +32,7 @@ class NotificationHistoryTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "NOTICE",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
             isRead = false
         )

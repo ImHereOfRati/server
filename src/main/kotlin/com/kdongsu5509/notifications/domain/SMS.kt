@@ -5,7 +5,7 @@ import com.kdongsu5509.support.exception.throwIt
 
 /**
  * SMS 도메인 객체.
- * 발송 대상 정보를 보유하고, SMS 본문 생성 책임도 직접 담당합니다.
+ * 발송 대상 정보와 본문을 보유하며, 생성 시 필수 값·본문 길이 불변식을 스스로 검증합니다.
  */
 class SMS(
     val senderNickname: String,
@@ -20,9 +20,6 @@ class SMS(
         validateRequiredFields()
         validateMessageText()
     }
-
-    /** SMS 발송용 본문을 생성합니다. */
-    fun buildMessageText(): String = body
 
     private fun validateMessageText() {
         if (body.length > MAX_MESSAGE_LENGTH) {

@@ -90,7 +90,7 @@ class NotificationCommandControllerWebMvcTest {
         assertThat(cmd.senderNickname).isEqualTo("senderNickname")
         assertThat(cmd.senderEmail).isEqualTo("sender@example.com")
         assertThat(cmd.targetIdentifier).isEqualTo("target@example.com")
-        assertThat(cmd.type).isEqualTo(NotificationType.LOCATION_TARGET.name)
+        assertThat(cmd.type).isEqualTo(NotificationType.LOCATION_TARGET)
     }
 
     @Test
@@ -114,7 +114,7 @@ class NotificationCommandControllerWebMvcTest {
         val captor = argumentCaptor<NotificationCommand>()
         verify(notificationEnqueueUseCase).enqueue(captor.capture())
 
-        assertThat(captor.firstValue.type).isEqualTo(NotificationType.DEPARTURE.name)
+        assertThat(captor.firstValue.type).isEqualTo(NotificationType.DEPARTURE)
     }
 
     @Test
@@ -142,6 +142,6 @@ class NotificationCommandControllerWebMvcTest {
         assertThat(cmd.senderNickname).isEqualTo("senderNickname")
         assertThat(cmd.senderEmail).isEqualTo("sender@example.com")
         assertThat(cmd.targetIdentifiers).hasSize(2)
-        assertThat(cmd.type).isEqualTo(NotificationType.LOCATION_TARGET.name)
+        assertThat(cmd.type).isEqualTo(NotificationType.LOCATION_TARGET)
     }
 }

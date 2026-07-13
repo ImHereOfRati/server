@@ -1,6 +1,7 @@
 package com.kdongsu5509.notifications.adapter.out.persistence
 
 import com.kdongsu5509.notifications.domain.NotificationHistory
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.springframework.stereotype.Component
 
 @Component
@@ -12,7 +13,7 @@ class NotificationHistoryMapper {
             senderNickname = entity.senderNickname,
             title = entity.title,
             body = entity.body,
-            type = entity.type,
+            type = NotificationType.valueOf(entity.type),
             path = entity.path,
             isRead = entity.isRead,
             createdAt = entity.createdAt
@@ -25,7 +26,7 @@ class NotificationHistoryMapper {
             senderNickname = domain.senderNickname,
             title = domain.title,
             body = domain.body,
-            type = domain.type,
+            type = domain.type.name,
             path = domain.path,
             isRead = domain.isRead,
         )

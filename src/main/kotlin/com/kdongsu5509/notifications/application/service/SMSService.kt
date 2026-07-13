@@ -2,7 +2,7 @@ package com.kdongsu5509.notifications.application.service
 
 import com.kdongsu5509.notifications.application.port.`in`.MessageSendUseCase
 import com.kdongsu5509.notifications.application.port.out.ExternalMessagePort
-import com.kdongsu5509.notifications.adapter.out.solapi.SolapiResponse
+import com.kdongsu5509.notifications.domain.MessageSendResult
 import com.kdongsu5509.notifications.domain.SMS
 import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.support.exception.throwIt
@@ -32,12 +32,12 @@ class SMSService(private val externalMessagePort: ExternalMessagePort) : Message
         val multipleSMS = receiverNumbers.map { SMS(senderNickname, it, body) }
 
         val responses = externalMessagePort.sendMultiple(multipleSMS)
-        if (responses.size != multipleSMS.size || responses.any { it.status != SolapiResponse.SUCCESS_STATUS }) {
+        if (responses.size != multipleSMS.size || responses.any { !it.isSuccess }) {
             NotificationException.SMS_SEND_FAILED.throwIt(
                 contextData = mapOf(
                     "receiverCount" to receiverNumbers.size,
                     "responseCount" to responses.size,
-                    "failedCount" to responses.count { it.status != SolapiResponse.SUCCESS_STATUS }
+                    "failedCount" to responses.count { !it.isSuccess }
                 )
             )
         }
@@ -59,8 +59,8 @@ class SMSService(private val externalMessagePort: ExternalMessagePort) : Message
         }
     }
 
-    private fun ensureSendSucceeded(response: SolapiResponse, receiverNumber: String) {
-        if (response.status != SolapiResponse.SUCCESS_STATUS) {
+    private fun ensureSendSucceeded(response: MessageSendResult, receiverNumber: String) {
+        if (!response.isSuccess) {
             NotificationException.SMS_SEND_FAILED.throwIt(
                 contextData = mapOf(
                     "receiverNumber" to receiverNumber,

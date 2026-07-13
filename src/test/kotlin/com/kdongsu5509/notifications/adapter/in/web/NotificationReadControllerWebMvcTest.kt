@@ -3,6 +3,7 @@ package com.kdongsu5509.notifications.adapter.`in`.web
 import com.kdongsu5509.auth.security.ImHereUserDetails
 import com.kdongsu5509.notifications.application.port.`in`.NotificationHistoryUseCase
 import com.kdongsu5509.notifications.domain.NotificationHistory
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -69,7 +70,7 @@ class NotificationReadControllerWebMvcTest {
             senderNickname = "sender",
             title = "test title",
             body = "test body",
-            type = "NOTICE",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
             isRead = false,
             createdAt = LocalDateTime.now()

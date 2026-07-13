@@ -29,7 +29,7 @@ data class NotificationRequest(
         senderEmail = senderEmail,
         notificationMethod = notificationMethod,
         targetIdentifier = targetId,
-        type = type.name,
+        type = type,
         extraData = extraData
     )
 }

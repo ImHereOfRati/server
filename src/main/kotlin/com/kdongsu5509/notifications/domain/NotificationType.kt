@@ -88,11 +88,46 @@ enum class NotificationType(
     ), ;
 
     /**
+     * 발송 결과(성공/실패)를 알리는 메타 타입인지 여부.
+     *
+     * 메타 타입은 발송 요청자에게 보내는 수신증(delivery receipt)이므로, 이 알림의 발송 결과로
+     * 또 다른 수신증을 발행하면 무한 재귀 발행이 된다. 컨슈머/실패통지기는 이 질의로 후속 발행을 건너뛴다.
+     */
+    val isMeta: Boolean
+        get() = this == DELIVERY_RESULT_NOTICE || this == DELIVERY_FAILED_NOTICE
+
+    /**
      * 발송자 닉네임과 추가 데이터로 이 종류의 알림 본문을 만든다.
      * 도착/출발 알림은 [extraData]의 [PLACE_NAME_KEY]를 사용한다.
      */
     fun bodyText(senderNickname: String, extraData: Map<String, String> = emptyMap()): String =
         bodyTemplate(senderNickname, extraData)
+
+    /**
+     * 발송자와 추가 데이터로 이 종류의 알림을 하나의 [RenderedNotification]으로 조립한다.
+     * 제목/본문/딥링크 경로와 FCM data 맵(`type`/`path`/`senderNickname`/`senderEmail` 포함) 조립을 한곳에 응집한다.
+     */
+    fun render(
+        senderNickname: String,
+        senderEmail: String,
+        extraData: Map<String, String> = emptyMap(),
+    ): RenderedNotification {
+        val path = resolvePath(extraData)
+        val data = extraData + mapOf(
+            "senderNickname" to senderNickname,
+            "senderEmail" to senderEmail,
+            "type" to name,
+            "path" to path,
+        )
+        return RenderedNotification(
+            type = this,
+            senderNickname = senderNickname,
+            title = titleText,
+            body = bodyText(senderNickname, extraData),
+            path = path,
+            data = data,
+        )
+    }
 
     /**
      * [appPath] 템플릿의 `{key}` 자리표시자를 [extraData] 값으로 치환한 딥링크 경로를 만든다.

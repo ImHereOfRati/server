@@ -2,6 +2,8 @@ package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.DlqQueueInfoResponse
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.DlqReplayResponse
+import com.kdongsu5509.notifications.application.dto.DlqQueueInfo
+import com.kdongsu5509.notifications.application.dto.DlqReplayResult
 import com.kdongsu5509.notifications.application.service.DlqAdminService
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.toOkResponse
@@ -16,12 +18,12 @@ class DlqAdminController(
     /** 전체 DLQ 목록 및 메시지 수 조회 */
     @GetMapping
     fun getAllDlqInfo(): ResponseEntity<ApiResponse<List<DlqQueueInfoResponse>>> =
-        dlqAdminService.getAllDlqInfo().toOkResponse()
+        dlqAdminService.getAllDlqInfo().map { it.toResponse() }.toOkResponse()
 
     /** 특정 DLQ 정보 조회 */
     @GetMapping("/{queueName}")
     fun getDlqInfo(@PathVariable queueName: String): ResponseEntity<ApiResponse<DlqQueueInfoResponse>> =
-        dlqAdminService.getQueueInfo(queueName).toOkResponse()
+        dlqAdminService.getQueueInfo(queueName).toResponse().toOkResponse()
 
     /**
      * DLQ 메시지 재처리
@@ -32,7 +34,7 @@ class DlqAdminController(
         @PathVariable queueName: String,
         @RequestParam(required = false) count: Int?
     ): ResponseEntity<ApiResponse<DlqReplayResponse>> =
-        dlqAdminService.replayMessages(queueName, count).toOkResponse()
+        dlqAdminService.replayMessages(queueName, count).toResponse().toOkResponse()
 
     /** DLQ 전체 메시지 삭제 */
     @DeleteMapping("/{queueName}/messages")
@@ -40,4 +42,10 @@ class DlqAdminController(
         dlqAdminService.purgeQueue(queueName)
         return Unit.toOkResponse()
     }
+
+    private fun DlqQueueInfo.toResponse() =
+        DlqQueueInfoResponse(queueName = queueName, messageCount = messageCount, consumerCount = consumerCount)
+
+    private fun DlqReplayResult.toResponse() =
+        DlqReplayResponse(queueName = queueName, replayedCount = replayedCount)
 }

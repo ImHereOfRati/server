@@ -4,6 +4,7 @@ import com.kdongsu5509.notifications.application.dto.MultipleNotificationCommand
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.out.NotificationProducePort
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -36,7 +37,7 @@ class NotificationEnqueueServiceTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.FCM,
             targetIdentifier = "target@example.com",
-            type = "FRIEND_REQUEST_RECEIVED"
+            type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
 
         service.enqueue(command)
@@ -52,7 +53,7 @@ class NotificationEnqueueServiceTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.FCM,
             targetIdentifiers = listOf("target1@example.com", "target2@example.com"),
-            type = "FRIEND_REQUEST_RECEIVED"
+            type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
 
         service.enqueueMultiple(command)
@@ -66,7 +67,7 @@ class NotificationEnqueueServiceTest {
             .containsExactlyInAnyOrder("target1@example.com", "target2@example.com")
         assertThat(capturedCommands).allSatisfy { cmd ->
             assertThat(cmd.senderNickname).isEqualTo("sender")
-            assertThat(cmd.type).isEqualTo("FRIEND_REQUEST_RECEIVED")
+            assertThat(cmd.type).isEqualTo(NotificationType.FRIEND_REQUEST_RECEIVED)
         }
     }
 }

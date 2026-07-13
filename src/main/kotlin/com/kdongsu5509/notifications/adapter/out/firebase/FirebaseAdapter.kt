@@ -4,10 +4,10 @@ import com.google.firebase.messaging.*
 import com.kdongsu5509.notifications.domain.AndroidPushPriority
 import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.application.port.out.FirebasePort
+import com.kdongsu5509.notifications.exception.UnregisteredTokenException
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.exception.type.InternalServerException
 import com.kdongsu5509.support.exception.type.InvalidInputException
-import com.kdongsu5509.support.exception.type.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -34,7 +34,7 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
     private fun handleUnregistered(ex: FirebaseMessagingException) =
         if (ex.messagingErrorCode == MessagingErrorCode.UNREGISTERED) {
             log.error("등록 해제된 토큰. DB 삭제 필요")
-            throw NotFoundException("등록 해제된 FCM 토큰입니다.", contextData = mapOf("unregistered" to true))
+            throw UnregisteredTokenException(cause = ex)
         } else Unit
 
     private fun handleRetryable(ex: FirebaseMessagingException) {

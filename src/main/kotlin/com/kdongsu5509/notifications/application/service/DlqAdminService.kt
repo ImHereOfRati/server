@@ -1,17 +1,14 @@
 package com.kdongsu5509.notifications.application.service
 
-import com.kdongsu5509.notifications.adapter.`in`.web.dto.DlqQueueInfoResponse
-import com.kdongsu5509.notifications.adapter.`in`.web.dto.DlqReplayResponse
+import com.kdongsu5509.notifications.application.dto.DlqQueueInfo
+import com.kdongsu5509.notifications.application.dto.DlqReplayResult
+import com.kdongsu5509.notifications.application.port.out.DlqManagementPort
 import com.kdongsu5509.support.config.RabbitMQConfig
-import org.springframework.amqp.core.AmqpAdmin
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
 
 @Service
 class DlqAdminService(
-    private val amqpAdmin: AmqpAdmin,
-    private val rabbitTemplate: RabbitTemplate
+    private val dlqManagementPort: DlqManagementPort
 ) {
     companion object {
         /** DLQ → 재발행 exchange 매핑 */
@@ -21,17 +18,17 @@ class DlqAdminService(
         )
     }
 
-    fun getAllDlqInfo(): List<DlqQueueInfoResponse> =
+    fun getAllDlqInfo(): List<DlqQueueInfo> =
         DLQ_REPLAY_TARGET.keys.map { getQueueInfo(it) }
 
-    fun getQueueInfo(queueName: String): DlqQueueInfoResponse {
+    fun getQueueInfo(queueName: String): DlqQueueInfo {
         requireKnownDlq(queueName)
-        val props = amqpAdmin.getQueueProperties(queueName)
+        val stats = dlqManagementPort.getQueueStats(queueName)
             ?: error("DLQ 큐를 찾을 수 없습니다: $queueName")
-        return DlqQueueInfoResponse(
+        return DlqQueueInfo(
             queueName = queueName,
-            messageCount = (props[RabbitAdmin.QUEUE_MESSAGE_COUNT] as? Number)?.toLong() ?: 0L,
-            consumerCount = (props[RabbitAdmin.QUEUE_CONSUMER_COUNT] as? Number)?.toLong() ?: 0L
+            messageCount = stats.messageCount,
+            consumerCount = stats.consumerCount
         )
     }
 
@@ -40,19 +37,19 @@ class DlqAdminService(
      * [count]가 null이면 DLQ의 모든 메시지를 재발행한다.
      * 재발행된 메시지는 DLQ에서 소비(제거)된다.
      */
-    fun replayMessages(queueName: String, count: Int? = null): DlqReplayResponse {
+    fun replayMessages(queueName: String, count: Int? = null): DlqReplayResult {
         requireKnownDlq(queueName)
         val exchange = DLQ_REPLAY_TARGET.getValue(queueName)
         val limit = count ?: Int.MAX_VALUE
 
         var replayed = 0
         repeat(limit) {
-            val message = rabbitTemplate.receive(queueName) ?: return DlqReplayResponse(queueName, replayed)
-            val originalRoutingKey = message.messageProperties.receivedRoutingKey ?: ""
-            rabbitTemplate.send(exchange, originalRoutingKey, message)
+            if (!dlqManagementPort.replayOne(queueName, exchange)) {
+                return DlqReplayResult(queueName, replayed)
+            }
             replayed++
         }
-        return DlqReplayResponse(queueName, replayed)
+        return DlqReplayResult(queueName, replayed)
     }
 
     /**
@@ -60,7 +57,7 @@ class DlqAdminService(
      */
     fun purgeQueue(queueName: String) {
         requireKnownDlq(queueName)
-        amqpAdmin.purgeQueue(queueName)
+        dlqManagementPort.purge(queueName)
     }
 
     private fun requireKnownDlq(queueName: String) {

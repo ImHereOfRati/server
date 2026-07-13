@@ -16,16 +16,6 @@ class NotificationEnqueueService(
     }
 
     override fun enqueueMultiple(command: MultipleNotificationCommand) {
-        command.targetIdentifiers.forEach { targetId ->
-            val singleCommand = NotificationCommand(
-                senderNickname = command.senderNickname,
-                senderEmail = command.senderEmail,
-                notificationMethod = command.notificationMethod,
-                targetIdentifier = targetId,
-                type = command.type,
-                extraData = command.extraData
-            )
-            notificationProducePort.send(singleCommand)
-        }
+        command.toSingles().forEach { notificationProducePort.send(it) }
     }
 }

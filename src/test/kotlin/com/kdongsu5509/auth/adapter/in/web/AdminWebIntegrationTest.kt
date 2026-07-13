@@ -8,10 +8,10 @@ import com.kdongsu5509.friends.domain.FriendRequest
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.friends.domain.Friendship
-import com.kdongsu5509.friends.service.FriendRequestService
-import com.kdongsu5509.friends.service.FriendRestrictionService
-import com.kdongsu5509.friends.service.FriendshipService
-import com.kdongsu5509.notifications.adapter.`in`.web.dto.DlqQueueInfoResponse
+import com.kdongsu5509.friends.service.FriendRequestAdminService
+import com.kdongsu5509.friends.service.FriendRestrictionAdminService
+import com.kdongsu5509.friends.service.FriendshipAdminService
+import com.kdongsu5509.notifications.application.dto.DlqQueueInfo
 import com.kdongsu5509.notifications.application.service.DlqAdminService
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
@@ -46,13 +46,13 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     private lateinit var termService: TermService
 
     @MockitoBean
-    private lateinit var friendRequestService: FriendRequestService
+    private lateinit var friendRequestAdminService: FriendRequestAdminService
 
     @MockitoBean
-    private lateinit var friendRestrictionService: FriendRestrictionService
+    private lateinit var friendRestrictionAdminService: FriendRestrictionAdminService
 
     @MockitoBean
-    private lateinit var friendshipService: FriendshipService
+    private lateinit var friendshipAdminService: FriendshipAdminService
 
     private val adminDetails = ImHereUserDetails(
         email = "admin@example.com",
@@ -92,7 +92,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("관리자는 DLQ 관리 페이지에 접근할 수 있다")
     fun dlqPageAccessibleForAdmin() {
         whenever(dlqAdminService.getAllDlqInfo()).thenReturn(
-            listOf(DlqQueueInfoResponse(queueName = "friend.dlq", messageCount = 3, consumerCount = 1))
+            listOf(DlqQueueInfo(queueName = "friend.dlq", messageCount = 3, consumerCount = 1))
         )
 
         mockMvc.perform(
@@ -168,9 +168,9 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
             OAuth2Provider.KAKAO,
             UserStatus.ACTIVE
         )
-        whenever(friendRequestService.findAll(any())).thenReturn(
+        whenever(friendRequestAdminService.findAll(any())).thenReturn(
             SliceImpl(
-                listOf(FriendRequest.createWithNullId(requester, receiver, "친구 요청 메시지")),
+                listOf(FriendRequest.newRequest(requester, receiver, "친구 요청 메시지")),
                 PageRequest.of(0, 20),
                 false
             )
@@ -204,7 +204,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
             OAuth2Provider.KAKAO,
             UserStatus.ACTIVE
         )
-        whenever(friendRestrictionService.findAll(any())).thenReturn(
+        whenever(friendRestrictionAdminService.findAll(any())).thenReturn(
             SliceImpl(
                 listOf(
                     FriendRestriction(
@@ -232,7 +232,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
             User(randomUUID(), "owner@example.com", "owner", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
         val friend =
             User(randomUUID(), "friend@example.com", "friend", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
-        whenever(friendshipService.findAll(any())).thenReturn(
+        whenever(friendshipAdminService.findAll(any())).thenReturn(
             SliceImpl(
                 listOf(Friendship(owner = owner, friend = friend, friendAlias = "베프")),
                 PageRequest.of(0, 20),

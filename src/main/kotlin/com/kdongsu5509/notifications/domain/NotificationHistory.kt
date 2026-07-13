@@ -17,7 +17,7 @@ class NotificationHistory internal constructor(
     val senderNickname: String,
     val title: String,
     val body: String,
-    val type: String,
+    val type: NotificationType,
     val path: String? = null,
     val isRead: Boolean = false,
     val createdAt: LocalDateTime? = null
@@ -29,10 +29,10 @@ class NotificationHistory internal constructor(
             senderNickname: String,
             title: String,
             body: String,
-            type: String,
+            type: NotificationType,
             path: String?
         ): NotificationHistory {
-            requireNotBlank(receiverEmail, senderNickname, title, body, type)
+            requireNotBlank(receiverEmail, senderNickname, title, body)
             return NotificationHistory(
                 id = null,
                 receiverEmail = receiverEmail,
@@ -50,15 +50,13 @@ class NotificationHistory internal constructor(
             receiverEmail: String,
             senderNickname: String,
             title: String,
-            body: String,
-            type: String
+            body: String
         ) {
             val blankFields = buildList {
                 if (receiverEmail.isBlank()) add("receiverEmail")
                 if (senderNickname.isBlank()) add("senderNickname")
                 if (title.isBlank()) add("title")
                 if (body.isBlank()) add("body")
-                if (type.isBlank()) add("type")
             }
             if (blankFields.isNotEmpty()) {
                 NotificationException.NOTIFICATION_INVALID_FIELD.throwIt(
@@ -74,7 +72,7 @@ class NotificationHistory internal constructor(
             senderNickname: String,
             title: String,
             body: String,
-            type: String,
+            type: NotificationType,
             path: String?,
             isRead: Boolean,
             createdAt: LocalDateTime?

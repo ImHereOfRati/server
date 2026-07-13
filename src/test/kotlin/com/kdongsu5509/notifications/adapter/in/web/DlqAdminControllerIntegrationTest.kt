@@ -3,8 +3,8 @@ package com.kdongsu5509.notifications.adapter.`in`.web
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.notifications.adapter.`in`.web.dto.DlqQueueInfoResponse
-import com.kdongsu5509.notifications.adapter.`in`.web.dto.DlqReplayResponse
+import com.kdongsu5509.notifications.application.dto.DlqQueueInfo
+import com.kdongsu5509.notifications.application.dto.DlqReplayResult
 import com.kdongsu5509.notifications.application.service.DlqAdminService
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -55,7 +55,7 @@ class DlqAdminControllerIntegrationTest : WebIntegrationTestSupport() {
     fun getAllDlqInfoSuccess() {
         whenever(dlqAdminService.getAllDlqInfo()).thenReturn(
             listOf(
-                DlqQueueInfoResponse(queueName = "friend.dlq", messageCount = 3, consumerCount = 1)
+                DlqQueueInfo(queueName = "friend.dlq", messageCount = 3, consumerCount = 1)
             )
         )
 
@@ -88,7 +88,7 @@ class DlqAdminControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("관리자는 특정 DLQ 정보를 조회할 수 있다")
     fun getDlqInfoSuccess() {
         whenever(dlqAdminService.getQueueInfo("friend.dlq")).thenReturn(
-            DlqQueueInfoResponse(queueName = "friend.dlq", messageCount = 7, consumerCount = 2)
+            DlqQueueInfo(queueName = "friend.dlq", messageCount = 7, consumerCount = 2)
         )
 
         mockMvc.perform(
@@ -141,7 +141,7 @@ class DlqAdminControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("관리자는 DLQ 재처리 요청을 count 값과 함께 전달할 수 있다")
     fun replayMessagesSuccess() {
         whenever(dlqAdminService.replayMessages("friend.dlq", 5)).thenReturn(
-            DlqReplayResponse(queueName = "friend.dlq", replayedCount = 5)
+            DlqReplayResult(queueName = "friend.dlq", replayedCount = 5)
         )
 
         mockMvc.perform(

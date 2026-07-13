@@ -112,7 +112,7 @@ class ServiceNotificationConsumerTest {
 
         verify(notificationEnqueueUseCase).enqueue(
             org.mockito.kotlin.argThat {
-                type == NotificationType.DELIVERY_FAILED_NOTICE.name &&
+                type == NotificationType.DELIVERY_FAILED_NOTICE &&
                     notificationMethod == com.kdongsu5509.notifications.domain.NotificationMethod.FCM &&
                     targetIdentifier == dto.sender.email
             }

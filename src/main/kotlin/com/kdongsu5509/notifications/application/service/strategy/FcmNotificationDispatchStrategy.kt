@@ -24,14 +24,6 @@ class FcmNotificationDispatchStrategy(
     }
 
     override fun dispatchMultiple(command: MultipleNotificationCommand) {
-        command.targetIdentifiers.forEach { targetId ->
-            fcmNotificationService.send(
-                senderNickname = command.senderNickname,
-                senderEmail = command.senderEmail,
-                receiverEmail = targetId,
-                type = command.type,
-                extraData = command.extraData
-            )
-        }
+        command.toSingles().forEach { dispatch(it) }
     }
 }

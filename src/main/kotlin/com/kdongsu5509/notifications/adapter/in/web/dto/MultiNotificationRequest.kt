@@ -29,7 +29,7 @@ data class MultiNotificationRequest(
         senderEmail = senderEmail,
         notificationMethod = notificationMethod,
         targetIdentifiers = targetIds,
-        type = type.name,
+        type = type,
         extraData = extraData
     )
 }

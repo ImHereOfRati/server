@@ -4,7 +4,6 @@ import com.kdongsu5509.notifications.adapter.`in`.messageQueue.dto.NotificationM
 import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
-import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.support.external.DiscordMessageDto
 import com.kdongsu5509.support.external.DiscordMessageSendPort
 import org.slf4j.LoggerFactory
@@ -51,24 +50,12 @@ class ConsumerFailureNotifier(
     // 큐 등록 자체가 실패해도 원래 예외를 가리면 안 되므로 여기서 삼킨다.
     // META_NOTIFICATION_TYPES를 제외하는 이유는 실패 알림 발송이 또 실패해 무한히 재귀 발행되는 걸 막기 위함이다.
     private fun notifySenderViaFcm(dto: NotificationMessageDto) {
-        if (dto.category in META_NOTIFICATION_TYPES) return
+        if (dto.category.isMeta) return
 
         runCatching {
             notificationEnqueueUseCase.enqueue(
-                NotificationCommand(
-                    senderNickname = "ImHere",
-                    senderEmail = dto.sender.email,
-                    notificationMethod = NotificationMethod.FCM,
-                    targetIdentifier = dto.sender.email,
-                    type = NotificationType.DELIVERY_FAILED_NOTICE.name,
-                    extraData = emptyMap()
-                )
+                NotificationCommand.deliveryReceipt(dto.sender.email, NotificationType.DELIVERY_FAILED_NOTICE)
             )
         }.onFailure { log.error("발송 실패 알림(FCM) 큐 등록 중 오류", it) }
-    }
-
-    companion object {
-        private val META_NOTIFICATION_TYPES =
-            setOf(NotificationType.DELIVERY_RESULT_NOTICE, NotificationType.DELIVERY_FAILED_NOTICE)
     }
 }

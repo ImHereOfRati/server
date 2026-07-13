@@ -4,6 +4,7 @@ import com.kdongsu5509.notifications.application.dto.MultipleNotificationCommand
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.`in`.MessageSendUseCase
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -40,7 +41,7 @@ class SmsNotificationDispatchStrategyTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.SMS,
             targetIdentifier = "01012345678",
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = mapOf("body" to "[ImHere]\nSeoul 도착")
         )
 
@@ -61,7 +62,7 @@ class SmsNotificationDispatchStrategyTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.SMS,
             targetIdentifiers = listOf("01012345678", "01087654321"),
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = mapOf("body" to "[ImHere]\nSeoul 도착")
         )
 

@@ -2,6 +2,7 @@ package com.kdongsu5509.notifications.application.service
 
 import com.kdongsu5509.notifications.application.port.out.NotificationHistoryPersistencePort
 import com.kdongsu5509.notifications.domain.NotificationHistory
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.support.exception.type.ForbiddenException
 import com.kdongsu5509.support.exception.type.NotFoundException
@@ -44,7 +45,7 @@ class NotificationHistoryServiceTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
             isRead = false,
             createdAt = LocalDateTime.now()
@@ -72,7 +73,7 @@ class NotificationHistoryServiceTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
             isRead = false,
             createdAt = LocalDateTime.now()
@@ -114,7 +115,7 @@ class NotificationHistoryServiceTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
             isRead = false,
             createdAt = LocalDateTime.now()

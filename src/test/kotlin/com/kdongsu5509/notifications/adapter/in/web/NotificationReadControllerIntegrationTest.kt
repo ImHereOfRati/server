@@ -49,7 +49,7 @@ class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
                 senderNickname = "senderNick",
                 title = "title-1",
                 body = "body-1",
-                type = "NOTICE",
+                type = "TERMS_UPDATE_NOTICE",
                 path = null,
                 isRead = false
             )
@@ -99,7 +99,7 @@ class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
                 senderNickname = "senderNick",
                 title = "title-1",
                 body = "body-1",
-                type = "NOTICE",
+                type = "TERMS_UPDATE_NOTICE",
                 path = null,
                 isRead = false
             )
@@ -151,7 +151,7 @@ class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
                 senderNickname = "senderNick",
                 title = "title-1",
                 body = "body-1",
-                type = "NOTICE",
+                type = "TERMS_UPDATE_NOTICE",
                 path = null,
                 isRead = false
             )

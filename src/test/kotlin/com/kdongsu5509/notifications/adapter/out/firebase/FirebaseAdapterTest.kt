@@ -4,9 +4,9 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingException
 import com.google.firebase.messaging.Message
 import com.google.firebase.messaging.MessagingErrorCode
+import com.kdongsu5509.notifications.exception.UnregisteredTokenException
 import com.kdongsu5509.support.exception.type.InternalServerException
 import com.kdongsu5509.support.exception.type.InvalidInputException
-import com.kdongsu5509.support.exception.type.NotFoundException
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -49,14 +49,14 @@ class FirebaseAdapterTest {
     }
 
     @Test
-    @DisplayName("UNREGISTERED 에러 발생 시 NotFoundException을 던진다")
+    @DisplayName("UNREGISTERED 에러 발생 시 UnregisteredTokenException을 던진다")
     fun send_unregistered() {
         val ex = Mockito.mock(FirebaseMessagingException::class.java)
         whenever(ex.messagingErrorCode).thenReturn(MessagingErrorCode.UNREGISTERED)
         whenever(firebaseMessaging.send(any<Message>())).thenThrow(ex)
 
         assertThatThrownBy { adapter.send("token", "title", "body", emptyMap()) }
-            .isInstanceOf(NotFoundException::class.java)
+            .isInstanceOf(UnregisteredTokenException::class.java)
     }
 
     @Test

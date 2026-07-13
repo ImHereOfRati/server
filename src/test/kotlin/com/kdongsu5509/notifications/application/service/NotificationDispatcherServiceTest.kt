@@ -4,6 +4,7 @@ import com.kdongsu5509.notifications.application.dto.MultipleNotificationCommand
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.service.strategy.NotificationDispatchStrategy
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.exception.NotificationException
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -44,7 +45,7 @@ class NotificationDispatcherServiceTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.FCM,
             targetIdentifier = "target@example.com",
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = emptyMap()
         )
 
@@ -63,7 +64,7 @@ class NotificationDispatcherServiceTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.FCM,
             targetIdentifier = "target@example.com",
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = emptyMap()
         )
 
@@ -79,7 +80,7 @@ class NotificationDispatcherServiceTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.SMS,
             targetIdentifiers = listOf("01011112222"),
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = emptyMap()
         )
 
@@ -98,7 +99,7 @@ class NotificationDispatcherServiceTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.FCM,
             targetIdentifiers = listOf("target@example.com"),
-            type = "TYPE",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = emptyMap()
         )
 

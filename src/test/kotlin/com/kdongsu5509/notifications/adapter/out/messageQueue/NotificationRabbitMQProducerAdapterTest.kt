@@ -37,7 +37,7 @@ class NotificationRabbitMQProducerAdapterTest {
             senderEmail = "sender@example.com",
             notificationMethod = NotificationMethod.FCM,
             targetIdentifier = "target@example.com",
-            type = "FRIEND_REQUEST_RECEIVED",
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
             extraData = mapOf("key" to "value")
         )
 

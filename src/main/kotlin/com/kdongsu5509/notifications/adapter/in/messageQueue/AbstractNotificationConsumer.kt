@@ -5,7 +5,6 @@ import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.`in`.NotificationDispatcherUseCase
 import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
 import com.kdongsu5509.notifications.application.service.MessageIdempotencyService
-import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationType
 import org.slf4j.LoggerFactory
 
@@ -42,21 +41,14 @@ abstract class AbstractNotificationConsumer(
                     senderEmail = dto.sender.email,
                     notificationMethod = dto.notificationMethod,
                     targetIdentifier = dto.receiver.email,
-                    type = dto.category.name,
+                    type = dto.category,
                     extraData = dto.data ?: emptyMap()
                 )
             )
 
-            if (dto.category !in META_NOTIFICATION_TYPES) {
+            if (!dto.category.isMeta) {
                 notificationEnqueueUseCase.enqueue(
-                    NotificationCommand(
-                        senderNickname = "ImHere",
-                        senderEmail = dto.sender.email,
-                        notificationMethod = NotificationMethod.FCM,
-                        targetIdentifier = dto.sender.email,
-                        type = NotificationType.DELIVERY_RESULT_NOTICE.name,
-                        extraData = emptyMap()
-                    )
+                    NotificationCommand.deliveryReceipt(dto.sender.email, NotificationType.DELIVERY_RESULT_NOTICE)
                 )
             }
         } catch (e: Exception) {
@@ -66,10 +58,5 @@ abstract class AbstractNotificationConsumer(
 
         // 정상 발송 완료 후에만 처리 완료로 기록한다.
         messageIdempotencyService.markAsProcessed(messageId)
-    }
-
-    companion object {
-        private val META_NOTIFICATION_TYPES =
-            setOf(NotificationType.DELIVERY_RESULT_NOTICE, NotificationType.DELIVERY_FAILED_NOTICE)
     }
 }

@@ -1,6 +1,7 @@
 package com.kdongsu5509.notifications.adapter.out.persistence
 
 import com.kdongsu5509.notifications.domain.NotificationHistory
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -42,7 +43,7 @@ class NotificationHistoryPersistenceAdapterTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
             isRead = false
         )
@@ -51,7 +52,7 @@ class NotificationHistoryPersistenceAdapterTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = "TERMS_UPDATE_NOTICE",
             path = null,
             isRead = false
         )
@@ -61,7 +62,7 @@ class NotificationHistoryPersistenceAdapterTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = "TERMS_UPDATE_NOTICE",
             path = null,
             isRead = false
         )
@@ -71,7 +72,7 @@ class NotificationHistoryPersistenceAdapterTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
             isRead = false
         )
@@ -101,7 +102,7 @@ class NotificationHistoryPersistenceAdapterTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = "TERMS_UPDATE_NOTICE",
             path = null,
             isRead = false
         )
@@ -111,7 +112,7 @@ class NotificationHistoryPersistenceAdapterTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
             isRead = false
         )
@@ -155,7 +156,7 @@ class NotificationHistoryPersistenceAdapterTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = "TERMS_UPDATE_NOTICE",
             path = null,
             isRead = false
         )
@@ -165,7 +166,7 @@ class NotificationHistoryPersistenceAdapterTest {
             senderNickname = "sender",
             title = "title",
             body = "body",
-            type = "type",
+            type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
             isRead = false
         )

@@ -16,7 +16,7 @@ class NotificationRabbitMQProducerAdapter(
 ) : NotificationProducePort {
 
     override fun send(command: NotificationCommand) {
-        val category = NotificationType.valueOf(command.type)
+        val category = command.type
         val messageDto = NotificationMessageDto(
             category = category,
             sender = NotificationPersonInfo(command.senderEmail, command.senderNickname),

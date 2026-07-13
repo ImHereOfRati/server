@@ -1,6 +1,7 @@
 package com.kdongsu5509.notifications.adapter.out.solapi
 
 import com.kdongsu5509.notifications.application.port.out.ExternalMessagePort
+import com.kdongsu5509.notifications.domain.MessageSendResult
 import com.kdongsu5509.notifications.domain.SMS
 import com.kdongsu5509.support.config.ExternalSMSProperties
 import com.kdongsu5509.support.exception.type.InvalidInputException
@@ -20,20 +21,20 @@ class SolapiAdapter(
 
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    override fun send(sms: SMS): SolapiResponse {
+    override fun send(sms: SMS): MessageSendResult {
         return try {
             val response = solapiService.send(
                 consistMessage(sms),
                 null
             )
             log.info("단일 문자 발송 성공: {}", response)
-            SolapiResponse.success()
+            MessageSendResult.success()
         } catch (e: Exception) {
             handleException("단일 발송", e)
         }
     }
 
-    override fun sendMultiple(multiSMS: List<SMS>): List<SolapiResponse> {
+    override fun sendMultiple(multiSMS: List<SMS>): List<MessageSendResult> {
         if (multiSMS.isEmpty()) {
             throw InvalidInputException("발송할 메시지가 없습니다.")
         }
@@ -45,14 +46,14 @@ class SolapiAdapter(
 
             val detailList = result.messageList
             if (detailList.isEmpty()) {
-                return List(multiSMS.size) { SolapiResponse.fail("응답 데이터가 비어있습니다.") }
+                return List(multiSMS.size) { MessageSendResult.fail("응답 데이터가 비어있습니다.") }
             }
 
             detailList.map { detail ->
                 if (detail.statusCode in listOf("200", "2000", "4000")) {
-                    SolapiResponse.success()
+                    MessageSendResult.success()
                 } else {
-                    SolapiResponse.fail("[${detail.statusCode}] ${detail.statusMessage ?: "알 수 없는 에러"}")
+                    MessageSendResult.fail("[${detail.statusCode}] ${detail.statusMessage ?: "알 수 없는 에러"}")
                 }
             }
         } catch (e: Exception) {
@@ -64,10 +65,10 @@ class SolapiAdapter(
     private fun consistMessage(sms: SMS): Message = Message(
         from = externalSMSProperties.sender,
         to = sms.receiverNumber,
-        text = sms.buildMessageText()
+        text = sms.body
     )
 
-    private fun handleException(type: String, e: Exception): SolapiResponse {
+    private fun handleException(type: String, e: Exception): MessageSendResult {
         val errorMessage = when (e) {
             is SolapiBadRequestException -> "잘못된 요청: ${e.message}"
             is SolapiInvalidApiKeyException -> "잘못된 API 키: ${e.message}"
@@ -75,6 +76,6 @@ class SolapiAdapter(
             else -> "시스템 오류: ${e.message ?: "Internal Error"}"
         }
         log.error("{} 실패 - {}", type, errorMessage, e)
-        return SolapiResponse.fail(errorMessage)
+        return MessageSendResult.fail(errorMessage)
     }
 }

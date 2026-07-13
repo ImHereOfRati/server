@@ -85,7 +85,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
         assertThat(command.senderEmail).isEqualTo("sender@example.com")
         assertThat(command.notificationMethod).isEqualTo(NotificationMethod.FCM)
         assertThat(command.targetIdentifier).isEqualTo("target@example.com")
-        assertThat(command.type).isEqualTo(NotificationType.LOCATION_TARGET.name)
+        assertThat(command.type).isEqualTo(NotificationType.LOCATION_TARGET)
         assertThat(command.extraData).containsEntry("key", "value")
     }
 
@@ -134,7 +134,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
             "target1@example.com",
             "target2@example.com"
         )
-        assertThat(captor.allValues.map { it.type }).containsOnly(NotificationType.LOCATION_TARGET.name)
+        assertThat(captor.allValues.map { it.type }).containsOnly(NotificationType.LOCATION_TARGET)
     }
 
     @Test

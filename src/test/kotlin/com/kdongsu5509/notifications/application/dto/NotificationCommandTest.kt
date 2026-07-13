@@ -1,6 +1,7 @@
 package com.kdongsu5509.notifications.application.dto
 
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -12,7 +13,7 @@ class NotificationCommandTest {
         senderEmail = "sender@example.com",
         notificationMethod = NotificationMethod.SMS,
         targetIdentifier = "01012345678",
-        type = "TYPE",
+        type = NotificationType.FRIEND_REQUEST_RECEIVED,
         extraData = extraData,
     )
 

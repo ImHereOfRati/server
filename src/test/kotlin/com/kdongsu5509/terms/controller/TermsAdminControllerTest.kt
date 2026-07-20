@@ -7,7 +7,7 @@ import com.kdongsu5509.terms.service.TermResult
 import com.kdongsu5509.terms.service.TermService
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito
+import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -47,7 +47,7 @@ class TermsAdminControllerTest {
         val results = listOf(
             TermResult(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
         )
-        BDDMockito.given(termService.findAll()).willReturn(results)
+        given(termService.findAll()).willReturn(results)
 
         mockMvc.perform(MockMvcRequestBuilders.get(TERM_ADMIN_CONTROLLER_URL))
             .andExpect(MockMvcResultMatchers.status().isOk)
@@ -57,15 +57,16 @@ class TermsAdminControllerTest {
     @Test
     @DisplayName("약관을 성공적으로 생성한다")
     fun create_success() {
+        val effectiveDate = LocalDateTime.now()
         val request = TermCreateRequest(
             type = TermTypes.SERVICE,
             title = "제목",
             content = "내용",
-            effectiveDate = LocalDateTime.now(),
+            effectiveDate = effectiveDate,
             isRequired = true
         )
-        val result = TermResult(1L, 1L, TermTypes.SERVICE, "제목", "내용", request.effectiveDate, true)
-        BDDMockito.given(termService.save(any())).willReturn(result)
+        val result = TermResult(1L, 1L, TermTypes.SERVICE, "제목", "내용", effectiveDate, true)
+        given(termService.save(any())).willReturn(result)
 
         mockMvc.perform(
             MockMvcRequestBuilders.post(TERM_ADMIN_CONTROLLER_URL)
@@ -107,7 +108,7 @@ class TermsAdminControllerTest {
             effectiveDate = LocalDateTime.now(),
             isRequired = true
         )
-        BDDMockito.given(termService.save(any())).willThrow(DataIntegrityViolationException("Duplicate version"))
+        given(termService.save(any())).willThrow(DataIntegrityViolationException("Duplicate version"))
 
         mockMvc.perform(
             MockMvcRequestBuilders.post(TERM_ADMIN_CONTROLLER_URL)

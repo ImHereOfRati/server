@@ -4,8 +4,6 @@ import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.repository.SpringDataTermRepository
 import com.kdongsu5509.terms.repository.TermJpaEntity
-import com.kdongsu5509.terms.repository.TermMapper
-import com.kdongsu5509.terms.repository.TermPersistenceAdapter
 import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.jpa.SpringDataUserAgreementRepository
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
@@ -27,7 +25,7 @@ import java.time.LocalDateTime
  */
 @DataJpaTest
 @ActiveProfiles("test")
-@Import(UserAgreementRepositoryImpl::class, TermPersistenceAdapter::class, TermMapper::class)
+@Import(UserAgreementRepositoryImpl::class)
 class UserAgreementRepositoryImplIntegrationTest @Autowired constructor(
     private val userAgreementRepositoryImpl: UserAgreementRepositoryImpl,
     private val springDataUserRepository: SpringDataUserRepository,

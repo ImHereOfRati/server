@@ -1,9 +1,10 @@
 package com.kdongsu5509.terms.repository
 
 import com.kdongsu5509.shared.BaseEntity
-import com.kdongsu5509.terms.domain.Term
 import com.kdongsu5509.terms.domain.TermTypes
 import jakarta.persistence.*
+import jakarta.persistence.EnumType.STRING
+import jakarta.persistence.GenerationType.IDENTITY
 import java.time.LocalDateTime
 
 @Entity
@@ -18,13 +19,13 @@ import java.time.LocalDateTime
 )
 class TermJpaEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     val id: Long? = null,
 
     @Column(nullable = false)
     var version: Long,
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(STRING)
     @Column(nullable = false)
     var type: TermTypes,
 
@@ -39,16 +40,4 @@ class TermJpaEntity(
 
     @Column(nullable = false)
     var isRequired: Boolean
-) : BaseEntity() {
-    companion object {
-        fun from(term: Term): TermJpaEntity = TermJpaEntity(
-            id = term.id,
-            version = term.version.value,
-            type = term.type,
-            title = term.title,
-            content = term.content,
-            effectiveDate = term.effectiveDate,
-            isRequired = term.isRequired,
-        )
-    }
-}
+) : BaseEntity()

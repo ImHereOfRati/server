@@ -1,34 +1,39 @@
 package com.kdongsu5509.terms.service
 
-import com.kdongsu5509.terms.domain.Term
+import com.kdongsu5509.terms.repository.SpringDataTermRepository
+import com.kdongsu5509.terms.repository.TermJpaEntity
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 
 @Service
 @Transactional(readOnly = true)
 class TermService(
-    private val termPersistenceAdapter: TermRepository
+    private val termRepository: SpringDataTermRepository
 ) {
     @Transactional
     fun save(command: TermCreateCommand): TermResult {
-        val previous = termPersistenceAdapter.findLatestByType(command.type)
-
-        return Term.issueNext(
-            previous = previous,
+        val latestVersion = termRepository.findTopByTypeOrderByVersionDesc(command.type)?.version ?: 0L
+        val term = TermJpaEntity(
+            version = latestVersion + 1L,
             type = command.type,
             title = command.title,
             content = command.content,
             effectiveDate = command.effectiveDate,
             isRequired = command.isRequired,
-        ).let { termPersistenceAdapter.save(it) }
-            .let { TermResult.from(it) }
+        )
+
+        return TermResult.from(termRepository.save(term))
     }
 
-    fun findAll(): List<TermResult> = termPersistenceAdapter.findAll()
+    fun findAll(): List<TermResult> = termRepository.findAll()
         .map { TermResult.from(it) }
         .toList()
 
-    fun findEffectiveTerms(): List<TermResult> = termPersistenceAdapter.findActiveAll()
+    fun findEffectiveTerms(): List<TermResult> = termRepository
+        .findAllByEffectiveDateLessThanEqual(LocalDateTime.now())
+        .groupBy { it.type }
+        .values
+        .map { terms -> terms.maxBy { it.version } }
         .map { TermResult.from(it) }
-        .toList()
 }

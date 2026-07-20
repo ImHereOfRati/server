@@ -1,11 +1,14 @@
 package com.kdongsu5509.terms.service
 
-import com.kdongsu5509.terms.domain.Term
 import com.kdongsu5509.terms.domain.TermTypes
+import com.kdongsu5509.terms.repository.SpringDataTermRepository
+import com.kdongsu5509.terms.repository.TermJpaEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentCaptor
+import org.mockito.Captor
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
@@ -18,7 +21,10 @@ import java.time.LocalDateTime
 class TermServiceTest {
 
     @Mock
-    lateinit var termPersistenceAdapter: TermRepository
+    lateinit var termRepository: SpringDataTermRepository
+
+    @Captor
+    lateinit var termCaptor: ArgumentCaptor<TermJpaEntity>
 
     @InjectMocks
     lateinit var termService: TermService
@@ -26,93 +32,79 @@ class TermServiceTest {
     @Test
     @DisplayName("새로운 약관을 저장할 때 기존 약관이 없으면 버전 1로 저장한다")
     fun save_new_term_without_existing() {
-        // given
-        val command = TermCreateCommand(
-            type = TermTypes.SERVICE,
-            title = "서비스 이용약관",
-            content = "내용",
-            effectiveDate = LocalDateTime.now(),
-            isRequired = true
-        )
-        given(termPersistenceAdapter.findLatestByType(command.type)).willReturn(null)
-        given(termPersistenceAdapter.save(any())).willReturn(
-            Term.reconstruct(1L, 1L, command.type, command.title, command.content, command.effectiveDate, command.isRequired)
-        )
+        val command = command()
+        given(termRepository.findTopByTypeOrderByVersionDesc(command.type)).willReturn(null)
+        given(termRepository.save(any<TermJpaEntity>())).willReturn(entity(id = 1L, version = 1L))
 
-        // when
         val result = termService.save(command)
 
-        // then
+        then(termRepository).should().save(termCaptor.capture())
+        assertThat(termCaptor.value.version).isEqualTo(1L)
         assertThat(result.version).isEqualTo(1L)
-        then(termPersistenceAdapter).should().findLatestByType(command.type)
-        then(termPersistenceAdapter).should().save(any())
     }
 
     @Test
     @DisplayName("새로운 약관을 저장할 때 기존 약관이 있으면 버전을 증가시켜 저장한다")
     fun save_new_term_with_existing() {
-        // given
-        val command = TermCreateCommand(
-            type = TermTypes.SERVICE,
-            title = "서비스 이용약관 v2",
-            content = "내용 v2",
-            effectiveDate = LocalDateTime.now(),
-            isRequired = true
-        )
-        val existingTerm = Term.reconstruct(
-            id = 1L,
-            version = 1L,
-            type = TermTypes.SERVICE,
-            title = "서비스 이용약관 v1",
-            content = "내용 v1",
-            effectiveDate = LocalDateTime.now().minusDays(1),
-            isRequired = true
-        )
-        given(termPersistenceAdapter.findLatestByType(command.type)).willReturn(existingTerm)
-        given(termPersistenceAdapter.save(any())).willReturn(
-            Term.reconstruct(2L, 2L, command.type, command.title, command.content, command.effectiveDate, command.isRequired)
-        )
+        val command = command()
+        given(termRepository.findTopByTypeOrderByVersionDesc(command.type))
+            .willReturn(entity(id = 1L, version = 2L))
+        given(termRepository.save(any<TermJpaEntity>())).willReturn(entity(id = 2L, version = 3L))
 
-        // when
         val result = termService.save(command)
 
-        // then
-        assertThat(result.version).isEqualTo(2L)
-        then(termPersistenceAdapter).should().findLatestByType(command.type)
-        then(termPersistenceAdapter).should().save(any())
+        then(termRepository).should().save(termCaptor.capture())
+        assertThat(termCaptor.value.version).isEqualTo(3L)
+        assertThat(result.version).isEqualTo(3L)
     }
 
     @Test
     @DisplayName("모든 약관을 조회한다")
     fun findAll_success() {
-        // given
-        val terms = listOf(
-            Term.reconstruct(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
-        )
-        given(termPersistenceAdapter.findAll()).willReturn(terms)
+        given(termRepository.findAll()).willReturn(listOf(entity(id = 1L)))
 
-        // when
         val results = termService.findAll()
 
-        // then
         assertThat(results).hasSize(1)
-        then(termPersistenceAdapter).should().findAll()
+        then(termRepository).should().findAll()
     }
 
     @Test
-    @DisplayName("발효 중인 약관만 조회한다")
+    @DisplayName("시행된 약관 중 타입별 최고 버전을 조회한다")
     fun findEffectiveTerms_success() {
-        // given
-        val terms = listOf(
-            Term.reconstruct(1L, 1L, TermTypes.SERVICE, "제목", "내용", LocalDateTime.now(), true)
+        val candidates = listOf(
+            entity(id = 1L, version = 1L, type = TermTypes.SERVICE),
+            entity(id = 2L, version = 2L, type = TermTypes.SERVICE),
+            entity(id = 3L, version = 1L, type = TermTypes.PRIVACY),
         )
-        given(termPersistenceAdapter.findActiveAll()).willReturn(terms)
+        given(termRepository.findAllByEffectiveDateLessThanEqual(any())).willReturn(candidates)
 
-        // when
         val results = termService.findEffectiveTerms()
 
-        // then
-        assertThat(results).hasSize(1)
-        then(termPersistenceAdapter).should().findActiveAll()
+        assertThat(results).hasSize(2)
+        assertThat(results.single { it.type == TermTypes.SERVICE }.version).isEqualTo(2L)
+        assertThat(results.single { it.type == TermTypes.PRIVACY }.version).isEqualTo(1L)
     }
+
+    private fun command() = TermCreateCommand(
+        type = TermTypes.SERVICE,
+        title = "서비스 이용약관",
+        content = "내용",
+        effectiveDate = LocalDateTime.now(),
+        isRequired = true,
+    )
+
+    private fun entity(
+        id: Long,
+        version: Long = 1L,
+        type: TermTypes = TermTypes.SERVICE,
+    ) = TermJpaEntity(
+        id = id,
+        version = version,
+        type = type,
+        title = "제목",
+        content = "내용",
+        effectiveDate = LocalDateTime.now().minusDays(1),
+        isRequired = true,
+    )
 }

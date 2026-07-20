@@ -10,13 +10,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
-import org.springframework.restdocs.payload.JsonFieldType
-import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.relaxedRequestFields
-import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
-import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
+import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -24,6 +23,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.LocalDateTime
+import java.util.stream.Stream
+
+private const val ADMIN_TERMS_PATH = "/api/admin/terms"
 
 class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
 
@@ -62,14 +64,14 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
             type = TermTypes.SERVICE,
             title = "서비스 이용약관",
             content = "이용약관 내용입니다.",
-            effectiveDate = LocalDateTime.now().plusDays(7),
+            effectiveDate = LocalDateTime.now().plusDays(1),
             isRequired = true
         )
 
         mockMvc.perform(
-            post("/api/admin/terms")
+            post(ADMIN_TERMS_PATH)
                 .with(csrf())
-                .with(user(adminUser)) // 관리자 권한이 필요하다면 (현재 Controller에는 @PreAuthorize가 없음, 하지만 생성은 가능)
+                .with(user(adminUser))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
         )
@@ -106,54 +108,26 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
         assertThat(terms[0].title).isEqualTo("서비스 이용약관")
     }
 
-    @Test
-    @DisplayName("중복된 버전의 약관 생성 시 409 Conflict 발생")
-    fun createTermConflict() {
-        // given: 동일한 타입의 약관을 미리 생성하여 저장해둔다. (동일 타입의 새 약관은 버전 충돌 발생)
-        // 실제로는 Term 엔티티 생성 시 버전을 조회하여 +1을 하지만, 동시성 상황이나 Unique Key 제약 조건 테스트
-        val request = TermCreateRequest(
-            type = TermTypes.SERVICE,
-            title = "서비스 이용약관 1",
-            content = "내용 1",
-            effectiveDate = LocalDateTime.now(),
-            isRequired = true
-        )
-
-        // 첫 번째 생성
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("invalidTermRequests")
+    @DisplayName("약관 생성 요청의 필드 검증에 실패하면 400 오류를 반환한다")
+    fun createTermFailWhenInvalid(
+        caseName: String,
+        request: TermCreateRequest,
+        expectedMessage: String,
+    ) {
         mockMvc.perform(
-            post("/api/admin/terms")
+            post(ADMIN_TERMS_PATH)
                 .with(csrf())
                 .with(user(adminUser))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMapper.writeValueAsString(request))
-        ).andExpect(status().isOk)
-
-        // when & then: 동일한 생성 요청을 반복하여 Unique Constraint 위반 유도 (구현 방식에 따라 다를 수 있으나 현재는 서비스 단에서 버전을 부여하고 저장)
-        // 약관 생성이 정상적으로 된다면 버전업이 되므로 이 테스트는 의도와 다르게 성공할 수 있음.
-        // 현재 TermsControllerTest를 보면 Duplicate version 시 409를 기대하므로 여기서 동일한 엔티티를 강제 저장하거나 예외를 발생시키는지 확인
-        // 만약 정상 버전업이 구현되어 있다면 200 OK일 수 있습니다. (TermsService 구현에 따름)
-        // 일단 여기서는 생략하거나 Controller 단 400 Bad Request 에러 확인으로 대체
-        val badRequest = TermCreateRequest(
-            type = TermTypes.SERVICE,
-            title = "",
-            content = "",
-            effectiveDate = LocalDateTime.now(),
-            isRequired = true
         )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.imhereResponseCode").value("GLOBAL-000"))
+            .andExpect(jsonPath("$.message").value("입력값이 올바르지 않습니다: $expectedMessage"))
 
-        mockMvc.perform(
-            post("/api/admin/terms")
-                .with(csrf())
-                .with(user(adminUser))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(badRequest))
-        ).andExpect(status().isBadRequest)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "terms-create-fail-bad-request",
-                    snippets = arrayOf(errorResponseFields())
-                )
-            )
+        assertThat(termRepository.count()).isZero()
     }
 
     @Test
@@ -175,15 +149,8 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
             isRequired = true
         )
 
-        mockMvc.perform(
-            post("/api/admin/terms").with(csrf()).with(user(adminUser)).contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(request1))
-        ).andExpect(status().isOk)
-
-        mockMvc.perform(
-            post("/api/admin/terms").with(csrf()).with(user(adminUser)).contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(request2))
-        ).andExpect(status().isOk)
+        requestToAdminTermsPathWithPostMethod(request1)
+        requestToAdminTermsPathWithPostMethod(request2)
 
         // when & then
         mockMvc.perform(
@@ -215,4 +182,78 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
             )
     }
 
+    private fun requestToAdminTermsPathWithPostMethod(requestValue: TermCreateRequest) {
+        mockMvc.perform(
+            post(ADMIN_TERMS_PATH)
+                .with(csrf())
+                .with(user(adminUser))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(requestValue))
+        ).andExpect(status().isOk)
+    }
+
+    companion object {
+        private val validRequest = TermCreateRequest(
+            type = TermTypes.SERVICE,
+            title = "서비스 이용약관",
+            content = "약관 내용",
+            effectiveDate = LocalDateTime.of(2026, 7, 20, 12, 0),
+            isRequired = true,
+        )
+
+        @JvmStatic
+        fun invalidTermRequests(): Stream<Arguments> = Stream.of(
+            invalidCase(
+                "약관 종류 누락",
+                validRequest.copy(type = null),
+                "type: 약관 종류는 필수입니다.",
+            ),
+            invalidCase(
+                "약관 제목 누락",
+                validRequest.copy(title = null),
+                "title: 약관 제목은 필수입니다.",
+            ),
+            invalidCase(
+                "약관 제목 빈 문자열",
+                validRequest.copy(title = ""),
+                "title: 약관 제목은 필수입니다.",
+            ),
+            invalidCase(
+                "약관 제목 공백",
+                validRequest.copy(title = " \t"),
+                "title: 약관 제목은 필수입니다.",
+            ),
+            invalidCase(
+                "약관 내용 누락",
+                validRequest.copy(content = null),
+                "content: 약관 내용은 필수입니다.",
+            ),
+            invalidCase(
+                "약관 내용 빈 문자열",
+                validRequest.copy(content = ""),
+                "content: 약관 내용은 필수입니다.",
+            ),
+            invalidCase(
+                "약관 내용 공백",
+                validRequest.copy(content = " \t"),
+                "content: 약관 내용은 필수입니다.",
+            ),
+            invalidCase(
+                "적용일 누락",
+                validRequest.copy(effectiveDate = null),
+                "effectiveDate: 적용일은 필수입니다.",
+            ),
+            invalidCase(
+                "필수 여부 누락",
+                validRequest.copy(isRequired = null),
+                "isRequired: 필수 여부는 빈 값일 수 없습니다",
+            ),
+        )
+
+        private fun invalidCase(
+            caseName: String,
+            request: TermCreateRequest,
+            expectedMessage: String,
+        ): Arguments = Arguments.of(caseName, request, expectedMessage)
+    }
 }

@@ -4,11 +4,7 @@ import com.kdongsu5509.terms.controller.dto.TermCreateRequest
 import com.kdongsu5509.terms.controller.dto.TermResponse
 import com.kdongsu5509.terms.service.TermService
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/admin/terms", version = "1")
@@ -17,7 +13,8 @@ class TermsAdminController(
 ) {
     @GetMapping
     fun readAll(): List<TermResponse> {
-        return TermResponse.listFrom(termService.findAll())
+        val results = termService.findAll()
+        return results.map { TermResponse.from(it) }
     }
 
     @PostMapping

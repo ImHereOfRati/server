@@ -5,7 +5,7 @@ import com.kdongsu5509.terms.service.TermResult
 import java.time.LocalDateTime
 
 data class TermResponse(
-    val id: Long?,
+    val id: Long,
     val version: Long,
     val type: TermTypes,
     val title: String,
@@ -23,7 +23,5 @@ data class TermResponse(
             result.effectiveDate,
             result.isRequired
         )
-
-        fun listFrom(results: List<TermResult>): List<TermResponse> = results.map { from(it) }
     }
 }

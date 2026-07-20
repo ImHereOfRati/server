@@ -19,6 +19,8 @@ class TermsController(
         if (!isActive) {
             TermException.NON_ACTIVE_TERM_NOT_ALLOWED.throwIt()
         }
-        return TermResponse.listFrom(termService.findEffectiveTerms())
+
+        val results = termService.findEffectiveTerms()
+        return results.map { TermResponse.from(it) }
     }
 }

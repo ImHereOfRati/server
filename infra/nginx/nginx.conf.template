@@ -71,11 +71,9 @@ http {
         include /etc/letsencrypt/options-ssl-nginx.conf;
         ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
-        # 랜딩 페이지는 정적 파일로 서빙한다.
+        # 기존 루트 도메인의 랜딩 요청은 CloudFront가 제공하는 신규 도메인으로 보낸다.
         location = / {
-            root /usr/share/nginx/html;
-            index index.html;
-            try_files /index.html =404;
+            return 301 https://imhere.ratiko.co.kr$request_uri;
         }
 
         # 운영 API / 관리자 / swagger / actuator 는 Spring Boot 로 넘긴다.
@@ -148,9 +146,7 @@ http {
         }
 
         location / {
-            root /usr/share/nginx/html;
-            index index.html;
-            try_files $uri $uri/ /index.html;
+            return 301 https://imhere.ratiko.co.kr$request_uri;
         }
     }
 }

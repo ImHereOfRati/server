@@ -10,7 +10,6 @@
 |---|---|
 | `infra/nginx/nginx.conf.template` | git에 저장하는 **원본** 설정. `${SERVER_NAME}` 같은 변수가 들어 있습니다 |
 | `infra/nginx/nginx.conf` | CD가 배포할 때마다 템플릿을 렌더링해 만드는 **결과물**. 배포가 끝나면 EC2에서 삭제되고, git에도 추적하지 않습니다(`.gitignore`) |
-| `infra/nginx/website.html` | `/` 경로에서 보여주는 정적 랜딩 페이지 |
 
 변수가 어떤 값으로 채워지는지, 어디서 설정하는지는 [cicd.md](cicd.md)의 환경 변수 가이드를 참고합니다.
 
@@ -33,15 +32,19 @@
 |---|---|---|
 | `^~ /.well-known/acme-challenge/` | 정적 파일(`certbot` webroot) | Let's Encrypt HTTP-01 챌린지 |
 | `/` on `80` | `https://$host$request_uri` | HTTP -> HTTPS 리다이렉트 |
-| `= /` | 정적 파일(`website.html`) | 랜딩 페이지 |
+| `= /` | `https://imhere.ratiko.co.kr$request_uri` | 신규 CloudFront 랜딩으로 301 리다이렉트 |
 | `^~ /api/` | `http://dsko:8080` | CORS 헤더 처리 + 프리플라이트 단축 응답 (아래 참고) |
 | `^~ /admin/` | `http://dsko:8080` | 관리자 API |
 | `^~ /swagger-ui/` | `http://dsko:8080` | API 문서 UI |
 | `^~ /docs/` | `http://dsko:8080` | REST Docs 정적 문서 |
 | `^~ ${MGMT_BASE_PATH}/` | `http://dsko:8080` | Actuator/모니터링 — 추측하기 어려운 난독화 경로를 외부에 노출 |
-| `/` (그 외 전부) | 정적 파일 + SPA fallback | `try_files $uri $uri/ /index.html` |
+| `/` (그 외 전부) | `https://imhere.ratiko.co.kr$request_uri` | 경로·쿼리스트링을 유지한 301 리다이렉트 |
 
 모든 백엔드 location은 `proxy_set_header`로 `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`를 Spring Boot에 전달합니다.
+
+React 랜딩과 WebView 앱 정적 파일은 이 서버가 보관하거나 서빙하지 않습니다. 두 산출물은 mobile 저장소에서 독립적으로 빌드해 CloudFront/S3에 배포합니다. 기존 루트 도메인의 API·관리·문서·모니터링 location만 EC2에서 유지합니다.
+
+DNS 레코드와 CloudFront 배포 전환은 이 설정과 별개인 수동 운영 작업입니다. 신규 도메인이 올바른 배포를 가리키는지 확인한 뒤 이 설정을 배포해야 합니다.
 
 ---
 

@@ -13,9 +13,11 @@ class ModularityTest {
         """
         잔여 위반 해소 후 활성화한다.
         - 사이클 7건: friends <-> user, auth <-> user, auth <-> agreement 및 파생 경로
-        - non-exposed 140건: friends -> user.repository.jpa/UserMapper(90),
-          user -> friends.repository.jpa Q타입(15), notifications/auth -> support 내부(24),
-          notifications -> auth.application.port.out(5), auth -> agreement.service(6)
+        - non-exposed 116건
+          [정리 대상] user -> friends.repository.jpa Q타입(15)
+          [보류] friends -> user.repository.jpa/UserMapper(90),
+                 auth -> agreement.service(6), notifications -> auth.application.port.out(5)
+        보류분은 agreement/user/terms가 의존하는 방향이 아니라 그 반대 방향이므로 후순위로 둔다.
         """
     )
     @DisplayName("모든 모듈이 서로의 Named Interface만 통해 의존한다")
@@ -133,17 +135,16 @@ class ModularityTest {
     }
 
     @Test
-    @DisplayName("Support 예외 패키지를 Named Interface로 공개한다")
-    fun getNamedInterfaces_success_exposes_support_exceptions() {
+    @DisplayName("Support 모듈은 하위 패키지를 공개하는 Open 모듈이다")
+    fun isOpen_success_support_module_is_open() {
         // given
         val modules = ApplicationModules.of(ImhereApplication::class.java)
-        val supportModule = modules.getModuleByName("support").orElseThrow()
 
         // when
-        val supportExceptions = supportModule.namedInterfaces.getByName("exceptions")
+        val supportModule = modules.getModuleByName("support").orElseThrow()
 
         // then
-        assertThat(supportExceptions).isPresent()
+        assertThat(supportModule.isOpen).isTrue()
     }
 
     @Test

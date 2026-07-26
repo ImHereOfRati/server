@@ -23,8 +23,7 @@ enum class UserException(
     USER_NOT_FOUND(CommonErrorCode.NOT_FOUND, "USER-300", "사용자를 찾을 수 없습니다."),
 
     // --- 5xx: State Conflict (409) ---
-    DUPLICATE_EMAIL(CommonErrorCode.CONFLICT, "USER-500", "이미 사용 중인 이메일입니다."),
-    DUPLICATE_NICKNAME(CommonErrorCode.CONFLICT, "USER-501", "이미 사용 중인 닉네임입니다.");
+    DUPLICATE_EMAIL(CommonErrorCode.CONFLICT, "USER-500", "이미 사용 중인 이메일입니다.");
 
     override val httpStatus = category.httpStatus
 }

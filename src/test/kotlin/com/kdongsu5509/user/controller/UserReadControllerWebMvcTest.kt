@@ -1,15 +1,13 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.auth.security.SecurityWhiteList
+import com.kdongsu5509.user.service.UserQueryService
+import com.common.testsupport.ImHereLightWebMvcTest
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
-import com.kdongsu5509.support.logger.AccessLogPrinter
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.service.UserService
-import com.kdongsu5509.user.service.dto.UserResult
+import com.kdongsu5509.user.api.UserResult
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -17,7 +15,6 @@ import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.SliceImpl
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
@@ -34,26 +31,17 @@ import org.springframework.web.context.WebApplicationContext
 import org.springframework.web.filter.CharacterEncodingFilter
 import java.util.*
 
-@WebMvcTest(UserReadController::class)
+@ImHereLightWebMvcTest(controllers = [UserReadController::class])
 class UserReadControllerWebMvcTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    private lateinit var userService: UserService
-
-    @MockitoBean
-    private lateinit var accessLogPrinter: AccessLogPrinter
+    private lateinit var userQueryService: UserQueryService
 
     @MockitoBean
     private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
-
-    @MockitoBean
-    private lateinit var tokenParser: ImHereTokenParserPort
-
-    @MockitoBean
-    private lateinit var securityWhiteList: SecurityWhiteList
 
     @BeforeEach
     fun setUp(webApplicationContext: WebApplicationContext) {
@@ -87,7 +75,7 @@ class UserReadControllerWebMvcTest {
             status = UserStatus.ACTIVE
         )
 
-        given(userService.findByEmail(eq("sender@example.com"))).willReturn(result)
+        given(userQueryService.findByEmail(eq("sender@example.com"))).willReturn(result)
 
         // when & then
         mockMvc.perform(
@@ -111,7 +99,7 @@ class UserReadControllerWebMvcTest {
 
     @Test
     @DisplayName("키워드 파라미터가 비어있으면 400 Bad Request를 반환한다")
-    fun readOthers_fail_when_keyword_blank() {
+    fun findOther_fail_when_keyword_blank() {
         val userDetails = ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")
 
         mockMvc.perform(
@@ -123,7 +111,7 @@ class UserReadControllerWebMvcTest {
 
     @Test
     @DisplayName("키워드로 타인 조회 시 성공하고 200 OK와 유저 슬라이스를 반환한다")
-    fun readOthers_success() {
+    fun findOther_success() {
         // given
         val userDetails = ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")
         val otherId = UUID.randomUUID()
@@ -138,7 +126,7 @@ class UserReadControllerWebMvcTest {
         val pageable = PageRequest.of(0, 15)
         val slice = SliceImpl(listOf(otherUser), pageable, false)
 
-        given(userService.findByKeyword(eq("sender@example.com"), eq("검색대상"), any())).willReturn(slice)
+        given(userQueryService.findByKeyword(eq("sender@example.com"), eq("검색대상"), any())).willReturn(slice)
 
         // when & then
         mockMvc.perform(

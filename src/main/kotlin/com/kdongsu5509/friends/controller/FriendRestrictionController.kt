@@ -1,6 +1,6 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.controller.dto.CreateFriendRestrictionRequest
 import com.kdongsu5509.friends.controller.dto.FriendRestrictionResponse
 import com.kdongsu5509.friends.service.FriendRestrictionService
@@ -29,6 +29,7 @@ class FriendRestrictionController(
         val sliceResponse = SliceResponse.from(restrictions.map { FriendRestrictionResponse.fromDomain(it) })
         return sliceResponse.toOkResponse()
     }
+
     @PostMapping
     fun restrictUser(
         @AuthenticationPrincipal userDetails: ImHereUserDetails,

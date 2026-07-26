@@ -1,30 +1,29 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.auth.application.port.`in`.ForceLogoutUseCase
-import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.auth.security.SecurityWhiteList
+import com.common.testsupport.ImHereLightWebMvcTest
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
-import com.kdongsu5509.support.logger.AccessLogPrinter
-import com.kdongsu5509.user.controller.dto.UserUpdateRequest
+import com.kdongsu5509.user.controller.dto.NicknameUpdateRequest
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.service.UserService
-import com.kdongsu5509.user.service.dto.UserResult
+import com.kdongsu5509.user.service.UserLifecycleService
+import com.kdongsu5509.user.service.UserProfileService
+import com.kdongsu5509.user.api.UserResult
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
+import org.mockito.Mockito.verify
 import org.mockito.kotlin.eq
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -36,29 +35,20 @@ import org.springframework.web.filter.CharacterEncodingFilter
 import tools.jackson.databind.json.JsonMapper
 import java.util.*
 
-@WebMvcTest(UserCommandController::class)
+@ImHereLightWebMvcTest(controllers = [UserCommandController::class])
 class UserCommandControllerWebMvcTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    private lateinit var userService: UserService
+    private lateinit var userProfileService: UserProfileService
 
     @MockitoBean
-    private lateinit var forceLogoutUseCase: ForceLogoutUseCase
-
-    @MockitoBean
-    private lateinit var accessLogPrinter: AccessLogPrinter
+    private lateinit var userLifecycleService: UserLifecycleService
 
     @MockitoBean
     private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
-
-    @MockitoBean
-    private lateinit var tokenParser: ImHereTokenParserPort
-
-    @MockitoBean
-    private lateinit var securityWhiteList: SecurityWhiteList
 
     @Autowired
     private lateinit var objectMapper: JsonMapper
@@ -81,7 +71,7 @@ class UserCommandControllerWebMvcTest {
     fun updateMe_success_with_nickname() {
         // given
         val userDetails = ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")
-        val request = UserUpdateRequest(nickname = "새닉네임")
+        val request = NicknameUpdateRequest(nickname = "새닉네임")
         val userId = UUID.randomUUID()
         val result = UserResult(
             id = userId,
@@ -92,7 +82,7 @@ class UserCommandControllerWebMvcTest {
             status = UserStatus.ACTIVE
         )
 
-        given(userService.updateNickname(eq("sender@example.com"), eq("새닉네임"))).willReturn(result)
+        given(userProfileService.updateNickname(eq("sender@example.com"), eq("새닉네임"))).willReturn(result)
 
         // when & then
         mockMvc.perform(
@@ -110,22 +100,11 @@ class UserCommandControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("닉네임 변경 요청에 닉네임이 없으면 기존 내 정보를 조회하여 200 OK를 반환한다")
-    fun updateMe_success_with_null_nickname() {
+    @DisplayName("닉네임이 비어 있으면 400 Bad Request를 반환한다")
+    fun updateMe_fail_when_nickname_blank() {
         // given
         val userDetails = ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")
-        val request = UserUpdateRequest(nickname = null)
-        val userId = UUID.randomUUID()
-        val result = UserResult(
-            id = userId,
-            email = "sender@example.com",
-            nickname = "sender-nick",
-            oauthProvider = OAuth2Provider.KAKAO,
-            role = UserRole.NORMAL,
-            status = UserStatus.ACTIVE
-        )
-
-        given(userService.findByEmail(eq("sender@example.com"))).willReturn(result)
+        val request = NicknameUpdateRequest(nickname = "")
 
         // when & then
         mockMvc.perform(
@@ -134,18 +113,16 @@ class UserCommandControllerWebMvcTest {
                 .with(user(userDetails))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.imhereResponseCode").value("SUCCESS"))
-            .andExpect(jsonPath("$.data.id").value(userId.toString()))
-            .andExpect(jsonPath("$.data.nickname").value("sender-nick"))
+        ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.imhereResponseCode").value("GLOBAL-000"))
     }
 
     @Test
-    @DisplayName("변경하려는 닉네임이 5자를 초과하면 400 Bad Request를 반환한다")
+    @DisplayName("변경하려는 닉네임이 7자를 초과하면 400 Bad Request를 반환한다")
     fun updateMe_fail_when_nickname_too_long() {
         // given
         val userDetails = ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")
-        val request = UserUpdateRequest(nickname = "여섯글자닉네") // 6자
+        val request = NicknameUpdateRequest(nickname = "여덟글자짜리닉네임")
 
         // when & then
         mockMvc.perform(
@@ -161,7 +138,7 @@ class UserCommandControllerWebMvcTest {
     @Test
     @DisplayName("인증이 안 된 상태로 내 정보 수정을 요청하면 401 Unauthorized를 반환한다")
     fun updateMe_fail_unauthorized() {
-        val request = UserUpdateRequest(nickname = "새닉네임")
+        val request = NicknameUpdateRequest(nickname = "새닉네임")
 
         mockMvc.perform(
             patch(UPDATE_ME_PATH)
@@ -169,5 +146,19 @@ class UserCommandControllerWebMvcTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    @DisplayName("인증된 사용자가 탈퇴하면 204 응답을 반환하고 이메일을 생명주기 서비스에 전달한다")
+    fun withdraw_returns_no_content_and_delegates_authenticated_email() {
+        val userDetails = ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")
+
+        mockMvc.perform(
+            delete("$UPDATE_ME_PATH/withdrawal")
+                .with(csrf())
+                .with(user(userDetails))
+        ).andExpect(status().isNoContent)
+
+        verify(userLifecycleService).withdraw("sender@example.com")
     }
 }

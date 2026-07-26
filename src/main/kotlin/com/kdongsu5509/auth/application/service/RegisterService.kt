@@ -7,17 +7,20 @@ import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
 import com.kdongsu5509.auth.domain.LoginEligibilityPolicy
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.api.RegisterUserCommand
+import com.kdongsu5509.user.api.UserLookupContract
+import com.kdongsu5509.user.api.UserRegistrationContract
+import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.domain.EmailRegistrationPolicy
-import com.kdongsu5509.user.domain.User
-import com.kdongsu5509.user.repository.UserRepository
+import com.kdongsu5509.user.domain.OAuth2Provider
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class RegisterService(
     private val oidcVerifyPort: OIDCVerifyPort,
-    private val userRepository: UserRepository,
+    private val userLookupContract: UserLookupContract,
+    private val userRegistrationContract: UserRegistrationContract,
     private val tokenProviderPort: ImHereTokenProviderPort
 ) : RegisterUseCase {
 
@@ -34,15 +37,21 @@ class RegisterService(
         return oidcVerifyPort.verify(provider, idToken, nonce)
     }
 
-    private fun saveNewUser(email: String, nickname: String, sub: String?, provider: OAuth2Provider): User {
-        val existingUser = userRepository.findByEmail(email)
+    private fun saveNewUser(email: String, nickname: String, sub: String?, provider: OAuth2Provider): UserResult {
+        val existingUser = userLookupContract.findByEmailOrNull(email)
 
         // 기존 계정이 있으면 로그인 자격 정책으로 재가입 가능 여부를 판정한다.
         // (신규 계정이면 existingUser == null 이므로 통과, 중복 검증은 아래에서 수행)
         existingUser?.let { LoginEligibilityPolicy.assertLoginable(it.status) }
 
         EmailRegistrationPolicy.assertNotDuplicated(existingUser != null)
-        val newUser = User.createWithPendingStatus(email, nickname, provider, sub)
-        return userRepository.save(newUser)
+        return userRegistrationContract.register(
+            RegisterUserCommand(
+                email = email,
+                nickname = nickname,
+                oauthProvider = provider,
+                oidcSubject = sub,
+            )
+        )
     }
 }

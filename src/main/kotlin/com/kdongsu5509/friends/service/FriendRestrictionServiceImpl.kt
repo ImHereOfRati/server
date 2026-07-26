@@ -7,8 +7,8 @@ import com.kdongsu5509.friends.repository.FriendRestrictionRepository
 import com.kdongsu5509.friends.repository.FriendshipRepository
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.exception.throwIt
+import com.kdongsu5509.user.api.UserLookupContract
 import com.kdongsu5509.user.domain.User
-import com.kdongsu5509.user.service.UserService
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Service
@@ -19,7 +19,7 @@ import java.util.*
 @Transactional(readOnly = true)
 class FriendRestrictionServiceImpl(
     private val friendRestrictionRepository: FriendRestrictionRepository,
-    private val userService: UserService,
+    private val userLookupContract: UserLookupContract,
     private val friendshipRepository: FriendshipRepository,
     private val friendRequestRepository: FriendRequestRepository
 ) : FriendRestrictionService {
@@ -43,10 +43,10 @@ class FriendRestrictionServiceImpl(
     @Transactional
     override fun restrictUser(restrictorEmail: String, targetUserId: UUID): FriendRestriction {
         val restrictor = findUserOr(FriendException.FRIEND_RELATIONSHIP_OWNER_MISS_MATCH) {
-            userService.findByEmail(restrictorEmail).toDomain()
+            userLookupContract.findByEmail(restrictorEmail).toDomain()
         }
         val restricted = findUserOr(FriendException.FRIEND_RELATIONSHIP_NOT_FOUND) {
-            userService.findById(targetUserId).toDomain()
+            userLookupContract.findById(targetUserId).toDomain()
         }
 
         val restrictorId = restrictor.id!!
@@ -69,7 +69,7 @@ class FriendRestrictionServiceImpl(
 
     override fun existRestricted(restrictorEmail: String, targetUserId: UUID): Boolean {
         val targetEmail = try {
-            userService.findById(targetUserId).email
+            userLookupContract.findById(targetUserId).email
         } catch (e: ImHereBaseException) {
             return false
         }

@@ -1,6 +1,6 @@
 package com.kdongsu5509.auth.adapter.out.oauth
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

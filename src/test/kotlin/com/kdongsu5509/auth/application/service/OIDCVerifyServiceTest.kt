@@ -5,7 +5,7 @@ import com.kdongsu5509.auth.adapter.out.oauth.OIDCProperties
 import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKey
 import com.kdongsu5509.auth.application.port.out.OIDCIdTokenVerifyPort
 import com.kdongsu5509.auth.application.port.out.PublicKeyLoadPort
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.type.UnauthorizedException
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jws
@@ -74,7 +74,14 @@ class OIDCVerifyServiceTest {
     @DisplayName("Google ID 토큰 검증에 성공하여 유저 정보를 반환한다")
     fun verify_success_google() {
         // given
-        givenTokenVerificationSucceeds(OAuth2Provider.GOOGLE, "accounts.google.com", "google-client-id", NONCE, null, "구글친구")
+        givenTokenVerificationSucceeds(
+            OAuth2Provider.GOOGLE,
+            "accounts.google.com",
+            "google-client-id",
+            NONCE,
+            null,
+            "구글친구"
+        )
 
         // when
         val result = verifyService.verify(OAuth2Provider.GOOGLE, ID_TOKEN, NONCE)
@@ -84,7 +91,8 @@ class OIDCVerifyServiceTest {
         assertThat(result.nickname).isEqualTo("구글친구")
         assertThat(result.sub).isEqualTo(SUB)
 
-        then(oidcIdTokenVerifyPort).should().verifyPayLoad(any(), eq("https://accounts.google.com"), eq("google-client-id"), eq(NONCE))
+        then(oidcIdTokenVerifyPort).should()
+            .verifyPayLoad(any(), eq("https://accounts.google.com"), eq("google-client-id"), eq(NONCE))
     }
 
     @Test
@@ -119,7 +127,12 @@ class OIDCVerifyServiceTest {
 
         // given
         given(oidcIdTokenVerifyPort.getKid(ID_TOKEN)).willReturn(KID)
-        given(publicKeyLoadPort.findByKeyId(OAuth2Provider.KAKAO, KID)).willThrow(UnauthorizedException(AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.errorMessage))
+        given(
+            publicKeyLoadPort.findByKeyId(
+                OAuth2Provider.KAKAO,
+                KID
+            )
+        ).willThrow(UnauthorizedException(AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.errorMessage))
 
         // when & then
         assertUnauthorizedException(AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.errorMessage) {

@@ -86,6 +86,71 @@ class TermServiceTest {
         assertThat(results.single { it.type == TermTypes.PRIVACY }.version).isEqualTo(1L)
     }
 
+    @Test
+    @DisplayName("아이디 목록으로 약관을 조회한다")
+    fun findAllByIds_success() {
+        val ids = setOf(1L, 3L)
+        given(termRepository.findAllById(ids)).willReturn(
+            listOf(
+                entity(id = 1L, type = TermTypes.SERVICE),
+                entity(id = 3L, type = TermTypes.PRIVACY),
+            )
+        )
+
+        val results = termService.findAllByIds(ids)
+
+        assertThat(results).extracting<Long> { it.id }.containsExactly(1L, 3L)
+    }
+
+    @Test
+    @DisplayName("시행 중인 약관을 TermFact로 변환해 공개한다")
+    fun findEffectiveTermFacts_success() {
+        val candidates = listOf(
+            entity(id = 1L, version = 1L, type = TermTypes.SERVICE),
+            entity(id = 2L, version = 2L, type = TermTypes.SERVICE),
+            entity(id = 3L, version = 1L, type = TermTypes.PRIVACY, isRequired = false),
+        )
+        given(termRepository.findAllByEffectiveDateLessThanEqual(any())).willReturn(candidates)
+
+        val facts = termService.findEffectiveTermFacts()
+
+        assertThat(facts).hasSize(2)
+        val service = facts.single { it.type == TermTypes.SERVICE.name }
+        assertThat(service.id).isEqualTo(2L)
+        assertThat(service.version).isEqualTo(2L)
+        assertThat(service.isRequired).isTrue()
+        val privacy = facts.single { it.type == TermTypes.PRIVACY.name }
+        assertThat(privacy.isRequired).isFalse()
+    }
+
+    @Test
+    @DisplayName("아이디 목록으로 조회한 약관을 TermFact로 변환해 공개한다")
+    fun findTermFacts_success() {
+        val ids = setOf(1L, 3L)
+        given(termRepository.findAllById(ids)).willReturn(
+            listOf(
+                entity(id = 1L, version = 4L, type = TermTypes.SERVICE),
+                entity(id = 3L, version = 1L, type = TermTypes.PRIVACY, isRequired = false),
+            )
+        )
+
+        val facts = termService.findTermFacts(ids)
+
+        assertThat(facts).extracting<Long> { it.id }.containsExactly(1L, 3L)
+        assertThat(facts.single { it.id == 1L }.type).isEqualTo(TermTypes.SERVICE.name)
+        assertThat(facts.single { it.id == 1L }.version).isEqualTo(4L)
+        assertThat(facts.single { it.id == 3L }.isRequired).isFalse()
+    }
+
+    @Test
+    @DisplayName("조회된 약관이 없으면 빈 TermFact 목록을 반환한다")
+    fun findTermFacts_success_when_empty() {
+        val ids = setOf(99L)
+        given(termRepository.findAllById(ids)).willReturn(emptyList())
+
+        assertThat(termService.findTermFacts(ids)).isEmpty()
+    }
+
     private fun command() = TermCreateCommand(
         type = TermTypes.SERVICE,
         title = "서비스 이용약관",
@@ -98,6 +163,7 @@ class TermServiceTest {
         id: Long,
         version: Long = 1L,
         type: TermTypes = TermTypes.SERVICE,
+        isRequired: Boolean = true,
     ) = TermJpaEntity(
         id = id,
         version = version,
@@ -105,6 +171,6 @@ class TermServiceTest {
         title = "제목",
         content = "내용",
         effectiveDate = LocalDateTime.now().minusDays(1),
-        isRequired = true,
+        isRequired = isRequired,
     )
 }

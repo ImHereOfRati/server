@@ -1,10 +1,10 @@
 package com.kdongsu5509.user.repository.jpa
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.shared.BaseTimeEntity
-import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.shared.repository.BaseTimeEntity
+import com.kdongsu5509.user.domain.User
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import java.util.*

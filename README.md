@@ -194,7 +194,7 @@ src/main/kotlin/com/kdongsu5509/
 | `fcm_token`            | Notifications | FCM 디바이스 토큰 저장      |
 | `notification_history` | Notifications | 발송 이력 저장            |
 | `terms`                | Terms         | 약관 버전과 본문 저장        |
-| `user_agreement`       | Terms         | 사용자별 약관 동의 이력 저장    |
+| `user_agreement`       | Agreement     | 사용자별 약관 동의 이력 저장    |
 
 ### 관계 요약
 

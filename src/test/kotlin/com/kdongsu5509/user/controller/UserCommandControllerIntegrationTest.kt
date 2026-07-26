@@ -2,11 +2,11 @@ package com.kdongsu5509.user.controller
 
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.user.controller.dto.UserUpdateRequest
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.user.controller.dto.NicknameUpdateRequest
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import org.assertj.core.api.Assertions.assertThat
@@ -58,7 +58,7 @@ class UserCommandControllerIntegrationTest : WebIntegrationTestSupport() {
         )
         userRepository.save(userEntity)
 
-        val request = UserUpdateRequest(nickname = "새닉네임")
+        val request = NicknameUpdateRequest(nickname = "새닉네임")
 
         // when & then
         mockMvc.perform(
@@ -104,7 +104,7 @@ class UserCommandControllerIntegrationTest : WebIntegrationTestSupport() {
         )
         userRepository.save(userEntity)
 
-        val request = UserUpdateRequest(nickname = "너무긴닉네임")
+        val request = NicknameUpdateRequest(nickname = "너무너무긴닉네임")
 
         mockMvc.perform(
             patch("/api/users/my")

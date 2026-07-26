@@ -1,21 +1,17 @@
 package com.kdongsu5509.friends.controller
 
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.friends.controller.dto.NewFriendRequest
-import com.kdongsu5509.friends.domain.FriendRequest
-import com.kdongsu5509.friends.domain.FriendRequestViewType
-import com.kdongsu5509.friends.domain.FriendRestriction
-import com.kdongsu5509.friends.domain.FriendRestrictionType
-import com.kdongsu5509.friends.domain.Friendship
+import com.kdongsu5509.friends.domain.*
 import com.kdongsu5509.friends.service.FriendRequestService
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import com.kdongsu5509.support.logger.AccessLogPrinter
 import com.kdongsu5509.user.domain.User
-import com.kdongsu5509.user.domain.UserStatus
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

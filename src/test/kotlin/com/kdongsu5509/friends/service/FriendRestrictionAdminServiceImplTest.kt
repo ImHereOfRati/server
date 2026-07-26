@@ -1,11 +1,11 @@
 package com.kdongsu5509.friends.service
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.repository.FriendRestrictionRepository
-import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.user.domain.User
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

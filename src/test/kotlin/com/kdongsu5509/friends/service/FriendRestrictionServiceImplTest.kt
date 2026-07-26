@@ -1,18 +1,18 @@
 package com.kdongsu5509.friends.service
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.friends.repository.FriendRequestRepository
 import com.kdongsu5509.friends.repository.FriendRestrictionRepository
 import com.kdongsu5509.friends.repository.FriendshipRepository
 import com.kdongsu5509.support.exception.ImHereBaseException
+import com.kdongsu5509.user.api.UserLookupContract
+import com.kdongsu5509.user.api.UserResult
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.exception.UserException
-import com.kdongsu5509.user.service.UserService
-import com.kdongsu5509.user.service.dto.UserResult
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -37,7 +37,7 @@ class FriendRestrictionServiceImplTest {
     lateinit var friendRestrictionRepository: FriendRestrictionRepository
 
     @Mock
-    lateinit var userService: UserService
+    lateinit var userService: UserLookupContract
 
     @Mock
     lateinit var friendshipRepository: FriendshipRepository

@@ -1,7 +1,7 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
 import com.common.testsupport.WebIntegrationTestSupport
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

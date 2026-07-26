@@ -1,6 +1,6 @@
 package com.kdongsu5509.terms.repository
 
-import com.kdongsu5509.shared.BaseEntity
+import com.kdongsu5509.shared.repository.BaseEntity
 import com.kdongsu5509.terms.domain.TermTypes
 import jakarta.persistence.*
 import jakarta.persistence.EnumType.STRING

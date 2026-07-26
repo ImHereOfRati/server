@@ -2,19 +2,15 @@ package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.out.persistence.NotificationHistoryJpaEntity
 import com.kdongsu5509.notifications.adapter.out.persistence.SpringDataNotificationHistoryRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
-import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
-import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
-import org.springframework.restdocs.request.RequestDocumentation.pathParameters
-import org.springframework.restdocs.request.RequestDocumentation.queryParameters
+import org.springframework.restdocs.payload.PayloadDocumentation.*
+import org.springframework.restdocs.request.RequestDocumentation.*
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get

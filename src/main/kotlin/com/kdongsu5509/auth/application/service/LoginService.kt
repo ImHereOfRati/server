@@ -8,23 +8,24 @@ import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
 import com.kdongsu5509.auth.domain.LoginEligibilityPolicy
-import com.kdongsu5509.auth.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.repository.UserRepository
+import com.kdongsu5509.user.api.UserLookupContract
+import com.kdongsu5509.user.domain.OAuth2Provider
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class LoginService(
     private val oidcVerifyPort: OIDCVerifyPort,
-    private val userRepository: UserRepository,
+    private val userLookupContract: UserLookupContract,
     private val tokenProviderPort: ImHereTokenProviderPort
 ) : LoginUseCase {
 
     @Transactional
     override fun login(provider: OAuth2Provider, idToken: String, nonce: String?): ImHereJwtToken {
         val userInformation = verifyOIDCToken(provider, idToken, nonce)
-        val user = userRepository.findByEmail(userInformation.email) ?: AuthException.USER_NOT_REGISTER.throwIt()
+        val user =
+            userLookupContract.findByEmailOrNull(userInformation.email) ?: AuthException.USER_NOT_REGISTER.throwIt()
 
         LoginEligibilityPolicy.assertLoginable(user.status)
 

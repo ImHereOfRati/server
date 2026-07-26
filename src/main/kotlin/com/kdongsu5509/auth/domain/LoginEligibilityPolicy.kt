@@ -1,8 +1,8 @@
 package com.kdongsu5509.auth.domain
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.support.exception.throwIt
 
 /**
  * 로그인/재가입 자격 판정 정책.

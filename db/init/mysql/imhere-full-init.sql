@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS friend_request;
 DROP TABLE IF EXISTS notification_history;
 DROP TABLE IF EXISTS fcm_token;
 DROP TABLE IF EXISTS one_time_tokens;
+DROP TABLE IF EXISTS event_publication;
 DROP TABLE IF EXISTS terms;
 DROP TABLE IF EXISTS users;
 
@@ -65,9 +66,10 @@ CREATE TABLE user_agreement
     id               CHAR(36)    NOT NULL,
     user_id          CHAR(36)    NOT NULL,
     terms_version_id BIGINT      NOT NULL,
-    created_at       DATETIME(6) NOT NULL,
-    updated_at       DATETIME(6) NOT NULL,
+    action           VARCHAR(20) NOT NULL,
+    occurred_at      DATETIME(6) NOT NULL,
     PRIMARY KEY (id),
+    INDEX idx_user_agreement_history (user_id, terms_version_id, occurred_at),
     CONSTRAINT fk_user_agreement_user FOREIGN KEY (user_id) REFERENCES users (id),
     CONSTRAINT fk_user_agreement_terms FOREIGN KEY (terms_version_id) REFERENCES terms (id)
 ) ENGINE = InnoDB
@@ -160,6 +162,23 @@ CREATE TABLE one_time_tokens
     PRIMARY KEY (token_value),
     KEY idx_one_time_tokens_expires_at (expires_at),
     KEY idx_one_time_tokens_username (username)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE event_publication
+(
+    id                     VARCHAR(36)   NOT NULL,
+    listener_id            VARCHAR(512)  NOT NULL,
+    event_type             VARCHAR(512)  NOT NULL,
+    serialized_event       VARCHAR(4000) NOT NULL,
+    publication_date       TIMESTAMP(6)  NOT NULL,
+    completion_date        TIMESTAMP(6)  NULL DEFAULT NULL,
+    status                 VARCHAR(20)   NULL,
+    completion_attempts    INT           NULL,
+    last_resubmission_date TIMESTAMP(6)  NULL DEFAULT NULL,
+    PRIMARY KEY (id),
+    INDEX event_publication_by_completion_date_idx (completion_date)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;

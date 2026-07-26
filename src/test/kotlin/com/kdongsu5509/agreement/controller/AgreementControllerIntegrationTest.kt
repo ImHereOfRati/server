@@ -4,12 +4,12 @@ import com.common.testsupport.WebIntegrationTestSupport
 import com.kdongsu5509.agreement.domain.AgreementStatus
 import com.kdongsu5509.agreement.repository.jpa.AgreementJpaEntity
 import com.kdongsu5509.agreement.repository.jpa.SpringDataAgreementRepository
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.shared.UserStatus
-import com.kdongsu5509.shared.UserStatus.ACTIVE
-import com.kdongsu5509.shared.UserStatus.PENDING
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
+import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.user.domain.UserStatus.ACTIVE
+import com.kdongsu5509.user.domain.UserStatus.PENDING
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermCreateCommand
 import com.kdongsu5509.terms.service.TermService
@@ -184,7 +184,7 @@ class AgreementControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(csrf())
                 .with(user(userDetails(savedUser.id!!)))
         ).andExpect(status().`is`(422))
-            .andExpect(jsonPath("$.imhereResponseCode").value("TERM-701"))
+            .andExpect(jsonPath("$.imhereResponseCode").value("AGREEMENT-701"))
 
         assertThat(agreementRepository.findAll()).isEmpty()
     }

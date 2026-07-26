@@ -1,6 +1,6 @@
 package com.kdongsu5509.auth.adapter.`in`.web.dto
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 

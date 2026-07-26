@@ -1,9 +1,8 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
+import com.kdongsu5509.user.service.UserQueryService
 import com.common.testsupport.WebIntegrationTestSupport
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.domain.FriendRequest
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
@@ -16,10 +15,11 @@ import com.kdongsu5509.notifications.application.service.DlqAdminService
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
 import com.kdongsu5509.terms.service.TermService
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.service.UserService
-import com.kdongsu5509.user.service.dto.UserResult
+import com.kdongsu5509.user.api.UserResult
 import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -40,7 +40,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     private lateinit var dlqAdminService: DlqAdminService
 
     @MockitoBean
-    private lateinit var userService: UserService
+    private lateinit var userQueryService: UserQueryService
 
     @MockitoBean
     private lateinit var termService: TermService
@@ -107,7 +107,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     @Test
     @DisplayName("관리자는 사용자 관리 페이지에 접근할 수 있다")
     fun usersPageAccessibleForAdmin() {
-        whenever(userService.findAll(any())).thenReturn(
+        whenever(userQueryService.findAll(any())).thenReturn(
             SliceImpl(
                 listOf(
                     UserResult(

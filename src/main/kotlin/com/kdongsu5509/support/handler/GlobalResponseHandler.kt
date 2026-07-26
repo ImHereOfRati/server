@@ -48,6 +48,6 @@ class GlobalResponseHandler : ResponseBodyAdvice<Any> {
             return body
         }
 
-        return ApiResponse.Companion.success(body)
+        return ApiResponse.success(body)
     }
 }

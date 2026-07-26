@@ -1,9 +1,9 @@
 package com.kdongsu5509.user.controller.dto
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.service.dto.UserResult
+import com.kdongsu5509.user.api.UserResult
 import java.util.*
 
 data class DetailUserResponse(

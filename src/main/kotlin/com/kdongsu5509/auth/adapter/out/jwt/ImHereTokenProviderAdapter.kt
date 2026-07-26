@@ -8,14 +8,14 @@ import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.domain.RefreshTokenVersionPolicy
 import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.repository.UserRepository
+import com.kdongsu5509.user.api.UserLookupContract
 import org.springframework.stereotype.Component
 
 @Component
 class ImHereTokenProviderAdapter(
     private val tokenIssuer: ImHereTokenIssuerPort,
     private val tokenParser: ImHereTokenParserPort,
-    private val userRepository: UserRepository
+    private val userLookupContract: UserLookupContract,
 ) : ImHereTokenProviderPort {
 
     override fun issue(claims: JwtTokenClaims): ImHereJwtToken {
@@ -26,22 +26,20 @@ class ImHereTokenProviderAdapter(
     }
 
     override fun reissueByRefreshToken(refreshToken: String): ImHereJwtToken {
-        tokenParser.validate(refreshToken)
+        val claims = tokenParser.parseRefreshToken(refreshToken)
 
-        val claims = tokenParser.parse(refreshToken)
-
-        val user = findUserByEmail(claims.email)
+        val user = loadUserByEmail(claims.email)
         RefreshTokenVersionPolicy.assertMatches(user.refreshTokenVersion, claims.refreshTokenVersion)
 
-        return issue(claims.copy(refreshTokenVersion = user.refreshTokenVersion))
-    }
-
-    override fun reissueByEmail(email: String): ImHereJwtToken {
-        val user = findUserByEmail(email)
         return issue(JwtTokenClaims.fromUser(user))
     }
 
-    private fun findUserByEmail(email: String) =
-        userRepository.findByEmail(email) ?: AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.throwIt()
+    override fun reissueByEmail(email: String): ImHereJwtToken {
+        val user = loadUserByEmail(email)
+        return issue(JwtTokenClaims.fromUser(user))
+    }
+
+    private fun loadUserByEmail(email: String) =
+        userLookupContract.findByEmailOrNull(email) ?: AuthException.IMHERE_KEY_NOT_FOUND_IN_CACHE.throwIt()
 }
 

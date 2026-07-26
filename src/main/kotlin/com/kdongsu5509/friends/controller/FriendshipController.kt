@@ -1,6 +1,6 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.controller.dto.FriendshipResponse
 import com.kdongsu5509.friends.controller.dto.UpdateAliasRequest
 import com.kdongsu5509.friends.service.FriendshipService
@@ -29,6 +29,7 @@ class FriendshipController(
         val sliceResponse = SliceResponse.from(friendships.map { FriendshipResponse.from(it) })
         return sliceResponse.toOkResponse()
     }
+
     @GetMapping("/target/{targetUserId}")
     fun checkFriendStatus(
         @AuthenticationPrincipal userDetails: ImHereUserDetails,
@@ -55,6 +56,7 @@ class FriendshipController(
         friendshipService.deleteByIdAndOwnerEmail(id, userDetails.email)
         return ResponseEntity.noContent().build()
     }
+
     @PatchMapping("/{id}/alias")
     fun updateAlias(
         @AuthenticationPrincipal userDetails: ImHereUserDetails,

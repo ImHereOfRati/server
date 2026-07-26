@@ -1,7 +1,7 @@
 package com.kdongsu5509.friends.repository.jpa
 
 import com.kdongsu5509.friends.domain.FriendRestrictionType
-import com.kdongsu5509.shared.BaseTimeEntity
+import com.kdongsu5509.shared.repository.BaseTimeEntity
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator

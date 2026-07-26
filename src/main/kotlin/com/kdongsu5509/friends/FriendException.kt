@@ -2,7 +2,6 @@ package com.kdongsu5509.friends
 
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseErrorCode
-import org.springframework.http.HttpStatus
 
 enum class FriendException(
     category: CommonErrorCode,
@@ -37,5 +36,5 @@ enum class FriendException(
         "나를 차단 혹은 거절한 친구에게 친구 요청을 할 수 없습니다."
     );
 
-    override val httpStatus: HttpStatus = category.httpStatus
+    override val httpStatus = category.httpStatus
 }

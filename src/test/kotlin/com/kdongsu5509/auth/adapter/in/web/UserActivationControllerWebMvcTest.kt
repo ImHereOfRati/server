@@ -4,12 +4,12 @@ import com.kdongsu5509.auth.application.port.`in`.ActivateUserUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.user.domain.UserRole
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import com.kdongsu5509.support.logger.AccessLogPrinter
-import com.kdongsu5509.user.domain.UserStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -38,6 +38,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
 import org.springframework.web.filter.CharacterEncodingFilter
 import tools.jackson.databind.json.JsonMapper
+import java.util.UUID
 
 @WebMvcTest(UserActivationController::class)
 @Import(UserActivationControllerWebMvcTest.MethodSecurityTestConfig::class)
@@ -76,6 +77,7 @@ class UserActivationControllerWebMvcTest {
     companion object {
         const val REQUEST_API = "/api/auth/activation"
         const val TEST_EMAIL = "pending@example.com"
+        val TEST_USER_ID: UUID = UUID.randomUUID()
     }
 
     @Test
@@ -110,6 +112,7 @@ class UserActivationControllerWebMvcTest {
         then(activateUserUseCase).should().activate(commandCaptor.capture(), any())
 
         assertThat(commandCaptor.firstValue.email).isEqualTo(TEST_EMAIL)
+        assertThat(commandCaptor.firstValue.userId).isEqualTo(TEST_USER_ID)
         assertThat(commandCaptor.firstValue.consents).containsExactly(
             UserActivationCommand.TermConsentCommand(id = 1L, isAgreed = true),
             UserActivationCommand.TermConsentCommand(id = 2L, isAgreed = false),
@@ -140,7 +143,8 @@ class UserActivationControllerWebMvcTest {
             email = TEST_EMAIL,
             nickname = "pending",
             role = UserRole.NORMAL.name,
-            status = UserStatus.PENDING.name
+            status = UserStatus.PENDING.name,
+            userId = TEST_USER_ID,
         )
     }
 

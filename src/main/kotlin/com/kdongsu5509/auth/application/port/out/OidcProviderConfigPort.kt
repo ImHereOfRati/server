@@ -1,6 +1,6 @@
 package com.kdongsu5509.auth.application.port.out
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 
 /**
  * provider별 OIDC 설정을 공급하는 out-port.

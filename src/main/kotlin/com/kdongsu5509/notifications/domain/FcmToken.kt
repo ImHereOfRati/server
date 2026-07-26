@@ -13,6 +13,7 @@ import java.time.LocalDateTime
  * - [reconstruct]: 영속성 레이어에서 복원 시 사용. 검증 없이 그대로 복원합니다.
  * - [update]: 새 토큰으로 갱신합니다. 빈 토큰은 허용하지 않습니다.
  */
+@ConsistentCopyVisibility
 data class FcmToken internal constructor(
     val id: Long? = null,
     val email: String,

@@ -1,7 +1,7 @@
 package com.kdongsu5509.friends.repository.jpa
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity

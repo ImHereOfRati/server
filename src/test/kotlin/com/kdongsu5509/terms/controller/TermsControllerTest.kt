@@ -60,6 +60,6 @@ class TermsControllerTest {
                 .param("isActive", "false")
         )
             .andExpect(MockMvcResultMatchers.status().isUnprocessableContent)
-            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("비활성화된 약관은 조회할 수 없습니다."))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("비활성 약관은 조회할 수 없습니다."))
     }
 }

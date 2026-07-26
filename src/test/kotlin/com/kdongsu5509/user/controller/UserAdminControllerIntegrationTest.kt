@@ -2,9 +2,9 @@ package com.kdongsu5509.user.controller
 
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity

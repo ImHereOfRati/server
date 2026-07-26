@@ -1,6 +1,6 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.controller.dto.*
 import com.kdongsu5509.friends.domain.FriendRequestViewType
 import com.kdongsu5509.friends.service.FriendRequestService
@@ -29,6 +29,7 @@ class FriendRequestController(
         val result = friendRequestService.request(user.email, request.targetId, request.message)
         return NewFriendRequestResponse(result.id!!)
     }
+
     @GetMapping(params = ["type"])
     fun findSentOrReceivedAll(
         @AuthenticationPrincipal userDetails: ImHereUserDetails,

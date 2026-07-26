@@ -1,5 +1,5 @@
-// epages restdocs-api-spec 0.20.0 plugin이 spring-boot-jackson2를 버전 없이
-// transitive로 의존하므로 buildscript classpath 해소를 위해 force 필요
+import static org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
+
 buildscript {
     configurations.all {
         resolutionStrategy {
@@ -15,8 +15,8 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '2.3.21'
     id 'com.google.devtools.ksp' version '2.3.7'
     //kotlin
-    id 'org.jetbrains.kotlin.plugin.spring' version '2.3.20'
-    id 'org.jetbrains.kotlin.plugin.jpa' version '2.3.20'
+    id 'org.jetbrains.kotlin.plugin.spring' version '2.3.21'
+    id 'org.jetbrains.kotlin.plugin.jpa' version '2.3.21'
     id 'jacoco'
 
     id 'com.epages.restdocs-api-spec' version '0.20.0'
@@ -47,6 +47,7 @@ configurations {
 
 dependencies {
     implementation platform("org.springframework.boot:spring-boot-dependencies:4.1.0")
+    implementation platform("org.springframework.modulith:spring-modulith-bom:2.1.0")
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 
     // KOTLIN
@@ -82,6 +83,11 @@ dependencies {
     implementation("io.github.openfeign.querydsl:querydsl-jpa:7.4.0")
     ksp("io.github.openfeign.querydsl:querydsl-ksp-codegen:7.4.0")
 
+    //Spring Modulith
+    implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    implementation 'org.springframework.modulith:spring-modulith-starter-jdbc'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+
     // RabbitMQ
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
@@ -104,10 +110,14 @@ dependencies {
     testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.20.0'
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    runtimeOnly 'org.springframework.modulith:spring-modulith-actuator'
+    runtimeOnly 'org.springframework.modulith:spring-modulith-observability'
 }
 
 kotlin {
+    jvmToolchain(25)
     compilerOptions {
+        jvmTarget = JVM_25
         freeCompilerArgs.addAll '-Xjsr305=strict'
     }
     sourceSets {

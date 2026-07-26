@@ -10,6 +10,15 @@ import java.util.concurrent.ThreadPoolExecutor
 @Configuration
 @EnableAsync
 class AsyncConfig {
+    @Bean("taskExecutor")
+    fun taskExecutor(): Executor =
+        ThreadPoolTaskExecutor().apply {
+            corePoolSize = 2
+            maxPoolSize = 8
+            queueCapacity = 200
+            setThreadNamePrefix("application-event-")
+            initialize()
+        }
 
     @Bean("discordExecutor")
     fun discordExecutor(): Executor =

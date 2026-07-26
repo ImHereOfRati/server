@@ -1,12 +1,12 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.SliceResponse
 import com.kdongsu5509.shared.response.toOkResponse
+import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.controller.dto.CompactUserResponse
-import com.kdongsu5509.user.service.UserSelfService
-import com.kdongsu5509.user.service.dto.UserResult
+import com.kdongsu5509.user.service.UserQueryService
 import jakarta.validation.constraints.NotBlank
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -23,22 +23,21 @@ import org.springframework.web.bind.annotation.RestController
 @Validated
 @RequestMapping("/api/users", version = "1")
 class UserReadController(
-    private val userService: UserSelfService
+    private val userQueryService: UserQueryService
 ) {
-
     @GetMapping("/my")
     fun readMe(@AuthenticationPrincipal user: ImHereUserDetails): CompactUserResponse {
-        val result = userService.findByEmail(user.email)
+        val result = userQueryService.findByEmail(user.email)
         return CompactUserResponse.from(result)
     }
 
     @GetMapping(params = ["keyword"])
-    fun readOthers(
+    fun findOther(
         @AuthenticationPrincipal user: ImHereUserDetails,
         @RequestParam @NotBlank(message = "검색어(이메일 또는 닉네임)는 필수입니다.") keyword: String,
         @PageableDefault(size = 15) pageable: Pageable
     ): ResponseEntity<ApiResponse<SliceResponse<CompactUserResponse>>> {
-        val findingUsers: Slice<UserResult> = userService.findByKeyword(user.email, keyword, pageable)
+        val findingUsers: Slice<UserResult> = userQueryService.findByKeyword(user.email, keyword, pageable)
         val sliceResponse = SliceResponse.from(findingUsers.map { CompactUserResponse.from(it) })
         return sliceResponse.toOkResponse()
     }

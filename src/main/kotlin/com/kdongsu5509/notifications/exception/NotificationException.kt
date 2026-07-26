@@ -2,7 +2,6 @@ package com.kdongsu5509.notifications.exception
 
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseErrorCode
-import org.springframework.http.HttpStatus
 
 /**
  * 알림 및 메시지 관련 비즈니스 에러 (NOTIFICATION / SMS)
@@ -33,5 +32,5 @@ enum class NotificationException(
     FCM_UNKNOWN_ERROR(CommonErrorCode.INTERNAL_SERVER_ERROR, "FCM-902", "알 수 없는 FCM 오류가 발생했습니다."),
     SMS_SEND_FAILED(CommonErrorCode.INTERNAL_SERVER_ERROR, "SMS-900", "SMS 전송 중 외부 서비스 오류가 발생했습니다.");
 
-    override val httpStatus: HttpStatus = category.httpStatus
+    override val httpStatus = category.httpStatus
 }

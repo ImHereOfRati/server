@@ -1,6 +1,7 @@
 package com.kdongsu5509.auth.application.service.dto
 
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.api.UserResult
 import java.time.LocalDateTime
 import java.util.*
 
@@ -22,6 +23,17 @@ data class JwtTokenClaims(
                 role = user.roleName(),
                 status = user.statusName(),
                 refreshTokenVersion = user.refreshTokenVersion
+            )
+        }
+
+        fun fromUser(user: UserResult): JwtTokenClaims {
+            return JwtTokenClaims(
+                uid = user.id,
+                email = user.email,
+                nickname = user.nickname,
+                role = user.role.name,
+                status = user.status.name,
+                refreshTokenVersion = user.refreshTokenVersion,
             )
         }
     }

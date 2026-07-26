@@ -6,7 +6,7 @@ import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.adapter.`in`.web.dto.OIDCAuthRequest
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.UserRepository
@@ -70,7 +70,8 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data.accessToken").description("발급된 액세스 토큰"),
                             fieldWithPath("data.refreshToken").description("발급된 리프레시 토큰"),
-                            fieldWithPath("data.userStatus").description("사용자 상태 (ACTIVE, PENDING, BLOCKED, WITHDRAWN)").optional()
+                            fieldWithPath("data.userStatus").description("사용자 상태 (ACTIVE, PENDING, BLOCKED, WITHDRAWN)")
+                                .optional()
                         )
                     )
                 )
@@ -140,7 +141,7 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
     fun registerFailWhenAlreadyRegistered() {
         // given
         val email = "existing@example.com"
-        val existingUser = User.createWithPendingStatus(email, "Existing User", OAuth2Provider.KAKAO).activate()
+        val existingUser = User(email, "Existing User", OAuth2Provider.KAKAO).activate()
         userRepository.save(existingUser)
 
         val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
@@ -175,7 +176,7 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
     fun registerFailWhenEmailIsBlocked() {
         // given
         val email = "blocked@example.com"
-        val blockedUser = User.createWithPendingStatus(email, "Blocked User", OAuth2Provider.KAKAO).activate().block()
+        val blockedUser = User(email, "Blocked User", OAuth2Provider.KAKAO).activate().block()
         userRepository.save(blockedUser)
 
         val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
@@ -210,7 +211,7 @@ class RegistrationControllerIntegrationTest : WebIntegrationTestSupport() {
     fun registerFailWhenEmailIsWithdrawn() {
         // given
         val email = "withdrawn@example.com"
-        val withdrawnUser = User.createWithPendingStatus(email, "Withdrawn User", OAuth2Provider.KAKAO).activate().withdraw()
+        val withdrawnUser = User(email, "Withdrawn User", OAuth2Provider.KAKAO).activate().withdraw()
         userRepository.save(withdrawnUser)
 
         val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)

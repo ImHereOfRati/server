@@ -13,8 +13,8 @@ import com.kdongsu5509.shared.notification.dto.NotificationCategory
 import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
 import com.kdongsu5509.shared.notification.dto.NotificationSendRequest
 import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.service.UserService
-import com.kdongsu5509.user.service.dto.UserResult
+import com.kdongsu5509.user.api.UserLookupContract
+import com.kdongsu5509.user.api.UserResult
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Service
@@ -24,7 +24,7 @@ import java.util.*
 @Service
 @Transactional(readOnly = true)
 class FriendRequestServiceImpl(
-    private val userService: UserService,
+    private val userLookupContract: UserLookupContract,
     private val friendRequestRepository: FriendRequestRepository,
     private val friendRestrictionRepository: FriendRestrictionRepository,
     private val friendshipRepository: FriendshipRepository,
@@ -36,8 +36,8 @@ class FriendRequestServiceImpl(
 
     @Transactional
     override fun request(requesterEmail: String, receiverId: UUID, message: String): FriendRequest {
-        val me: UserResult = userService.findByEmail(requesterEmail)
-        val target = userService.findById(receiverId)
+        val me: UserResult = userLookupContract.findByEmail(requesterEmail)
+        val target = userLookupContract.findById(receiverId)
 
         friendRequestPolicy.verifyRequestable(me, target)
 

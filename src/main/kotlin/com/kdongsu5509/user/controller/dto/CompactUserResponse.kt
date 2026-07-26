@@ -1,7 +1,7 @@
 package com.kdongsu5509.user.controller.dto
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.user.service.dto.UserResult
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.api.UserResult
 import java.util.*
 
 data class CompactUserResponse(
@@ -13,10 +13,10 @@ data class CompactUserResponse(
     companion object {
         fun from(userResult: UserResult): CompactUserResponse {
             return CompactUserResponse(
-                userResult.id,
-                userResult.email,
-                userResult.nickname,
-                userResult.oauthProvider
+                id = userResult.id,
+                email = userResult.email,
+                nickname = userResult.nickname,
+                oAuth2Provider = userResult.oauthProvider
             )
         }
     }

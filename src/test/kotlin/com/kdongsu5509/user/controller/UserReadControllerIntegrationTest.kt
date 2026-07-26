@@ -2,9 +2,9 @@ package com.kdongsu5509.user.controller
 
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
@@ -84,7 +84,7 @@ class UserReadControllerIntegrationTest : WebIntegrationTestSupport() {
 
     @Test
     @DisplayName("키워드로 타 사용자를 페이징 조회한다")
-    fun readOthersSuccess() {
+    fun findOtherSuccess() {
         // given
         userRepository.save(
             UserJpaEntity(

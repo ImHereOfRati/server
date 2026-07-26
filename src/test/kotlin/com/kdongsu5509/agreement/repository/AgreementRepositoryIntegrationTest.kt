@@ -3,8 +3,8 @@ package com.kdongsu5509.agreement.repository
 import com.kdongsu5509.agreement.domain.AgreementStatus
 import com.kdongsu5509.agreement.domain.ConsentChange
 import com.kdongsu5509.agreement.repository.jpa.SpringDataAgreementRepository
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.shared.UserStatus
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.repository.SpringDataTermRepository
 import com.kdongsu5509.terms.repository.TermJpaEntity

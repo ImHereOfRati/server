@@ -55,6 +55,11 @@ spring:
     job:
       enabled: false
 
+  modulith:
+    events:
+      completion-mode: delete
+      republish-outstanding-events-on-restart: true
+
 logging:
   # LOG_FILE comes from prod.env in production.
   file:

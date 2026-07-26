@@ -4,16 +4,14 @@ import com.kdongsu5509.agreement.AgreementException
 import com.kdongsu5509.agreement.domain.AgreementStatus
 import com.kdongsu5509.agreement.domain.Consent
 import com.kdongsu5509.agreement.domain.ConsentChange
-import com.kdongsu5509.agreement.event.RequiredAgreementsSatisfied
 import com.kdongsu5509.agreement.repository.AgreementRepository
 import com.kdongsu5509.agreement.service.dto.AgreementConsentResult
 import com.kdongsu5509.agreement.service.dto.AgreementHistoryResult
 import com.kdongsu5509.agreement.service.dto.TermsConsentCommands
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.TermCatalog
-import com.kdongsu5509.terms.TermException
 import com.kdongsu5509.terms.TermFact
-import org.springframework.context.ApplicationEventPublisher
+import com.kdongsu5509.user.api.UserActivationContract
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -21,7 +19,7 @@ import java.util.*
 @Service
 @Transactional(readOnly = true)
 class AgreementService(
-    private val eventPublisher: ApplicationEventPublisher,
+    private val userActivationContract: UserActivationContract,
     private val agreementRepository: AgreementRepository,
     private val termCatalog: TermCatalog,
 ) {
@@ -49,7 +47,7 @@ class AgreementService(
         val requiredSatisfied = areRequiredTermsSatisfied(effectiveTerms, resultingStatuses)
 
         if (requiredSatisfied) {
-            eventPublisher.publishEvent(RequiredAgreementsSatisfied(userId))
+            userActivationContract.activateIfPending(userId)
         }
 
         return AgreementConsentResult(requiredSatisfied)
@@ -64,7 +62,7 @@ class AgreementService(
         val effectiveTerms = termCatalog.findEffectiveTermFacts()
         val renewedTerm = effectiveTerms
             .singleOrNull { it.id == termId }
-            ?: TermException.TERM_NOT_FOUND.throwIt()
+            ?: AgreementException.TERM_NOT_FOUND.throwIt()
 
         validateRenewal(renewedTerm, currentStatuses)
 
@@ -78,7 +76,7 @@ class AgreementService(
         val effectiveTerms = termCatalog.findEffectiveTermFacts()
         val term = effectiveTerms
             .singleOrNull { it.id == termId }
-            ?: TermException.TERM_NOT_FOUND.throwIt()
+            ?: AgreementException.TERM_NOT_FOUND.throwIt()
 
         if (term.isRequired) {
             AgreementException.REQUIRED_AGREEMENT_CANNOT_BE_WITHDRAWN.throwIt()
@@ -105,7 +103,7 @@ class AgreementService(
             it.type == renewedTerm.type && it.version < renewedTerm.version
         }
 
-        if (!isRenewal) TermException.TERM_RENEWAL_NOT_REQUIRED.throwIt()
+        if (!isRenewal) AgreementException.TERM_RENEWAL_NOT_REQUIRED.throwIt()
     }
 
     private fun areRequiredTermsSatisfied(
@@ -119,7 +117,7 @@ class AgreementService(
     private fun validateSubmittedTermsAreEffective(consent: Consent, effectiveTerms: List<TermFact>) {
         val effectiveTermIds = effectiveTerms.mapTo(mutableSetOf()) { it.id }
         if (consent.items.any { it.termId !in effectiveTermIds }) {
-            TermException.TERM_NOT_FOUND.throwIt()
+            AgreementException.TERM_NOT_FOUND.throwIt()
         }
     }
 }

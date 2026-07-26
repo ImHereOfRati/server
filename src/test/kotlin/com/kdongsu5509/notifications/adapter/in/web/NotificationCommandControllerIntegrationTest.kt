@@ -2,26 +2,22 @@ package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
-import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.notifications.domain.NotificationType
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.MultiNotificationRequest
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationRequest
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.out.NotificationProducePort
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.restdocs.payload.JsonFieldType
-import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.relaxedRequestFields
-import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
-import org.springframework.restdocs.payload.PayloadDocumentation.subsectionWithPath
+import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -198,7 +194,8 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                     identifier = "notifications-send-fail-missing-notification-method",
                     snippets = arrayOf(
                         relaxedRequestFields(
-                            fieldWithPath("notificationMethod").description("발송 방식").type(JsonFieldType.STRING).optional(),
+                            fieldWithPath("notificationMethod").description("발송 방식").type(JsonFieldType.STRING)
+                                .optional(),
                             fieldWithPath("targetId").description("대상 식별자"),
                             fieldWithPath("type").description("알림 타입"),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
@@ -269,7 +266,8 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                     identifier = "notifications-send-batch-fail-missing-notification-method",
                     snippets = arrayOf(
                         relaxedRequestFields(
-                            fieldWithPath("notificationMethod").description("발송 방식").type(JsonFieldType.STRING).optional(),
+                            fieldWithPath("notificationMethod").description("발송 방식").type(JsonFieldType.STRING)
+                                .optional(),
                             fieldWithPath("targetIds").description("대상 식별자 목록"),
                             fieldWithPath("type").description("알림 타입"),
                             subsectionWithPath("extraData").description("추가 데이터").optional()

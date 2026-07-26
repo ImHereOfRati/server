@@ -3,7 +3,7 @@ package com.kdongsu5509.agreement.controller
 import com.kdongsu5509.agreement.controller.dto.AgreementConsentRequest
 import com.kdongsu5509.agreement.controller.dto.AgreementHistoryResponse
 import com.kdongsu5509.agreement.service.AgreementService
-import com.kdongsu5509.shared.AllowPendingUser
+import com.kdongsu5509.auth.security.shared.AllowPendingUser
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated

@@ -1,8 +1,8 @@
 package com.kdongsu5509.auth.domain
 
 import com.kdongsu5509.auth.AuthException
-import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.support.exception.ImHereBaseException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.DisplayName

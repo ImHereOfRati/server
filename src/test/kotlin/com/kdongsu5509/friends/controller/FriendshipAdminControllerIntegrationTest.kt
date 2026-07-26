@@ -4,7 +4,7 @@ import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.friends.domain.Friendship
 import com.kdongsu5509.friends.repository.FriendshipRepository
 import com.kdongsu5509.user.domain.User
@@ -12,13 +12,8 @@ import com.kdongsu5509.user.repository.UserRepository
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
-import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
-import org.springframework.restdocs.payload.PayloadDocumentation.subsectionWithPath
-import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
-import org.springframework.restdocs.request.RequestDocumentation.pathParameters
-import org.springframework.restdocs.request.RequestDocumentation.queryParameters
+import org.springframework.restdocs.payload.PayloadDocumentation.*
+import org.springframework.restdocs.request.RequestDocumentation.*
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -26,21 +21,34 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class FriendshipAdminControllerIntegrationTest : WebIntegrationTestSupport() {
 
-    @Autowired private lateinit var userRepository: UserRepository
-    @Autowired private lateinit var friendshipRepository: FriendshipRepository
-    @Autowired private lateinit var tokenProviderPort: ImHereTokenProviderPort
+    @Autowired
+    private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var friendshipRepository: FriendshipRepository
+
+    @Autowired
+    private lateinit var tokenProviderPort: ImHereTokenProviderPort
 
     private fun createUserAndToken(email: String, nickname: String): Pair<User, String> {
-        val user = User.createWithPendingStatus(email, nickname, OAuth2Provider.KAKAO).activate()
+        val user = User(email, nickname, OAuth2Provider.KAKAO).activate()
         val saved = userRepository.save(user)
         val token = tokenProviderPort.issue(JwtTokenClaims.fromUser(saved)).accessToken
         return Pair(saved, token)
     }
 
     private fun createAdminUserAndToken(email: String, nickname: String): Pair<User, String> {
-        val user = User.createWithPendingStatus(email, nickname, OAuth2Provider.KAKAO).activate()
+        val user = User(email, nickname, OAuth2Provider.KAKAO).activate()
         val saved = userRepository.save(user)
-        val token = tokenProviderPort.issue(JwtTokenClaims(uid = saved.id!!, email = saved.email, nickname = saved.nickname, role = "ADMIN", status = saved.statusName())).accessToken
+        val token = tokenProviderPort.issue(
+            JwtTokenClaims(
+                uid = saved.id!!,
+                email = saved.email,
+                nickname = saved.nickname,
+                role = "ADMIN",
+                status = saved.statusName()
+            )
+        ).accessToken
         return Pair(saved, token)
     }
 

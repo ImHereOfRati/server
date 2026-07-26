@@ -1,6 +1,6 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationHistoryResponse
 import com.kdongsu5509.notifications.application.port.`in`.NotificationHistoryUseCase
 import com.kdongsu5509.shared.response.ApiResponse

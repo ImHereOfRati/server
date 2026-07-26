@@ -23,6 +23,20 @@ class ImHereJjwtParserAdapter(
 
     override fun parse(token: String): JwtTokenClaims {
         val claims = parseClaims(token)
+        return toJwtTokenClaims(claims)
+    }
+
+    override fun parseRefreshToken(token: String): JwtTokenClaims {
+        val claims = parseValidatedClaims(token)
+
+        if (claims[JwtClaimKeys.CLAIM_CATEGORY] != JwtClaimKeys.REFRESH_TOKEN) {
+            AuthException.IMHERE_INVALID_TOKEN.throwIt()
+        }
+
+        return toJwtTokenClaims(claims)
+    }
+
+    private fun toJwtTokenClaims(claims: Claims): JwtTokenClaims {
         return JwtTokenClaims(
             uid = UUID.fromString(claims[JwtClaimKeys.CLAIM_USER_ID] as String),
             email = claims[JwtClaimKeys.CLAIM_EMAIL] as String,
@@ -35,9 +49,13 @@ class ImHereJjwtParserAdapter(
     }
 
     override fun validate(token: String): Boolean {
+        parseValidatedClaims(token)
+        return true
+    }
+
+    private fun parseValidatedClaims(token: String): Claims {
         return try {
             parseClaims(token)
-            true
         } catch (e: ExpiredJwtException) {
             AuthException.IMHERE_EXPIRED_TOKEN.throwIt(cause = e)
         } catch (e: MalformedJwtException) {

@@ -2,7 +2,7 @@ package com.kdongsu5509.auth.security.filter
 
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.shared.response.APIResponseSerializers
 import com.kdongsu5509.support.exception.ImHereBaseException
 import jakarta.servlet.FilterChain
@@ -79,8 +79,10 @@ class JwtAuthenticationFilter(
 
         val trimmed = authHeader.trim()
         if (!trimmed.startsWith(BEARER_PREFIX, ignoreCase = false)) {
-            log.warn("Authorization header invalid format: starts_with='{}', uri={}",
-                trimmed.take(30), request.requestURI)
+            log.warn(
+                "Authorization header invalid format: starts_with='{}', uri={}",
+                trimmed.take(30), request.requestURI
+            )
             return null
         }
 
@@ -90,10 +92,11 @@ class JwtAuthenticationFilter(
     private fun createAuthentication(jwt: String, request: HttpServletRequest): UsernamePasswordAuthenticationToken {
         val claims = tokenParser.parse(jwt)
         val userDetails = ImHereUserDetails(
+            userId = claims.uid,
             email = claims.email,
             nickname = claims.nickname,
             role = claims.role,
-            status = claims.status
+            status = claims.status,
         )
 
         validateUserStatus(userDetails)

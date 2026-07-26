@@ -2,7 +2,8 @@ package com.kdongsu5509.auth.security.config
 
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
-import com.kdongsu5509.auth.domain.UserRole
+import com.kdongsu5509.auth.security.ActiveUserAuthorizationManager
+import com.kdongsu5509.auth.security.RestControllerMethodPointcut
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.auth.security.filter.JwtAuthenticationFilter
 import com.kdongsu5509.auth.security.filter.OttIpFilterConfig
@@ -10,17 +11,22 @@ import com.kdongsu5509.auth.security.filter.OttIpValidationFilter
 import com.kdongsu5509.auth.security.handler.ImHereOttSuccessHandler
 import com.kdongsu5509.auth.security.handler.OttLoginSuccessHandler
 import com.kdongsu5509.shared.response.APIResponseSerializers
+import com.kdongsu5509.user.domain.UserRole
+import org.springframework.aop.Advisor
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Role
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.jdbc.core.JdbcOperations
 import org.springframework.security.authentication.ott.JdbcOneTimeTokenService
 import org.springframework.security.authentication.ott.OneTimeTokenService
+import org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -48,16 +54,23 @@ class SecurityConfig(
     private val imHereJwtTokenParserPort: ImHereTokenParserPort,
     private val imHereOttSuccessHandler: ImHereOttSuccessHandler,
     private val ottLoginSuccessHandler: OttLoginSuccessHandler,
-    @Value("\${admin.id}") private val adminId: String,
-    @Value("\${admin.allowed-ips:127.0.0.1}") private val allowedIps: List<String>,
-    @Value("\${management.endpoints.web.base-path:/actuator}") private val managementBasePath: String,
+    @param:Value("\${admin.id}") private val adminId: String,
+    @param:Value("\${admin.allowed-ips:127.0.0.1}") private val allowedIps: List<String>,
+    @param:Value("\${management.endpoints.web.base-path:/actuator}") private val managementBasePath: String,
 ) {
 
     private val permitAllPaths by lazy { securityWhiteList.permitAllPaths(managementBasePath) }
-
     @Bean
     fun jwtAuthenticationFilter(): JwtAuthenticationFilter =
         JwtAuthenticationFilter(imHereJwtTokenParserPort, permitAllPaths)
+
+    @Bean
+    @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+    fun activeUserMethodInterceptor(): Advisor =
+        AuthorizationManagerBeforeMethodInterceptor(
+            RestControllerMethodPointcut(),
+            ActiveUserAuthorizationManager(permitAllPaths),
+        )
 
     @Bean
     fun userDetailsService(): UserDetailsService = UserDetailsService { email ->
@@ -228,6 +241,8 @@ class SecurityConfig(
                 authorize("/error", permitAll)
                 authorize(HttpMethod.OPTIONS, "/**", permitAll)
                 authorize("/api/admin/**", hasRole(UserRole.ADMIN.name))
+                // 상태별 기본/예외 정책은 activeUserMethodInterceptor가 컨트롤러 메서드에서 적용한다.
+                // URL 계층에서 ACTIVE를 요구하면 @AllowPendingUser가 그 결정을 대체할 수 없다.
                 authorize(anyRequest, authenticated)
             }
 

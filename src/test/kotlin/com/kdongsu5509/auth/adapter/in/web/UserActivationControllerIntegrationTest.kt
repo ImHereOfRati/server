@@ -5,7 +5,7 @@ import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.adapter.`in`.web.dto.UserActivationRequest
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermCreateCommand
 import com.kdongsu5509.terms.service.TermService
@@ -35,7 +35,7 @@ class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("PENDING user can activate successfully")
     fun activationSuccessAndDocument() {
         val email = "pending@example.com"
-        val user = User.createWithPendingStatus(email, "Pending User", OAuth2Provider.KAKAO)
+        val user = User(email, "Pending User", OAuth2Provider.KAKAO)
         val savedUser = userRepository.save(user)
 
         val claims = JwtTokenClaims.fromUser(savedUser)
@@ -101,7 +101,7 @@ class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("Already active user gets bad request")
     fun activationFailWhenAlreadyActive() {
         val email = "active@example.com"
-        val user = User.createWithPendingStatus(email, "Active User", OAuth2Provider.KAKAO).activate()
+        val user = User(email, "Active User", OAuth2Provider.KAKAO).activate()
         val savedUser = userRepository.save(user)
 
         val claims = JwtTokenClaims.fromUser(savedUser).copy(role = "PENDING")
@@ -185,7 +185,7 @@ class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("필수 약관에 동의하지 않은 경우 활성화에 실패하고 예외를 반환하며 문서화한다")
     fun activationFailWhenMandatoryConsentMissing() {
         val email = "noconsent@example.com"
-        val user = User.createWithPendingStatus(email, "No Consent User", OAuth2Provider.KAKAO)
+        val user = User(email, "No Consent User", OAuth2Provider.KAKAO)
         val savedUser = userRepository.save(user)
 
         val claims = JwtTokenClaims.fromUser(savedUser)
@@ -233,7 +233,7 @@ class UserActivationControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("존재하지 않는 약관 ID를 포함하여 요청 시 예외를 반환하며 문서화한다")
     fun activationFailWhenTermNotFound() {
         val email = "invalidterm@example.com"
-        val user = User.createWithPendingStatus(email, "Invalid Term User", OAuth2Provider.KAKAO)
+        val user = User(email, "Invalid Term User", OAuth2Provider.KAKAO)
         val savedUser = userRepository.save(user)
 
         val claims = JwtTokenClaims.fromUser(savedUser)

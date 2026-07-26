@@ -2,7 +2,7 @@ package com.kdongsu5509.auth.adapter.out.oauth
 
 import com.kdongsu5509.auth.application.port.out.OidcProviderConfig
 import com.kdongsu5509.auth.application.port.out.OidcProviderConfigPort
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 

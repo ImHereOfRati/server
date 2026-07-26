@@ -5,7 +5,7 @@ import com.kdongsu5509.friends.repository.FriendRequestRepository
 import com.kdongsu5509.friends.repository.FriendRestrictionRepository
 import com.kdongsu5509.friends.repository.FriendshipRepository
 import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.service.dto.UserResult
+import com.kdongsu5509.user.api.UserResult
 
 class FriendRequestPolicy(
     private val friendRequestRepository: FriendRequestRepository,

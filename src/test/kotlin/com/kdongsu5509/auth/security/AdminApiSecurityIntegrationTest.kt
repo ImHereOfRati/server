@@ -1,6 +1,7 @@
 package com.kdongsu5509.auth.security
 
 import com.common.testsupport.WebIntegrationTestSupport
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user

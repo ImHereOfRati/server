@@ -3,12 +3,12 @@ package com.kdongsu5509.agreement.service
 import com.kdongsu5509.agreement.AgreementException
 import com.kdongsu5509.agreement.domain.AgreementStatus
 import com.kdongsu5509.agreement.domain.ConsentChange
-import com.kdongsu5509.agreement.event.RequiredAgreementsSatisfied
 import com.kdongsu5509.agreement.repository.AgreementRepository
 import com.kdongsu5509.agreement.repository.jpa.AgreementJpaEntity
 import com.kdongsu5509.agreement.service.dto.TermsConsentCommands
 import com.kdongsu5509.terms.TermCatalog
 import com.kdongsu5509.terms.TermFact
+import com.kdongsu5509.user.api.UserActivationContract
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName
@@ -21,7 +21,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.given
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
-import org.springframework.context.ApplicationEventPublisher
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -37,7 +36,7 @@ class AgreementServiceTest {
     }
 
     @Mock
-    lateinit var eventPublisher: ApplicationEventPublisher
+    lateinit var userActivationContract: UserActivationContract
 
     @Mock
     lateinit var agreementRepository: AgreementRepository
@@ -49,8 +48,8 @@ class AgreementServiceTest {
     lateinit var agreementService: AgreementService
 
     @Test
-    @DisplayName("변경된 동의 상태만 저장하고 필수 약관 동의 완료 이벤트를 발행한다")
-    fun consent_success_records_transitions_and_publishes_satisfied_event() {
+    @DisplayName("변경된 동의 상태만 저장하고 필수 약관이 충족되면 사용자를 활성화한다")
+    fun consent_success_records_transitions_and_activates_user() {
         // given
         given(termCatalog.findEffectiveTermFacts()).willReturn(EFFECTIVE_TERMS)
         given(agreementRepository.findHistory(USER_ID))
@@ -68,12 +67,12 @@ class AgreementServiceTest {
             USER_ID,
             listOf(ConsentChange(1L, AgreementStatus.CONSENT))
         )
-        verify(eventPublisher).publishEvent(RequiredAgreementsSatisfied(USER_ID))
+        verify(userActivationContract).activateIfPending(USER_ID)
     }
 
     @Test
-    @DisplayName("기존 필수 약관 동의를 철회하면 미동의 상태를 반환하고 완료 이벤트는 발행하지 않는다")
-    fun consent_success_withdraws_existing_agreement_without_satisfied_event() {
+    @DisplayName("기존 필수 약관 동의를 철회하면 미동의 상태를 반환하고 사용자를 활성화하지 않는다")
+    fun consent_success_withdraws_existing_agreement_without_activation() {
         // given
         given(termCatalog.findEffectiveTermFacts()).willReturn(EFFECTIVE_TERMS)
         given(agreementRepository.findHistory(USER_ID)).willReturn(
@@ -90,7 +89,7 @@ class AgreementServiceTest {
             USER_ID,
             listOf(ConsentChange(1L, AgreementStatus.WITHDRAW))
         )
-        verify(eventPublisher, never()).publishEvent(any<RequiredAgreementsSatisfied>())
+        verify(userActivationContract, never()).activateIfPending(any())
     }
 
     @Test
@@ -108,12 +107,12 @@ class AgreementServiceTest {
 
         // then
         verify(agreementRepository, never()).recordChanges(any(), any())
-        verify(eventPublisher).publishEvent(RequiredAgreementsSatisfied(USER_ID))
+        verify(userActivationContract).activateIfPending(USER_ID)
     }
 
     @Test
-    @DisplayName("갱신 약관에 동의하면 동의 내역을 저장하고 활성화 이벤트는 발행하지 않는다")
-    fun consentToRenewedTerm_success_records_consent_without_activation_event() {
+    @DisplayName("갱신 약관에 동의하면 동의 내역을 저장하고 사용자를 활성화하지 않는다")
+    fun consentToRenewedTerm_success_records_consent_without_activation() {
         // given
         given(termCatalog.findEffectiveTermFacts()).willReturn(
             listOf(TermFact(2L, 2L, "SERVICE", true))
@@ -133,7 +132,7 @@ class AgreementServiceTest {
             USER_ID,
             listOf(ConsentChange(2L, AgreementStatus.CONSENT))
         )
-        verify(eventPublisher, never()).publishEvent(any<RequiredAgreementsSatisfied>())
+        verify(userActivationContract, never()).activateIfPending(any())
     }
 
     @Test
@@ -155,7 +154,7 @@ class AgreementServiceTest {
             USER_ID,
             listOf(ConsentChange(2L, AgreementStatus.WITHDRAW))
         )
-        verify(eventPublisher, never()).publishEvent(any<RequiredAgreementsSatisfied>())
+        verify(userActivationContract, never()).activateIfPending(any())
     }
 
     @Test

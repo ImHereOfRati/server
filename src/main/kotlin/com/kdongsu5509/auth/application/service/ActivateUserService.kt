@@ -1,21 +1,23 @@
 package com.kdongsu5509.auth.application.service
 
+import com.kdongsu5509.agreement.service.AgreementService
+import com.kdongsu5509.agreement.service.dto.TermsConsentCommands
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.`in`.ActivateUserUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
-import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
 import com.kdongsu5509.auth.application.service.dto.UserActivationCommand
-import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.service.UserAgreementUseCase
-import com.kdongsu5509.user.service.dto.MultiTermsConsentCommand
+import com.kdongsu5509.support.exception.throwIt
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Deprecated(
+    message = "약관 동의 이벤트 기반 사용자 활성화 흐름으로 대체될 예정입니다.",
+)
 class ActivateUserService(
-    private val userAgreementService: UserAgreementUseCase,
+    private val agreementService: AgreementService,
     private val tokenProviderPort: ImHereTokenProviderPort
 ) : ActivateUserUseCase {
 
@@ -23,17 +25,14 @@ class ActivateUserService(
     override fun activate(command: UserActivationCommand, userStatus: String): ImHereJwtToken {
         if (userStatus != UserStatus.PENDING.name) AuthException.IMHERE_ALREADY_ACTIVE.throwIt()
 
-        // 1. 약관 동의 처리 및 회원 상태를 ACTIVE로 변경
-        val consentsCommand = MultiTermsConsentCommand(
+        val consentsCommand = TermsConsentCommands(
             consents = command.consents.map {
-                MultiTermsConsentCommand.TermConsentCommand(id = it.id, isAgreed = it.isAgreed)
+                TermsConsentCommands.TermConsentCommand(id = it.id, isAgreed = it.isAgreed)
             }
         )
 
-        val user = userAgreementService.consentAll(command.email, consentsCommand)
-
-        // 2. ACTIVE 상태가 반영된 새 JWT 토큰 발급
-        val newUserClaims = JwtTokenClaims.fromUser(user)
-        return tokenProviderPort.issue(newUserClaims)
+        agreementService.consent(command.userId, consentsCommand)
+            .requireRequiredAgreementsSatisfied()
+        return tokenProviderPort.reissueByEmail(command.email)
     }
 }

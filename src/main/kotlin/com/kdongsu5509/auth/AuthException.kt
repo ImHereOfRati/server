@@ -2,7 +2,6 @@ package com.kdongsu5509.auth
 
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseErrorCode
-import org.springframework.http.HttpStatus
 
 enum class AuthException(
     category: CommonErrorCode,
@@ -52,5 +51,5 @@ enum class AuthException(
     OIDC_KEY_PARSING_ERROR(CommonErrorCode.INTERNAL_SERVER_ERROR, "AUTH-903", "OIDC 키 파싱 중 오류가 발생했습니다"),
     IMHERE_KEY_EXCEPTION(CommonErrorCode.INTERNAL_SERVER_ERROR, "AUTH-904", "토큰 검증 중 오류가 발생하였습니다. 관리자에게 문의해주세요");
 
-    override val httpStatus: HttpStatus = category.httpStatus
+    override val httpStatus = category.httpStatus
 }

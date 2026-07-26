@@ -6,6 +6,7 @@ import com.kdongsu5509.auth.application.service.dto.UserActivationCommand.TermCo
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
+import java.util.UUID
 
 data class UserActivationRequest(
     @field:NotEmpty(message = "약관 동의 내역은 필수입니다.")
@@ -21,8 +22,9 @@ data class UserActivationRequest(
         val isAgreed: Boolean
     )
 
-    fun toCommand(email: String): UserActivationCommand {
+    fun toCommand(userId: UUID, email: String): UserActivationCommand {
         return UserActivationCommand(
+            userId = userId,
             email = email,
             consents = consents.map {
                 TermConsentCommand(

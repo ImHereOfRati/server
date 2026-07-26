@@ -1,11 +1,12 @@
 package com.kdongsu5509.auth.adapter.out.oauth
 
-import com.kdongsu5509.auth.adapter.out.oauth.OIDCProperties
+import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.auth.adapter.out.cache.OIDCTokenPublicKeyAdapter
 import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKey
 import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKeyResponse
 import com.kdongsu5509.auth.application.port.out.OauthClientPort
 import com.kdongsu5509.support.exception.ImHereBaseException
-import com.kdongsu5509.auth.AuthException
+import com.kdongsu5509.user.domain.OAuth2Provider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -46,9 +47,11 @@ class OIDCTokenPublicKeyAdapterTest {
     fun findByKeyId_fromCache() {
         val key = OIDCPublicKey("kid1", "kty", "alg", "use", "n", "e")
         val response = OIDCPublicKeyResponse(listOf(key))
-        whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(response)
+        whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(
+            response
+        )
 
-        val result = adapter.findByKeyId(com.kdongsu5509.auth.domain.OAuth2Provider.KAKAO, "kid1")
+        val result = adapter.findByKeyId(OAuth2Provider.KAKAO, "kid1")
 
         assertThat(result.kid).isEqualTo("kid1")
     }
@@ -58,7 +61,7 @@ class OIDCTokenPublicKeyAdapterTest {
     fun findByKeyId_cacheFetchFail() {
         whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(null)
 
-        assertThatThrownBy { adapter.findByKeyId(com.kdongsu5509.auth.domain.OAuth2Provider.KAKAO, "kid1") }
+        assertThatThrownBy { adapter.findByKeyId(OAuth2Provider.KAKAO, "kid1") }
             .isInstanceOf(ImHereBaseException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", AuthException.OIDC_PUBLIC_KEY_FETCH_FROM_CACHE_FAILED)
     }
@@ -68,13 +71,17 @@ class OIDCTokenPublicKeyAdapterTest {
     fun findByKeyId_fromRefresh() {
         val oldKey = OIDCPublicKey("kid2", "kty", "alg", "use", "n", "e")
         val oldResponse = OIDCPublicKeyResponse(listOf(oldKey))
-        whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(oldResponse)
+        whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(
+            oldResponse
+        )
 
         val newKey = OIDCPublicKey("kid1", "kty", "alg", "use", "n", "e")
         val newResponse = OIDCPublicKeyResponse(listOf(oldKey, newKey))
-        whenever(oauthClientPort.refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(newResponse)
+        whenever(oauthClientPort.refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(
+            newResponse
+        )
 
-        val result = adapter.findByKeyId(com.kdongsu5509.auth.domain.OAuth2Provider.KAKAO, "kid1")
+        val result = adapter.findByKeyId(OAuth2Provider.KAKAO, "kid1")
 
         assertThat(result.kid).isEqualTo("kid1")
     }
@@ -84,10 +91,14 @@ class OIDCTokenPublicKeyAdapterTest {
     fun findByKeyId_refreshNotFound() {
         val oldKey = OIDCPublicKey("kid2", "kty", "alg", "use", "n", "e")
         val oldResponse = OIDCPublicKeyResponse(listOf(oldKey))
-        whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(oldResponse)
-        whenever(oauthClientPort.refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(oldResponse)
+        whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(
+            oldResponse
+        )
+        whenever(oauthClientPort.refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(
+            oldResponse
+        )
 
-        assertThatThrownBy { adapter.findByKeyId(com.kdongsu5509.auth.domain.OAuth2Provider.KAKAO, "kid1") }
+        assertThatThrownBy { adapter.findByKeyId(OAuth2Provider.KAKAO, "kid1") }
             .isInstanceOf(ImHereBaseException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", AuthException.OIDC_PUBLIC_KEY_NOT_FOUND)
     }
@@ -97,10 +108,14 @@ class OIDCTokenPublicKeyAdapterTest {
     fun findByKeyId_refreshFail() {
         val oldKey = OIDCPublicKey("kid2", "kty", "alg", "use", "n", "e")
         val oldResponse = OIDCPublicKeyResponse(listOf(oldKey))
-        whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(oldResponse)
-        whenever(oauthClientPort.refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(null)
+        whenever(oauthClientPort.fetch("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(
+            oldResponse
+        )
+        whenever(oauthClientPort.refresh("kakao-cache", "https://kauth.kakao.com/.well-known/jwks.json")).thenReturn(
+            null
+        )
 
-        assertThatThrownBy { adapter.findByKeyId(com.kdongsu5509.auth.domain.OAuth2Provider.KAKAO, "kid1") }
+        assertThatThrownBy { adapter.findByKeyId(OAuth2Provider.KAKAO, "kid1") }
             .isInstanceOf(ImHereBaseException::class.java)
             .hasFieldOrPropertyWithValue("errorCode", AuthException.OIDC_PUBLIC_KEY_FETCH_FAILED)
     }

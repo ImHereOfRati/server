@@ -4,7 +4,7 @@ import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.friends.controller.dto.CreateFriendRestrictionRequest
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
@@ -16,21 +16,25 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.restdocs.payload.PayloadDocumentation.*
-import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
-import org.springframework.restdocs.request.RequestDocumentation.pathParameters
-import org.springframework.restdocs.request.RequestDocumentation.queryParameters
+import org.springframework.restdocs.request.RequestDocumentation.*
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.*
 
 class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
 
-    @Autowired private lateinit var userRepository: UserRepository
-    @Autowired private lateinit var friendRestrictionRepository: FriendRestrictionRepository
-    @Autowired private lateinit var tokenProviderPort: ImHereTokenProviderPort
+    @Autowired
+    private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var friendRestrictionRepository: FriendRestrictionRepository
+
+    @Autowired
+    private lateinit var tokenProviderPort: ImHereTokenProviderPort
 
     private fun createUserAndToken(email: String, nickname: String): Pair<User, String> {
-        val user = User.createWithPendingStatus(email, nickname, OAuth2Provider.KAKAO).activate()
+        val user = User(email, nickname, OAuth2Provider.KAKAO).activate()
         val saved = userRepository.save(user)
         val token = tokenProviderPort.issue(JwtTokenClaims.fromUser(saved)).accessToken
         return Pair(saved, token)

@@ -1,6 +1,6 @@
 package com.kdongsu5509.friends.controller.dto
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.User
 import java.util.*
 

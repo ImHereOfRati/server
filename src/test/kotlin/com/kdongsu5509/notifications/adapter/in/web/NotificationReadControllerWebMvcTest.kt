@@ -1,6 +1,6 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.application.port.`in`.NotificationHistoryUseCase
 import com.kdongsu5509.notifications.domain.NotificationHistory
 import com.kdongsu5509.notifications.domain.NotificationType
@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user

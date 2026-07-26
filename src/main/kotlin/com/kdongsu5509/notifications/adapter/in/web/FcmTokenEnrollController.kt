@@ -1,6 +1,6 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.FcmTokenEnrollRequest
 import com.kdongsu5509.notifications.application.port.`in`.FcmTokenEnrollUseCase
 import org.springframework.http.HttpStatus

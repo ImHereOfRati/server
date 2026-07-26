@@ -5,7 +5,12 @@ import java.util.*
 
 @Configuration
 class TimeZoneConfig {
+    companion object {
+        val SEOUL_TIMEZONE_ID: String = "Asia/Seoul"
+    }
+
     init {
-        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"))
+        val koreaTimeZone = TimeZone.getTimeZone(SEOUL_TIMEZONE_ID)
+        TimeZone.setDefault(koreaTimeZone)
     }
 }

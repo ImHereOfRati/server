@@ -4,7 +4,7 @@ import com.kdongsu5509.auth.adapter.out.oauth.OIDCProperties
 import com.kdongsu5509.auth.application.port.out.OauthClientPort
 import com.kdongsu5509.auth.application.port.out.OidcProviderConfig
 import com.kdongsu5509.auth.application.port.out.OidcProviderConfigPort
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

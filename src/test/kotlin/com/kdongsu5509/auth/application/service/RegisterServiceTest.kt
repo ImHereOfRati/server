@@ -4,11 +4,13 @@ import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.api.RegisterUserCommand
+import com.kdongsu5509.user.api.UserLookupContract
+import com.kdongsu5509.user.api.UserRegistrationContract
+import com.kdongsu5509.user.api.UserResult
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.repository.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -34,16 +36,13 @@ class RegisterServiceTest {
 
         val TEST_OAUTH_PROVIDER = OAuth2Provider.KAKAO
         val TEST_OIDC_USER_INFO = OIDCUserInfo(email = TEST_EMAIL, nickname = TEST_NICKNAME, sub = TEST_SUB)
-        val TEST_NO_ID_USER = User(
-            id = null,
+        val TEST_REGISTER_COMMAND = RegisterUserCommand(
             email = TEST_EMAIL,
             nickname = TEST_NICKNAME,
             oauthProvider = TEST_OAUTH_PROVIDER,
-            role = UserRole.NORMAL,
-            status = UserStatus.PENDING,
             oidcSubject = TEST_SUB
         )
-        val TEST_WITH_ID_USER = User(
+        val TEST_USER_RESULT = UserResult(
             id = UUID.randomUUID(),
             email = TEST_EMAIL,
             nickname = TEST_NICKNAME,
@@ -59,7 +58,10 @@ class RegisterServiceTest {
     lateinit var oidcVerifyPort: OIDCVerifyPort
 
     @Mock
-    lateinit var userRepository: UserRepository
+    lateinit var userLookupContract: UserLookupContract
+
+    @Mock
+    lateinit var userRegistrationContract: UserRegistrationContract
 
     @Mock
     lateinit var tokenProviderPort: ImHereTokenProviderPort
@@ -72,7 +74,7 @@ class RegisterServiceTest {
     fun register_success() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userRepository.save(TEST_NO_ID_USER)).willReturn(TEST_WITH_ID_USER)
+        given(userRegistrationContract.register(TEST_REGISTER_COMMAND)).willReturn(TEST_USER_RESULT)
         given(tokenProviderPort.issue(any())).willReturn(ImHereJwtToken(TEST_ACCESS_TOKEN, TEST_REFRESH_TOKEN))
 
         // when
@@ -80,7 +82,8 @@ class RegisterServiceTest {
 
         // then
         then(oidcVerifyPort).should().verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)
-        then(userRepository).should().save(TEST_NO_ID_USER)
+        then(userLookupContract).should().findByEmailOrNull(TEST_EMAIL)
+        then(userRegistrationContract).should().register(TEST_REGISTER_COMMAND)
         then(tokenProviderPort).should().issue(any())
     }
 
@@ -97,7 +100,8 @@ class RegisterServiceTest {
         }
 
         assertThat(exception.message).isEqualTo("OIDC Verification Failed")
-        then(userRepository).shouldHaveNoInteractions()
+        then(userLookupContract).shouldHaveNoInteractions()
+        then(userRegistrationContract).shouldHaveNoInteractions()
         then(tokenProviderPort).shouldHaveNoInteractions()
     }
 
@@ -106,7 +110,7 @@ class RegisterServiceTest {
     fun register_fail_user_save() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userRepository.save(TEST_NO_ID_USER)).willThrow(RuntimeException("Persistence Failed"))
+        given(userRegistrationContract.register(TEST_REGISTER_COMMAND)).willThrow(RuntimeException("Persistence Failed"))
 
         // when & then
         val exception = org.junit.jupiter.api.assertThrows<RuntimeException> {
@@ -122,7 +126,7 @@ class RegisterServiceTest {
     fun register_fail_token_issue() {
         // given
         given(oidcVerifyPort.verify(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN)).willReturn(TEST_OIDC_USER_INFO)
-        given(userRepository.save(TEST_NO_ID_USER)).willReturn(TEST_WITH_ID_USER)
+        given(userRegistrationContract.register(TEST_REGISTER_COMMAND)).willReturn(TEST_USER_RESULT)
         given(tokenProviderPort.issue(any())).willThrow(RuntimeException("Token Issue Failed"))
 
         // when & then

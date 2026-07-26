@@ -3,10 +3,9 @@ package com.kdongsu5509.auth.adapter.`in`.web
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.adapter.`in`.web.dto.TokenRefreshRequest
-import com.kdongsu5509.auth.application.port.`in`.ForceLogoutUseCase
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.UserRepository
 import org.junit.jupiter.api.DisplayName
@@ -31,15 +30,12 @@ class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
     @Autowired
     private lateinit var tokenProviderPort: ImHereTokenProviderPort
 
-    @Autowired
-    private lateinit var forceLogoutUseCase: ForceLogoutUseCase
-
     @Test
     @DisplayName("정상적인 리프레시 토큰으로 액세스 토큰을 재발급받고 200 OK를 반환하며 문서화한다")
     fun refreshSuccessAndDocument() {
         // given
         val email = "refresh@example.com"
-        val user = User.createWithPendingStatus(email, "Refresh User", OAuth2Provider.KAKAO).activate()
+        val user = User(email, "Refresh User", OAuth2Provider.KAKAO).activate()
         val savedUser = userRepository.save(user)
 
         val claims = JwtTokenClaims.fromUser(savedUser)
@@ -66,7 +62,8 @@ class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data.accessToken").description("새로 발급된 액세스 토큰"),
                             fieldWithPath("data.refreshToken").description("새로 발급된 리프레시 토큰"),
-                            fieldWithPath("data.userStatus").description("사용자 상태 (ACTIVE, PENDING, BLOCKED, WITHDRAWN)").optional()
+                            fieldWithPath("data.userStatus").description("사용자 상태 (ACTIVE, PENDING, BLOCKED, WITHDRAWN)")
+                                .optional()
                         )
                     )
                 )
@@ -132,13 +129,13 @@ class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
     fun refreshFailWhenTokenRevoked() {
         // given - 유효한 서명이지만 강제 로그아웃으로 더 이상 사용할 수 없는 토큰
         val email = "logout@example.com"
-        val user = User.createWithPendingStatus(email, "Logout User", OAuth2Provider.KAKAO).activate()
+        val user = User(email, "Logout User", OAuth2Provider.KAKAO).activate()
         val savedUser = userRepository.save(user)
 
         val claims = JwtTokenClaims.fromUser(savedUser)
         val token = tokenProviderPort.issue(claims)
 
-        forceLogoutUseCase.logout(email)
+        userRepository.update(savedUser.rotateRefreshTokenVersion())
 
         mockMvc.perform(
             post("/api/auth/refresh")

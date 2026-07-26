@@ -2,7 +2,7 @@ package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.FcmTokenEnrollRequest
 import com.kdongsu5509.notifications.adapter.out.persistence.FcmTokenJpaEntity
 import com.kdongsu5509.notifications.adapter.out.persistence.SpringDataFcmTokenRepository

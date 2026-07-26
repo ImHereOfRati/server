@@ -1,6 +1,7 @@
 package com.kdongsu5509.agreement.repository.jpa
 
 import com.kdongsu5509.agreement.domain.AgreementStatus
+import com.kdongsu5509.shared.repository.BaseEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import org.springframework.data.annotation.CreatedDate
@@ -27,7 +28,7 @@ class AgreementJpaEntity(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     val action: AgreementStatus,
-) {
+) : BaseEntity() {
     @Id
     @GeneratedValue
     @UuidGenerator

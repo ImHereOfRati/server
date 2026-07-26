@@ -1,13 +1,13 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
-import com.kdongsu5509.auth.security.ImHereUserDetails
-import com.kdongsu5509.notifications.domain.NotificationType
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.MultiNotificationRequest
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationRequest
 import com.kdongsu5509.notifications.application.dto.MultipleNotificationCommand
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf

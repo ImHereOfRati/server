@@ -2,7 +2,7 @@ package com.kdongsu5509.auth.application.service
 
 import com.kdongsu5509.auth.application.port.out.OauthClientPort
 import com.kdongsu5509.auth.application.port.out.OidcProviderConfigPort
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 

@@ -6,7 +6,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
 class WebConfig : WebMvcConfigurer {
-
     override fun configureApiVersioning(configurer: ApiVersionConfigurer) {
         configurer.useQueryParam("v").setDefaultVersion("1")
     }

@@ -1,6 +1,6 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.user.service.UserAdminService
+import com.kdongsu5509.user.service.UserQueryService
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam
 @Controller
 @RequestMapping("/admin/users")
 class UserAdminPageController(
-    private val userService: UserAdminService
+    private val userQueryService: UserQueryService
 ) {
     @GetMapping
     fun page(
@@ -19,7 +19,7 @@ class UserAdminPageController(
         @RequestParam(defaultValue = "20") size: Int,
         model: Model
     ): String {
-        val result = userService.findAll(PageRequest.of(page, size))
+        val result = userQueryService.findAll(PageRequest.of(page, size))
         model.addAttribute("users", result.content)
         model.addAttribute("hasNext", result.hasNext())
         return "admin/users"

@@ -1,6 +1,6 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.FcmTokenEnrollRequest
 import com.kdongsu5509.notifications.application.port.`in`.FcmTokenEnrollUseCase
 import com.kdongsu5509.notifications.domain.DeviceType
@@ -10,7 +10,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf

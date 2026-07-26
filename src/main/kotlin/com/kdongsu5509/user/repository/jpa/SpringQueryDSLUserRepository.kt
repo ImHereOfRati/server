@@ -18,39 +18,6 @@ class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
 
     private val user = QUserJpaEntity.Companion.userJpaEntity
 
-    fun findUserByEmail(email: String): UserJpaEntity? =
-        queryFactory.selectFrom(user)
-            .where(emailEquals(email))
-            .fetchOne()
-
-
-    fun findActiveUserByEmail(email: String): UserJpaEntity? =
-        queryFactory.selectFrom(user)
-            .where(emailEquals(email), isActive())
-            .fetchOne()
-
-    fun findActiveUsersByEmails(vararg emails: String): List<UserJpaEntity> =
-        queryFactory.selectFrom(user)
-            .where(user.email.`in`(*emails), isActive())
-            .fetch()
-
-    fun findActiveUsersByEmailAndId(email: String, id: UUID): List<UserJpaEntity> =
-        queryFactory.selectFrom(user)
-            .where(emailEquals(email).or(idEquals(id)), isActive())
-            .fetch()
-
-    //----
-
-    fun findAll(pageable: Pageable): Slice<UserJpaEntity> {
-        val content = queryFactory.selectFrom(user)
-            .where(isNotWithdrawn())
-            .fetch()
-        val hasNext = content.size > pageable.pageSize
-        val sliceContent = if (hasNext) content.subList(0, pageable.pageSize) else content
-
-        return SliceImpl(sliceContent, pageable, hasNext)
-    }
-
     fun findAllActiveByEmailAndKeyword(
         userEmail: String,
         keyword: String,
@@ -127,10 +94,8 @@ class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
                     .fetch()
     }
 
-    private fun idEquals(id: UUID): BooleanExpression = user.id.eq(id)
     private fun emailEquals(email: String): BooleanExpression = user.email.eq(email)
     private fun isActive(): BooleanExpression = user.status.eq(UserStatus.ACTIVE)
-    private fun isNotWithdrawn(): BooleanExpression = user.status.ne(UserStatus.WITHDRAWN)
 
     private fun nicknameEqualsOrEmailEquals(keyword: String): BooleanExpression =
         if (keyword.contains("@")) {

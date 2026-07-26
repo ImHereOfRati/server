@@ -2,7 +2,7 @@ package com.kdongsu5509.terms.controller
 
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.terms.controller.dto.TermCreateRequest
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.repository.SpringDataTermRepository

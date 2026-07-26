@@ -1,14 +1,14 @@
 package com.kdongsu5509.friends.repository
 
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.friends.domain.FriendRestriction
 import com.kdongsu5509.friends.domain.FriendRestrictionType
 import com.kdongsu5509.friends.repository.jpa.FriendRestrictionJpaEntity
 import com.kdongsu5509.friends.repository.jpa.SpringDataFriendRestrictionRepository
 import com.kdongsu5509.friends.repository.mapper.FriendRestrictionMapper
-import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.jpa.UserJpaEntity
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat

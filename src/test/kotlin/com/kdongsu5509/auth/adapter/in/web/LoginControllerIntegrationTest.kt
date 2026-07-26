@@ -6,7 +6,7 @@ import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.adapter.`in`.web.dto.OIDCAuthRequest
 import com.kdongsu5509.auth.application.port.out.OIDCVerifyPort
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.UserRepository
@@ -44,7 +44,7 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
     fun loginSuccessAndDocument() {
         // given
         val email = "test@example.com"
-        val user = User.createWithPendingStatus(email, "Test User", OAuth2Provider.KAKAO)
+        val user = User(email, "Test User", OAuth2Provider.KAKAO)
         userRepository.save(user.activate())
 
         val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
@@ -74,7 +74,8 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data.accessToken").description("발급된 액세스 토큰"),
                             fieldWithPath("data.refreshToken").description("발급된 리프레시 토큰"),
-                            fieldWithPath("data.userStatus").description("사용자 상태 (ACTIVE, PENDING, BLOCKED, WITHDRAWN)").optional()
+                            fieldWithPath("data.userStatus").description("사용자 상태 (ACTIVE, PENDING, BLOCKED, WITHDRAWN)")
+                                .optional()
                         )
                     )
                 )
@@ -172,7 +173,7 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("정지된 계정(BLOCKED)으로 로그인 시 401 Unauthorized와 에러를 반환하며 문서화한다")
     fun loginFailWhenUserBlocked() {
         val email = "blocked@example.com"
-        val user = User.createWithPendingStatus(email, "Blocked User", OAuth2Provider.KAKAO).activate().block()
+        val user = User(email, "Blocked User", OAuth2Provider.KAKAO).activate().block()
         userRepository.save(user)
 
         val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
@@ -205,7 +206,7 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("가입 대기 중인 계정(PENDING)으로 로그인 시 200 OK와 토큰, 상태를 반환하며 문서화한다")
     fun loginSuccessWhenUserPending() {
         val email = "pending@example.com"
-        val user = User.createWithPendingStatus(email, "Pending User", OAuth2Provider.KAKAO)
+        val user = User(email, "Pending User", OAuth2Provider.KAKAO)
         userRepository.save(user)
 
         val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
@@ -240,7 +241,7 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("탈퇴한 계정(WITHDRAWN)으로 로그인 시 401 Unauthorized와 에러를 반환하며 문서화한다")
     fun loginFailWhenUserWithdrawn() {
         val email = "withdrawn@example.com"
-        val user = User.createWithPendingStatus(email, "Withdrawn User", OAuth2Provider.KAKAO).activate().withdraw()
+        val user = User(email, "Withdrawn User", OAuth2Provider.KAKAO).activate().withdraw()
         userRepository.save(user)
 
         val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)
@@ -273,7 +274,7 @@ class LoginControllerIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("일반 로그인 API는 관리자 IP allowlist의 영향을 받지 않는다")
     fun loginIgnoresAdminIpAllowlist() {
         val email = "public-login@example.com"
-        val user = User.createWithPendingStatus(email, "Public Login User", OAuth2Provider.KAKAO)
+        val user = User(email, "Public Login User", OAuth2Provider.KAKAO)
         userRepository.save(user.activate())
 
         val request = OIDCAuthRequest(provider = OAuth2Provider.KAKAO, idToken = "valid-id-token", nonce = NONCE)

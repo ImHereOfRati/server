@@ -1,7 +1,7 @@
 package com.kdongsu5509.auth.application.port.`in`
 
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 
 interface RegisterUseCase {
     fun register(provider: OAuth2Provider, idToken: String, nonce: String? = null): ImHereJwtToken

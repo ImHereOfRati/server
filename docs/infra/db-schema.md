@@ -72,6 +72,8 @@ erDiagram
         UUID id PK
         UUID user_id FK
         long terms_version_id FK
+        enum action
+        datetime occurred_at
     }
 
     fcm_token {
@@ -116,8 +118,9 @@ erDiagram
 
 ### user_agreement
 
-* 사용자가 동의한 약관 버전을 저장합니다.
-* 약관이 변경되더라도 당시 동의한 버전을 추적할 수 있습니다.
+* 사용자의 약관 동의와 철회를 append-only 이력으로 저장합니다.
+* 약관이 변경되더라도 당시 동의한 버전과 동의·철회 시각을 추적할 수 있습니다.
+* `(user_id, terms_version_id, occurred_at)` 인덱스로 약관별 최신 상태 조회를 지원합니다.
 
 ### friend_request
 

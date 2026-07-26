@@ -4,7 +4,7 @@ import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
-import com.kdongsu5509.auth.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.friends.controller.dto.NewFriendRequest
 import com.kdongsu5509.friends.domain.FriendRequest
 import com.kdongsu5509.friends.domain.FriendRestriction
@@ -20,23 +20,31 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.restdocs.payload.PayloadDocumentation.*
-import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
-import org.springframework.restdocs.request.RequestDocumentation.pathParameters
-import org.springframework.restdocs.request.RequestDocumentation.queryParameters
+import org.springframework.restdocs.request.RequestDocumentation.*
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.*
 
 class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
 
-    @Autowired private lateinit var userRepository: UserRepository
-    @Autowired private lateinit var friendRequestRepository: FriendRequestRepository
-    @Autowired private lateinit var friendshipRepository: FriendshipRepository
-    @Autowired private lateinit var friendRestrictionRepository: FriendRestrictionRepository
-    @Autowired private lateinit var tokenProviderPort: ImHereTokenProviderPort
+    @Autowired
+    private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var friendRequestRepository: FriendRequestRepository
+
+    @Autowired
+    private lateinit var friendshipRepository: FriendshipRepository
+
+    @Autowired
+    private lateinit var friendRestrictionRepository: FriendRestrictionRepository
+
+    @Autowired
+    private lateinit var tokenProviderPort: ImHereTokenProviderPort
 
     private fun createUserAndToken(email: String, nickname: String): Pair<User, String> {
-        val user = User.createWithPendingStatus(email, nickname, OAuth2Provider.KAKAO).activate()
+        val user = User(email, nickname, OAuth2Provider.KAKAO).activate()
         val saved = userRepository.save(user)
         val token = tokenProviderPort.issue(JwtTokenClaims.fromUser(saved)).accessToken
         return Pair(saved, token)
@@ -235,7 +243,13 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val (requester, token) = createUserAndToken("req5@example.com", "req5")
         val (receiver, _) = createUserAndToken("rec5@example.com", "rec5")
 
-        friendRestrictionRepository.save(FriendRestriction(restrictor = receiver, restricted = requester, type = FriendRestrictionType.BLOCK))
+        friendRestrictionRepository.save(
+            FriendRestriction(
+                restrictor = receiver,
+                restricted = requester,
+                type = FriendRestrictionType.BLOCK
+            )
+        )
 
         val requestDto = NewFriendRequest(targetId = receiver.id!!, message = "차단 좀 풀어줄래? 진짜 미안해.")
 

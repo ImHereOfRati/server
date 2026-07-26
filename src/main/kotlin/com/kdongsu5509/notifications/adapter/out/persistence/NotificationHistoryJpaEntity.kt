@@ -1,6 +1,6 @@
 package com.kdongsu5509.notifications.adapter.out.persistence
 
-import com.kdongsu5509.shared.BaseTimeEntity
+import com.kdongsu5509.shared.repository.BaseTimeEntity
 import jakarta.persistence.*
 
 @Entity

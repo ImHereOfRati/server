@@ -1,20 +1,21 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.auth.application.port.`in`.ForceLogoutUseCase
+import com.kdongsu5509.user.service.UserLifecycleService
+import com.kdongsu5509.user.service.UserQueryService
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
-import com.kdongsu5509.auth.domain.OAuth2Provider
-import com.kdongsu5509.auth.domain.UserRole
-import com.kdongsu5509.auth.security.ImHereUserDetails
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import com.kdongsu5509.support.logger.AccessLogPrinter
+import com.kdongsu5509.user.domain.OAuth2Provider
+import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.service.UserService
-import com.kdongsu5509.user.service.dto.UserResult
+import com.kdongsu5509.user.api.UserResult
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
+import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.TestConfiguration
@@ -23,10 +24,13 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.SliceImpl
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -43,10 +47,10 @@ class UserAdminControllerWebMvcTest {
     private lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    private lateinit var userService: UserService
+    private lateinit var userQueryService: UserQueryService
 
     @MockitoBean
-    private lateinit var forceLogoutUseCase: ForceLogoutUseCase
+    private lateinit var userLifecycleService: UserLifecycleService
 
     @MockitoBean
     private lateinit var accessLogPrinter: AccessLogPrinter
@@ -93,7 +97,7 @@ class UserAdminControllerWebMvcTest {
         val pageable = PageRequest.of(0, 15)
         val slice = SliceImpl(listOf(userResult), pageable, false)
 
-        given(userService.findAll(any())).willReturn(slice)
+        given(userQueryService.findAll(any())).willReturn(slice)
 
         mockMvc.perform(
             get(BASE_PATH)
@@ -106,4 +110,59 @@ class UserAdminControllerWebMvcTest {
             .andExpect(jsonPath("$.data.hasNext").value(false))
     }
 
+    @Test
+    @DisplayName("관리자가 사용자를 차단하면 대상 이메일을 생명주기 서비스에 전달한다")
+    fun block_delegates_target_email() {
+        val adminDetails = ImHereUserDetails("admin@example.com", "admin", "ADMIN", "ACTIVE")
+
+        mockMvc.perform(
+            post("$BASE_PATH/{email}/block", "target@example.com")
+                .with(csrf())
+                .with(user(adminDetails))
+        ).andExpect(status().isOk)
+
+        verify(userLifecycleService).block("target@example.com")
+    }
+
+    @Test
+    @DisplayName("관리자가 사용자 차단을 해제하면 대상 이메일을 생명주기 서비스에 전달한다")
+    fun unblock_delegates_target_email() {
+        val adminDetails = ImHereUserDetails("admin@example.com", "admin", "ADMIN", "ACTIVE")
+
+        mockMvc.perform(
+            delete("$BASE_PATH/{email}/block", "target@example.com")
+                .with(csrf())
+                .with(user(adminDetails))
+        ).andExpect(status().isOk)
+
+        verify(userLifecycleService).unblock("target@example.com")
+    }
+
+    @Test
+    @DisplayName("관리자가 강제 로그아웃을 요청하면 대상 이메일을 생명주기 서비스에 전달한다")
+    fun forceLogout_delegates_target_email() {
+        val adminDetails = ImHereUserDetails("admin@example.com", "admin", "ADMIN", "ACTIVE")
+
+        mockMvc.perform(
+            delete("$BASE_PATH/{email}/token", "target@example.com")
+                .with(csrf())
+                .with(user(adminDetails))
+        ).andExpect(status().isOk)
+
+        verify(userLifecycleService).requestForceLogout("target@example.com")
+    }
+
+    @Test
+    @DisplayName("관리자가 사용자를 탈퇴시키면 대상 이메일을 생명주기 서비스에 전달한다")
+    fun withdraw_delegates_target_email() {
+        val adminDetails = ImHereUserDetails("admin@example.com", "admin", "ADMIN", "ACTIVE")
+
+        mockMvc.perform(
+            delete("$BASE_PATH/{email}", "target@example.com")
+                .with(csrf())
+                .with(user(adminDetails))
+        ).andExpect(status().isOk)
+
+        verify(userLifecycleService).withdraw("target@example.com")
+    }
 }

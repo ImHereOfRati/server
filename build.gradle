@@ -209,7 +209,14 @@ jacocoTestReport {
                     "**/Q*",
                     "**/*Application*",
                     "**/*BaseEntity*",
-                    "**/*BaseTimeEntity*"
+                    "**/*BaseTimeEntity*",
+                    // Spring 설정 클래스와 프로퍼티 바인딩 홀더.
+                    // @Bean 메서드는 컨텍스트 기동만으로 "실행"되어 커버리지를 부풀리고,
+                    // 프로퍼티 홀더의 중첩 data class는 equals/hashCode/copy 같은 생성 멤버뿐이라 검증 대상이 아니다.
+                    // 로직을 가진 바깥 클래스(SecurityWhiteList, OIDCProperties)는 그대로 집계한다.
+                    "**/*Config.class",
+                    '**/*Config$*.class',
+                    '**/*Properties$*.class'
             ])
         }))
     }

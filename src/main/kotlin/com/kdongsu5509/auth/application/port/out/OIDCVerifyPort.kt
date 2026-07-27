@@ -4,5 +4,5 @@ import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
 import com.kdongsu5509.user.domain.OAuth2Provider
 
 interface OIDCVerifyPort {
-    fun verify(provider: OAuth2Provider, idToken: String, nonce: String? = null): OIDCUserInfo
+    fun verify(provider: OAuth2Provider, idToken: String, nonce: String): OIDCUserInfo
 }

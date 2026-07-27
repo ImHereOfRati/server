@@ -10,7 +10,8 @@ class SecurityWhiteList(
     fun permitAllPaths(managementBasePath: String): List<String> {
         val normalizedBasePath = managementBasePath.trim().ifEmpty { "/actuator" }.let { path ->
             val withLeadingSlash = if (path.startsWith('/')) path else "/$path"
-            withLeadingSlash.trimEnd('/')
+            // 루트("/")는 trimEnd 후 빈 문자열이 되어 permitAll 패턴으로 쓸 수 없으므로 되돌린다.
+            withLeadingSlash.trimEnd('/').ifEmpty { "/" }
         }
 
         val actuatorPaths = if (normalizedBasePath == "/") {

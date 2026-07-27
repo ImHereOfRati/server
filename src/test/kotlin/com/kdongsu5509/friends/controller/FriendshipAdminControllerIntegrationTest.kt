@@ -4,6 +4,7 @@ import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
+import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.friends.domain.Friendship
 import com.kdongsu5509.friends.repository.FriendshipRepository
@@ -33,7 +34,7 @@ class FriendshipAdminControllerIntegrationTest : WebIntegrationTestSupport() {
     private fun createUserAndToken(email: String, nickname: String): Pair<User, String> {
         val user = User(email, nickname, OAuth2Provider.KAKAO).activate()
         val saved = userRepository.save(user)
-        val token = tokenProviderPort.issue(JwtTokenClaims.fromUser(saved)).accessToken
+        val token = tokenProviderPort.issue(JwtTokenClaims.fromUser(UserResult.fromDomain(saved))).accessToken
         return Pair(saved, token)
     }
 

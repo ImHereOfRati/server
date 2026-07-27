@@ -5,6 +5,7 @@ import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.adapter.`in`.web.dto.TokenRefreshRequest
 import com.kdongsu5509.auth.application.port.out.ImHereTokenProviderPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
+import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.repository.UserRepository
@@ -38,7 +39,7 @@ class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
         val user = User(email, "Refresh User", OAuth2Provider.KAKAO).activate()
         val savedUser = userRepository.save(user)
 
-        val claims = JwtTokenClaims.fromUser(savedUser)
+        val claims = JwtTokenClaims.fromUser(UserResult.fromDomain(savedUser))
         val initialToken = tokenProviderPort.issue(claims)
 
         val request = TokenRefreshRequest(refreshToken = initialToken.refreshToken)
@@ -132,7 +133,7 @@ class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
         val user = User(email, "Logout User", OAuth2Provider.KAKAO).activate()
         val savedUser = userRepository.save(user)
 
-        val claims = JwtTokenClaims.fromUser(savedUser)
+        val claims = JwtTokenClaims.fromUser(UserResult.fromDomain(savedUser))
         val token = tokenProviderPort.issue(claims)
 
         userRepository.update(savedUser.rotateRefreshTokenVersion())

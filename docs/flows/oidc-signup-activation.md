@@ -8,7 +8,7 @@ OIDC 로그인 뒤 신규 사용자를 `PENDING` 으로 만들고, 약관 동의
 
 | 판단 | 내용 | 근거 |
 |---|---|---|
-| 가입과 활성화를 분리 | 회원가입 직후에는 `PENDING` 토큰을 돌려주고, 활성화 API 에서 최종 `ACTIVE` 전환을 한다 | 약관 동의 전 사용 범위를 명확히 제한하려는 설계다 |
+| 가입과 로그인은 합치고, 활성화만 분리 | `/api/auth` 하나가 가입 겸 로그인을 처리하고 `PENDING` 토큰을 돌려준다. 최종 `ACTIVE` 전환은 활성화 단계에서 한다 | 약관 동의 전 사용 범위를 명확히 제한하려는 설계다 |
 | 약관 동의와 상태 변경을 함께 처리 | 활성화 시 리스트 기반 `consent()`와 상태 변경을 한 트랜잭션 축으로 다룬다 | 부분 성공 상태를 줄이기 위함이다 |
 | 이미 활성화된 사용자는 재활성화하지 않음 | `ACTIVE` 사용자가 다시 activation API 를 호출하면 예외 처리한다 | 상태 전이를 단방향으로 유지한다 |
 
@@ -25,15 +25,19 @@ sequenceDiagram
 
     App->>OIDC: 로그인 + nonce
     OIDC-->>App: ID Token
-    App->>Server: POST /api/auth/registration
+    App->>Server: POST /api/auth
     Server->>Server: OIDC 검증
-    Server->>DB: email 중복 / 상태 확인
-    alt BLOCKED or WITHDRAWN
-        Server-->>App: 가입 거절
-    else 신규 또는 추가 가입 가능
+    Server->>DB: email로 기존 계정 조회
+    alt 기존 계정 있음
+        Server->>Server: 가입을 건너뛰고 로그인으로 이어감
+    else 신규
         Server->>DB: User(status=PENDING) 저장
-        Server->>Server: PENDING JWT 발급
-        Server-->>App: 토큰 반환
+    end
+    alt BLOCKED or WITHDRAWN
+        Server-->>App: 인증 거절
+    else PENDING or ACTIVE
+        Server->>Server: JWT 발급
+        Server-->>App: 토큰 + status 반환
     end
 ```
 
@@ -71,8 +75,7 @@ sequenceDiagram
 
 ## 코드 기준점
 
-- `src/main/kotlin/com/kdongsu5509/auth/application/service/RegisterService.kt`
-- `src/main/kotlin/com/kdongsu5509/auth/application/service/ActivateUserService.kt`
+- `src/main/kotlin/com/kdongsu5509/auth/application/service/AuthService.kt`
 - `src/main/kotlin/com/kdongsu5509/terms/`
 
 ---

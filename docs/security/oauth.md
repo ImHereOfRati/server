@@ -43,7 +43,7 @@ ImHere 서버는 Spring OAuth2 Client 전체 플로우를 사용하지 않고, K
 ## 실제 요청 예시
 
 ```http
-POST /api/auth/login
+POST /api/auth
 Content-Type: application/json
 
 {

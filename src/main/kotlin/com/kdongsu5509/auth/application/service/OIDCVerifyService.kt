@@ -20,7 +20,7 @@ class OIDCVerifyService(
     private val providerConfigPort: OidcProviderConfigPort,
 ) : OIDCVerifyPort {
 
-    override fun verify(provider: OAuth2Provider, idToken: String, nonce: String?): OIDCUserInfo {
+    override fun verify(provider: OAuth2Provider, idToken: String, nonce: String): OIDCUserInfo {
         val providerProperties = providerConfigPort.get(provider)
         val kid = oidcIdTokenVerifyPort.getKid(idToken)
         val publicKey = publicKeyLoadPort.findByKeyId(provider, kid)
@@ -37,7 +37,7 @@ class OIDCVerifyService(
             name = jws.payload["name"] as? String
         )
 
-        val expectedNonce = nonce?.takeIf { it.isNotBlank() } ?: AuthException.OIDC_NONCE_INVALID.throwIt()
+        val expectedNonce = nonce.takeIf { it.isNotBlank() } ?: AuthException.OIDC_NONCE_INVALID.throwIt()
 
         oidcIdTokenVerifyPort.verifyPayLoad(
             payload,

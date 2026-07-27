@@ -31,7 +31,7 @@ class JwtAuthenticationFilterTest {
     @BeforeEach
     fun setUp() {
         filterChain = mock(FilterChain::class.java)
-        filter = JwtAuthenticationFilter(tokenParser, listOf("/api/auth/login", "/actuator/**"))
+        filter = JwtAuthenticationFilter(tokenParser, listOf("/api/auth", "/actuator/**"))
         SecurityContextHolder.clearContext()
     }
 
@@ -39,7 +39,7 @@ class JwtAuthenticationFilterTest {
     @DisplayName("permit-all 경로는 JWT 검증 없이 통과한다")
     fun doFilterInternal_permitAllPath() {
         val request = MockHttpServletRequest().apply {
-            servletPath = "/api/auth/login"
+            servletPath = "/api/auth"
             addHeader("Authorization", "Bearer invalidToken")
         }
         val response = MockHttpServletResponse()
@@ -111,6 +111,54 @@ class JwtAuthenticationFilterTest {
 
         verify(filterChain, never()).doFilter(request, response)
         assertThat(response.status).isEqualTo(401)
+    }
+
+    @Test
+    @DisplayName("Bearer 접두사가 없는 Authorization 헤더는 토큰으로 보지 않고 통과시킨다")
+    fun doFilterInternal_authorizationHeaderWithoutBearerPrefix() {
+        val request = MockHttpServletRequest()
+        request.addHeader("Authorization", "Basic dXNlcjpwYXNzd29yZA==")
+        val response = MockHttpServletResponse()
+
+        filter.doFilter(request, response, filterChain)
+
+        verify(filterChain).doFilter(request, response)
+        verify(tokenParser, never()).validate(anyString())
+        assertThat(SecurityContextHolder.getContext().authentication).isNull()
+    }
+
+    @Test
+    @DisplayName("검증 단계에서 ImHereBaseException이 던져지면 해당 에러코드로 응답한다")
+    fun doFilterInternal_validateThrowsImHereException() {
+        val request = MockHttpServletRequest()
+        request.addHeader("Authorization", "Bearer expiredToken")
+        val response = MockHttpServletResponse()
+
+        whenever(tokenParser.validate("expiredToken"))
+            .thenThrow(ImHereBaseException(AuthException.IMHERE_EXPIRED_TOKEN))
+
+        filter.doFilter(request, response, filterChain)
+
+        verify(filterChain, never()).doFilter(request, response)
+        assertThat(response.status).isEqualTo(AuthException.IMHERE_EXPIRED_TOKEN.httpStatus.value())
+        assertThat(response.contentAsString).contains(AuthException.IMHERE_EXPIRED_TOKEN.imhereErrorCode)
+    }
+
+    @Test
+    @DisplayName("인증 생성 중 예상치 못한 예외가 발생하면 IMHERE_ACCESS_DENIED로 응답한다")
+    fun doFilterInternal_unexpectedExceptionDuringAuthenticationCreation() {
+        val request = MockHttpServletRequest()
+        request.addHeader("Authorization", "Bearer validToken")
+        val response = MockHttpServletResponse()
+
+        whenever(tokenParser.validate("validToken")).thenReturn(true)
+        whenever(tokenParser.parse("validToken")).thenThrow(IllegalStateException("claims broken"))
+
+        filter.doFilter(request, response, filterChain)
+
+        verify(filterChain, never()).doFilter(request, response)
+        assertThat(response.status).isEqualTo(AuthException.IMHERE_ACCESS_DENIED.httpStatus.value())
+        assertThat(response.contentAsString).contains("claims broken")
     }
 
     @Test

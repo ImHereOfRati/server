@@ -1,10 +1,9 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
+import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.adapter.`in`.web.dto.TokenRefreshRequest
 import com.kdongsu5509.auth.application.port.`in`.TokenRefreshUseCase
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
-import com.kdongsu5509.auth.security.config.SecurityConfig
-import com.kdongsu5509.support.config.LoggingConfig
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -12,9 +11,6 @@ import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.FilterType
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
@@ -23,18 +19,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tools.jackson.databind.json.JsonMapper
 
-@WebMvcTest(
-    controllers = [RefreshController::class],
-    excludeFilters = [
-        ComponentScan.Filter(
-            type = FilterType.ASSIGNABLE_TYPE,
-            classes = [
-                SecurityConfig::class,
-                LoggingConfig::class
-            ]
-        )
-    ]
-)
+@ImHereLightWebMvcTest(controllers = [RefreshController::class])
 @AutoConfigureMockMvc(addFilters = false)
 class RefreshControllerTest {
 

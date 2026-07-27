@@ -15,7 +15,7 @@ class RefreshController(
     private val tokenRefreshUseCase: TokenRefreshUseCase
 ) {
     @PostMapping
-    fun login(@Validated @RequestBody request: TokenRefreshRequest): OIDCAuthResponse {
+    fun refresh(@Validated @RequestBody request: TokenRefreshRequest): OIDCAuthResponse {
         val imHereJwtToken = tokenRefreshUseCase.refresh(request.refreshToken)
         return OIDCAuthResponse.fromImHereJwtToken(imHereJwtToken)
     }

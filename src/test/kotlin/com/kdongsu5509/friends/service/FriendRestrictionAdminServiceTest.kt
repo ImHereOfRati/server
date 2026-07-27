@@ -21,13 +21,13 @@ import org.springframework.data.domain.PageRequest
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
-class FriendRestrictionAdminServiceImplTest {
+class FriendRestrictionAdminServiceTest {
 
     @Mock
     lateinit var friendRestrictionRepository: FriendRestrictionRepository
 
     @InjectMocks
-    lateinit var friendRestrictionAdminServiceImpl: FriendRestrictionAdminServiceImpl
+    lateinit var friendRestrictionAdminServiceImpl: FriendRestrictionAdminService
 
     private fun createTestUser(email: String): User = User(
         id = UUID.randomUUID(),

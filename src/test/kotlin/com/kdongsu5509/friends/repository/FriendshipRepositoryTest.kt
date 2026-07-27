@@ -28,7 +28,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
-class FriendshipRepositoryImplTest {
+class FriendshipRepositoryTest {
 
     @Mock
     lateinit var entityManager: EntityManager
@@ -40,7 +40,7 @@ class FriendshipRepositoryImplTest {
     lateinit var springDataFriendshipRepository: SpringDataFriendshipRepository
 
     @InjectMocks
-    lateinit var friendshipRepositoryImpl: FriendshipRepositoryImpl
+    lateinit var friendshipRepositoryImpl: FriendshipRepository
 
     private fun createTestUser(id: UUID): User = User(
         id = id,

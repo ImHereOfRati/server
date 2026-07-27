@@ -24,13 +24,13 @@ import java.time.LocalDateTime
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
-class FriendshipAdminServiceImplTest {
+class FriendshipAdminServiceTest {
 
     @Mock
     lateinit var friendshipRepository: FriendshipRepository
 
     @InjectMocks
-    lateinit var friendshipAdminServiceImpl: FriendshipAdminServiceImpl
+    lateinit var friendshipAdminServiceImpl: FriendshipAdminService
 
     private fun createTestUser(id: UUID = UUID.randomUUID(), email: String = "test@test.com"): User = User(
         id = id,

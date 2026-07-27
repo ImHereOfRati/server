@@ -1,6 +1,5 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.controller.dto.CreateFriendRestrictionRequest
 import com.kdongsu5509.friends.controller.dto.FriendRestrictionResponse
 import com.kdongsu5509.friends.service.FriendRestrictionService
@@ -22,41 +21,38 @@ class FriendRestrictionController(
 ) {
     @GetMapping
     fun findAll(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PageableDefault pageable: Pageable
     ): ResponseEntity<ApiResponse<SliceResponse<FriendRestrictionResponse>>> {
-        val restrictions = friendRestrictionService.findAllByRestrictorEmail(userDetails.email, pageable)
+        val restrictions = friendRestrictionService.findAllByRestrictorEmail(userEmail, pageable)
         val sliceResponse = SliceResponse.from(restrictions.map { FriendRestrictionResponse.fromDomain(it) })
         return sliceResponse.toOkResponse()
     }
 
     @PostMapping
     fun restrictUser(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @Validated @RequestBody request: CreateFriendRestrictionRequest
     ): FriendRestrictionResponse {
-        val result = friendRestrictionService.restrictUser(userDetails.email, request.targetUserId)
+        val result = friendRestrictionService.restrictUser(userEmail, request.targetUserId)
         return FriendRestrictionResponse.fromDomain(result)
     }
 
     @GetMapping("/target/{targetUserId}")
     fun checkRestrictionStatus(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PathVariable targetUserId: UUID
-    ): Boolean = friendRestrictionService.existRestricted(userDetails.email, targetUserId)
+    ): Boolean = friendRestrictionService.existRestricted(userEmail, targetUserId)
 
     @DeleteMapping("/{id}")
     fun delete(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PathVariable @Validated id: UUID
-    ) = friendRestrictionService.deleteByIdAndRestrictorEmail(id, userDetails.email)
+    ) = friendRestrictionService.deleteByIdAndRestrictorEmail(id, userEmail)
 
     @DeleteMapping("/blocked-users/{restrictedId}")
     fun unblock(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PathVariable @Validated restrictedId: UUID
-    ) = friendRestrictionService.unblockByRestrictorEmailAndRestrictedId(
-        userDetails.email,
-        restrictedId
-    )
+    ) = friendRestrictionService.unblockByRestrictorEmailAndRestrictedId(userEmail, restrictedId)
 }

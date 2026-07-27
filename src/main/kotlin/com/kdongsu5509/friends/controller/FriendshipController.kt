@@ -1,6 +1,5 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.controller.dto.FriendshipResponse
 import com.kdongsu5509.friends.controller.dto.UpdateAliasRequest
 import com.kdongsu5509.friends.service.FriendshipService
@@ -22,54 +21,54 @@ class FriendshipController(
 ) {
     @GetMapping
     fun readAll(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PageableDefault pageable: Pageable
     ): ResponseEntity<ApiResponse<SliceResponse<FriendshipResponse>>> {
-        val friendships = friendshipService.findAllByOwnerEmail(userDetails.email, pageable)
+        val friendships = friendshipService.findAllByOwnerEmail(userEmail, pageable)
         val sliceResponse = SliceResponse.from(friendships.map { FriendshipResponse.from(it) })
         return sliceResponse.toOkResponse()
     }
 
     @GetMapping("/target/{targetUserId}")
     fun checkFriendStatus(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PathVariable targetUserId: UUID
     ): ResponseEntity<ApiResponse<Boolean>> {
-        val friendship = friendshipService.findByOwnerEmailAndFriendId(userDetails.email, targetUserId)
+        val friendship = friendshipService.findByOwnerEmailAndFriendId(userEmail, targetUserId)
         return (friendship != null).toOkResponse()
     }
 
     @GetMapping("/{id}")
     fun readById(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PathVariable id: UUID
     ): FriendshipResponse {
-        val result = friendshipService.findByIdAndOwnerEmail(id, userDetails.email)
+        val result = friendshipService.findByIdAndOwnerEmail(id, userEmail)
         return FriendshipResponse.from(result)
     }
 
     @DeleteMapping("/{id}")
     fun deleteFriendship(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PathVariable id: UUID
     ): ResponseEntity<Unit> {
-        friendshipService.deleteByIdAndOwnerEmail(id, userDetails.email)
+        friendshipService.deleteByIdAndOwnerEmail(id, userEmail)
         return ResponseEntity.noContent().build()
     }
 
     @PatchMapping("/{id}/alias")
     fun updateAlias(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PathVariable id: UUID,
         @Validated @RequestBody request: UpdateAliasRequest
     ): FriendshipResponse {
-        val result = friendshipService.updateAliasByIdAndOwnerEmail(id, userDetails.email, request.alias)
+        val result = friendshipService.updateAliasByIdAndOwnerEmail(id, userEmail, request.alias)
         return FriendshipResponse.from(result)
     }
 
     @PostMapping("/{id}/block")
     fun blockFriend(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @PathVariable id: UUID
-    ) = friendshipService.blockByIdAndOwnerEmail(id, userDetails.email)
+    ) = friendshipService.blockByIdAndOwnerEmail(id, userEmail)
 }

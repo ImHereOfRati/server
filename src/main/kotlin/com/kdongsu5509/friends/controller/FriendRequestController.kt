@@ -1,6 +1,5 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.controller.dto.*
 import com.kdongsu5509.friends.domain.FriendRequestViewType
 import com.kdongsu5509.friends.service.FriendRequestService
@@ -23,59 +22,59 @@ class FriendRequestController(
 ) {
     @PostMapping
     fun request(
-        @AuthenticationPrincipal user: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @Validated @RequestBody request: NewFriendRequest
     ): NewFriendRequestResponse {
-        val result = friendRequestService.request(user.email, request.targetId, request.message)
+        val result = friendRequestService.request(userEmail, request.targetId, request.message)
         return NewFriendRequestResponse(result.id!!)
     }
 
     @GetMapping(params = ["type"])
     fun findSentOrReceivedAll(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @RequestParam type: FriendRequestViewType,
         @PageableDefault pageable: Pageable
     ): ResponseEntity<ApiResponse<SliceResponse<FriendRequestResponse>>> {
-        val requests = friendRequestService.findAllByEmailAndType(userDetails.email, type, pageable)
+        val requests = friendRequestService.findAllByEmailAndType(userEmail, type, pageable)
         val sliceResponse = SliceResponse.from(requests.map { FriendRequestResponse.from(it) })
         return sliceResponse.toOkResponse()
     }
 
     @GetMapping("/{id}")
     fun readById(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @Validated @NotNull @PathVariable id: UUID
     ): FriendRequestResponse {
-        val result = friendRequestService.findByIdAndParticipantEmail(id, userDetails.email)
+        val result = friendRequestService.findByIdAndParticipantEmail(id, userEmail)
         return FriendRequestResponse.from(result)
     }
 
     @PostMapping("/{id}/accept")
     fun acceptFriendRequest(
         @PathVariable id: UUID,
-        @AuthenticationPrincipal userDetails: ImHereUserDetails
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
     ): FriendshipResponse {
-        val result = friendRequestService.acceptRequest(userDetails.email, id)
+        val result = friendRequestService.acceptRequest(userEmail, id)
         return FriendshipResponse.from(result)
     }
 
     @PostMapping("/{id}/reject")
     fun rejectFriendRequest(
         @PathVariable id: UUID,
-        @AuthenticationPrincipal userDetails: ImHereUserDetails
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
     ): FriendRestrictionResponse {
-        val result = friendRequestService.rejectRequest(userDetails.email, id)
+        val result = friendRequestService.rejectRequest(userEmail, id)
         return FriendRestrictionResponse.fromDomain(result)
     }
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: UUID, @AuthenticationPrincipal userDetails: ImHereUserDetails) =
-        friendRequestService.deleteByIdAndReceiverEmail(id, userDetails.email)
+    fun delete(@PathVariable id: UUID, @AuthenticationPrincipal(expression = "email") userEmail: String) =
+        friendRequestService.deleteByIdAndReceiverEmail(id, userEmail)
 
 
     @DeleteMapping("/{id}/sent")
     fun cancelSentRequest(
         @PathVariable id: UUID,
-        @AuthenticationPrincipal userDetails: ImHereUserDetails
-    ) = friendRequestService.deleteByIdAndRequesterEmail(id, userDetails.email)
+        @AuthenticationPrincipal(expression = "email") userEmail: String
+    ) = friendRequestService.deleteByIdAndRequesterEmail(id, userEmail)
 }

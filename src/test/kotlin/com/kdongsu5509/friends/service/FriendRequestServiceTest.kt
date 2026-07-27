@@ -30,7 +30,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
-class FriendRequestServiceImplTest {
+class FriendRequestServiceTest {
 
     @Mock
     lateinit var userService: UserLookupContract
@@ -48,7 +48,7 @@ class FriendRequestServiceImplTest {
     lateinit var notificationPort: NotificationPort
 
     @InjectMocks
-    lateinit var friendRequestServiceImpl: FriendRequestServiceImpl
+    lateinit var friendRequestServiceImpl: FriendRequestService
 
     private fun createTestUser(
         id: UUID = UUID.randomUUID(),

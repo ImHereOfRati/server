@@ -29,7 +29,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
-class FriendRestrictionRepositoryImplTest {
+class FriendRestrictionRepositoryTest {
 
     @Mock
     lateinit var entityManager: EntityManager
@@ -41,7 +41,7 @@ class FriendRestrictionRepositoryImplTest {
     lateinit var springDataFriendRestrictionRepository: SpringDataFriendRestrictionRepository
 
     @InjectMocks
-    lateinit var friendRestrictionRepositoryImpl: FriendRestrictionRepositoryImpl
+    lateinit var friendRestrictionRepositoryImpl: FriendRestrictionRepository
 
     private fun createTestUser(id: UUID): User = User(
         id = id,

@@ -1,6 +1,5 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.SliceResponse
 import com.kdongsu5509.shared.response.toOkResponse
@@ -26,18 +25,18 @@ class UserReadController(
     private val userQueryService: UserQueryService
 ) {
     @GetMapping("/my")
-    fun readMe(@AuthenticationPrincipal user: ImHereUserDetails): CompactUserResponse {
-        val result = userQueryService.findByEmail(user.email)
+    fun readMe(@AuthenticationPrincipal(expression = "email") userEmail: String): CompactUserResponse {
+        val result = userQueryService.findByEmail(userEmail)
         return CompactUserResponse.from(result)
     }
 
     @GetMapping(params = ["keyword"])
     fun findOther(
-        @AuthenticationPrincipal user: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @RequestParam @NotBlank(message = "검색어(이메일 또는 닉네임)는 필수입니다.") keyword: String,
         @PageableDefault(size = 15) pageable: Pageable
     ): ResponseEntity<ApiResponse<SliceResponse<CompactUserResponse>>> {
-        val findingUsers: Slice<UserResult> = userQueryService.findByKeyword(user.email, keyword, pageable)
+        val findingUsers: Slice<UserResult> = userQueryService.findByKeyword(userEmail, keyword, pageable)
         val sliceResponse = SliceResponse.from(findingUsers.map { CompactUserResponse.from(it) })
         return sliceResponse.toOkResponse()
     }

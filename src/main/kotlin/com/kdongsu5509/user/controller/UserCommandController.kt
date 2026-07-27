@@ -1,6 +1,5 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.user.controller.dto.CompactUserResponse
 import com.kdongsu5509.user.controller.dto.NicknameUpdateRequest
 import com.kdongsu5509.user.service.UserLifecycleService
@@ -18,16 +17,16 @@ class UserCommandController(
 ) {
     @PatchMapping
     fun updateMe(
-        @AuthenticationPrincipal user: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "email") userEmail: String,
         @Validated @RequestBody request: NicknameUpdateRequest
     ): CompactUserResponse {
-        val userInfo = userProfileService.updateNickname(user.email, request.nickname)
+        val userInfo = userProfileService.updateNickname(userEmail, request.nickname)
         return CompactUserResponse.from(userInfo)
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/withdrawal")
-    fun withdraw(@AuthenticationPrincipal user: ImHereUserDetails) {
-        userLifecycleService.withdraw(user.email)
+    fun withdraw(@AuthenticationPrincipal(expression = "email") userEmail: String) {
+        userLifecycleService.withdraw(userEmail)
     }
 }

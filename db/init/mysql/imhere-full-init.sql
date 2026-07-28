@@ -11,6 +11,7 @@ SET time_zone = '+09:00';
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS user_agreement;
+DROP TABLE IF EXISTS friend_relations;
 DROP TABLE IF EXISTS friend_relationships;
 DROP TABLE IF EXISTS friend_restrictions;
 DROP TABLE IF EXISTS friend_request;
@@ -76,49 +77,34 @@ CREATE TABLE user_agreement
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
-CREATE TABLE friend_request
+-- 관계는 두 사람당 한 행이다.
+-- 예전에는 요청(friend_request) / 친구(friend_relationships) / 제한(friend_restrictions)이
+-- 세 테이블로 나뉘었고, 친구는 방향별로 두 행에 나뉘어 저장됐다.
+-- 두 행이 한 쌍이라는 사실을 스키마가 표현하지 못해 한쪽만 지워지면 유령 관계가 남았다.
+-- 이제 status가 관계의 생애 주기를 표현하고, uk_friend_pair가 한 쌍 한 행을 강제한다.
+--
+-- low/high 정렬은 애플리케이션이 정한다. MySQL의 CHAR 비교와 Java UUID.compareTo의
+-- 정렬 결과가 다를 수 있어 SQL에서 순서를 정하면 도메인과 어긋난다.
+CREATE TABLE friend_relations
 (
-    friend_request_id CHAR(36)     NOT NULL,
-    requester_id      CHAR(36)     NOT NULL,
-    receiver_id       CHAR(36)     NOT NULL,
-    message           VARCHAR(255) NOT NULL,
-    created_at        DATETIME(6)  NOT NULL,
-    updated_at        DATETIME(6)  NOT NULL,
-    PRIMARY KEY (friend_request_id),
-    CONSTRAINT fk_friend_request_requester FOREIGN KEY (requester_id) REFERENCES users (id),
-    CONSTRAINT fk_friend_request_receiver FOREIGN KEY (receiver_id) REFERENCES users (id)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
-
-CREATE TABLE friend_restrictions
-(
-    friend_restriction_id CHAR(36)                 NOT NULL,
-    restrictor_id         CHAR(36)                 NULL,
-    restricted_id         CHAR(36)                 NULL,
-    type                  ENUM ('BLOCK', 'REJECT') NOT NULL,
-    expired_at            DATETIME(6)              NULL,
-    created_at            DATETIME(6)              NOT NULL,
-    updated_at            DATETIME(6)              NOT NULL,
-    PRIMARY KEY (friend_restriction_id),
-    CONSTRAINT fk_friend_restrictions_restrictor FOREIGN KEY (restrictor_id) REFERENCES users (id),
-    CONSTRAINT fk_friend_restrictions_restricted FOREIGN KEY (restricted_id) REFERENCES users (id)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
-
-CREATE TABLE friend_relationships
-(
-    friend_relationship_id CHAR(36)    NOT NULL,
-    owner_user_id          CHAR(36)    NOT NULL,
-    friend_user_id         CHAR(36)    NOT NULL,
-    friend_alias           VARCHAR(20) NOT NULL,
-    created_at             DATETIME(6) NOT NULL,
-    updated_at             DATETIME(6) NOT NULL,
-    PRIMARY KEY (friend_relationship_id),
-    UNIQUE KEY uk_owner_friend (owner_user_id, friend_user_id),
-    CONSTRAINT fk_friend_relationships_owner FOREIGN KEY (owner_user_id) REFERENCES users (id),
-    CONSTRAINT fk_friend_relationships_friend FOREIGN KEY (friend_user_id) REFERENCES users (id)
+    friend_relation_id CHAR(36)                                             NOT NULL,
+    low_user_id        CHAR(36)                                             NOT NULL,
+    high_user_id       CHAR(36)                                             NOT NULL,
+    status             ENUM ('REQUESTED', 'ACCEPTED', 'REJECTED', 'BLOCKED') NOT NULL,
+    initiated_by       CHAR(36)                                             NOT NULL,
+    message            VARCHAR(255)                                         NULL,
+    low_alias          VARCHAR(20)                                          NULL,
+    high_alias         VARCHAR(20)                                          NULL,
+    expires_at         DATETIME(6)                                          NULL,
+    created_at         DATETIME(6)                                          NOT NULL,
+    updated_at         DATETIME(6)                                          NOT NULL,
+    PRIMARY KEY (friend_relation_id),
+    UNIQUE KEY uk_friend_pair (low_user_id, high_user_id),
+    KEY idx_friend_relations_low (low_user_id, status),
+    KEY idx_friend_relations_high (high_user_id, status),
+    KEY idx_friend_relations_expires_at (expires_at),
+    CONSTRAINT fk_friend_relations_low FOREIGN KEY (low_user_id) REFERENCES users (id),
+    CONSTRAINT fk_friend_relations_high FOREIGN KEY (high_user_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;

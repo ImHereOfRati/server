@@ -2,7 +2,8 @@ package com.kdongsu5509.friends.controller
 
 import com.kdongsu5509.friends.controller.dto.CreateFriendRestrictionRequest
 import com.kdongsu5509.friends.controller.dto.FriendRestrictionResponse
-import com.kdongsu5509.friends.service.FriendRestrictionService
+import com.kdongsu5509.friends.service.FriendRelationCommandService
+import com.kdongsu5509.friends.service.FriendRelationQueryService
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.SliceResponse
 import com.kdongsu5509.shared.response.toOkResponse
@@ -17,42 +18,38 @@ import java.util.*
 @RestController
 @RequestMapping("/api/friends/restrictions", version = "1")
 class FriendRestrictionController(
-    private val friendRestrictionService: FriendRestrictionService
+    private val friendRelationCommandService: FriendRelationCommandService,
+    private val friendRelationQueryService: FriendRelationQueryService
 ) {
     @GetMapping
     fun findAll(
-        @AuthenticationPrincipal(expression = "email") userEmail: String,
+        @AuthenticationPrincipal(expression = "userId") userId: UUID,
         @PageableDefault pageable: Pageable
     ): ResponseEntity<ApiResponse<SliceResponse<FriendRestrictionResponse>>> {
-        val restrictions = friendRestrictionService.findAllByRestrictorEmail(userEmail, pageable)
+        val restrictions = friendRelationQueryService.findRestrictions(userId, pageable)
         val sliceResponse = SliceResponse.from(restrictions.map { FriendRestrictionResponse.fromDomain(it) })
         return sliceResponse.toOkResponse()
     }
 
+    /** 친구든 아니든 이 하나로 차단한다. */
     @PostMapping
-    fun restrictUser(
-        @AuthenticationPrincipal(expression = "email") userEmail: String,
+    fun block(
+        @AuthenticationPrincipal(expression = "userId") userId: UUID,
         @Validated @RequestBody request: CreateFriendRestrictionRequest
     ): FriendRestrictionResponse {
-        val result = friendRestrictionService.restrictUser(userEmail, request.targetUserId)
+        val result = friendRelationCommandService.block(userId, request.targetUserId)
         return FriendRestrictionResponse.fromDomain(result)
     }
 
     @GetMapping("/target/{targetUserId}")
     fun checkRestrictionStatus(
-        @AuthenticationPrincipal(expression = "email") userEmail: String,
+        @AuthenticationPrincipal(expression = "userId") userId: UUID,
         @PathVariable targetUserId: UUID
-    ): Boolean = friendRestrictionService.existRestricted(userEmail, targetUserId)
+    ): Boolean = friendRelationQueryService.existsRestriction(userId, targetUserId)
 
-    @DeleteMapping("/{id}")
-    fun delete(
-        @AuthenticationPrincipal(expression = "email") userEmail: String,
-        @PathVariable @Validated id: UUID
-    ) = friendRestrictionService.deleteByIdAndRestrictorEmail(id, userEmail)
-
-    @DeleteMapping("/blocked-users/{restrictedId}")
+    @DeleteMapping("/blocked-users/{targetUserId}")
     fun unblock(
-        @AuthenticationPrincipal(expression = "email") userEmail: String,
-        @PathVariable @Validated restrictedId: UUID
-    ) = friendRestrictionService.unblockByRestrictorEmailAndRestrictedId(userEmail, restrictedId)
+        @AuthenticationPrincipal(expression = "userId") userId: UUID,
+        @PathVariable @Validated targetUserId: UUID
+    ) = friendRelationCommandService.unblock(userId, targetUserId)
 }

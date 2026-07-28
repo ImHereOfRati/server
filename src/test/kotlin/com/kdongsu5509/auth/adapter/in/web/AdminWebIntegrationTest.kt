@@ -1,15 +1,15 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
+import com.kdongsu5509.friends.service.dto.FriendMember
+import com.kdongsu5509.friends.service.dto.FriendRestrictionType
+import com.kdongsu5509.friends.service.FriendRelationAdminCommandService
+import com.kdongsu5509.friends.service.FriendRelationAdminQueryService
+import com.kdongsu5509.friends.service.dto.FriendRequestView
+import com.kdongsu5509.friends.service.dto.FriendRestrictionView
+import com.kdongsu5509.friends.service.dto.FriendshipView
 import com.kdongsu5509.user.service.UserQueryService
 import com.common.testsupport.WebIntegrationTestSupport
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.friends.domain.FriendRequest
-import com.kdongsu5509.friends.domain.FriendRestriction
-import com.kdongsu5509.friends.domain.FriendRestrictionType
-import com.kdongsu5509.friends.domain.Friendship
-import com.kdongsu5509.friends.service.FriendRequestAdminService
-import com.kdongsu5509.friends.service.FriendRestrictionAdminService
-import com.kdongsu5509.friends.service.FriendshipAdminService
 import com.kdongsu5509.notifications.application.dto.DlqQueueInfo
 import com.kdongsu5509.notifications.application.service.DlqAdminService
 import com.kdongsu5509.terms.domain.TermTypes
@@ -36,6 +36,8 @@ import java.util.UUID.randomUUID
 
 class AdminWebIntegrationTest : WebIntegrationTestSupport() {
 
+    private val now: java.time.LocalDateTime = java.time.LocalDateTime.of(2026, 7, 27, 12, 0)
+
     @MockitoBean
     private lateinit var dlqAdminService: DlqAdminService
 
@@ -46,13 +48,12 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     private lateinit var termService: TermService
 
     @MockitoBean
-    private lateinit var friendRequestAdminService: FriendRequestAdminService
+    private lateinit var friendRelationAdminQueryService: FriendRelationAdminQueryService
 
     @MockitoBean
-    private lateinit var friendRestrictionAdminService: FriendRestrictionAdminService
+    private lateinit var friendRelationAdminCommandService: FriendRelationAdminCommandService
 
-    @MockitoBean
-    private lateinit var friendshipAdminService: FriendshipAdminService
+
 
     private val adminDetails = ImHereUserDetails(
         email = "admin@example.com",
@@ -152,30 +153,18 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     @Test
     @DisplayName("관리자는 친구 요청 관리 페이지에 접근할 수 있다")
     fun friendRequestsPageAccessibleForAdmin() {
-        val requester = User(
-            randomUUID(),
-            "requester@example.com",
-            "requester",
-            UserRole.NORMAL,
-            OAuth2Provider.KAKAO,
-            UserStatus.ACTIVE
-        )
-        val receiver = User(
-            randomUUID(),
-            "receiver@example.com",
-            "receiver",
-            UserRole.NORMAL,
-            OAuth2Provider.KAKAO,
-            UserStatus.ACTIVE
-        )
-        whenever(friendRequestAdminService.findAll(any())).thenReturn(
+        // given
+        val requester = FriendMember(randomUUID(), "requester@example.com", "requester")
+        val receiver = FriendMember(randomUUID(), "receiver@example.com", "receiver")
+        whenever(friendRelationAdminQueryService.findAllRequests(any())).thenReturn(
             SliceImpl(
-                listOf(FriendRequest.newRequest(requester, receiver, "친구 요청 메시지")),
+                listOf(FriendRequestView(randomUUID(), requester, receiver, "친구 요청 메시지입니다", now, now)),
                 PageRequest.of(0, 20),
                 false
             )
         )
 
+        // when & then
         mockMvc.perform(
             get("/admin/friend-requests")
                 .with(user(adminDetails))
@@ -188,34 +177,22 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     @Test
     @DisplayName("관리자는 친구 차단 관리 페이지에 접근할 수 있다")
     fun friendRestrictionsPageAccessibleForAdmin() {
-        val restrictor = User(
-            randomUUID(),
-            "restrictor@example.com",
-            "restrictor",
-            UserRole.NORMAL,
-            OAuth2Provider.KAKAO,
-            UserStatus.ACTIVE
-        )
-        val restricted = User(
-            randomUUID(),
-            "restricted@example.com",
-            "restricted",
-            UserRole.NORMAL,
-            OAuth2Provider.KAKAO,
-            UserStatus.ACTIVE
-        )
-        whenever(friendRestrictionAdminService.findAll(any())).thenReturn(
+        // given
+        val restrictor = FriendMember(randomUUID(), "restrictor@example.com", "restrictor")
+        val restricted = FriendMember(randomUUID(), "restricted@example.com", "restricted")
+        whenever(friendRelationAdminQueryService.findAllRestrictions(any())).thenReturn(
             SliceImpl(
                 listOf(
-                    FriendRestriction(
-                        restrictor = restrictor,
-                        restricted = restricted,
-                        type = FriendRestrictionType.BLOCK
+                    FriendRestrictionView(
+                        randomUUID(), restrictor, restricted, FriendRestrictionType.BLOCK, now, now, null
                     )
-                ), PageRequest.of(0, 20), false
+                ),
+                PageRequest.of(0, 20),
+                false
             )
         )
 
+        // when & then
         mockMvc.perform(
             get("/admin/friend-restrictions")
                 .with(user(adminDetails))
@@ -228,18 +205,18 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     @Test
     @DisplayName("관리자는 친구 관계 관리 페이지에 접근할 수 있다")
     fun friendshipsPageAccessibleForAdmin() {
-        val owner =
-            User(randomUUID(), "owner@example.com", "owner", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
-        val friend =
-            User(randomUUID(), "friend@example.com", "friend", UserRole.NORMAL, OAuth2Provider.KAKAO, UserStatus.ACTIVE)
-        whenever(friendshipAdminService.findAll(any())).thenReturn(
+        // given
+        val owner = FriendMember(randomUUID(), "owner@example.com", "owner")
+        val friend = FriendMember(randomUUID(), "friend@example.com", "friend")
+        whenever(friendRelationAdminQueryService.findAllFriendships(any())).thenReturn(
             SliceImpl(
-                listOf(Friendship(owner = owner, friend = friend, friendAlias = "베프")),
+                listOf(FriendshipView(randomUUID(), owner, friend, "베프", now, now)),
                 PageRequest.of(0, 20),
                 false
             )
         )
 
+        // when & then
         mockMvc.perform(
             get("/admin/friendships")
                 .with(user(adminDetails))

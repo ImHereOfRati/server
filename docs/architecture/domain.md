@@ -76,4 +76,3 @@ ERD 와 테이블 단위 설명은 [../infra/db-schema.md](../infra/db-schema.md
 - [../security/jwt.md](../security/jwt.md)
 - [../security/oauth.md](../security/oauth.md)
 - [../flows/friend-request.md](../flows/friend-request.md)
-- [../flows/friend-block.md](../flows/friend-block.md)

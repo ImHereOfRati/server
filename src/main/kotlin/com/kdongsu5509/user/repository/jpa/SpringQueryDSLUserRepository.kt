@@ -1,8 +1,6 @@
 package com.kdongsu5509.user.repository.jpa
 
-import com.kdongsu5509.friends.repository.jpa.QFriendRequestJpaEntity
-import com.kdongsu5509.friends.repository.jpa.QFriendRestrictionJpaEntity
-import com.kdongsu5509.friends.repository.jpa.QFriendshipJpaEntity
+import com.kdongsu5509.friends.repository.jpa.QFriendRelationJpaEntity
 import com.kdongsu5509.user.domain.UserStatus
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
@@ -16,7 +14,7 @@ import java.util.*
 @Repository
 class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
 
-    private val user = QUserJpaEntity.Companion.userJpaEntity
+    private val user = QUserJpaEntity.userJpaEntity
 
     fun findAllActiveByEmailAndKeyword(
         userEmail: String,
@@ -51,47 +49,26 @@ class SpringQueryDSLUserRepository(private val queryFactory: JPAQueryFactory) {
             .fetchOne()
     }
 
+    /**
+     * 이미 관계가 있는 사용자를 검색 결과에서 뺀다.
+     *
+     * 친구/요청/제한이 세 테이블로 나뉘어 있을 때는 각각을 양방향으로 뒤져 여섯 번 조회했다.
+     * 관계가 한 테이블 한 행이 된 뒤로는 내가 낀 행에서 상대 식별자만 꺼내면 되므로 두 번이면 된다.
+     */
     private fun fetchExcludedUserIds(currentUserId: UUID): Set<UUID> {
-        val friendUserIds = findFriendUserIds(currentUserId)
-        val requestUserIds = findRequestUserIds(currentUserId)
-        val restrictionUserIds = findRestrictionUserIds(currentUserId)
-        return (friendUserIds + requestUserIds + restrictionUserIds).filterNotNull().toSet()
-    }
+        val relation = QFriendRelationJpaEntity.friendRelationJpaEntity
 
-    private fun findFriendUserIds(currentUserId: UUID): List<UUID?> {
-        val friendship = QFriendshipJpaEntity.friendshipJpaEntity
-        return queryFactory.select(friendship.friendUser.id)
-            .from(friendship)
-            .where(friendship.ownerUser.id.eq(currentUserId))
-            .fetch() +
-                queryFactory.select(friendship.ownerUser.id)
-                    .from(friendship)
-                    .where(friendship.friendUser.id.eq(currentUserId))
-                    .fetch()
-    }
+        val asLow = queryFactory.select(relation.highUserId)
+            .from(relation)
+            .where(relation.lowUserId.eq(currentUserId))
+            .fetch()
 
-    private fun findRequestUserIds(currentUserId: UUID): List<UUID?> {
-        val friendRequest = QFriendRequestJpaEntity.friendRequestJpaEntity
-        return queryFactory.select(friendRequest.receiver.id)
-            .from(friendRequest)
-            .where(friendRequest.requester.id.eq(currentUserId))
-            .fetch() +
-                queryFactory.select(friendRequest.requester.id)
-                    .from(friendRequest)
-                    .where(friendRequest.receiver.id.eq(currentUserId))
-                    .fetch()
-    }
+        val asHigh = queryFactory.select(relation.lowUserId)
+            .from(relation)
+            .where(relation.highUserId.eq(currentUserId))
+            .fetch()
 
-    private fun findRestrictionUserIds(currentUserId: UUID): List<UUID?> {
-        val friendRestriction = QFriendRestrictionJpaEntity.friendRestrictionJpaEntity
-        return queryFactory.select(friendRestriction.restricted.id)
-            .from(friendRestriction)
-            .where(friendRestriction.restrictor.id.eq(currentUserId))
-            .fetch() +
-                queryFactory.select(friendRestriction.restrictor.id)
-                    .from(friendRestriction)
-                    .where(friendRestriction.restricted.id.eq(currentUserId))
-                    .fetch()
+        return (asLow + asHigh).filterNotNull().toSet()
     }
 
     private fun emailEquals(email: String): BooleanExpression = user.email.eq(email)

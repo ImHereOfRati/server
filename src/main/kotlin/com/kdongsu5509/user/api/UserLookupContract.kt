@@ -4,6 +4,6 @@ import java.util.*
 
 interface UserLookupContract {
     fun findById(id: UUID): UserResult
-    fun findByEmail(email: String): UserResult
     fun findByEmailOrNull(email: String): UserResult?
+    fun findAllByIds(ids: Collection<UUID>): List<UserResult>
 }

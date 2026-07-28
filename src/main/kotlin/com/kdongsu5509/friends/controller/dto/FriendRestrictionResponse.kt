@@ -1,7 +1,7 @@
 package com.kdongsu5509.friends.controller.dto
 
-import com.kdongsu5509.friends.domain.FriendRestriction
-import com.kdongsu5509.friends.domain.FriendRestrictionType
+import com.kdongsu5509.friends.service.dto.FriendRestrictionType
+import com.kdongsu5509.friends.service.dto.FriendRestrictionView
 import java.time.LocalDateTime
 import java.util.*
 
@@ -15,14 +15,14 @@ data class FriendRestrictionResponse(
     val expiredAt: LocalDateTime?
 ) {
     companion object {
-        fun fromDomain(domain: FriendRestriction) = FriendRestrictionResponse(
-            id = domain.id,
-            restrictor = FriendRequestUserResponse.from(domain.restrictor),
-            restricted = FriendRequestUserResponse.from(domain.restricted),
-            type = domain.type,
-            createdAt = domain.createdAt,
-            updatedAt = domain.updatedAt,
-            expiredAt = domain.expiredAt
+        fun fromDomain(view: FriendRestrictionView) = FriendRestrictionResponse(
+            id = view.id,
+            restrictor = FriendRequestUserResponse.from(view.restrictor),
+            restricted = FriendRequestUserResponse.from(view.restricted),
+            type = view.type,
+            createdAt = view.createdAt,
+            updatedAt = view.updatedAt,
+            expiredAt = view.expiredAt
         )
     }
 }

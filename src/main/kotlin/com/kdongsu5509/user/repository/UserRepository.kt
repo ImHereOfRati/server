@@ -32,6 +32,11 @@ class UserRepository(
         return queryResult?.let { userMapper.toDomain(it) }
     }
 
+    fun findAllByIds(ids: Collection<UUID>): List<User> {
+        if (ids.isEmpty()) return emptyList()
+        return springDataUserRepository.findAllById(ids).mapNotNull { userMapper.toDomain(it) }
+    }
+
     fun findAll(pageable: Pageable): Slice<User> {
         return springDataUserRepository.findAllByStatusNot(UserStatus.WITHDRAWN, pageable)
             .map { userMapper.toDomain(it)!! }

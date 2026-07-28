@@ -1,209 +1,115 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
-import com.kdongsu5509.user.domain.OAuth2Provider
-import com.kdongsu5509.user.domain.UserRole
+import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.auth.security.SecurityWhiteList
-import com.kdongsu5509.friends.controller.dto.CreateFriendRestrictionRequest
-import com.kdongsu5509.friends.domain.FriendRestriction
-import com.kdongsu5509.friends.domain.FriendRestrictionType
-import com.kdongsu5509.friends.service.FriendRestrictionService
-import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.friends.service.FriendRelationCommandService
+import com.kdongsu5509.friends.service.FriendRelationQueryService
+import com.kdongsu5509.friends.service.dto.FriendMember
+import com.kdongsu5509.friends.service.dto.FriendRestrictionType
+import com.kdongsu5509.friends.service.dto.FriendRestrictionView
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
-import com.kdongsu5509.support.logger.AccessLogPrinter
-import com.kdongsu5509.user.domain.User
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.given
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.SliceImpl
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
-import org.springframework.test.web.servlet.setup.MockMvcBuilders
-import org.springframework.web.context.WebApplicationContext
-import org.springframework.web.filter.CharacterEncodingFilter
 import tools.jackson.databind.json.JsonMapper
 import java.time.LocalDateTime
 import java.util.*
 
-@WebMvcTest(FriendRestrictionController::class)
+@ImHereLightWebMvcTest(controllers = [FriendRestrictionController::class])
 class FriendRestrictionControllerWebMvcTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
 
-    @MockitoBean
-    private lateinit var friendRestrictionService: FriendRestrictionService
+    @Autowired
+    private lateinit var jsonMapper: JsonMapper
 
     @MockitoBean
-    private lateinit var accessLogPrinter: AccessLogPrinter
+    private lateinit var friendRelationCommandService: FriendRelationCommandService
+
+    @MockitoBean
+    private lateinit var friendRelationQueryService: FriendRelationQueryService
 
     @MockitoBean
     private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
 
-    @MockitoBean
-    private lateinit var tokenParser: ImHereTokenParserPort
+    private val requesterId = UUID.fromString("00000000-0000-0000-0000-000000000001")
+    private val otherId = UUID.fromString("00000000-0000-0000-0000-000000000002")
 
-    @MockitoBean
-    private lateinit var securityWhiteList: SecurityWhiteList
-
-    @Autowired
-    private lateinit var objectMapper: JsonMapper
-
-    private val restrictor = User(
-        id = UUID.randomUUID(),
-        email = "restrictor@example.com",
-        nickname = "restrictor-nick",
-        role = UserRole.NORMAL,
-        oauthProvider = OAuth2Provider.KAKAO,
-        status = UserStatus.ACTIVE
+    private val principal = ImHereUserDetails(
+        email = "me@example.com",
+        nickname = "me",
+        role = "NORMAL",
+        status = "ACTIVE",
+        userId = requesterId
     )
 
-    private val restricted = User(
-        id = UUID.randomUUID(),
-        email = "restricted@example.com",
-        nickname = "restricted-nick",
-        role = UserRole.NORMAL,
-        oauthProvider = OAuth2Provider.KAKAO,
-        status = UserStatus.ACTIVE
-    )
+    private val me = FriendMember(requesterId, "me@example.com", "me")
+    private val other = FriendMember(otherId, "other@example.com", "other")
 
-    private val userDetails = ImHereUserDetails(
-        email = restrictor.email,
-        nickname = restrictor.nickname,
-        role = "ROLE_USER",
-        status = "ACTIVE"
-    )
+    private val now: LocalDateTime = LocalDateTime.of(2026, 7, 27, 12, 0)
 
-    @BeforeEach
-    fun setUp(webApplicationContext: WebApplicationContext) {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-            .apply<DefaultMockMvcBuilder>(springSecurity())
-            .alwaysDo<DefaultMockMvcBuilder>(MockMvcResultHandlers.print())
-            .addFilters<DefaultMockMvcBuilder>(CharacterEncodingFilter("UTF-8", true))
-            .build()
-    }
+    @Test
+    @DisplayName("제한 목록 응답은 restrictor/restricted/type 형태를 유지한다")
+    fun findAll_keeps_response_shape() {
+        // given
+        given(friendRelationQueryService.findRestrictions(any(), any()))
+            .willReturn(SliceImpl(listOf(blockView()), PageRequest.of(0, 20), false))
 
-    companion object {
-        const val BASE_PATH = "/api/friends/restrictions"
+        // when & then
+        mockMvc.perform(get("/api/friends/restrictions").with(user(principal)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.content[0].restrictor.email").value(me.email))
+            .andExpect(jsonPath("$.data.content[0].restricted.email").value(other.email))
+            .andExpect(jsonPath("$.data.content[0].type").value("BLOCK"))
     }
 
     @Test
-    @DisplayName("차단 목록 조회 시 200 OK와 페이징된 목록을 반환한다")
-    fun findAll_success() {
-        val restriction = FriendRestriction(
-            id = UUID.randomUUID(),
-            restrictor = restrictor,
-            restricted = restricted,
-            type = FriendRestrictionType.BLOCK,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-        val slice = SliceImpl(listOf(restriction), PageRequest.of(0, 10), false)
+    @DisplayName("차단 응답의 type은 BLOCK이다")
+    fun block_returns_block_type() {
+        // given
+        given(friendRelationCommandService.block(eq(requesterId), eq(otherId))).willReturn(blockView())
 
-        given(friendRestrictionService.findAllByRestrictorEmail(eq(restrictor.email), any()))
-            .willReturn(slice)
-
+        // when & then
         mockMvc.perform(
-            get(BASE_PATH)
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.imhereResponseCode").value("SUCCESS"))
-            .andExpect(jsonPath("$.data.content[0].id").value(restriction.id.toString()))
-    }
-
-    @Test
-    @DisplayName("유저 차단 성공 시 200 OK와 차단 생성 정보를 반환한다")
-    fun restrictUser_success() {
-        val requestDto = CreateFriendRestrictionRequest(targetUserId = restricted.id!!)
-        val restriction = FriendRestriction(
-            id = UUID.randomUUID(),
-            restrictor = restrictor,
-            restricted = restricted,
-            type = FriendRestrictionType.BLOCK,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-
-        given(friendRestrictionService.restrictUser(eq(restrictor.email), eq(requestDto.targetUserId)))
-            .willReturn(restriction)
-
-        mockMvc.perform(
-            post(BASE_PATH)
-                .with(csrf())
-                .with(user(userDetails))
+            post("/api/friends/restrictions")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestDto))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.id").value(restriction.id.toString()))
+                .content(jsonMapper.writeValueAsString(mapOf("targetUserId" to otherId.toString())))
+                .with(user(principal))
+                .with(csrf())
+        )
+            .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.type").value("BLOCK"))
+            .andExpect(jsonPath("$.data.restrictor.email").value(me.email))
     }
 
     @Test
-    @DisplayName("유저 차단 시 targetUserId가 없으면 400 Bad Request를 반환한다")
-    fun restrictUser_fail_when_targetId_is_null() {
-        val requestDto = "{}"
+    @DisplayName("제한 여부 조회는 boolean을 준다")
+    fun checkRestrictionStatus_returns_boolean() {
+        // given
+        given(friendRelationQueryService.existsRestriction(eq(requesterId), eq(otherId))).willReturn(true)
 
-        mockMvc.perform(
-            post(BASE_PATH)
-                .with(csrf())
-                .with(user(userDetails))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestDto)
-        ).andExpect(status().isBadRequest)
-    }
-
-    @Test
-    @DisplayName("유저 차단 여부 확인 시 200 OK와 여부를 Boolean으로 반환한다")
-    fun checkRestrictionStatus_success() {
-        val targetUserId = restricted.id!!
-        given(friendRestrictionService.existRestricted(eq(restrictor.email), eq(targetUserId)))
-            .willReturn(true)
-
-        mockMvc.perform(
-            get("$BASE_PATH/target/$targetUserId")
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
+        // when & then
+        mockMvc.perform(get("/api/friends/restrictions/target/$otherId").with(user(principal)))
+            .andExpect(status().isOk)
             .andExpect(jsonPath("$.data").value(true))
     }
 
-    @Test
-    @DisplayName("차단 내역 삭제 시 200 OK를 반환한다")
-    fun delete_success() {
-        val restrictionId = UUID.randomUUID()
-
-        mockMvc.perform(
-            delete("$BASE_PATH/$restrictionId")
-                .with(csrf())
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-    }
-
-    @Test
-    @DisplayName("차단 해제 (unblock) 시 200 OK를 반환한다")
-    fun unblock_success() {
-        val restrictedId = restricted.id!!
-
-        mockMvc.perform(
-            delete("$BASE_PATH/blocked-users/$restrictedId")
-                .with(csrf())
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-    }
-
+    /** 차단은 만료되지 않으므로 만료 시각이 사실상 무한대다. */
+    private fun blockView(id: UUID = UUID.randomUUID()) =
+        FriendRestrictionView(id, me, other, FriendRestrictionType.BLOCK, now, now, null)
 }

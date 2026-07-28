@@ -17,18 +17,17 @@ class UserQueryService(
     private val userRepository: UserRepository,
 ) : UserLookupContract {
 
-    override fun findById(id: UUID): UserResult =
-        UserResult.fromDomain(
-            userRepository.findById(id) ?: UserException.USER_NOT_FOUND.throwIt()
-        )
-
-    override fun findByEmail(email: String): UserResult =
-        UserResult.fromDomain(
-            userRepository.findByEmail(email) ?: UserException.USER_NOT_FOUND.throwIt()
-        )
+    override fun findById(id: UUID): UserResult {
+        val result = userRepository.findById(id) ?: UserException.USER_NOT_FOUND.throwIt()
+        return UserResult.fromDomain(result)
+    }
 
     override fun findByEmailOrNull(email: String): UserResult? =
         userRepository.findByEmail(email)?.let(UserResult::fromDomain)
+
+    override fun findAllByIds(ids: Collection<UUID>): List<UserResult> =
+        if (ids.isEmpty()) emptyList()
+        else userRepository.findAllByIds(ids).map(UserResult::fromDomain)
 
     fun findAll(pageable: Pageable): Slice<UserResult> =
         userRepository.findAll(pageable)

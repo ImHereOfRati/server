@@ -1,13 +1,13 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.user.service.UserQueryService
 import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.api.UserResult
+import com.kdongsu5509.user.service.UserQueryService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -64,8 +64,9 @@ class UserReadControllerWebMvcTest {
     @DisplayName("로그인한 상태로 내 정보 조회 요청 시 200 OK와 사용자 정보를 반환한다")
     fun readMe_success() {
         // given
-        val userDetails = ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")
         val userId = UUID.randomUUID()
+        val userDetails =
+            ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE", userId)
         val result = UserResult(
             id = userId,
             email = "sender@example.com",
@@ -75,7 +76,7 @@ class UserReadControllerWebMvcTest {
             status = UserStatus.ACTIVE
         )
 
-        given(userQueryService.findByEmail(eq("sender@example.com"))).willReturn(result)
+        given(userQueryService.findById(eq(userId))).willReturn(result)
 
         // when & then
         mockMvc.perform(

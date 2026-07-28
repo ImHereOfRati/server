@@ -31,7 +31,6 @@ ImHere 기능을 **어디서 시작해서 어디로 끝나는지** 기준으로 
 | 순서 | 문서 | 범위 |
 |---|---|---|
 | 5 | [friend-request.md](friend-request.md) | 요청, 수락, 거절 |
-| 6 | [friend-block.md](friend-block.md) | 차단, 제한, 해제 |
 
 ### 알림
 

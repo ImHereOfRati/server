@@ -1,6 +1,6 @@
 package com.kdongsu5509.friends.controller.dto
 
-import com.kdongsu5509.friends.domain.FriendRequest
+import com.kdongsu5509.friends.service.dto.FriendRequestView
 import java.time.LocalDateTime
 import java.util.*
 
@@ -13,15 +13,13 @@ data class FriendRequestResponse(
     val updatedAt: LocalDateTime
 ) {
     companion object {
-        fun from(domain: FriendRequest) = FriendRequestResponse(
-            id = domain.id!!,
-            requester = FriendRequestUserResponse.from(domain.requester),
-            receiver = FriendRequestUserResponse.from(domain.receiver),
-            message = domain.message.value,
-            createdAt = domain.createdAt!!,
-            updatedAt = domain.updatedAt!!
+        fun from(view: FriendRequestView) = FriendRequestResponse(
+            id = view.id!!,
+            requester = FriendRequestUserResponse.from(view.requester),
+            receiver = FriendRequestUserResponse.from(view.receiver),
+            message = view.message,
+            createdAt = view.createdAt!!,
+            updatedAt = view.updatedAt!!
         )
     }
 }
-
-

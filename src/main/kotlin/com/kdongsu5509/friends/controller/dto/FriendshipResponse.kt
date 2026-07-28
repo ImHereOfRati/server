@@ -1,6 +1,6 @@
 package com.kdongsu5509.friends.controller.dto
 
-import com.kdongsu5509.friends.domain.Friendship
+import com.kdongsu5509.friends.service.dto.FriendshipView
 import java.time.LocalDateTime
 import java.util.*
 
@@ -13,13 +13,13 @@ data class FriendshipResponse(
     val updatedAt: LocalDateTime? = null
 ) {
     companion object {
-        fun from(domain: Friendship) = FriendshipResponse(
-            id = domain.id,
-            owner = FriendRequestUserResponse.from(domain.owner),
-            friend = FriendRequestUserResponse.from(domain.friend),
-            friendAlias = domain.friendAlias.value,
-            createdAt = domain.createdAt,
-            updatedAt = domain.updatedAt
+        fun from(view: FriendshipView) = FriendshipResponse(
+            id = view.id,
+            owner = FriendRequestUserResponse.from(view.owner),
+            friend = FriendRequestUserResponse.from(view.friend),
+            friendAlias = view.friendAlias,
+            createdAt = view.createdAt,
+            updatedAt = view.updatedAt
         )
     }
 }

@@ -1,11 +1,15 @@
 package com.kdongsu5509.friends.domain
 
+import com.kdongsu5509.friends.FriendException
+import com.kdongsu5509.support.exception.throwIt
+
 data class FriendAlias(val value: String) {
     init {
-        require(value.length <= 20) { "friendAlias는 20자를 넘을 수 없습니다." }
+        if (value.isBlank()) FriendException.FRIEND_ALIAS_BLANK.throwIt()
+        if (value.length > MAX_LENGTH) FriendException.FRIEND_ALIAS_TOO_LONG.throwIt()
     }
 
     companion object {
-        fun fromNickname(nickname: String): FriendAlias = FriendAlias(nickname.take(20))
+        const val MAX_LENGTH = 10
     }
 }

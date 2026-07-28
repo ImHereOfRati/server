@@ -73,7 +73,9 @@ class AdminApiSecurityIntegrationTest : WebIntegrationTestSupport() {
         mockMvc.perform(
             get("/api/friends/restrictions/admin")
                 .with(user(adminDetails))
-        ).andExpect(status().isMethodNotAllowed)
+            // 예전에는 DELETE /restrictions/{id}가 있어 GET이 405로 걸렸다. 그 통로를 없앤 뒤로는
+            // 이 경로에 매핑 자체가 없다.
+        ).andExpect(status().isNotFound)
     }
 
     @Test

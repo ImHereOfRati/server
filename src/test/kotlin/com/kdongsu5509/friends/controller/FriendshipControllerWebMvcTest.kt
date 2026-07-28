@@ -1,242 +1,139 @@
 package com.kdongsu5509.friends.controller
 
-import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
-import com.kdongsu5509.user.domain.OAuth2Provider
-import com.kdongsu5509.user.domain.UserRole
+import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.auth.security.SecurityWhiteList
-import com.kdongsu5509.friends.controller.dto.UpdateAliasRequest
-import com.kdongsu5509.friends.domain.Friendship
-import com.kdongsu5509.friends.service.FriendshipService
-import com.kdongsu5509.user.domain.UserStatus
+import com.kdongsu5509.friends.service.FriendRelationCommandService
+import com.kdongsu5509.friends.service.FriendRelationQueryService
+import com.kdongsu5509.friends.service.dto.FriendMember
+import com.kdongsu5509.friends.service.dto.FriendshipView
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
-import com.kdongsu5509.support.logger.AccessLogPrinter
-import com.kdongsu5509.user.domain.User
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.given
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.given
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.SliceImpl
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
-import org.springframework.test.web.servlet.setup.MockMvcBuilders
-import org.springframework.web.context.WebApplicationContext
-import org.springframework.web.filter.CharacterEncodingFilter
 import tools.jackson.databind.json.JsonMapper
 import java.time.LocalDateTime
 import java.util.*
 
-@WebMvcTest(FriendshipController::class)
+@ImHereLightWebMvcTest(controllers = [FriendshipController::class])
 class FriendshipControllerWebMvcTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
 
-    @MockitoBean
-    private lateinit var friendshipService: FriendshipService
+    @Autowired
+    private lateinit var jsonMapper: JsonMapper
 
     @MockitoBean
-    private lateinit var accessLogPrinter: AccessLogPrinter
+    private lateinit var friendRelationCommandService: FriendRelationCommandService
+
+    @MockitoBean
+    private lateinit var friendRelationQueryService: FriendRelationQueryService
 
     @MockitoBean
     private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
 
-    @MockitoBean
-    private lateinit var tokenParser: ImHereTokenParserPort
+    private val requesterId = UUID.fromString("00000000-0000-0000-0000-000000000001")
+    private val friendId = UUID.fromString("00000000-0000-0000-0000-000000000002")
 
-    @MockitoBean
-    private lateinit var securityWhiteList: SecurityWhiteList
-
-    @Autowired
-    private lateinit var objectMapper: JsonMapper
-
-    private val owner = User(
-        id = UUID.randomUUID(),
-        email = "owner@example.com",
-        nickname = "owner-nick",
-        role = UserRole.NORMAL,
-        oauthProvider = OAuth2Provider.KAKAO,
-        status = UserStatus.ACTIVE
+    private val principal = ImHereUserDetails(
+        email = "me@example.com",
+        nickname = "me",
+        role = "NORMAL",
+        status = "ACTIVE",
+        userId = requesterId
     )
 
-    private val friend = User(
-        id = UUID.randomUUID(),
-        email = "friend@example.com",
-        nickname = "friend-nick",
-        role = UserRole.NORMAL,
-        oauthProvider = OAuth2Provider.KAKAO,
-        status = UserStatus.ACTIVE
-    )
+    private val me = FriendMember(requesterId, "me@example.com", "me")
+    private val friend = FriendMember(friendId, "friend@example.com", "friend")
 
-    private val userDetails = ImHereUserDetails(
-        email = owner.email,
-        nickname = owner.nickname,
-        role = "ROLE_USER",
-        status = "ACTIVE"
-    )
-
-    @BeforeEach
-    fun setUp(webApplicationContext: WebApplicationContext) {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-            .apply<DefaultMockMvcBuilder>(springSecurity())
-            .alwaysDo<DefaultMockMvcBuilder>(MockMvcResultHandlers.print())
-            .addFilters<DefaultMockMvcBuilder>(CharacterEncodingFilter("UTF-8", true))
-            .build()
-    }
-
-    companion object {
-        const val BASE_PATH = "/api/friendships"
-    }
+    private val now: LocalDateTime = LocalDateTime.of(2026, 7, 27, 12, 0)
 
     @Test
-    @DisplayName("친구 목록 조회 시 200 OK와 페이징된 목록을 반환한다")
-    fun readAll_success() {
-        val friendship = Friendship(
-            id = UUID.randomUUID(),
-            owner = owner,
-            friend = friend,
-            friendAlias = "베프",
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-        val slice = SliceImpl(listOf(friendship), PageRequest.of(0, 10), false)
+    @DisplayName("친구 목록 응답은 owner/friend/friendAlias 형태를 유지한다")
+    fun readAll_keeps_response_shape() {
+        // given
+        given(friendRelationQueryService.findFriends(any(), any()))
+            .willReturn(SliceImpl(listOf(friendshipView()), PageRequest.of(0, 20), false))
 
-        given(friendshipService.findAllByOwnerEmail(eq(owner.email), any()))
-            .willReturn(slice)
-
-        mockMvc.perform(
-            get(BASE_PATH)
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
+        // when & then
+        mockMvc.perform(get("/api/friendships").with(user(principal)))
+            .andExpect(status().isOk)
             .andExpect(jsonPath("$.imhereResponseCode").value("SUCCESS"))
-            .andExpect(jsonPath("$.data.content[0].id").value(friendship.id.toString()))
+            .andExpect(jsonPath("$.data.content[0].owner.email").value(me.email))
+            .andExpect(jsonPath("$.data.content[0].friend.email").value(friend.email))
+            .andExpect(jsonPath("$.data.content[0].friendAlias").value(me.nickname))
     }
 
     @Test
-    @DisplayName("특정 유저와 친구 여부 확인 시 200 OK와 여부를 Boolean으로 반환한다")
-    fun checkFriendStatus_success() {
-        val targetUserId = friend.id!!
-        val friendship = Friendship(
-            id = UUID.randomUUID(),
-            owner = owner,
-            friend = friend,
-            friendAlias = "베프",
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+    @DisplayName("친구 여부 조회는 관계 유무를 boolean으로 준다")
+    fun checkFriendStatus_returns_boolean() {
+        // given
+        given(friendRelationQueryService.findFriendByTarget(eq(requesterId), eq(friendId))).willReturn(null)
 
-        given(friendshipService.findByOwnerEmailAndFriendId(eq(owner.email), eq(targetUserId)))
-            .willReturn(friendship)
-
-        mockMvc.perform(
-            get("$BASE_PATH/target/$targetUserId")
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data").value(true))
+        // when & then
+        mockMvc.perform(get("/api/friendships/target/$friendId").with(user(principal)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data").value(false))
     }
 
     @Test
-    @DisplayName("친구 관계 단건 조회 시 200 OK와 상세 정보를 반환한다")
-    fun readById_success() {
-        val friendshipId = UUID.randomUUID()
-        val friendship = Friendship(
-            id = friendshipId,
-            owner = owner,
-            friend = friend,
-            friendAlias = "베프",
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+    @DisplayName("단건 조회 응답도 같은 형태를 유지한다")
+    fun readById_keeps_response_shape() {
+        // given
+        val id = UUID.randomUUID()
+        given(friendRelationQueryService.findFriend(eq(id), eq(requesterId))).willReturn(friendshipView(id))
 
-        given(friendshipService.findByIdAndOwnerEmail(eq(friendshipId), eq(owner.email)))
-            .willReturn(friendship)
-
-        mockMvc.perform(
-            get("$BASE_PATH/$friendshipId")
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.id").value(friendshipId.toString()))
-            .andExpect(jsonPath("$.data.friendAlias").value("베프"))
+        // when & then
+        mockMvc.perform(get("/api/friendships/$id").with(user(principal)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.id").value(id.toString()))
+            .andExpect(jsonPath("$.data.owner.email").value(me.email))
     }
 
     @Test
-    @DisplayName("친구 삭제 시 204 No Content를 반환한다")
-    fun deleteFriendship_success() {
-        val friendshipId = UUID.randomUUID()
+    @DisplayName("별칭 변경은 변경된 별칭을 응답에 담는다")
+    fun updateAlias_returns_updated_alias() {
+        // given
+        val id = UUID.randomUUID()
+        given(friendRelationCommandService.updateAlias(eq(id), eq(requesterId), eq("단짝")))
+            .willReturn(FriendshipView(id, me, friend, "단짝", now, now))
 
+        // when & then
         mockMvc.perform(
-            delete("$BASE_PATH/$friendshipId")
-                .with(csrf())
-                .with(user(userDetails))
-        ).andExpect(status().isNoContent)
-    }
-
-    @Test
-    @DisplayName("친구 별칭 수정 성공 시 200 OK와 수정 정보를 반환한다")
-    fun updateAlias_success() {
-        val friendshipId = UUID.randomUUID()
-        val requestDto = UpdateAliasRequest(alias = "새별칭")
-        val updatedFriendship = Friendship(
-            id = friendshipId,
-            owner = owner,
-            friend = friend,
-            friendAlias = "새별칭",
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
-
-        given(friendshipService.updateAliasByIdAndOwnerEmail(eq(friendshipId), eq(owner.email), eq("새별칭")))
-            .willReturn(updatedFriendship)
-
-        mockMvc.perform(
-            patch("$BASE_PATH/$friendshipId/alias")
-                .with(csrf())
-                .with(user(userDetails))
+            patch("/api/friendships/$id/alias")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestDto))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.id").value(friendshipId.toString()))
-            .andExpect(jsonPath("$.data.friendAlias").value("새별칭"))
+                .content(jsonMapper.writeValueAsString(mapOf("alias" to "단짝")))
+                .with(user(principal))
+                .with(csrf())
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.friendAlias").value("단짝"))
     }
 
     @Test
-    @DisplayName("친구 별칭 수정 시 별칭이 너무 길면 400 Bad Request를 반환한다")
-    fun updateAlias_fail_when_alias_is_too_long() {
-        val friendshipId = UUID.randomUUID()
-        val requestDto = UpdateAliasRequest(alias = "A".repeat(50)) // 가상의 길이 초과 에러
+    @DisplayName("친구 삭제는 204를 준다")
+    fun delete_returns_no_content() {
+        // given: 삭제는 반환값이 없어 준비할 것이 없다.
 
-        mockMvc.perform(
-            patch("$BASE_PATH/$friendshipId/alias")
-                .with(csrf())
-                .with(user(userDetails))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestDto))
-        ).andExpect(status().isBadRequest)
+        // when & then
+        mockMvc.perform(delete("/api/friendships/${UUID.randomUUID()}").with(user(principal)).with(csrf()))
+            .andExpect(status().isNoContent)
     }
 
-    @Test
-    @DisplayName("친구 차단 성공 시 200 OK를 반환한다")
-    fun blockFriend_success() {
-        val friendshipId = UUID.randomUUID()
-
-        mockMvc.perform(
-            post("$BASE_PATH/$friendshipId/block")
-                .with(csrf())
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-    }
+    /** 수락 시점에 내 자리 별칭이 내 닉네임으로 채워진 상태를 흉내 낸다. */
+    private fun friendshipView(id: UUID = UUID.randomUUID()) =
+        FriendshipView(id, me, friend, me.nickname, now, now)
 }

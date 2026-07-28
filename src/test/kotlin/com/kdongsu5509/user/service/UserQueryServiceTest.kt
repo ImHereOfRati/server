@@ -60,24 +60,6 @@ class UserQueryServiceTest {
     }
 
     @Test
-    @DisplayName("이메일로 사용자를 조회하면 사용자 결과를 반환한다")
-    fun findByEmail_returns_user() {
-        whenever(userRepository.findByEmail(testEmail)).thenReturn(testUser)
-
-        val result = userQueryService.findByEmail(testEmail)
-
-        assertThat(result).isEqualTo(UserResult.fromDomain(testUser))
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 사용자 이메일로 조회하면 예외가 발생한다")
-    fun findByEmail_throws_when_user_does_not_exist() {
-        whenever(userRepository.findByEmail(testEmail)).thenReturn(null)
-
-        assertUserNotFound { userQueryService.findByEmail(testEmail) }
-    }
-
-    @Test
     @DisplayName("nullable 이메일 조회 시 사용자가 존재하면 사용자 결과를 반환한다")
     fun findByEmailOrNull_returns_user_when_present() {
         whenever(userRepository.findByEmail(testEmail)).thenReturn(testUser)

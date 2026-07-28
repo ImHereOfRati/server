@@ -3,8 +3,10 @@ package com.kdongsu5509.user.controller
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.SliceResponse
 import com.kdongsu5509.shared.response.toOkResponse
+import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.controller.dto.CompactUserResponse
+import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.service.UserQueryService
 import jakarta.validation.constraints.NotBlank
 import org.springframework.data.domain.Pageable
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.util.*
 
 @RestController
 @Validated
@@ -25,8 +28,8 @@ class UserReadController(
     private val userQueryService: UserQueryService
 ) {
     @GetMapping("/my")
-    fun readMe(@AuthenticationPrincipal(expression = "email") userEmail: String): CompactUserResponse {
-        val result = userQueryService.findByEmail(userEmail)
+    fun readMe(@AuthenticationPrincipal(expression = "userId") userId: UUID): CompactUserResponse {
+        val result = userQueryService.findById(userId) ?: UserException.USER_NOT_FOUND.throwIt()
         return CompactUserResponse.from(result)
     }
 

@@ -48,8 +48,8 @@ class UserReadControllerIntegrationTest : WebIntegrationTestSupport() {
     @Test
     @DisplayName("내 정보 조회를 성공한다")
     fun readMeSuccess() {
-        // given
-        userRepository.save(
+        // given: 내 정보 조회는 인증 주체의 식별자로 찾으므로 저장된 식별자를 principal에 실어 준다.
+        val saved = userRepository.save(
             UserJpaEntity(
                 email = "me@example.com",
                 nickname = "MeNick",
@@ -62,7 +62,7 @@ class UserReadControllerIntegrationTest : WebIntegrationTestSupport() {
         // when & then
         mockMvc.perform(
             get("/api/users/my")
-                .with(user(myDetails))
+                .with(user(myDetails.copy(userId = saved.id)))
         ).andExpect(status().isOk)
             .andExpect(jsonPath("$.data.email").value("me@example.com"))
             .andDo(

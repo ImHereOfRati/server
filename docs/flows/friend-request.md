@@ -100,7 +100,6 @@ sequenceDiagram
 
 ## 연관 문서
 
-- [friend-block.md](friend-block.md)
 - [notification-pipeline.md](notification-pipeline.md)
 - [../architecture/domain.md](../architecture/domain.md)
 - [practical-feature-flows.md](practical-feature-flows.md#6-friend--contact--restriction)

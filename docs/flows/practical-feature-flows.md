@@ -62,7 +62,7 @@
 |---|---|
 | 시작점 | `contact_view`, `contact_view_model`, `friend_request_view_model`, `friend_restriction_view_model` |
 | 흐름 | 연락처 권한 확인 -> 로컬 연락처와 서버 친구 병합 -> 검색으로 서버 사용자 탐색 -> 요청 전송 -> FCM 알림 -> 수락/거절 -> 차단 목록 관리 |
-| 서버에서 같이 봐야 할 문서 | [friend-request.md](friend-request.md), [friend-block.md](friend-block.md), [notification-pipeline.md](notification-pipeline.md), [../architecture/domain.md](../architecture/domain.md) |
+| 서버에서 같이 봐야 할 문서 | [friend-request.md](friend-request.md), [notification-pipeline.md](notification-pipeline.md), [../architecture/domain.md](../architecture/domain.md) |
 
 ### 7. Record / History
 
@@ -70,7 +70,7 @@
 |---|---|
 | 시작점 | `record_view`, `geofence_record_view_model`, `notification_view_model` |
 | 흐름 | 기록 화면에서 지오펜스/알림/친구 요청 기록 조회 -> 로컬 DB 주기 동기화 -> 앱 resume 시 갱신 -> 유지보수 작업 수행 |
-| 서버에서 같이 봐야 할 문서 | [fcm-token-failure-chain.md](fcm-token-failure-chain.md), [friend-request.md](friend-request.md), [friend-block.md](friend-block.md) |
+| 서버에서 같이 봐야 할 문서 | [fcm-token-failure-chain.md](fcm-token-failure-chain.md), [friend-request.md](friend-request.md) |
 
 ### 8. Setting / My Info / Terms
 

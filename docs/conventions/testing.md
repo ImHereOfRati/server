@@ -10,7 +10,7 @@
 |---|---|---|
 | Service는 단위 테스트 우선 | 비즈니스 분기와 예외 코드를 빠르게 검증 | `LoginServiceTest.kt` |
 | Controller는 계약 테스트 우선 | status, body, 인증/인가를 함께 봄 | `WebMvcTest`, IntegrationTest 계열 |
-| MQ/외부연동은 통합 경계 포함 | RabbitMQ container, Firebase/Solapi mock 사용 | `PersistenceTestSupport.kt:16` |
+| 이벤트/외부연동은 통합 경계 포함 | Modulith 이벤트 저장소, Firebase/Solapi mock 사용 | `PersistenceTestSupport.kt` |
 
 ---
 
@@ -35,7 +35,7 @@
 
 ### 통합 테스트
 
-* 대상: 요청부터 DB/MQ까지 이어지는 흐름
+* 대상: 요청부터 DB/이벤트 발행까지 이어지는 흐름
 * 도구: `@SpringBootTest`
 * 기반 클래스:
   * `PersistenceTestSupport`
@@ -50,7 +50,7 @@
 * `@SpringBootTest`
 * `@Transactional`
 * `@ActiveProfiles("test")`
-* RabbitMQ Testcontainer 사용
+* H2 기반 영속성 및 Spring Modulith 이벤트 발행 검증
 * Firebase / Solapi는 MockitoBean으로 대체
 
 ### `WebIntegrationTestSupport`

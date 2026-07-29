@@ -10,8 +10,8 @@ import com.kdongsu5509.friends.service.dto.FriendshipView
 import com.kdongsu5509.user.service.UserQueryService
 import com.common.testsupport.WebIntegrationTestSupport
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.notifications.application.dto.DlqQueueInfo
-import com.kdongsu5509.notifications.application.service.DlqAdminService
+import com.kdongsu5509.notifications.application.service.FailedNotificationAdminService
+import com.kdongsu5509.notifications.domain.NotificationStatus
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
 import com.kdongsu5509.terms.service.TermService
@@ -39,7 +39,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     private val now: java.time.LocalDateTime = java.time.LocalDateTime.of(2026, 7, 27, 12, 0)
 
     @MockitoBean
-    private lateinit var dlqAdminService: DlqAdminService
+    private lateinit var failedNotificationAdminService: FailedNotificationAdminService
 
     @MockitoBean
     private lateinit var userQueryService: UserQueryService
@@ -90,19 +90,18 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     }
 
     @Test
-    @DisplayName("관리자는 DLQ 관리 페이지에 접근할 수 있다")
-    fun dlqPageAccessibleForAdmin() {
-        whenever(dlqAdminService.getAllDlqInfo()).thenReturn(
-            listOf(DlqQueueInfo(queueName = "friend.dlq", messageCount = 3, consumerCount = 1))
-        )
+    @DisplayName("관리자는 실패 알림 관리 페이지에 접근할 수 있다")
+    fun failedNotificationPageAccessibleForAdmin() {
+        whenever(failedNotificationAdminService.findAll(NotificationStatus.DEAD, 0, 100))
+            .thenReturn(emptyList())
 
         mockMvc.perform(
-            get("/admin/dead-letter-queues")
+            get("/admin/failed-notifications")
                 .with(user(adminDetails))
         )
             .andExpect(status().isOk)
-            .andExpect(content().string(containsString("DLQ 관리")))
-            .andExpect(content().string(containsString("friend.dlq")))
+            .andExpect(content().string(containsString("실패 알림 관리")))
+            .andExpect(content().string(containsString("실패 알림이 없습니다.")))
     }
 
     @Test

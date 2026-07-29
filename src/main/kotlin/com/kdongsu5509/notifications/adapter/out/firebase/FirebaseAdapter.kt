@@ -1,9 +1,11 @@
 package com.kdongsu5509.notifications.adapter.out.firebase
 
 import com.google.firebase.messaging.*
-import com.kdongsu5509.notifications.domain.AndroidPushPriority
-import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.application.port.out.FirebasePort
+import com.kdongsu5509.notifications.domain.AndroidPushPriority
+import com.kdongsu5509.notifications.domain.DeviceType
+import com.kdongsu5509.notifications.domain.PushChannel
+import com.kdongsu5509.notifications.domain.RenderedNotification
 import com.kdongsu5509.notifications.exception.UnregisteredTokenException
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.exception.type.InternalServerException
@@ -15,10 +17,10 @@ import org.springframework.stereotype.Component
 class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : FirebasePort {
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    override fun send(fcmToken: String, title: String, body: String, data: Map<String, String>) {
+    override fun send(fcmToken: String, deviceType: DeviceType, rendered: RenderedNotification) {
         if (fcmToken.isBlank()) return log.warn("FCM 토큰 공백으로 전송 중단")
         try {
-            firebaseMessaging.send(createFcmMessage(fcmToken, title, body, data))
+            firebaseMessaging.send(createFcmMessage(fcmToken, deviceType, rendered))
         } catch (ex: FirebaseMessagingException) {
             processFcmException(ex)
         }
@@ -55,23 +57,52 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
         else -> Unit
     }
 
-    private fun createFcmMessage(token: String, title: String, body: String, data: Map<String, String>) =
-        Message.builder()
-            .setNotification(Notification.builder().setTitle(title).setBody(body).build())
-            .putAllData(data)
-            .setAndroidConfig(createAndroidConfig(data))
-            .setToken(token).build()
-
-    private fun createAndroidConfig(data: Map<String, String>): AndroidConfig {
-        val notificationType = NotificationType.fromName(data["type"]) ?: NotificationType.DELIVERY_RESULT_NOTICE
-
-        return AndroidConfig.builder()
-            .setPriority(toFirebasePriority(notificationType.pushPriority))
+    /**
+     * 기기 종류에 따라 Android/iOS 중 한쪽 전달 설정만 붙인다.
+     *
+     * 어떤 정책을 쓸지는 [PushChannel]이 이미 정해 두었으므로 여기서는 SDK 타입으로 옮기기만 한다.
+     */
+    private fun createFcmMessage(
+        token: String,
+        deviceType: DeviceType,
+        rendered: RenderedNotification,
+    ): Message {
+        val builder = Message.builder()
             .setNotification(
-                AndroidNotification.builder()
-                    .setChannelId(notificationType.androidChannelId)
+                Notification.builder()
+                    .setTitle(rendered.title)
+                    .setBody(rendered.body)
                     .build()
             )
+            .putAllData(rendered.data)
+            .setToken(token)
+
+        val channel = rendered.type.channel
+        return when (deviceType) {
+            DeviceType.AOS -> builder.setAndroidConfig(createAndroidConfig(channel))
+            DeviceType.IOS -> builder.setApnsConfig(createApnsConfig(channel))
+        }.build()
+    }
+
+    private fun createAndroidConfig(channel: PushChannel): AndroidConfig =
+        AndroidConfig.builder()
+            .setPriority(toFirebasePriority(channel.androidPriority))
+            .setNotification(
+                AndroidNotification.builder()
+                    .setChannelId(channel.androidChannelId)
+                    .build()
+            )
+            .build()
+
+    private fun createApnsConfig(channel: PushChannel): ApnsConfig {
+        val aps = Aps.builder()
+            .putCustomData(INTERRUPTION_LEVEL_KEY, channel.interruptionLevel.value)
+            .also { builder -> channel.sound?.let { builder.setSound(it) } }
+            .build()
+
+        return ApnsConfig.builder()
+            .putHeader(APNS_PRIORITY_HEADER, channel.apnsPriority.headerValue)
+            .setAps(aps)
             .build()
     }
 
@@ -89,6 +120,11 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
     private fun logAndReturnRetryable(code: MessagingErrorCode, ex: Exception): RetryableFcmException {
         log.error("[$code] FCM 서버 일시적 오류. 재시도 시작.", ex)
         return RetryableFcmException("FCM 재시도 필요: $code", ex)
+    }
+
+    private companion object {
+        const val APNS_PRIORITY_HEADER = "apns-priority"
+        const val INTERRUPTION_LEVEL_KEY = "interruption-level"
     }
 }
 

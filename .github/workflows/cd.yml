@@ -73,7 +73,6 @@ jobs:
 
     outputs:
       ec2_host: ${{ steps.resolve.outputs.ec2_host }}
-      rabbitmq_host: ${{ steps.resolve.outputs.rabbitmq_host }}
       security_group_id: ${{ steps.resolve.outputs.security_group_id }}
       instance_id: ${{ steps.resolve.outputs.instance_id }}
       ecr_repository_name: ${{ steps.resolve.outputs.ecr_repository_name }}
@@ -95,12 +94,11 @@ jobs:
         run: |
           EC2_HOST=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='ElasticIp'].OutputValue | [0]" --output text)
           SECURITY_GROUP_ID=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='SecurityGroupId'].OutputValue | [0]" --output text)
-          RABBITMQ_HOST=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='RabbitMqPrivateIp'].OutputValue | [0]" --output text)
           INSTANCE_ID=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='Ec2InstanceId'].OutputValue | [0]" --output text)
           ECR_REPOSITORY_NAME=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryName'].OutputValue | [0]" --output text)
           ECR_REPOSITORY_URI=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryUri'].OutputValue | [0]" --output text)
 
-          for value in "$EC2_HOST" "$SECURITY_GROUP_ID" "$RABBITMQ_HOST" "$INSTANCE_ID" "$ECR_REPOSITORY_NAME" "$ECR_REPOSITORY_URI"; do
+          for value in "$EC2_HOST" "$SECURITY_GROUP_ID" "$INSTANCE_ID" "$ECR_REPOSITORY_NAME" "$ECR_REPOSITORY_URI"; do
             if [ -z "$value" ] || [ "$value" = "None" ]; then
               echo "Required CloudFormation output is empty."
               exit 1
@@ -108,7 +106,6 @@ jobs:
           done
 
           echo "ec2_host=$EC2_HOST" >> "$GITHUB_OUTPUT"
-          echo "rabbitmq_host=$RABBITMQ_HOST" >> "$GITHUB_OUTPUT"
           echo "security_group_id=$SECURITY_GROUP_ID" >> "$GITHUB_OUTPUT"
           echo "instance_id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
           echo "ecr_repository_name=$ECR_REPOSITORY_NAME" >> "$GITHUB_OUTPUT"
@@ -209,7 +206,6 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
       EC2_HOST: ${{ needs.resolve-infra.outputs.ec2_host }}
-      RABBITMQ_HOST: ${{ needs.resolve-infra.outputs.rabbitmq_host }}
       ECR_REPOSITORY: ${{ needs.resolve-infra.outputs.ecr_repository_name }}
       EC2_SECURITY_GROUP_ID: ${{ needs.resolve-infra.outputs.security_group_id }}
 
@@ -298,8 +294,6 @@ jobs:
           RUNTIME_DIR=/tmp/imhere-runtime
           mkdir -p "$RUNTIME_DIR/infra/nginx" "$RUNTIME_DIR/infra/alloy"
           cp /tmp/imhere-secrets/prod.env "$RUNTIME_DIR/prod.env"
-          printf '\nRABBITMQ_HOST=%s\n' "$RABBITMQ_HOST" >> "$RUNTIME_DIR/prod.env"
-
           python3 - <<'PY'
           from pathlib import Path
           import os

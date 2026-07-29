@@ -5,8 +5,10 @@ import com.kdongsu5509.friends.domain.FriendPair
 import com.kdongsu5509.friends.domain.FriendRelation
 import com.kdongsu5509.friends.domain.FriendRelationStatus
 import com.kdongsu5509.friends.domain.RequestMessage
+import com.kdongsu5509.friends.event.FriendRequestAccepted
+import com.kdongsu5509.friends.event.FriendRequestSent
 import com.kdongsu5509.friends.repository.FriendRelationRepository
-import com.kdongsu5509.shared.notification.NotificationPort
+import com.kdongsu5509.shared.event.DomainEventPublisher
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.user.api.UserLookupContract
 import com.kdongsu5509.user.api.UserResult
@@ -23,7 +25,7 @@ class FriendRelationCommandServiceTest {
 
     private val friendRelationRepository = mock<FriendRelationRepository>()
     private val userLookupContract = mock<UserLookupContract>()
-    private val notificationPort = mock<NotificationPort>()
+    private val eventPublisher = mock<DomainEventPublisher>()
 
     private lateinit var friendRelationCommandService: FriendRelationCommandService
 
@@ -57,7 +59,7 @@ class FriendRelationCommandServiceTest {
             friendRelationRepository,
             FriendMemberLoader(userLookupContract),
             userLookupContract,
-            notificationPort
+            eventPublisher
         )
     }
 
@@ -81,7 +83,10 @@ class FriendRelationCommandServiceTest {
             assertThat(result.requester.id).isEqualTo(requesterId)
             assertThat(result.receiver.id).isEqualTo(otherId)
             assertThat(result.message).isEqualTo(message)
-            then(notificationPort).should().send(any())
+            then(eventPublisher).should().publish(check<FriendRequestSent> {
+                assertThat(it.requesterEmail).isEqualTo(meResult.email)
+                assertThat(it.receiverEmail).isEqualTo(otherResult.email)
+            })
         }
 
         @Test
@@ -101,7 +106,7 @@ class FriendRelationCommandServiceTest {
             // then
             assertThat(exception.errorCode).isEqualTo(FriendException.ALREADY_FRIEND)
             then(friendRelationRepository).should(never()).save(any())
-            then(notificationPort).shouldHaveNoInteractions()
+            then(eventPublisher).shouldHaveNoInteractions()
         }
 
         @Test
@@ -213,7 +218,10 @@ class FriendRelationCommandServiceTest {
             // then
             assertThat(result.owner.id).isEqualTo(requesterId)
             assertThat(result.friend.id).isEqualTo(otherId)
-            then(notificationPort).should().send(any())
+            then(eventPublisher).should().publish(check<FriendRequestAccepted> {
+                assertThat(it.accepterEmail).isEqualTo(meResult.email)
+                assertThat(it.requesterEmail).isEqualTo(otherResult.email)
+            })
         }
 
         @Test

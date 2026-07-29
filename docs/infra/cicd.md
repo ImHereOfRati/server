@@ -52,7 +52,7 @@ flowchart LR
 | Job | `needs` | 내용 |
 |---|---|---|
 | **build-jar** | — | `./gradlew bootJar -x test`로 JAR를 빌드해 아티팩트로 올립니다(1일 보관, `cd.yml:53-63`). |
-| **resolve-infra** | — | CloudFormation 스택 `imhere-prod-infra`의 Output(`ElasticIp`, `RabbitMqPrivateIp`, `SecurityGroupId`, `Ec2InstanceId`, `EcrRepositoryName`, `EcrRepositoryUri`)을 읽어 이후 Job에 전달합니다(`cd.yml:93-114`). |
+| **resolve-infra** | — | CloudFormation 스택 `imhere-prod-infra`의 앱 EC2·보안 그룹·ECR Output을 읽어 이후 Job에 전달합니다. |
 | **docker-push** | `build-jar`, `resolve-infra` | OIDC로 AWS Role을 assume(장기 Access Key 없음) → `Dockerfile.release`로 이미지 빌드 → ECR에 날짜-SHA 태그 + `latest`로 Push(`cd.yml:165-176`). |
 | **sync-config** | `resolve-infra` | `infra/scripts/sync-config.sh`로 private config repo(`ImHereOfRati/config`)를 clone해 `prod.env`와 Firebase 키를 아티팩트로 만듭니다(`cd.yml:187-200`). |
 | **deploy-app** | `docker-push`, `resolve-infra`, `sync-config` | 배포 본체. 아래 "deploy-app 스텝 순서" 참고. |
@@ -66,7 +66,7 @@ flowchart LR
 | 1 | 러너 공인 IP 조회 후 EC2 SG에 SSH(22) 임시 허용 | `cd.yml:233-245` |
 | 2 | Let's Encrypt HTTP-01 챌린지용으로 80 포트를 `0.0.0.0/0`에 임시 개방 | `cd.yml:247-253` |
 | 3 | EC2 런타임 디렉터리 준비(Docker/Compose/Certbot 설치 확인, 배포 경로 생성) | `cd.yml:262-278` |
-| 4 | `prod.env`에 `RABBITMQ_HOST` 주입 → `nginx.conf.template`/`alloy-config.alloy.template` 렌더링 → `docker-compose.yml`·렌더 결과·`prod.env`·Firebase 키를 EC2로 전송 | `cd.yml:291-334` |
+| 4 | `nginx.conf.template`/`alloy-config.alloy.template` 렌더링 → `docker-compose.yml`·렌더 결과·`prod.env`·Firebase 키를 EC2로 전송 | `cd.yml` |
 | 5 | SSH로 ECR 로그인 → compose config/`nginx -t` 검증 → `docker compose --profile prod pull` → `up -d` | `cd.yml:340-433` |
 | 6 | **Let's Encrypt 인증서 확보**(검증→갱신/재발급/부트스트랩) 후 `nginx -s reload` | `cd.yml:435-471` |
 | 7 | `if: always()` — SSH(22)·80 포트 허용 규칙 회수, 러너 임시 파일 삭제 | `cd.yml:475-498` |
@@ -233,7 +233,6 @@ certbot(호스트에서 실행)이 토큰 파일을 쓰면, 같은 디렉터리�
 | 서버/Nginx | `SERVER_NAME`, `CERT_DOMAIN`, `NGINX_ALLOWED_ORIGIN`, `MGMT_BASE_PATH` | `nginx.conf.template`/`alloy-config.alloy.template` 렌더링에도 쓰임 |
 | Spring 공통 | `SPRING_PROFILES_ACTIVE`, `SECURITY_WHITELIST`, `CORS_ALLOWED_ORIGINS`, `JWT_SECRET`, `LOG_FILE` | |
 | DB | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_POOL_SIZE` | 가비아 MySQL 접속 정보 — `gabia.md` 참고 |
-| RabbitMQ | `RABBITMQ_PORT`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`, `RABBITMQ_VHOST`, `RABBITMQ_CONCURRENCY`, `RABBITMQ_MAX_CONCURRENCY` | `RABBITMQ_HOST`는 여기 적지 않습니다 — CD가 CloudFormation Output으로 자동 주입하며 `prod.env`에 덮어씁니다 |
 | Firebase | `FIREBASE_PATH` | 컨테이너 내부 경로(`/app/secrets/imhereFirebaseKey.json`), 키 파일 자체는 `imhereFirebaseKey.json`으로 별도 전송 |
 | Admin | `ADMIN_ID`, `ADMIN_ALLOWED_IPS` | |
 | SMS(Solapi) | `SOLAPI_SENDER`, `SOLAPI_API_KEY`, `SOLAPI_API_SECRET` | |
@@ -247,7 +246,6 @@ certbot(호스트에서 실행)이 토큰 파일을 쓰면, 같은 디렉터리�
 | 값 | CloudFormation Output | 쓰이는 곳 |
 |---|---|---|
 | `EC2_HOST` | `ElasticIp` | SSH 접속, 배포 대상 |
-| `RABBITMQ_HOST` | `RabbitMqPrivateIp` | `prod.env`에 자동 추가 |
 | `EC2_SECURITY_GROUP_ID` | `SecurityGroupId` | 배포 중 SSH(22) 임시 허용/회수 |
 | `ECR_REPOSITORY_NAME` / `ECR_REPOSITORY_URI` | `EcrRepositoryName` / `EcrRepositoryUri` | 이미지 push/pull 대상 |
 
@@ -255,14 +253,14 @@ certbot(호스트에서 실행)이 토큰 파일을 쓰면, 같은 디렉터리�
 
 ### 4. CloudFormation 스택 파라미터 (`--parameter-overrides`)
 
-스택을 생성/업데이트할 때만 지정하는 값입니다. 상세 목록과 기본값은 [aws.md의 파라미터 표](aws.md#파라미터)를 참고합니다. 예: `KeyName`, `AppInstanceType`, `RabbitMqInstanceType`, `EcrRepositoryName`, `RabbitMqUser`/`RabbitMqPassword`/`RabbitMqVHost`.
+스택을 생성/업데이트할 때만 지정하는 값입니다. 현재 애플리케이션 배포에 필요한 주요 값은 `KeyName`, `AppInstanceType`, `EcrRepositoryName`입니다.
 
 ```bash
 aws cloudformation deploy \
   --stack-name imhere-prod-infra \
   --template-file infra/cloudformation/main.yaml \
   --region ap-northeast-2 \
-  --parameter-overrides KeyName=imhere-prod-key AppInstanceType=t3.small RabbitMqInstanceType=t3.micro \
+  --parameter-overrides KeyName=imhere-prod-key AppInstanceType=t3.small EcrRepositoryName=imhere/dsko \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 

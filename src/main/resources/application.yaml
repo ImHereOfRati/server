@@ -34,22 +34,6 @@ spring:
         format_sql: true
         naming:
           physical-strategy: org.hibernate.boot.model.naming.CamelToUnderscoresNamingStrategy
-        type:
-          preferred_uuid_jdbc_type: CHAR
-
-  # RABBITMQ_* values come from application-local.yaml in local and prod.env in production.
-  # RABBITMQ_HOST is not stored in prod.env itself. CD appends it from CloudFormation output.
-  rabbitmq:
-    host: ${RABBITMQ_HOST}
-    port: ${RABBITMQ_PORT}
-    username: ${RABBITMQ_USER}
-    password: ${RABBITMQ_PASSWORD}
-    virtual-host: ${RABBITMQ_VHOST}
-    listener:
-      simple:
-        concurrency: ${RABBITMQ_CONCURRENCY}
-        max-concurrency: ${RABBITMQ_MAX_CONCURRENCY}
-        acknowledge-mode: auto
 
   batch:
     job:

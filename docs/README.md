@@ -33,7 +33,7 @@ ImHereServer 문서를 **어떤 축으로 읽어야 하는지** 정리한 인덱
 * `ApiResponse<T>`: ImHere의 공통 API 응답 래퍼. 성공/실패를 같은 외형으로 감쌉니다.
 * `ImHereUserDetails`: JWT claims를 Spring Security 인증 주체로 옮긴 객체입니다.
 * `PENDING`: OIDC 가입은 끝났지만 약관 동의/활성화가 남은 사용자 상태입니다.
-* `DLQ Replay`: Dead Letter Queue 메시지를 관리자가 원본 Exchange로 다시 발행하는 운영 기능입니다.
+* `DEAD 재발송`: 재시도를 소진한 알림 기록을 관리자가 확인하고 다시 발송하는 운영 기능입니다.
 
 ---
 

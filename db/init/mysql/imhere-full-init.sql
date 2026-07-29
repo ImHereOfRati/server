@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS friend_relations;
 DROP TABLE IF EXISTS friend_relationships;
 DROP TABLE IF EXISTS friend_restrictions;
 DROP TABLE IF EXISTS friend_request;
-DROP TABLE IF EXISTS notification_history;
+DROP TABLE IF EXISTS notification;
 DROP TABLE IF EXISTS fcm_token;
 DROP TABLE IF EXISTS one_time_tokens;
 DROP TABLE IF EXISTS event_publication;
@@ -122,19 +122,36 @@ CREATE TABLE fcm_token
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
-CREATE TABLE notification_history
+-- 알림 한 건의 발송 생애주기를 담는다.
+-- 요청 접수(PENDING)부터
+-- 성공(SENT) / 재시도 가능한 실패(FAILED) / 재시도 소진(DEAD)까지를 status가 표현한다.
+-- DEAD는 재시도 소진 후 운영자 확인이 필요한 알림을 나타낸다.
+--
+-- uk_notification_dedupe_key가 멱등성 장치다. 같은 발송 요청이 두 번 들어와도 행은 하나만 생긴다.
+CREATE TABLE notification
 (
-    id              BIGINT       NOT NULL AUTO_INCREMENT,
-    receiver_email  VARCHAR(255) NOT NULL,
-    sender_nickname VARCHAR(255) NOT NULL,
-    title           VARCHAR(255) NOT NULL,
-    body            VARCHAR(255) NOT NULL,
-    type            VARCHAR(255) NOT NULL,
-    path            VARCHAR(255) NULL,
-    is_read         BIT(1)       NOT NULL,
-    created_at      DATETIME(6)  NOT NULL,
-    updated_at      DATETIME(6)  NOT NULL,
-    PRIMARY KEY (id)
+    id                BIGINT                                  NOT NULL AUTO_INCREMENT,
+    dedupe_key        VARCHAR(120)                            NOT NULL,
+    target_identifier VARCHAR(255)                            NOT NULL,
+    method            ENUM ('SMS', 'FCM')                     NOT NULL,
+    sender_email      VARCHAR(255)                            NOT NULL,
+    sender_nickname   VARCHAR(255)                            NOT NULL,
+    type              VARCHAR(255)                            NOT NULL,
+    title             VARCHAR(255)                            NOT NULL,
+    body              VARCHAR(500)                            NOT NULL,
+    path              VARCHAR(255)                            NULL,
+    extra_data        VARCHAR(2000)                           NOT NULL,
+    status            ENUM ('PENDING', 'SENT', 'FAILED', 'DEAD') NOT NULL,
+    attempts          INT                                     NOT NULL DEFAULT 0,
+    last_error        VARCHAR(500)                            NULL,
+    sent_at           DATETIME(6)                             NULL,
+    is_read           BIT(1)                                  NOT NULL DEFAULT b'0',
+    created_at        DATETIME(6)                             NOT NULL,
+    updated_at        DATETIME(6)                             NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_notification_dedupe_key (dedupe_key),
+    KEY idx_notification_inbox (target_identifier, method, status, created_at),
+    KEY idx_notification_status (status, created_at)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
@@ -154,7 +171,7 @@ CREATE TABLE one_time_tokens
 
 CREATE TABLE event_publication
 (
-    id                     VARCHAR(36)   NOT NULL,
+    id                     BINARY(16)    NOT NULL,
     listener_id            VARCHAR(512)  NOT NULL,
     event_type             VARCHAR(512)  NOT NULL,
     serialized_event       VARCHAR(4000) NOT NULL,

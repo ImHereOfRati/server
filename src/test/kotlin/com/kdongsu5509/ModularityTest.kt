@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.modulith.core.ApplicationModules
+import java.nio.file.Files
+import java.nio.file.Path
 
 class ModularityTest {
 
@@ -163,5 +165,41 @@ class ModularityTest {
         assertThat(agreementEvents).isEmpty()
         assertThat(userApi.asJavaClasses().map { it.name }.toList())
             .contains("com.kdongsu5509.user.api.UserActivationContract")
+    }
+
+    @Test
+    @DisplayName("Friends는 알림 번역에 필요한 도메인 이벤트만 event Named Interface로 공개한다")
+    fun friends_exposes_event_named_interface() {
+        val modules = ApplicationModules.of(ImhereApplication::class.java)
+        val friends = modules.getModuleByName("friends").orElseThrow()
+
+        val eventInterface = friends.namedInterfaces.getByName("event").orElseThrow()
+        val exposedTypes = eventInterface.asJavaClasses().map { it.name }.toList()
+
+        assertThat(exposedTypes).containsExactlyInAnyOrder(
+            "com.kdongsu5509.friends.event.FriendRequestSent",
+            "com.kdongsu5509.friends.event.FriendRequestAccepted",
+        )
+    }
+
+    @Test
+    @DisplayName("Notifications만 Friends 이벤트를 구독하고 Friends는 Notifications를 참조하지 않는다")
+    fun notifications_depends_on_friends_without_reverse_dependency() {
+        val modules = ApplicationModules.of(ImhereApplication::class.java)
+        val friends = modules.getModuleByName("friends").orElseThrow()
+        val notifications = modules.getModuleByName("notifications").orElseThrow()
+
+        assertThat(notifications.getDirectDependencies(modules).containsModuleNamed("friends")).isTrue()
+        assertThat(friends.getDirectDependencies(modules).containsModuleNamed("notifications")).isFalse()
+    }
+
+    @Test
+    @DisplayName("Shared에는 알림 발송 계약 패키지가 남아 있지 않는다")
+    fun shared_contains_no_notification_package() {
+        val packagePath = Path.of("src/main/kotlin/com/kdongsu5509/shared/notification")
+
+        val containsFiles = Files.exists(packagePath) &&
+            Files.walk(packagePath).use { paths -> paths.anyMatch(Files::isRegularFile) }
+        assertThat(containsFiles).isFalse()
     }
 }

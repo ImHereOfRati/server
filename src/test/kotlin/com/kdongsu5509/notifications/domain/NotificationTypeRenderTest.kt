@@ -40,20 +40,4 @@ class NotificationTypeRenderTest {
         assertThat(rendered.data).containsEntry("path", "/terms-detail/42")
     }
 
-    @Test
-    @DisplayName("렌더 결과를 수신자 기준 이력으로 변환한다")
-    fun toHistory() {
-        val rendered = NotificationType.FRIEND_REQUEST_RECEIVED.render(
-            senderNickname = "홍길동",
-            senderEmail = "gildong@imhere.com",
-        )
-
-        val history = rendered.toHistory("receiver@imhere.com")
-
-        assertThat(history.receiverEmail).isEqualTo("receiver@imhere.com")
-        assertThat(history.type).isEqualTo(NotificationType.FRIEND_REQUEST_RECEIVED)
-        assertThat(history.title).isEqualTo(rendered.title)
-        assertThat(history.body).isEqualTo(rendered.body)
-        assertThat(history.path).isEqualTo(rendered.path)
-    }
 }

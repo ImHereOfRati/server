@@ -5,7 +5,7 @@ import com.kdongsu5509.notifications.adapter.`in`.web.dto.MultiNotificationReque
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationRequest
 import com.kdongsu5509.notifications.application.dto.MultipleNotificationCommand
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
-import com.kdongsu5509.notifications.application.port.`in`.NotificationEnqueueUseCase
+import com.kdongsu5509.notifications.application.service.NotificationRequestPublisher
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
@@ -42,7 +42,7 @@ class NotificationCommandControllerWebMvcTest {
     private lateinit var jsonMapper: JsonMapper
 
     @MockitoBean
-    private lateinit var notificationEnqueueUseCase: NotificationEnqueueUseCase
+    private lateinit var notificationRequestPublisher: NotificationRequestPublisher
 
     @MockitoBean
     private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
@@ -83,7 +83,7 @@ class NotificationCommandControllerWebMvcTest {
         ).andExpect(status().isAccepted)
 
         val captor = argumentCaptor<NotificationCommand>()
-        verify(notificationEnqueueUseCase).enqueue(captor.capture())
+        verify(notificationRequestPublisher).publish(captor.capture())
 
         val cmd = captor.firstValue
         assertThat(cmd.senderNickname).isEqualTo("senderNickname")
@@ -111,7 +111,7 @@ class NotificationCommandControllerWebMvcTest {
         ).andExpect(status().isAccepted)
 
         val captor = argumentCaptor<NotificationCommand>()
-        verify(notificationEnqueueUseCase).enqueue(captor.capture())
+        verify(notificationRequestPublisher).publish(captor.capture())
 
         assertThat(captor.firstValue.type).isEqualTo(NotificationType.DEPARTURE)
     }
@@ -135,7 +135,7 @@ class NotificationCommandControllerWebMvcTest {
         ).andExpect(status().isAccepted)
 
         val captor = argumentCaptor<MultipleNotificationCommand>()
-        verify(notificationEnqueueUseCase).enqueueMultiple(captor.capture())
+        verify(notificationRequestPublisher).publish(captor.capture())
 
         val cmd = captor.firstValue
         assertThat(cmd.senderNickname).isEqualTo("senderNickname")

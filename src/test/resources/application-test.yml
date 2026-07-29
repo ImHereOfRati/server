@@ -21,15 +21,6 @@ spring:
     job:
       enabled: false
 
-  
-  rabbitmq:
-    host: ${SPRING_RABBIT_MQ_HOST:host.docker.internal}
-    port: ${SPRING_RABBIT_MQ_PORT:5672}
-    username: ${SPRING_RABBIT_MQ_USERNAME:guest}
-    password: ${SPRING_RABBIT_MQ_PASSWORD:guest}
-    virtual-host: /main
-
-
 jwt:
   secret: testSecretKeyForJwtAuthenticationTesting12345678901234567890
   access-expiration-minutes: 10
@@ -92,13 +83,6 @@ DB_NAME: testdb
 DB_USER: sa
 DB_PASSWORD: ""
 DB_POOL_SIZE: 10
-RABBITMQ_HOST: localhost
-RABBITMQ_PORT: 5672
-RABBITMQ_USER: guest
-RABBITMQ_PASSWORD: guest
-RABBITMQ_VHOST: /main
-RABBITMQ_CONCURRENCY: 3
-RABBITMQ_MAX_CONCURRENCY: 10
 MGMT_BASE_PATH: /actuator
 JWT_SECRET: testSecretKeyForJwtAuthenticationTesting12345678901234567890
 SOLAPI_SENDER: "01012341234"

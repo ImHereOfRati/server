@@ -1,92 +1,92 @@
-# 알림 발송 흐름
+# 알림 이벤트 발송 흐름
 
-알림 이벤트가 큐에 들어가고, consumer 가 중복 제거와 FCM 전송을 수행한 뒤 결과를 남기는 기본 파이프라인을 정리한 문서다.
-
----
+Spring Modulith Application Events가 발행 트랜잭션과 이벤트 기록을 묶고, `Notification` 애그리게이트가 발송 생애주기를 소유한다. 외부 메시지 큐·consumer·DLQ와 로컬 멱등 캐시는 사용하지 않는다.
 
 ## 핵심 판단
 
-| 판단 | 내용 | 근거 |
-|---|---|---|
-| 알림 발송은 비동기 처리 | API/service 는 MQ 에 발행하고 실제 전송은 consumer 가 담당한다 | HTTP 요청 지연과 FCM 장애를 분리한다 |
-| 중복 제거를 consumer 앞단에서 수행 | `messageId` 기준으로 이미 처리한 메시지는 ACK 한다 | 재전송이나 중복 발행에 대한 방어가 필요하다 |
-| 성공 결과도 별도 이벤트로 남김 | 전송 성공 후 `DELIVERY_RESULT_NOTICE` 를 추가 발행한다 | 이력 반영과 후속 처리 연결이 쉬워진다 |
-
----
+| 판단 | 내용 |
+|---|---|
+| 모듈 결합 | friends는 `FriendRequestSent`/`FriendRequestAccepted`만 발행하고 notifications가 알림으로 번역한다 |
+| 커밋 경계 | `@ApplicationModuleListener`가 AFTER_COMMIT에 비동기로 처리하므로 롤백된 업무의 유령 알림은 나가지 않는다 |
+| 멱등성 | `dedupe_key = "{eventId}:{method}"` UNIQUE 제약으로 중복 예약을 억제한다 |
+| 재시도 | `RetryableFcmException`은 Spring Retry로 최대 3회(1초, 2초, 최대 8초) 시도한다 |
+| 운영 가시성 | 최종 실패는 `Notification.DEAD`로 남기고 관리자 API/화면에서 재발송한다 |
 
 ## 시퀀스
 
 ```mermaid
 sequenceDiagram
-    participant API as API/Service
-    participant MQ as RabbitMQ
-    participant Consumer
-    participant Cache as Local Cache
-    participant FCM as Firebase
+    participant Friends
+    participant Registry as event_publication
+    participant Listener as Notification Event Listener
+    participant DB as notification
+    participant Channel as FCM / SMS
 
-    API->>MQ: routing key + messageId 로 발행
-    MQ->>Consumer: 메시지 전달
-    Consumer->>Cache: messageId 중복 확인
-    alt 이미 처리됨
-        Consumer-->>MQ: ACK
-    else 신규 메시지
-        Consumer->>FCM: 알림 전송
+    Friends->>Registry: 도메인 이벤트 (업무 트랜잭션과 함께)
+    Registry-->>Listener: 커밋 후 비동기 전달
+    Listener->>DB: PENDING 예약 + dedupe_key UNIQUE
+    alt 이미 예약됨
+        DB-->>Listener: 중복 처리 종료
+    else 신규 예약
+        Listener->>Channel: 외부 발송
         alt 성공
-            Consumer->>MQ: DELIVERY_RESULT_NOTICE 추가 발행
-            Consumer->>Cache: messageId 기록
-            Consumer-->>MQ: ACK
-        else 실패
-            Consumer-->>MQ: 예외 전파
+            Listener->>DB: SENT + sent_at
+        else 일시적 FCM 오류
+            Listener->>DB: FAILED + attempts
+            Listener->>Channel: Spring Retry
+            Listener->>DB: 3회 소진 시 DEAD
+        else 영구 오류
+            Listener->>DB: FAILED
         end
     end
 ```
 
----
+## 이벤트 경계
 
-## 주요 라우팅
+- `shared.event.DomainEvent`: 모든 이벤트에 `eventId`와 `occurredAt`을 강제한다.
+- `shared.event.DomainEventPublisher`: 향후 다른 이벤트 전송 구현으로 바꿀 수 있는 발행 포트다.
+- `friends::event`: notifications가 참조할 수 있는 유일한 friends 공개 경계다.
+- `NotificationRequested`: 클라이언트 API와 발송 성공/실패 영수증에 쓰는 notifications 내부 이벤트다.
 
-| 항목 | 큐/익스체인지 |
-|---|---|
-| 친구 이벤트 | `noti.queue.friend` |
-| 서비스 이벤트 | `noti.queue.service` |
-| 메인 exchange | `imhere.noti.topic` |
+## 발송 상태와 회수
 
----
+- `PENDING`: 예약됐으나 외부 발송이 완료되지 않음
+- `SENT`: 외부 채널 발송 성공
+- `FAILED`: 재시도 가능한 실패
+- `DEAD`: 최대 3회 소진
+- `NotificationRecoveryScheduler`: 5분 이상 갱신되지 않은 `PENDING`/`FAILED`를 분당 회수한다.
 
-## 구현 포인트
+보장 수준은 **at-least-once 전달 + DB UNIQUE 기반 중복 억제**다. 외부 발송 성공 직후 `SENT` 커밋 전에 프로세스가 종료되면 재발송될 수 있다.
 
-1. 중복 제거 책임은 `MessageIdempotencyService` 가 맡는다.
-2. 전송 실패는 여기서 끝나지 않고 retry/DLQ 정책으로 이어진다.
-3. 전송 성공도 후속 이력 반영을 위해 다시 이벤트화한다.
+## 플랫폼 채널
 
-
-### Android channel policy
-
-`FirebaseAdapter` resolves `data.type` into `NotificationType` and derives Android channel ID and priority from that enum. If the value is missing or invalid, it falls back to `DELIVERY_RESULT_NOTICE`.
-
-| NotificationType | Android channel | Priority |
+| PushChannel | Android | iOS |
 |---|---|---|
-| `ARRIVAL`, `ARRIVAL_CONFIRMATION`, `DEPARTURE` | `fcm_critical_channel` | `HIGH` |
-| `FRIEND_REQUEST_RECEIVED`, `LOCATION_SHARE_RECEIVED` | `fcm_high_channel` | `HIGH` |
-| `FRIEND_REQUEST_ACCEPTED`, `DELIVERY_FAILED_NOTICE` | `fcm_normal_channel` | `HIGH` |
-| `TERMS_UPDATE_NOTICE`, `DELIVERY_RESULT_NOTICE` | `fcm_silent_channel` | `NORMAL` |
+| `CRITICAL` | `fcm_critical_channel` / HIGH | priority 10 / time-sensitive / default |
+| `HIGH` | `fcm_high_channel` / HIGH | priority 10 / active / default |
+| `NORMAL` | `fcm_normal_channel` / HIGH | priority 10 / active / default |
+| `SILENT` | `fcm_silent_channel` / NORMAL | priority 5 / passive / 무음 |
 
-This policy lets the server map notification semantics to Android system channels instead of treating every push as the same class of alert.
----
+`DeviceType.AOS`에는 `AndroidConfig`, `DeviceType.IOS`에는 `ApnsConfig`만 붙는다.
+
+## 제약
+
+- 인메모리 이벤트는 발행 인스턴스에서만 처리된다. 서버 스케일아웃 시 외부 브로커를 재검토한다.
+- `event_publication.serialized_event`는 `VARCHAR(4000)`이므로 이벤트에 큰 payload를 싣지 않는다.
+- iOS APNs 정책은 실제 기기와 집중 모드에서 별도 수동 검증이 필요하다.
 
 ## 코드 기준점
 
-- `src/main/kotlin/com/kdongsu5509/notifications/adapter/in/messageQueue/AbstractNotificationConsumer.kt`
-- `src/main/kotlin/com/kdongsu5509/notifications/application/service/FCMNotificationService.kt`
-- `src/main/kotlin/com/kdongsu5509/notifications/adapter/in/messageQueue/dto/NotificationType.kt`
-- `src/main/kotlin/com/kdongsu5509/notifications/adapter/out/firebase/FirebaseAdapter.kt`
-- `src/main/kotlin/com/kdongsu5509/support/config/RabbitMQConfig.kt`
-
----
+- `friends/event/`
+- `notifications/adapter/in/event/`
+- `notifications/application/service/NotificationDeliveryService.kt`
+- `notifications/application/service/NotificationRecorder.kt`
+- `notifications/scheduler/NotificationRecoveryScheduler.kt`
+- `notifications/domain/Notification.kt`
+- `notifications/domain/PushChannel.kt`
 
 ## 연관 문서
 
-- [rabbitmq-dlq-replay.md](rabbitmq-dlq-replay.md)
+- [failed-notification-replay.md](failed-notification-replay.md)
 - [fcm-token-failure-chain.md](fcm-token-failure-chain.md)
-- [practical-feature-flows.md](practical-feature-flows.md#4-geofence-trigger--delivery--retry)
-- [practical-feature-flows.md](practical-feature-flows.md#5-fcm-notification-lifecycle)
+- [../architecture/domain.md](../architecture/domain.md#notification)

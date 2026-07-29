@@ -34,7 +34,6 @@ ImHere의 서버 애플리케이션입니다.
 <p>
   <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"/>
   <img src="https://img.shields.io/badge/Caffeine-FF9F1C?style=for-the-badge&logo=coffeescript&logoColor=white" alt="Caffeine"/>
-  <img src="https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white" alt="RabbitMQ"/>
   <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT"/>
 </p>
 <p>
@@ -58,7 +57,7 @@ ImHere의 서버 애플리케이션입니다.
 - Kakao/Google OIDC 로그인
 - JWT 발급 및 Refresh Token 재발급
 - 사용자, 친구, 약관, 알림, 기록, 운영 도메인 분리
-- RabbitMQ 기반 비동기 알림 처리
+- Spring Modulith 이벤트 기반 비동기 알림 처리
 - FCM, SMS, Discord, Grafana Cloud 연동
 - REST Docs + OpenAPI 기반 API 문서화
 - 로그, 메트릭, 트레이스, 에러 알림 운영
@@ -75,7 +74,7 @@ ImHere의 서버 애플리케이션입니다.
 | Architecture  | Hybrid MVC + Hexagonal                             |
 | DB            | MySQL, Spring Data JPA, QueryDSL                   |
 | Cache         | Caffeine                                           |
-| Queue         | RabbitMQ                                           |
+| Events        | Spring Modulith Application Events                 |
 | Auth          | Kakao OIDC, Google OIDC, JWT, Spring Security      |
 | Admin Auth    | Spring Security OTT                                |
 | Push          | Firebase Admin SDK (FCM)                           |
@@ -83,7 +82,7 @@ ImHere의 서버 애플리케이션입니다.
 | Alerting      | Discord Webhook                                    |
 | API Docs      | Spring REST Docs, OpenAPI 3                        |
 | Observability | Micrometer, Prometheus, Grafana Alloy, Loki, Tempo |
-| Test          | JUnit 5, Mockito, AssertJ, MockMvc, Testcontainers |
+| Test          | JUnit 5, Mockito, AssertJ, MockMvc                  |
 | Coverage      | JaCoCo                                             |
 | Infra         | AWS EC2, ECR, Docker                               |
 
@@ -118,8 +117,8 @@ ImHere의 서버 애플리케이션입니다.
 
 - FCM 푸시
 - SMS 발송
-- RabbitMQ 비동기 큐
-- 멱등성 및 DLQ 재시도
+- Spring Modulith 도메인 이벤트
+- DB UNIQUE 멱등성 및 DEAD 상태 재시도
 
 ### 운영
 
@@ -192,7 +191,7 @@ src/main/kotlin/com/kdongsu5509/
 | `friend_request`       | Friends       | 대기 중인 친구 요청 저장      |
 | `friend_restrictions`  | Friends       | 차단/거절 제한 저장         |
 | `fcm_token`            | Notifications | FCM 디바이스 토큰 저장      |
-| `notification_history` | Notifications | 발송 이력 저장            |
+| `notification`         | Notifications | 발송 생애주기와 수신함 저장     |
 | `terms`                | Terms         | 약관 버전과 본문 저장        |
 | `user_agreement`       | Agreement     | 사용자별 약관 동의 이력 저장    |
 
@@ -203,7 +202,7 @@ src/main/kotlin/com/kdongsu5509/
 - `friend_request`는 요청자/수신자를 구분해 보관한다.
 - `friend_restrictions`는 `REJECT`, `BLOCK` 타입으로 제한 상태를 저장한다.
 - `terms`는 약관 타입과 버전을 관리한다.
-- `notification_history`는 알림 제목, 본문, 타입, path, 읽음 여부를 저장한다.
+- `notification`은 알림 내용, 전달 수단, 발송 상태, 재시도와 읽음 여부를 함께 저장한다.
 
 ---
 
@@ -270,9 +269,9 @@ src/main/kotlin/com/kdongsu5509/
 ### 발송 구조
 
 - HTTP 요청에서 바로 외부 발송하지 않는다.
-- RabbitMQ 큐에 먼저 적재한다.
-- Consumer가 비동기로 처리한다.
-- 동일 요청 중복 처리 방지를 위해 멱등성을 유지한다.
+- 발행 트랜잭션과 함께 Modulith Event Publication Registry에 기록한다.
+- 커밋 후 이벤트 리스너가 비동기로 처리한다.
+- `dedupe_key` UNIQUE 제약으로 동일 요청의 중복 발송을 억제한다.
 
 ### 채널
 
@@ -287,7 +286,7 @@ src/main/kotlin/com/kdongsu5509/
 
 ### 알림 이력
 
-- `notification_history`에 수신자, 발신자, 제목, 본문, 타입, 경로, 읽음 여부를 저장한다.
+- `notification`에 수신자, 발신자, 내용, 발송 상태, 시도 횟수, 실패 사유와 읽음 여부를 저장한다.
 - 시스템 알림의 발신자 표시는 `ImHere`를 사용한다.
 
 ---
@@ -312,13 +311,13 @@ src/main/kotlin/com/kdongsu5509/
     - Grafana Alloy
 - Database Server
     - MySQL
-- Middleware Server
+- In-process middleware
     - Caffeine
-    - RabbitMQ
+    - Spring Modulith Event Publication Registry
 
 ### Compose 파일
 
-- `docker-compose.yml`: 단일 원본, `local` / `infra` / `prod` profile로 분기
+- `docker-compose.yml`: 단일 원본, `local` / `prod` profile로 분기
 
 ### 배포 관련 파일
 
@@ -357,7 +356,6 @@ src/main/kotlin/com/kdongsu5509/
 
 - DB 접속 정보
 - Caffeine 설정
-- RabbitMQ 접속 정보
 - Grafana Cloud 자격증명
 - Firebase 키 경로
 - OIDC 관련 설정
@@ -365,12 +363,12 @@ src/main/kotlin/com/kdongsu5509/
 ### 운영용 compose 변수 예시
 
 - `CONFIG_REPO_PAT`
-- `prod.env`에 들어가는 DB/RabbitMQ/Grafana Cloud 값들
+- `prod.env`에 들어가는 DB/Grafana Cloud 값들
 
 ### 로컬에서 설정이 들어가는 방식
 
 - `./gradlew bootRun`은 `application.yaml` + `application-local.yaml` 조합으로 뜬다.
-- `docker compose --profile local --profile infra up -d`는 `docker-compose.yml`에 적힌 기본값으로 뜬다.
+- `docker compose --profile local up -d`는 `docker-compose.yml`에 적힌 기본값으로 뜬다.
 - config repo의 `prod.env` / `imhereFirebaseKey.json`은 운영 배포 전용이다.
 
 ---
@@ -386,7 +384,7 @@ src/main/kotlin/com/kdongsu5509/
 ### 로컬 인프라
 
 ```bash
-docker compose --profile local --profile infra up -d
+docker compose --profile local up -d
 ```
 
 ### 애플리케이션 실행
@@ -409,14 +407,13 @@ docker compose --profile local --profile infra up -d
 
 - Unit Test: 도메인, 독립 서비스
 - Slice Test: Controller, Repository
-- Integration Test: 실제 DB/RabbitMQ 포함 E2E
+- Integration Test: 실제 DB와 Modulith 이벤트 경계를 포함한 E2E
 
 ### 규칙
 
 - Controller는 슬라이스 테스트로 검증한다.
 - 실제 인증/인가와 비즈니스 에러는 통합 테스트로 검증한다.
 - 새로운 API 엔드포인트는 Integration Test와 RestDocs를 함께 작성한다.
-- Testcontainers 사용 시 Docker 데몬이 필요하다.
 
 ---
 
@@ -425,7 +422,7 @@ docker compose --profile local --profile infra up -d
 - 초기 배포는 필요한 설정 파일을 EC2에 반영한 뒤 수행한다.
 - 인증서 갱신은 호스트의 Certbot과 Nginx 조합을 사용한다.
 - 장애 시 로그와 traceId로 원인을 추적한다.
-- 알림 실패는 RabbitMQ/DLQ 흐름과 외부 서비스 상태를 함께 본다.
+- 알림 실패는 `Notification.DEAD` 상태와 외부 서비스 상태를 함께 본다.
 
 ---
 
@@ -441,7 +438,7 @@ docker compose --profile local --profile infra up -d
 | [docs/error-handling.md](./docs/error-handling.md)             | 응답 포맷, 도메인 에러 코드 패턴                      |
 | [docs/api-spec.md](./docs/api-spec.md)                         | 엔드포인트 그룹, 자동생성 API 문서 위치                 |
 | [docs/db-schema.md](docs/infra/db-schema.md)                   | DDL, ERD, 테이블별 참고사항                      |
-| [docs/flows.md](./docs/flows.md)                               | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/DLQ)           |
+| [docs/flows.md](./docs/flows.md)                               | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/재발송)          |
 | [docs/deployment.md](docs/infra/README.md)                     | Docker, CI/CD, AWS, 도메인/DB 호스팅           |
 | [docs/observability/README.md](./docs/observability/README.md) | 로그/메트릭/트레이스 파이프라인, 알림 채널                 |
 | [docs/test-guideline.md](./docs/test-guideline.md)             | 테스트 네이밍/전략/도구                            |

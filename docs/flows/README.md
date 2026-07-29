@@ -36,8 +36,8 @@ ImHere 기능을 **어디서 시작해서 어디로 끝나는지** 기준으로 
 
 | 순서 | 문서 | 범위 |
 |---|---|---|
-| 7 | [notification-pipeline.md](notification-pipeline.md) | MQ In -> Out 처리 |
-| 8 | [rabbitmq-dlq-replay.md](rabbitmq-dlq-replay.md) | 재시도, DLQ, Admin Replay |
+| 7 | [notification-pipeline.md](notification-pipeline.md) | Modulith 이벤트 -> 발송 상태 처리 |
+| 8 | [failed-notification-replay.md](failed-notification-replay.md) | DEAD 조회, 재시도, Admin 재발송 |
 | 9 | [fcm-token-failure-chain.md](fcm-token-failure-chain.md) | FCM 토큰 등록, 실패 체인 |
 
 ### 앱 실전 흐름

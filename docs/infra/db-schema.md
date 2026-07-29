@@ -83,14 +83,22 @@ erDiagram
         enum deviceType
     }
 
-    notification_history {
+    notification {
         long id PK
-        string receiverEmail
+        string dedupeKey UK
+        string targetIdentifier
+        enum method
+        string senderEmail
         string senderNickname
         string title
         string body
         string type
         string path
+        string extraData
+        enum status
+        int attempts
+        string lastError
+        datetime sentAt
         boolean isRead
     }
 
@@ -144,9 +152,11 @@ erDiagram
 * 모바일 기기의 FCM Token을 저장합니다.
 * `users`와 Foreign Key를 연결하지 않고 이메일을 통한 약한 참조를 사용합니다.
 
-### notification_history
+### notification
 
-* 사용자에게 발송한 알림 이력을 저장합니다.
+* 요청부터 성공·실패·재시도 소진까지 알림의 발송 생애주기를 저장합니다.
+* `dedupe_key` Unique Key로 동일 이벤트와 전달 수단의 중복 발송을 억제합니다.
+* 상태는 `PENDING`, `SENT`, `FAILED`, `DEAD`이며 FCM의 `SENT` 알림만 사용자 수신함에 노출합니다.
 * `type`에는 다음 `NotificationType`을 사용합니다.
 
     * `FRIEND_REQUEST_RECEIVED`

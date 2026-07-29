@@ -1,6 +1,5 @@
 # Unified compose
 # - local profile: app + Prometheus + Grafana
-# - infra profile: RabbitMQ
 # - prod profile: dsko + nginx + alloy
 
 services:
@@ -19,11 +18,6 @@ services:
       - DB_NAME=${DB_NAME:-rati}
       - DB_USER=${DB_USER:-root}
       - DB_PASSWORD=${DB_PASSWORD:-}
-      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
-      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
-      - RABBITMQ_USER=${RABBITMQ_USER:-local-rabbit}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-local-rabbit}
-      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/main}
     networks:
       - app-network
     restart: unless-stopped
@@ -65,25 +59,6 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/provisioning/dashboards:/var/lib/grafana/dashboards:ro
-    networks:
-      - app-network
-    restart: unless-stopped
-
-  rabbitmq:
-    image: rabbitmq:4-management-alpine
-    container_name: rabbitmq-container
-    profiles:
-      - infra
-    expose:
-      - "5672"
-      - "15672"
-    environment:
-      - TZ=Asia/Seoul
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-local-rabbit}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-local-rabbit}
-      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/main}
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - app-network
     restart: unless-stopped
@@ -158,8 +133,6 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
-  rabbitmq_data:
-
 networks:
   app-network:
     ipam:

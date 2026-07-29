@@ -5,10 +5,10 @@ import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.MultiNotificationRequest
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationRequest
-import com.kdongsu5509.notifications.application.dto.NotificationCommand
-import com.kdongsu5509.notifications.application.port.out.NotificationProducePort
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationType
+import com.kdongsu5509.notifications.event.NotificationRequested
+import com.kdongsu5509.shared.event.DomainEventPublisher
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport() {
 
     @MockitoBean
-    private lateinit var notificationProducePort: NotificationProducePort
+    private lateinit var eventPublisher: DomainEventPublisher
 
     private val userDetails = ImHereUserDetails(
         email = "sender@example.com",
@@ -73,16 +73,16 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                 )
             )
 
-        val captor = argumentCaptor<NotificationCommand>()
-        verify(notificationProducePort).send(captor.capture())
+        val captor = argumentCaptor<NotificationRequested>()
+        verify(eventPublisher).publish(captor.capture())
 
-        val command = captor.firstValue
-        assertThat(command.senderNickname).isEqualTo("senderNick")
-        assertThat(command.senderEmail).isEqualTo("sender@example.com")
-        assertThat(command.notificationMethod).isEqualTo(NotificationMethod.FCM)
-        assertThat(command.targetIdentifier).isEqualTo("target@example.com")
-        assertThat(command.type).isEqualTo(NotificationType.LOCATION_TARGET)
-        assertThat(command.extraData).containsEntry("key", "value")
+        val event = captor.firstValue
+        assertThat(event.senderNickname).isEqualTo("senderNick")
+        assertThat(event.senderEmail).isEqualTo("sender@example.com")
+        assertThat(event.notificationMethod).isEqualTo(NotificationMethod.FCM)
+        assertThat(event.targetIdentifier).isEqualTo("target@example.com")
+        assertThat(event.type).isEqualTo(NotificationType.LOCATION_TARGET)
+        assertThat(event.extraData).containsEntry("key", "value")
     }
 
     @Test
@@ -122,8 +122,8 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                 )
             )
 
-        val captor = argumentCaptor<NotificationCommand>()
-        verify(notificationProducePort, times(2)).send(captor.capture())
+        val captor = argumentCaptor<NotificationRequested>()
+        verify(eventPublisher, times(2)).publish(captor.capture())
 
         assertThat(captor.allValues).hasSize(2)
         assertThat(captor.allValues.map { it.targetIdentifier }).containsExactly(

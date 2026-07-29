@@ -4,9 +4,13 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingException
 import com.google.firebase.messaging.Message
 import com.google.firebase.messaging.MessagingErrorCode
+import com.kdongsu5509.notifications.domain.DeviceType
+import com.kdongsu5509.notifications.domain.NotificationType
+import com.kdongsu5509.notifications.domain.RenderedNotification
 import com.kdongsu5509.notifications.exception.UnregisteredTokenException
 import com.kdongsu5509.support.exception.type.InternalServerException
 import com.kdongsu5509.support.exception.type.InvalidInputException
+import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -16,6 +20,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -33,10 +38,30 @@ class FirebaseAdapterTest {
         adapter = FirebaseAdapter(firebaseMessaging)
     }
 
+    private fun rendered(
+        type: NotificationType = NotificationType.FRIEND_REQUEST_RECEIVED,
+    ): RenderedNotification = type.render(
+        senderNickname = "홍길동",
+        senderEmail = "sender@imhere.com",
+    )
+
+    /**
+     * Firebase Admin SDK의 [Message]는 공개 getter가 없어 내부 필드를 직접 들여다본다.
+     * 어느 플랫폼 설정이 붙었는지는 이 방법 말고는 확인할 길이 없다.
+     */
+    private fun field(target: Any, name: String): Any? =
+        target.javaClass.getDeclaredField(name).apply { isAccessible = true }.get(target)
+
+    private fun captureSentMessage(): Message {
+        val captor = argumentCaptor<Message>()
+        verify(firebaseMessaging).send(captor.capture())
+        return captor.firstValue
+    }
+
     @Test
     @DisplayName("토큰이 비어있으면 발송을 중단한다")
     fun send_emptyToken() {
-        adapter.send("", "title", "body", emptyMap())
+        adapter.send("", DeviceType.AOS, rendered())
         verify(firebaseMessaging, never()).send(any<Message>())
     }
 
@@ -44,8 +69,38 @@ class FirebaseAdapterTest {
     @DisplayName("토큰이 존재하면 정상적으로 발송된다")
     fun send_success() {
         whenever(firebaseMessaging.send(any<Message>())).thenReturn("message-id")
-        adapter.send("valid_token", "title", "body", mapOf("key" to "value"))
+        adapter.send("valid_token", DeviceType.AOS, rendered())
         verify(firebaseMessaging).send(any<Message>())
+    }
+
+    @Test
+    @DisplayName("안드로이드 기기에는 Android 설정만 붙인다")
+    fun send_success_aos_uses_android_config_only() {
+        // given
+        whenever(firebaseMessaging.send(any<Message>())).thenReturn("message-id")
+
+        // when
+        adapter.send("valid_token", DeviceType.AOS, rendered())
+
+        // then
+        val message = captureSentMessage()
+        assertThat(field(message, "androidConfig")).isNotNull()
+        assertThat(field(message, "apnsConfig")).isNull()
+    }
+
+    @Test
+    @DisplayName("iOS 기기에는 APNs 설정만 붙인다")
+    fun send_success_ios_uses_apns_config_only() {
+        // given
+        whenever(firebaseMessaging.send(any<Message>())).thenReturn("message-id")
+
+        // when
+        adapter.send("valid_token", DeviceType.IOS, rendered())
+
+        // then
+        val message = captureSentMessage()
+        assertThat(field(message, "apnsConfig")).isNotNull()
+        assertThat(field(message, "androidConfig")).isNull()
     }
 
     @Test
@@ -55,7 +110,7 @@ class FirebaseAdapterTest {
         whenever(ex.messagingErrorCode).thenReturn(MessagingErrorCode.UNREGISTERED)
         whenever(firebaseMessaging.send(any<Message>())).thenThrow(ex)
 
-        assertThatThrownBy { adapter.send("token", "title", "body", emptyMap()) }
+        assertThatThrownBy { adapter.send("token", DeviceType.AOS, rendered()) }
             .isInstanceOf(UnregisteredTokenException::class.java)
     }
 
@@ -66,7 +121,7 @@ class FirebaseAdapterTest {
         whenever(ex.messagingErrorCode).thenReturn(MessagingErrorCode.INVALID_ARGUMENT)
         whenever(firebaseMessaging.send(any<Message>())).thenThrow(ex)
 
-        assertThatThrownBy { adapter.send("token", "title", "body", emptyMap()) }
+        assertThatThrownBy { adapter.send("token", DeviceType.AOS, rendered()) }
             .isInstanceOf(InvalidInputException::class.java)
     }
 
@@ -77,7 +132,7 @@ class FirebaseAdapterTest {
         whenever(ex.messagingErrorCode).thenReturn(MessagingErrorCode.SENDER_ID_MISMATCH)
         whenever(firebaseMessaging.send(any<Message>())).thenThrow(ex)
 
-        assertThatThrownBy { adapter.send("token", "title", "body", emptyMap()) }
+        assertThatThrownBy { adapter.send("token", DeviceType.AOS, rendered()) }
             .isInstanceOf(InternalServerException::class.java)
     }
 
@@ -88,7 +143,7 @@ class FirebaseAdapterTest {
         whenever(ex.messagingErrorCode).thenReturn(MessagingErrorCode.UNAVAILABLE)
         whenever(firebaseMessaging.send(any<Message>())).thenThrow(ex)
 
-        assertThatThrownBy { adapter.send("token", "title", "body", emptyMap()) }
+        assertThatThrownBy { adapter.send("token", DeviceType.AOS, rendered()) }
             .isInstanceOf(RetryableFcmException::class.java)
     }
 
@@ -99,7 +154,7 @@ class FirebaseAdapterTest {
         whenever(ex.messagingErrorCode).thenReturn(MessagingErrorCode.THIRD_PARTY_AUTH_ERROR)
         whenever(firebaseMessaging.send(any<Message>())).thenThrow(ex)
 
-        assertThatThrownBy { adapter.send("token", "title", "body", emptyMap()) }
+        assertThatThrownBy { adapter.send("token", DeviceType.AOS, rendered()) }
             .isInstanceOf(InternalServerException::class.java)
     }
 
@@ -110,7 +165,7 @@ class FirebaseAdapterTest {
         whenever(ex.messagingErrorCode).thenReturn(null) // 혹은 지정되지 않은 에러 코드
         whenever(firebaseMessaging.send(any<Message>())).thenThrow(ex)
 
-        assertThatThrownBy { adapter.send("token", "title", "body", emptyMap()) }
+        assertThatThrownBy { adapter.send("token", DeviceType.AOS, rendered()) }
             .isInstanceOf(InternalServerException::class.java)
     }
 }

@@ -4,15 +4,14 @@ import com.kdongsu5509.friends.FriendException
 import com.kdongsu5509.friends.FriendException.FRIEND_RELATIONSHIP_NOT_FOUND
 import com.kdongsu5509.friends.domain.FriendRelation
 import com.kdongsu5509.friends.domain.FriendRelationStatus
+import com.kdongsu5509.friends.event.FriendRequestAccepted
+import com.kdongsu5509.friends.event.FriendRequestSent
 import com.kdongsu5509.friends.repository.FriendRelationRepository
 import com.kdongsu5509.friends.service.dto.FriendMember
 import com.kdongsu5509.friends.service.dto.FriendRequestView
 import com.kdongsu5509.friends.service.dto.FriendRestrictionView
 import com.kdongsu5509.friends.service.dto.FriendshipView
-import com.kdongsu5509.shared.notification.NotificationPort
-import com.kdongsu5509.shared.notification.dto.NotificationCategory
-import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
-import com.kdongsu5509.shared.notification.dto.NotificationSendRequest
+import com.kdongsu5509.shared.event.DomainEventPublisher
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.exception.throwIt
@@ -41,7 +40,7 @@ class FriendRelationCommandService(
     private val friendRelationRepository: FriendRelationRepository,
     private val friendMemberLoader: FriendMemberLoader,
     private val userLookupContract: UserLookupContract,
-    private val notificationPort: NotificationPort
+    private val eventPublisher: DomainEventPublisher,
 ) {
     fun sendRequest(requesterId: UUID, receiverId: UUID, message: String): FriendRequestView {
         val requester = FriendMember.from(userLookupContract.findById(requesterId))
@@ -58,12 +57,11 @@ class FriendRelationCommandService(
             )
         )
 
-        //TODO : RabbitMQ 제거할 방법 찾기. -> 이벤트 기반 비동기 @TransactionalEventLister 혹은 Modulith Event Publish.
-        notificationPort.send(
-            NotificationSendRequest(
-                category = NotificationCategory.FRIEND_REQUEST_RECEIVED,
-                sender = NotificationPersonInfo(requester.email, requester.nickname),
-                receiver = NotificationPersonInfo(receiver.email, receiver.nickname)
+        eventPublisher.publish(
+            FriendRequestSent(
+                requesterEmail = requester.email,
+                requesterNickname = requester.nickname,
+                receiverEmail = receiver.email,
             )
         )
 
@@ -84,12 +82,11 @@ class FriendRelationCommandService(
         val initiator = members.getValue(accepted.initiator())
         val target = members.getValue(accepted.target())
 
-        //TODO : notification -> eventListner
-        notificationPort.send(
-            NotificationSendRequest(
-                category = NotificationCategory.FRIEND_REQUEST_ACCEPTED,
-                sender = NotificationPersonInfo(target.email, target.nickname),
-                receiver = NotificationPersonInfo(initiator.email, initiator.nickname)
+        eventPublisher.publish(
+            FriendRequestAccepted(
+                accepterEmail = target.email,
+                accepterNickname = target.nickname,
+                requesterEmail = initiator.email,
             )
         )
 

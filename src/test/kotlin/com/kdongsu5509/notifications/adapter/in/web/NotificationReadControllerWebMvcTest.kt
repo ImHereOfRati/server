@@ -1,8 +1,10 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.notifications.application.port.`in`.NotificationHistoryUseCase
-import com.kdongsu5509.notifications.domain.NotificationHistory
+import com.kdongsu5509.notifications.application.port.`in`.NotificationInboxUseCase
+import com.kdongsu5509.notifications.domain.Notification
+import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationStatus
 import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.support.external.DiscordUserErrorNotifier
 import org.junit.jupiter.api.BeforeEach
@@ -42,7 +44,7 @@ class NotificationReadControllerWebMvcTest {
     private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
 
     @MockitoBean
-    private lateinit var notificationHistoryUseCase: NotificationHistoryUseCase
+    private lateinit var notificationInboxUseCase: NotificationInboxUseCase
 
     private val userDetails = ImHereUserDetails(
         email = "test@example.com",
@@ -63,19 +65,27 @@ class NotificationReadControllerWebMvcTest {
     @Test
     @DisplayName("알림 목록을 페이징 조회하여 200 OK를 반환한다")
     fun getNotifications_success() {
-        val history = NotificationHistory(
+        val history = Notification.reconstruct(
             id = 1L,
-            receiverEmail = userDetails.email,
+            dedupeKey = "event:FCM",
+            targetIdentifier = userDetails.email,
+            method = NotificationMethod.FCM,
+            senderEmail = "sender@example.com",
             senderNickname = "sender",
             title = "test title",
             body = "test body",
             type = NotificationType.TERMS_UPDATE_NOTICE,
             path = null,
+            extraData = emptyMap(),
+            status = NotificationStatus.SENT,
+            attempts = 0,
+            lastError = null,
+            sentAt = LocalDateTime.now(),
             isRead = false,
             createdAt = LocalDateTime.now()
         )
 
-        whenever(notificationHistoryUseCase.findByReceiverEmail(userDetails.email, 0, 20))
+        whenever(notificationInboxUseCase.findByReceiverEmail(userDetails.email, 0, 20))
             .thenReturn(listOf(history))
 
         mockMvc.perform(
@@ -88,7 +98,7 @@ class NotificationReadControllerWebMvcTest {
             .andExpect(jsonPath("$.data.[0].id").value(1))
             .andExpect(jsonPath("$.data.[0].title").value("test title"))
 
-        verify(notificationHistoryUseCase).findByReceiverEmail(userDetails.email, 0, 20)
+        verify(notificationInboxUseCase).findByReceiverEmail(userDetails.email, 0, 20)
     }
 
     @Test
@@ -102,6 +112,6 @@ class NotificationReadControllerWebMvcTest {
                 .with(user(userDetails))
         ).andExpect(status().isNoContent)
 
-        verify(notificationHistoryUseCase).markAsRead(userDetails.email, notificationId)
+        verify(notificationInboxUseCase).markAsRead(userDetails.email, notificationId)
     }
 }

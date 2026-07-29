@@ -26,11 +26,11 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users
 (
-    id                    CHAR(36)                                           NOT NULL,
+    id                    BINARY(16)                                         NOT NULL,
     email                 VARCHAR(255)                                       NOT NULL,
     nickname              VARCHAR(255)                                       NOT NULL,
     role                  ENUM ('NORMAL', 'ADMIN')                           NOT NULL,
-    provider              ENUM ('KAKAO', 'GOOGLE', 'NAVER')                  NOT NULL,
+    provider              ENUM ('KAKAO', 'GOOGLE')                           NOT NULL,
     status                ENUM ('PENDING', 'ACTIVE', 'BLOCKED', 'WITHDRAWN') NOT NULL,
     oidc_subject          VARCHAR(255)                                       NULL,
     refresh_token_version BIGINT                                             NOT NULL DEFAULT 0,
@@ -64,11 +64,15 @@ CREATE TABLE terms
 
 CREATE TABLE user_agreement
 (
-    id               CHAR(36)    NOT NULL,
-    user_id          CHAR(36)    NOT NULL,
-    terms_version_id BIGINT      NOT NULL,
-    action           VARCHAR(20) NOT NULL,
-    occurred_at      DATETIME(6) NOT NULL,
+    id               BINARY(16)   NOT NULL,
+    user_id          BINARY(16)   NOT NULL,
+    terms_version_id BIGINT       NOT NULL,
+    action           VARCHAR(20)  NOT NULL,
+    occurred_at      DATETIME(6)  NOT NULL,
+    created_by       VARCHAR(255) NULL,
+    updated_by       VARCHAR(255) NULL,
+    created_at       DATETIME(6)  NOT NULL,
+    updated_at       DATETIME(6)  NOT NULL,
     PRIMARY KEY (id),
     INDEX idx_user_agreement_history (user_id, terms_version_id, occurred_at),
     CONSTRAINT fk_user_agreement_user FOREIGN KEY (user_id) REFERENCES users (id),
@@ -83,26 +87,26 @@ CREATE TABLE user_agreement
 -- 두 행이 한 쌍이라는 사실을 스키마가 표현하지 못해 한쪽만 지워지면 유령 관계가 남았다.
 -- 이제 status가 관계의 생애 주기를 표현하고, uk_friend_pair가 한 쌍 한 행을 강제한다.
 --
--- low/high 정렬은 애플리케이션이 정한다. MySQL의 CHAR 비교와 Java UUID.compareTo의
+-- low/high 정렬은 애플리케이션이 정한다. SQL의 바이트 비교와 Java UUID.compareTo의
 -- 정렬 결과가 다를 수 있어 SQL에서 순서를 정하면 도메인과 어긋난다.
 CREATE TABLE friend_relations
 (
-    friend_relation_id CHAR(36)                                             NOT NULL,
-    low_user_id        CHAR(36)                                             NOT NULL,
-    high_user_id       CHAR(36)                                             NOT NULL,
-    status             ENUM ('REQUESTED', 'ACCEPTED', 'REJECTED', 'BLOCKED') NOT NULL,
-    initiated_by       CHAR(36)                                             NOT NULL,
-    message            VARCHAR(255)                                         NULL,
-    low_alias          VARCHAR(20)                                          NULL,
-    high_alias         VARCHAR(20)                                          NULL,
-    expires_at         DATETIME(6)                                          NULL,
-    created_at         DATETIME(6)                                          NOT NULL,
-    updated_at         DATETIME(6)                                          NOT NULL,
+    friend_relation_id BINARY(16)                                                       NOT NULL,
+    low_user_id        BINARY(16)                                                       NOT NULL,
+    high_user_id       BINARY(16)                                                       NOT NULL,
+    status             ENUM ('REQUESTED', 'ACCEPTED', 'REJECTED', 'BLOCKED', 'CANCEL')  NOT NULL,
+    initiated_user_id  BINARY(16)                                                       NOT NULL,
+    message            VARCHAR(255)                                                     NULL,
+    low_alias          VARCHAR(10)                                                      NULL,
+    high_alias         VARCHAR(10)                                                      NULL,
+    expired_at         DATETIME(6)                                                      NULL,
+    created_at         DATETIME(6)                                                      NOT NULL,
+    updated_at         DATETIME(6)                                                      NOT NULL,
     PRIMARY KEY (friend_relation_id),
     UNIQUE KEY uk_friend_pair (low_user_id, high_user_id),
     KEY idx_friend_relations_low (low_user_id, status),
     KEY idx_friend_relations_high (high_user_id, status),
-    KEY idx_friend_relations_expires_at (expires_at),
+    KEY idx_friend_relations_expired_at (expired_at),
     CONSTRAINT fk_friend_relations_low FOREIGN KEY (low_user_id) REFERENCES users (id),
     CONSTRAINT fk_friend_relations_high FOREIGN KEY (high_user_id) REFERENCES users (id)
 ) ENGINE = InnoDB

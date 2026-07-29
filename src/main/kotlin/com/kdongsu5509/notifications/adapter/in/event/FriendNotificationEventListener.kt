@@ -2,10 +2,10 @@ package com.kdongsu5509.notifications.adapter.`in`.event
 
 import com.kdongsu5509.friends.event.FriendRequestAccepted
 import com.kdongsu5509.friends.event.FriendRequestSent
-import com.kdongsu5509.notifications.application.dto.NotificationDeliveryCommand
 import com.kdongsu5509.notifications.application.service.NotificationDeliveryService
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationType
+import com.kdongsu5509.notifications.event.NotificationRequested
 import org.springframework.modulith.events.ApplicationModuleListener
 import org.springframework.stereotype.Component
 
@@ -16,7 +16,7 @@ class FriendNotificationEventListener(
     @ApplicationModuleListener
     fun handle(event: FriendRequestSent) {
         deliveryService.deliver(
-            NotificationDeliveryCommand(
+            NotificationRequested(
                 eventId = event.eventId,
                 senderNickname = event.requesterNickname,
                 senderEmail = event.requesterEmail,
@@ -30,7 +30,7 @@ class FriendNotificationEventListener(
     @ApplicationModuleListener
     fun handle(event: FriendRequestAccepted) {
         deliveryService.deliver(
-            NotificationDeliveryCommand(
+            NotificationRequested(
                 eventId = event.eventId,
                 senderNickname = event.accepterNickname,
                 senderEmail = event.accepterEmail,

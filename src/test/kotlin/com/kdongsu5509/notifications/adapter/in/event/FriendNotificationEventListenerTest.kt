@@ -2,9 +2,9 @@ package com.kdongsu5509.notifications.adapter.`in`.event
 
 import com.kdongsu5509.friends.event.FriendRequestAccepted
 import com.kdongsu5509.friends.event.FriendRequestSent
-import com.kdongsu5509.notifications.application.dto.NotificationDeliveryCommand
 import com.kdongsu5509.notifications.application.service.NotificationDeliveryService
 import com.kdongsu5509.notifications.domain.NotificationType
+import com.kdongsu5509.notifications.event.NotificationRequested
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -40,11 +40,11 @@ class FriendNotificationEventListenerTest {
 
         listener.handle(event)
 
-        val command = argumentCaptor<NotificationDeliveryCommand>()
-        verify(deliveryService).deliver(command.capture())
-        assertThat(command.firstValue.eventId).isEqualTo(event.eventId)
-        assertThat(command.firstValue.targetIdentifier).isEqualTo(event.receiverEmail)
-        assertThat(command.firstValue.type).isEqualTo(NotificationType.FRIEND_REQUEST_RECEIVED)
+        val request = argumentCaptor<NotificationRequested>()
+        verify(deliveryService).deliver(request.capture())
+        assertThat(request.firstValue.eventId).isEqualTo(event.eventId)
+        assertThat(request.firstValue.targetIdentifier).isEqualTo(event.receiverEmail)
+        assertThat(request.firstValue.type).isEqualTo(NotificationType.FRIEND_REQUEST_RECEIVED)
     }
 
     @Test
@@ -59,10 +59,10 @@ class FriendNotificationEventListenerTest {
 
         listener.handle(event)
 
-        val command = argumentCaptor<NotificationDeliveryCommand>()
-        verify(deliveryService).deliver(command.capture())
-        assertThat(command.firstValue.senderEmail).isEqualTo(event.accepterEmail)
-        assertThat(command.firstValue.targetIdentifier).isEqualTo(event.requesterEmail)
-        assertThat(command.firstValue.type).isEqualTo(NotificationType.FRIEND_REQUEST_ACCEPTED)
+        val request = argumentCaptor<NotificationRequested>()
+        verify(deliveryService).deliver(request.capture())
+        assertThat(request.firstValue.senderEmail).isEqualTo(event.accepterEmail)
+        assertThat(request.firstValue.targetIdentifier).isEqualTo(event.requesterEmail)
+        assertThat(request.firstValue.type).isEqualTo(NotificationType.FRIEND_REQUEST_ACCEPTED)
     }
 }

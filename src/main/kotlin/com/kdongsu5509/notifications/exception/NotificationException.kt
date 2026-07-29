@@ -14,7 +14,6 @@ enum class NotificationException(
     // --- 0xx: Bad Request (400) ---
     SMS_NOT_ALLOW_EMPTY(CommonErrorCode.INVALID_INPUT, "SMS-000", "전송할 메시지 내용이 비어있습니다."),
     SMS_BODY_TOO_LONG(CommonErrorCode.INVALID_INPUT, "SMS-001", "SMS 본문은 개행 포함 45자를 초과할 수 없습니다."),
-    UNSUPPORTED_TARGET_TYPE(CommonErrorCode.INVALID_INPUT, "NOTI-001", "지원하지 않는 알림 수단입니다."),
     NOTIFICATION_INVALID_FIELD(CommonErrorCode.INVALID_INPUT, "NOTI-002", "알림 필수 항목이 비어있습니다."),
     NOTIFICATION_NOT_RETRYABLE(CommonErrorCode.INVALID_INPUT, "NOTI-003", "재발송은 발송이 최종 실패한 알림에만 할 수 있습니다."),
     NOTIFICATION_NOT_DELIVERED(CommonErrorCode.INVALID_INPUT, "NOTI-004", "아직 발송되지 않은 알림은 읽음 처리할 수 없습니다."),

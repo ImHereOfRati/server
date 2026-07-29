@@ -1,12 +1,12 @@
 package com.kdongsu5509.notifications.application.service
 
 import com.kdongsu5509.notifications.application.dto.NotificationCommand
-import com.kdongsu5509.notifications.application.dto.NotificationDeliveryCommand
 import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
 import com.kdongsu5509.notifications.domain.Notification
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationStatus
 import com.kdongsu5509.notifications.exception.NotificationException
+import com.kdongsu5509.notifications.event.NotificationRequested
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.support.exception.type.InvalidInputException
 import org.springframework.stereotype.Service
@@ -19,19 +19,19 @@ class NotificationRecorder(
     private val persistencePort: NotificationPersistencePort,
 ) {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    fun reserve(command: NotificationDeliveryCommand): Notification? {
-        val dedupeKey = Notification.dedupeKeyOf(command.eventId, command.notificationMethod)
+    fun reserve(request: NotificationRequested): Notification? {
+        val dedupeKey = Notification.dedupeKeyOf(request.eventId, request.notificationMethod)
         persistencePort.findByDedupeKey(dedupeKey)?.let { existing ->
             return existing.takeIf { it.status == NotificationStatus.FAILED }
         }
 
-        val rendered = command.type.render(
-            senderNickname = command.senderNickname,
-            senderEmail = command.senderEmail,
-            extraData = command.extraData,
+        val rendered = request.type.render(
+            senderNickname = request.senderNickname,
+            senderEmail = request.senderEmail,
+            extraData = request.extraData,
         )
-        val bodyOverride = if (command.notificationMethod == NotificationMethod.SMS) {
-            command.extraData[NotificationCommand.BODY_KEY]
+        val bodyOverride = if (request.notificationMethod == NotificationMethod.SMS) {
+            request.extraData[NotificationCommand.BODY_KEY]
                 ?.takeIf(String::isNotBlank)
                 ?: throw InvalidInputException("SMS 본문이 누락되었습니다.")
         } else {
@@ -41,9 +41,9 @@ class NotificationRecorder(
         return persistencePort.save(
             Notification.request(
                 dedupeKey = dedupeKey,
-                targetIdentifier = command.targetIdentifier,
-                method = command.notificationMethod,
-                senderEmail = command.senderEmail,
+                targetIdentifier = request.targetIdentifier,
+                method = request.notificationMethod,
+                senderEmail = request.senderEmail,
                 rendered = rendered,
                 bodyOverride = bodyOverride,
             )

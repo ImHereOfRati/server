@@ -29,6 +29,12 @@ data class NotificationRequested(
             )
 
         fun deliveryReceipt(senderEmail: String, type: NotificationType): NotificationRequested =
-            from(NotificationCommand.deliveryReceipt(senderEmail, type))
+            NotificationRequested(
+                senderNickname = "ImHere",
+                senderEmail = senderEmail,
+                notificationMethod = NotificationMethod.FCM,
+                targetIdentifier = senderEmail,
+                type = type,
+            )
     }
 }

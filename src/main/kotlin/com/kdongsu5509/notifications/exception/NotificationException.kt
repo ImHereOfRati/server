@@ -2,10 +2,8 @@ package com.kdongsu5509.notifications.exception
 
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseErrorCode
+import com.kdongsu5509.support.exception.ImHereBaseException
 
-/**
- * 알림 및 메시지 관련 비즈니스 에러 (NOTIFICATION / SMS)
- */
 enum class NotificationException(
     category: CommonErrorCode,
     override val imhereErrorCode: String,
@@ -18,7 +16,7 @@ enum class NotificationException(
     NOTIFICATION_NOT_RETRYABLE(CommonErrorCode.INVALID_INPUT, "NOTI-003", "재발송은 발송이 최종 실패한 알림에만 할 수 있습니다."),
     NOTIFICATION_NOT_DELIVERED(CommonErrorCode.INVALID_INPUT, "NOTI-004", "아직 발송되지 않은 알림은 읽음 처리할 수 없습니다."),
     NOTIFICATION_NOT_DELIVERABLE(CommonErrorCode.INVALID_INPUT, "NOTI-005", "지금 발송할 수 있는 상태의 알림이 아닙니다."),
-    FCM_TOKEN_EMPTY(CommonErrorCode.INVALID_INPUT, "FCM-000", "FCM 토큰 또는 이메일은 공백일 수 없습니다."),
+    FCM_TOKEN_EMPTY(CommonErrorCode.INVALID_INPUT, "FCM-000", "FCM 토큰은 공백일 수 없습니다."),
 
     // ---2xx: UNAUTHORIZE(403) ---
     NOT_MY_NOTIFICATION(CommonErrorCode.FORBIDDEN, "NOTI-200", "해당 알람에 대한 작업 권한이 없습니다."),
@@ -36,3 +34,12 @@ enum class NotificationException(
 
     override val httpStatus = category.httpStatus
 }
+
+class UnregisteredTokenException(
+    message: String = "등록 해제된 FCM 토큰입니다.",
+    cause: Throwable? = null,
+) : ImHereBaseException(
+    errorCode = NotificationException.FCM_TOKEN_UNREGISTERED,
+    overrideMessage = message,
+    cause = cause,
+)

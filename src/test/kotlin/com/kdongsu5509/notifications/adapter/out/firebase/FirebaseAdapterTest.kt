@@ -5,11 +5,12 @@ import com.google.firebase.messaging.FirebaseMessagingException
 import com.google.firebase.messaging.Message
 import com.google.firebase.messaging.MessagingErrorCode
 import com.kdongsu5509.notifications.domain.DeviceType
+import com.kdongsu5509.notifications.domain.NotificationTemplate
 import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.domain.RenderedNotification
+import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.notifications.exception.UnregisteredTokenException
 import com.kdongsu5509.support.exception.type.InternalServerException
-import com.kdongsu5509.support.exception.type.InvalidInputException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -19,11 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.never
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 
 @ExtendWith(MockitoExtension::class)
 class FirebaseAdapterTest {
@@ -40,15 +37,11 @@ class FirebaseAdapterTest {
 
     private fun rendered(
         type: NotificationType = NotificationType.FRIEND_REQUEST_RECEIVED,
-    ): RenderedNotification = type.render(
-        senderNickname = "홍길동",
-        senderEmail = "sender@imhere.com",
+    ): RenderedNotification = NotificationTemplate.render(
+        type = type,
+        senderAlias = "홍길동",
     )
 
-    /**
-     * Firebase Admin SDK의 [Message]는 공개 getter가 없어 내부 필드를 직접 들여다본다.
-     * 어느 플랫폼 설정이 붙었는지는 이 방법 말고는 확인할 길이 없다.
-     */
     private fun field(target: Any, name: String): Any? =
         target.javaClass.getDeclaredField(name).apply { isAccessible = true }.get(target)
 
@@ -115,14 +108,16 @@ class FirebaseAdapterTest {
     }
 
     @Test
-    @DisplayName("INVALID_ARGUMENT 에러 발생 시 InvalidInputException을 던진다")
+    @DisplayName("INVALID_ARGUMENT 에러는 FCM-900 서버 오류로 다룬다")
     fun send_invalidArgument() {
         val ex = Mockito.mock(FirebaseMessagingException::class.java)
         whenever(ex.messagingErrorCode).thenReturn(MessagingErrorCode.INVALID_ARGUMENT)
         whenever(firebaseMessaging.send(any<Message>())).thenThrow(ex)
 
         assertThatThrownBy { adapter.send("token", DeviceType.AOS, rendered()) }
-            .isInstanceOf(InvalidInputException::class.java)
+            .isInstanceOf(InternalServerException::class.java)
+            .extracting("errorCode")
+            .isEqualTo(NotificationException.FCM_INVALID_ARGUMENT)
     }
 
     @Test

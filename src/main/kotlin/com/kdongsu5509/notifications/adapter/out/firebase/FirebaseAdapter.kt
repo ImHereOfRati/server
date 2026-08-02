@@ -6,10 +6,9 @@ import com.kdongsu5509.notifications.domain.AndroidPushPriority
 import com.kdongsu5509.notifications.domain.DeviceType
 import com.kdongsu5509.notifications.domain.PushChannel
 import com.kdongsu5509.notifications.domain.RenderedNotification
+import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.notifications.exception.UnregisteredTokenException
-import com.kdongsu5509.support.exception.ImHereBaseException
-import com.kdongsu5509.support.exception.type.InternalServerException
-import com.kdongsu5509.support.exception.type.InvalidInputException
+import com.kdongsu5509.support.exception.throwIt
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -26,11 +25,11 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
         }
     }
 
-    private fun processFcmException(ex: FirebaseMessagingException) {
+    private fun processFcmException(ex: FirebaseMessagingException): Nothing {
         handleUnregistered(ex)
         handleRetryable(ex)
         handleNonRetryable(ex)
-        throw InternalServerException("알 수 없는 FCM 오류가 발생했습니다.", cause = ex)
+        fail(NotificationException.FCM_UNKNOWN_ERROR, ex)
     }
 
     private fun handleUnregistered(ex: FirebaseMessagingException) =
@@ -47,21 +46,18 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
     }
 
     private fun handleNonRetryable(ex: FirebaseMessagingException) = when (ex.messagingErrorCode) {
-        MessagingErrorCode.INVALID_ARGUMENT -> logAndThrow(InvalidInputException("FCM 요청 매개변수가 잘못되었습니다."), ex)
-        MessagingErrorCode.SENDER_ID_MISMATCH -> logAndThrow(InternalServerException("FCM 발신자 ID가 일치하지 않습니다."), ex)
-        MessagingErrorCode.THIRD_PARTY_AUTH_ERROR -> logAndThrow(
-            InternalServerException("FCM 타사 인증 오류가 발생했습니다."),
-            ex
-        )
+        MessagingErrorCode.INVALID_ARGUMENT ->
+            fail(NotificationException.FCM_INVALID_ARGUMENT, ex, "FCM 요청 매개변수가 잘못되었습니다.")
+
+        MessagingErrorCode.SENDER_ID_MISMATCH ->
+            fail(NotificationException.FCM_AUTH_ERROR, ex, "FCM 발신자 ID가 일치하지 않습니다.")
+
+        MessagingErrorCode.THIRD_PARTY_AUTH_ERROR ->
+            fail(NotificationException.FCM_AUTH_ERROR, ex, "FCM 타사 인증 오류가 발생했습니다.")
 
         else -> Unit
     }
 
-    /**
-     * 기기 종류에 따라 Android/iOS 중 한쪽 전달 설정만 붙인다.
-     *
-     * 어떤 정책을 쓸지는 [PushChannel]이 이미 정해 두었으므로 여기서는 SDK 타입으로 옮기기만 한다.
-     */
     private fun createFcmMessage(
         token: String,
         deviceType: DeviceType,
@@ -77,7 +73,7 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
             .putAllData(rendered.data)
             .setToken(token)
 
-        val channel = rendered.type.channel
+        val channel = rendered.channel
         return when (deviceType) {
             DeviceType.AOS -> builder.setAndroidConfig(createAndroidConfig(channel))
             DeviceType.IOS -> builder.setApnsConfig(createApnsConfig(channel))
@@ -112,9 +108,17 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
             AndroidPushPriority.NORMAL -> AndroidConfig.Priority.NORMAL
         }
 
-    private fun logAndThrow(exception: ImHereBaseException, ex: Exception): Nothing {
-        log.error("[${exception.errorCode}] ${exception.message}", ex)
-        throw exception
+    private fun fail(
+        errorCode: NotificationException,
+        ex: FirebaseMessagingException,
+        message: String? = null,
+    ): Nothing {
+        log.error("[{}] {}", errorCode.imhereErrorCode, message ?: errorCode.errorMessage, ex)
+        errorCode.throwIt(
+            contextData = mapOf("messagingErrorCode" to ex.messagingErrorCode?.name),
+            customMessage = message,
+            cause = ex,
+        )
     }
 
     private fun logAndReturnRetryable(code: MessagingErrorCode, ex: Exception): RetryableFcmException {

@@ -88,12 +88,10 @@ erDiagram
         string dedupeKey UK
         string targetIdentifier
         enum method
-        string senderEmail
-        string senderNickname
+        string senderAlias
         string title
         string body
         string type
-        string path
         string extraData
         enum status
         int attempts
@@ -117,7 +115,11 @@ erDiagram
 ### users
 
 * 사용자의 기본 정보를 저장합니다.
-* 현재 OAuth Provider는 `KAKAO`, `GOOGLE`만 지원합니다.
+* 현재 OAuth Provider는 `KAKAO`, `GOOGLE`, `APPLE`만 지원합니다. `provider` 컬럼이 MySQL
+  `ENUM`이라 값을 추가할 때는 `db/init/mysql/imhere-full-init.sql`도 함께 고쳐야 합니다.
+  Kotlin enum에만 추가하면 `ddl-auto: validate`가 잡아 주지 않아 기동은 되지만, 새 값으로
+  INSERT할 때 데이터 잘림 오류가 납니다.
+  절차는 [README의 스키마 변경](../../README.md#스키마-변경)을 보세요.
 
 ### terms
 
@@ -157,14 +159,17 @@ erDiagram
 * 요청부터 성공·실패·재시도 소진까지 알림의 발송 생애주기를 저장합니다.
 * `dedupe_key` Unique Key로 동일 이벤트와 전달 수단의 중복 발송을 억제합니다.
 * 상태는 `PENDING`, `SENT`, `FAILED`, `DEAD`이며 FCM의 `SENT` 알림만 사용자 수신함에 노출합니다.
+* `sender_alias`에는 수신자가 발송자를 부르는 이름을 저장합니다. 친구 별칭이 있으면 별칭을, 없으면
+  발송자 닉네임을 담습니다. 친구 요청 관련 알림은 아직 별칭이 있을 수 없어 항상 닉네임을 담습니다.
+* 딥링크 경로는 서버가 만들지 않으므로 `path` 컬럼이 없습니다. 어느 화면으로 이동할지는 클라이언트가
+  `type`을 보고 정합니다.
 * `type`에는 다음 `NotificationType`을 사용합니다.
 
     * `FRIEND_REQUEST_RECEIVED`
     * `FRIEND_REQUEST_ACCEPTED`
-    * `LOCATION_SHARE_RECEIVED`
+    * `LOCATION_TARGET`
     * `ARRIVAL`
     * `DEPARTURE`
-    * `ARRIVAL_CONFIRMATION`
     * `TERMS_UPDATE_NOTICE`
     * `DELIVERY_RESULT_NOTICE`
     * `DELIVERY_FAILED_NOTICE`

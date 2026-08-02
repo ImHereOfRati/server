@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.application.port.out
+package com.kdongsu5509.shared.cache
 
 import java.time.Duration
 

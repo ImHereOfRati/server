@@ -1,8 +1,7 @@
-package com.kdongsu5509.auth.adapter.out.cache
+package com.kdongsu5509.shared.cache
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Cache
-import com.kdongsu5509.auth.application.port.out.CachePort
 import tools.jackson.databind.json.JsonMapper
 import java.time.Clock
 import java.time.Duration

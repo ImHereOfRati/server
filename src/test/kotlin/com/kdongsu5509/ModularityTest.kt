@@ -11,17 +11,6 @@ import java.nio.file.Path
 class ModularityTest {
 
     @Test
-    @Disabled(
-        """
-        잔여 위반 해소 후 활성화한다.
-        - 사이클 7건: friends <-> user, auth <-> user, auth <-> agreement 및 파생 경로
-        - non-exposed 116건
-          [정리 대상] user -> friends.repository.jpa Q타입(15)
-          [보류] friends -> user.repository.jpa/UserMapper(90),
-                 auth -> agreement.service(6), notifications -> auth.application.port.out(5)
-        보류분은 agreement/user/terms가 의존하는 방향이 아니라 그 반대 방향이므로 후순위로 둔다.
-        """
-    )
     @DisplayName("모든 모듈이 서로의 Named Interface만 통해 의존한다")
     fun verify_success_no_module_boundary_violation() {
         // given

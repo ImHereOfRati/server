@@ -5,12 +5,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.modulith.core.ApplicationModules
 
-/**
- * auth 모듈만 떼어 낸 Modulith 경계 검증.
- *
- * 전체 [ModularityTest.verify_success_no_module_boundary_violation]은 잔여 위반 때문에 아직 꺼져 있다.
- * 그동안 auth만이라도 경계를 지키는지 좁혀서 확인한다.
- */
 class AuthModularityTest {
 
     private val modules = ApplicationModules.of(ImhereApplication::class.java)

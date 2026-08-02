@@ -1,10 +1,5 @@
 package com.kdongsu5509.shared.response
 
-/**
- * 모든 API 응답의 공통 규격
- *
- * @param T 실제 응답 데이터의 타입
- */
 data class ApiResponse<T>(
     val imhereResponseCode: String,
     val message: String,

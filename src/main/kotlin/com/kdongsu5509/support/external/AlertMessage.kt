@@ -1,23 +1,14 @@
 package com.kdongsu5509.support.external
 
-/**
- * Discord 경보 메시지 표현. 세 곳(사용자 오류·비정상 접근·서버 오류)에 흩어져 손조립되던 마크다운 템플릿을
- * 이 한 클래스로 응집한다(Extract Class). 포맷/필드 변경이 이 파일 한곳으로 끝난다(Shotgun Surgery 제거).
- */
-data class DiscordAlertMessage(val content: String) {
-
-    fun toDto(): DiscordMessageDto = DiscordMessageDto(content)
+data class AlertMessage(val content: String) {
 
     companion object {
-        /** 4xx 사용자/입력 오류 경보. */
-        fun userError(code: String, message: String, context: RequestContext): DiscordAlertMessage =
+        fun userError(code: String, message: String, context: RequestContext): AlertMessage =
             requestAlert("⚠️ User Error (4xx)", "Business / Input Error", code, message, context)
 
-        /** 403 비정상 접근(인가 거부) 경보. */
-        fun abnormalAccess(code: String, message: String, context: RequestContext): DiscordAlertMessage =
+        fun abnormalAccess(code: String, message: String, context: RequestContext): AlertMessage =
             requestAlert("🚨 Abnormal Access (403)", "Authorization Denied", code, message, context)
 
-        /** 5xx 서버 오류 경보. */
         fun serverError(
             status: Int,
             traceId: String,
@@ -26,7 +17,7 @@ data class DiscordAlertMessage(val content: String) {
             durationMs: Long,
             ip: String,
             formatted: String,
-        ): DiscordAlertMessage = DiscordAlertMessage(
+        ): AlertMessage = AlertMessage(
             """
             ## 🔥 Server Error ($status)
             **TraceId:** `$traceId`
@@ -39,13 +30,29 @@ data class DiscordAlertMessage(val content: String) {
             """.trimIndent()
         )
 
+        fun notificationDeliveryFailure(
+            notificationId: Long?,
+            target: String,
+            type: String,
+            errorType: String,
+            errorMessage: String?,
+        ): AlertMessage = AlertMessage(
+            """
+            ## 🚨 Notification Delivery Failure
+            **NotificationId:** `$notificationId`
+            **Target:** `$target`
+            **Type:** `$type`
+            **Error:** $errorType - $errorMessage
+            """.trimIndent()
+        )
+
         private fun requestAlert(
             header: String,
             type: String,
             code: String,
             message: String,
             context: RequestContext,
-        ): DiscordAlertMessage = DiscordAlertMessage(
+        ): AlertMessage = AlertMessage(
             """
             ## $header
             **Type:** $type

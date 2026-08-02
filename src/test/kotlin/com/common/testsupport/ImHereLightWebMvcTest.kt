@@ -8,11 +8,6 @@ import org.springframework.context.annotation.FilterType
 import org.springframework.core.annotation.AliasFor
 import kotlin.reflect.KClass
 
-/**
- * @author : kdongsu5509
- * @param : WebMvcTest 를 이용한 테스트를 실행할 테스트
- * ImHere에서 사용하는 필터 관련 의존성을 제외하고 싶을 때 사용하면 됩니다.
- */
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

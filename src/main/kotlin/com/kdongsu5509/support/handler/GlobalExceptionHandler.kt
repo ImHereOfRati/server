@@ -4,7 +4,7 @@ import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.toFailResponse
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseException
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import org.slf4j.LoggerFactory
@@ -24,13 +24,10 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @RestControllerAdvice(basePackages = ["com.kdongsu5509"])
 class GlobalExceptionHandler(
-    private val discordUserErrorNotifier: DiscordUserErrorNotifier
+    private val userErrorAlertNotifier: UserErrorAlertNotifier
 ) {
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    /**
-     * 프로젝트 공통 비즈니스 예외 처리
-     */
     @ExceptionHandler(ImHereBaseException::class)
     fun handleBaseException(
         e: ImHereBaseException,
@@ -39,7 +36,7 @@ class GlobalExceptionHandler(
         val errorCode = e.errorCode
         log.warn("[{}] {} (context: {})", errorCode.imhereErrorCode, e.message, e.contextData)
 
-        discordUserErrorNotifier.notifyUserError(
+        userErrorAlertNotifier.notifyUserError(
             request,
             errorCode.imhereErrorCode,
             e.message ?: errorCode.errorMessage
@@ -54,9 +51,6 @@ class GlobalExceptionHandler(
 
     // --- 400 Bad Request ---
 
-    /**
-     * Bean Validation 예외 처리
-     */
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleMethodArgumentNotValidException(
         e: MethodArgumentNotValidException
@@ -71,9 +65,6 @@ class GlobalExceptionHandler(
         )
     }
 
-    /**
-     * 잘못된 요청 파라미터 예외 처리
-     */
     @ExceptionHandler(
         MethodArgumentTypeMismatchException::class,
         MissingServletRequestParameterException::class,
@@ -92,9 +83,6 @@ class GlobalExceptionHandler(
         )
     }
 
-    /**
-     * JSON 파싱 오류 및 메시지 읽기 실패 처리
-     */
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleHttpMessageNotReadableException(
         e: HttpMessageNotReadableException,
@@ -114,9 +102,6 @@ class GlobalExceptionHandler(
 
     // --- 404 Not Found ---
 
-    /**
-     * 잘못된 경로 요청 처리
-     */
     @ExceptionHandler(NoResourceFoundException::class)
     fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ApiResponse<Unit>> {
         return null.toFailResponse(
@@ -128,9 +113,6 @@ class GlobalExceptionHandler(
 
     // --- 405 Method Not Allowed ---
 
-    /**
-     * 지원하지 않는 HTTP 메서드 처리
-     */
     @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
     fun handleHttpRequestMethodNotSupportedException(e: HttpRequestMethodNotSupportedException): ResponseEntity<ApiResponse<Unit>> {
         return null.toFailResponse(
@@ -154,9 +136,6 @@ class GlobalExceptionHandler(
 
     // --- 415 Unsupported Media Type ---
 
-    /**
-     * 지원하지 않는 미디어 타입 처리
-     */
     @ExceptionHandler(HttpMediaTypeNotSupportedException::class)
     fun handleHttpMediaTypeNotSupportedException(e: HttpMediaTypeNotSupportedException): ResponseEntity<ApiResponse<Unit>> {
         return null.toFailResponse(

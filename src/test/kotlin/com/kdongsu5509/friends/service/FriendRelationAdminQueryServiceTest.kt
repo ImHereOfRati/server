@@ -85,7 +85,7 @@ class FriendRelationAdminQueryServiceTest {
         given(friendRelationQueryRepository.findAllFriendships(pageable))
             .willReturn(
                 SliceImpl(
-                    listOf(storedRequest().accept(lowAlias = "low", highAlias = "high")),
+                    listOf(storedRequest().accept(lowNickname = "low", highNickname = "high")),
                     pageable,
                     false
                 )
@@ -118,7 +118,6 @@ class FriendRelationAdminQueryServiceTest {
         assertThat(result.content[0].restricted.id).isEqualTo(highId)
     }
 
-    /** 저장된 요청 행을 흉내 낸다. 식별자와 감사 시각이 있어야 View 변환이 성립한다. */
     private fun storedRequest(): FriendRelation = FriendRelation(
         id = UUID.randomUUID(),
         pair = FriendPair.of(lowId, highId),

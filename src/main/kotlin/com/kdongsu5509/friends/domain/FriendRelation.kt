@@ -55,19 +55,17 @@ class FriendRelation(
         message = RequestMessage(message),
     )
 
-    /** 요청을 수락한다. 수락한 순간 양쪽 별칭이 상대 닉네임으로 정해진다. */
-    fun accept(lowAlias: String, highAlias: String): FriendRelation {
+    fun accept(lowNickname: String, highNickname: String): FriendRelation {
         validateIsRequested()
         return replaced(
             status = FriendRelationStatus.ACCEPTED,
             message = null,
-            lowAlias = FriendAlias(lowAlias),
-            highAlias = FriendAlias(highAlias),
+            lowAlias = FriendAlias(highNickname),
+            highAlias = FriendAlias(lowNickname),
             expiresAt = PERMANENT
         )
     }
 
-    /** 요청을 거절한다. 거절한 쪽이 제한의 주체가 되므로 방향이 뒤집힌다. */
     fun reject(current: LocalDateTime): FriendRelation {
         validateIsRequested()
         return replaced(
@@ -78,7 +76,6 @@ class FriendRelation(
         )
     }
 
-    /** 상대를 차단한다. 친구든 아니든 걸 수 있고 만료되지 않는다. */
     fun block(requesterId: UUID): FriendRelation {
         val targetId = getCounterpart(requesterId)
         validateOwnership(requesterId)
@@ -109,7 +106,6 @@ class FriendRelation(
         if (!this.isInitiatedBy(blockerId)) FRIEND_RELATIONSHIP_OWNER_MISS_MATCH.throwIt()
     }
 
-    /** 내가 붙인 별칭만 바꾼다. 상대가 붙인 별칭은 건드리지 않는다. */
     fun rename(owner: UUID, alias: String): FriendRelation {
         validateOwnership(owner)
         validateAccepted()
@@ -121,10 +117,8 @@ class FriendRelation(
 
     fun getAlias(userId: UUID): FriendAlias? = if (pair.isLow(userId)) lowAlias else highAlias
 
-    /** 요청/거절/차단을 건 쪽. */
     fun initiator(): UUID = pair.memberOf(modifierId)
 
-    /** 요청/거절/차단을 당한 쪽. */
     fun target(): UUID = pair.counterpartOf(modifierId)
 
     fun involves(userId: UUID): Boolean = pair.contains(userId)

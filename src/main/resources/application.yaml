@@ -34,22 +34,6 @@ spring:
         format_sql: true
         naming:
           physical-strategy: org.hibernate.boot.model.naming.CamelToUnderscoresNamingStrategy
-        type:
-          preferred_uuid_jdbc_type: CHAR
-
-  # RABBITMQ_* values come from application-local.yaml in local and prod.env in production.
-  # RABBITMQ_HOST is not stored in prod.env itself. CD appends it from CloudFormation output.
-  rabbitmq:
-    host: ${RABBITMQ_HOST}
-    port: ${RABBITMQ_PORT}
-    username: ${RABBITMQ_USER}
-    password: ${RABBITMQ_PASSWORD}
-    virtual-host: ${RABBITMQ_VHOST}
-    listener:
-      simple:
-        concurrency: ${RABBITMQ_CONCURRENCY}
-        max-concurrency: ${RABBITMQ_MAX_CONCURRENCY}
-        acknowledge-mode: auto
 
   batch:
     job:
@@ -130,18 +114,37 @@ jwt:
   access-header-name: Authorization
   admin-expiration-minutes: 60
 
+# issuers/audiences는 목록이다. Google은 iss를 스킴 포함/미포함 두 형태로 발급하고,
+# Google·Apple은 iOS/Android/Web마다 client ID(aud)가 갈리기 때문이다.
+# 값이 빈 항목은 OIDCProperties가 걸러내므로, 쓰지 않는 플랫폼은 env를 비워 두면 된다.
 oidc:
   providers:
     kakao:
-      issuer: "https://kauth.kakao.com"
-      audience: "840e16595771540d4b1056238cbb6b51"
+      issuers:
+        - "https://kauth.kakao.com"
+      audiences:
+        - "840e16595771540d4b1056238cbb6b51"
       cacheKey: "kakaoOidcKeys::kakaoPublicKeySet"
       jwksUri: "https://kauth.kakao.com/.well-known/jwks.json"
     google:
-      issuer: "https://accounts.google.com"
-      audience: "190429362894-488cdf8tegm4c81qrta3pns04ot12c25.apps.googleusercontent.com"
+      issuers:
+        - "https://accounts.google.com"
+        - "accounts.google.com"
+      audiences:
+        - "190429362894-488cdf8tegm4c81qrta3pns04ot12c25.apps.googleusercontent.com"
+        - ${GOOGLE_CLIENT_ID_IOS:}
+        - ${GOOGLE_CLIENT_ID_ANDROID:}
       cacheKey: "googleOidcKeys::googlePublicKeySet"
       jwksUri: "https://www.googleapis.com/oauth2/v3/certs"
+    apple:
+      issuers:
+        - "https://appleid.apple.com"
+      audiences:
+        # iOS는 bundle ID, 웹은 Services ID가 aud로 들어온다.
+        - ${APPLE_CLIENT_ID:}
+        - ${APPLE_SERVICE_ID:}
+      cacheKey: "appleOidcKeys::applePublicKeySet"
+      jwksUri: "https://appleid.apple.com/auth/keys"
 
 # External integration credentials come from application-local.yaml in local
 # and prod.env in production. FIREBASE_PATH points to the JSON key copied by deploy-app.

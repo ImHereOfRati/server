@@ -5,21 +5,12 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.modulith.core.ApplicationModules
+import java.nio.file.Files
+import java.nio.file.Path
 
 class ModularityTest {
 
     @Test
-    @Disabled(
-        """
-        잔여 위반 해소 후 활성화한다.
-        - 사이클 7건: friends <-> user, auth <-> user, auth <-> agreement 및 파생 경로
-        - non-exposed 116건
-          [정리 대상] user -> friends.repository.jpa Q타입(15)
-          [보류] friends -> user.repository.jpa/UserMapper(90),
-                 auth -> agreement.service(6), notifications -> auth.application.port.out(5)
-        보류분은 agreement/user/terms가 의존하는 방향이 아니라 그 반대 방향이므로 후순위로 둔다.
-        """
-    )
     @DisplayName("모든 모듈이 서로의 Named Interface만 통해 의존한다")
     fun verify_success_no_module_boundary_violation() {
         // given
@@ -163,5 +154,41 @@ class ModularityTest {
         assertThat(agreementEvents).isEmpty()
         assertThat(userApi.asJavaClasses().map { it.name }.toList())
             .contains("com.kdongsu5509.user.api.UserActivationContract")
+    }
+
+    @Test
+    @DisplayName("Friends는 알림 번역에 필요한 도메인 이벤트만 event Named Interface로 공개한다")
+    fun friends_exposes_event_named_interface() {
+        val modules = ApplicationModules.of(ImhereApplication::class.java)
+        val friends = modules.getModuleByName("friends").orElseThrow()
+
+        val eventInterface = friends.namedInterfaces.getByName("event").orElseThrow()
+        val exposedTypes = eventInterface.asJavaClasses().map { it.name }.toList()
+
+        assertThat(exposedTypes).containsExactlyInAnyOrder(
+            "com.kdongsu5509.friends.event.FriendRequestSent",
+            "com.kdongsu5509.friends.event.FriendRequestAccepted",
+        )
+    }
+
+    @Test
+    @DisplayName("Notifications만 Friends 이벤트를 구독하고 Friends는 Notifications를 참조하지 않는다")
+    fun notifications_depends_on_friends_without_reverse_dependency() {
+        val modules = ApplicationModules.of(ImhereApplication::class.java)
+        val friends = modules.getModuleByName("friends").orElseThrow()
+        val notifications = modules.getModuleByName("notifications").orElseThrow()
+
+        assertThat(notifications.getDirectDependencies(modules).containsModuleNamed("friends")).isTrue()
+        assertThat(friends.getDirectDependencies(modules).containsModuleNamed("notifications")).isFalse()
+    }
+
+    @Test
+    @DisplayName("Shared에는 알림 발송 계약 패키지가 남아 있지 않는다")
+    fun shared_contains_no_notification_package() {
+        val packagePath = Path.of("src/main/kotlin/com/kdongsu5509/shared/notification")
+
+        val containsFiles = Files.exists(packagePath) &&
+            Files.walk(packagePath).use { paths -> paths.anyMatch(Files::isRegularFile) }
+        assertThat(containsFiles).isFalse()
     }
 }

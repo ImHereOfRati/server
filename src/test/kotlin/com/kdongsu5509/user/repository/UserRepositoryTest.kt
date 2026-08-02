@@ -140,20 +140,20 @@ class UserRepositoryTest {
 
     @Test
     @DisplayName("키워드가 이메일 또는 닉네임과 일치하면 해당하는 유저 슬라이스를 반환한다")
-    fun findSliceByEmailAndNickname_success() {
+    fun searchActiveByKeyword_success() {
         // given
         val pageable = PageRequest.of(0, 20)
         `when`(
-            springQueryDSLUserRepository.findAllActiveByEmailAndKeyword(
-                "owner@owner.com",
+            springQueryDSLUserRepository.findAllActiveByKeyword(
                 TEST_NICKNAME,
+                emptySet(),
                 pageable
             )
         ).thenReturn(SliceImpl(listOf(testUserEntity), pageable, false))
         `when`(userMapper.toDomain(testUserEntity)).thenReturn(testUser)
 
         // when
-        val result = userRepository.findSliceByEmailAndNickname("owner@owner.com", TEST_NICKNAME, pageable)
+        val result = userRepository.searchActiveByKeyword(TEST_NICKNAME, emptySet(), pageable)
 
         // then
         assertThat(result.content).hasSize(1)

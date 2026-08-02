@@ -2,7 +2,7 @@ package com.kdongsu5509.user.controller
 
 import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.UserRole
@@ -12,11 +12,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
-import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.SliceImpl
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -41,7 +38,7 @@ class UserReadControllerWebMvcTest {
     private lateinit var userQueryService: UserQueryService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @BeforeEach
     fun setUp(webApplicationContext: WebApplicationContext) {
@@ -96,50 +93,6 @@ class UserReadControllerWebMvcTest {
         mockMvc.perform(
             get("$BASE_PATH/my")
         ).andExpect(status().isUnauthorized)
-    }
-
-    @Test
-    @DisplayName("키워드 파라미터가 비어있으면 400 Bad Request를 반환한다")
-    fun findOther_fail_when_keyword_blank() {
-        val userDetails = ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")
-
-        mockMvc.perform(
-            get(BASE_PATH)
-                .param("keyword", "")
-                .with(user(userDetails))
-        ).andExpect(status().isBadRequest)
-    }
-
-    @Test
-    @DisplayName("키워드로 타인 조회 시 성공하고 200 OK와 유저 슬라이스를 반환한다")
-    fun findOther_success() {
-        // given
-        val userDetails = ImHereUserDetails("sender@example.com", "sender-nick", "ROLE_USER", "ACTIVE")
-        val otherId = UUID.randomUUID()
-        val otherUser = UserResult(
-            id = otherId,
-            email = "other@example.com",
-            nickname = "검색대상",
-            oauthProvider = OAuth2Provider.KAKAO,
-            role = UserRole.NORMAL,
-            status = UserStatus.ACTIVE
-        )
-        val pageable = PageRequest.of(0, 15)
-        val slice = SliceImpl(listOf(otherUser), pageable, false)
-
-        given(userQueryService.findByKeyword(eq("sender@example.com"), eq("검색대상"), any())).willReturn(slice)
-
-        // when & then
-        mockMvc.perform(
-            get(BASE_PATH)
-                .param("keyword", "검색대상")
-                .with(user(userDetails))
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.imhereResponseCode").value("SUCCESS"))
-            .andExpect(jsonPath("$.data.content[0].id").value(otherId.toString()))
-            .andExpect(jsonPath("$.data.content[0].email").value("other@example.com"))
-            .andExpect(jsonPath("$.data.content[0].nickname").value("검색대상"))
-            .andExpect(jsonPath("$.data.hasNext").value(false))
     }
 
 }

@@ -3,10 +3,6 @@ package com.kdongsu5509.notifications.domain
 import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.support.exception.throwIt
 
-/**
- * SMS 도메인 객체.
- * 발송 대상 정보와 본문을 보유하며, 생성 시 필수 값·본문 길이 불변식을 스스로 검증합니다.
- */
 class SMS(
     val senderNickname: String,
     val receiverNumber: String,

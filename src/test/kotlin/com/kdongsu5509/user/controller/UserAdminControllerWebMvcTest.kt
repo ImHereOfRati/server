@@ -5,7 +5,7 @@ import com.kdongsu5509.user.service.UserQueryService
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.auth.security.SecurityWhiteList
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import com.kdongsu5509.support.logger.AccessLogPrinter
 import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.UserRole
@@ -56,7 +56,7 @@ class UserAdminControllerWebMvcTest {
     private lateinit var accessLogPrinter: AccessLogPrinter
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @MockitoBean
     private lateinit var tokenParser: ImHereTokenParserPort

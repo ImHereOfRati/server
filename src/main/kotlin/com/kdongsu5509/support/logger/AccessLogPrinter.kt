@@ -1,20 +1,16 @@
 package com.kdongsu5509.support.logger
 
-import com.kdongsu5509.support.external.DiscordAlertMessage
-import com.kdongsu5509.support.external.DiscordMessageDto
-import com.kdongsu5509.support.external.DiscordMessageSendPort
+import com.kdongsu5509.support.external.AlertChannel
+import com.kdongsu5509.support.external.AlertMessage
+import com.kdongsu5509.support.external.ErrorAlertPort
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
 class AccessLogPrinter(
-    private val discordMessageSendPort: DiscordMessageSendPort,
+    private val errorAlertPort: ErrorAlertPort,
     private val formatter: AccessLogFormatter
 ) {
-
-    @Value("\${discord.url.error.server:}")
-    private val errorAlertChannelWebhookUrl: String? = null
 
     private val log = LoggerFactory.getLogger(AccessLogPrinter::class.java)
 
@@ -27,14 +23,12 @@ class AccessLogPrinter(
     private fun sendAlertIfNeeded(accessLog: AccessLog, formatted: String, sendAlert: Boolean) {
         if (!sendAlert || accessLog.status < 500) return
 
-        errorAlertChannelWebhookUrl?.takeIf { it.isNotEmpty() }?.let { webhookUrl ->
-            discordMessageSendPort.sendMessage(webhookUrl, build5xxAlert(accessLog, formatted))
-        }
+        errorAlertPort.send(AlertChannel.SERVER_ERROR, build5xxAlert(accessLog, formatted))
     }
 
-    private fun build5xxAlert(accessLog: AccessLog, formatted: String): DiscordMessageDto {
+    private fun build5xxAlert(accessLog: AccessLog, formatted: String): AlertMessage {
         val uri = accessLog.uri + (accessLog.queryString?.let { "?$it" } ?: "")
-        return DiscordAlertMessage.serverError(
+        return AlertMessage.serverError(
             status = accessLog.status,
             traceId = accessLog.traceId,
             method = accessLog.method,
@@ -42,6 +36,6 @@ class AccessLogPrinter(
             durationMs = accessLog.durationMs,
             ip = accessLog.remoteIp,
             formatted = formatted,
-        ).toDto()
+        )
     }
 }

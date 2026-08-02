@@ -13,8 +13,8 @@ class OIDCPropertiesTest {
         val properties = OIDCProperties(
             providers = mutableMapOf(
                 "kakao" to OIDCProperties.Provider(
-                    issuer = "issuer",
-                    audience = "aud",
+                    issuers = mutableListOf("issuer"),
+                    audiences = mutableListOf("aud"),
                     cacheKey = "key",
                     jwksUri = "uri"
                 )
@@ -22,7 +22,50 @@ class OIDCPropertiesTest {
         )
 
         assertThat(properties.get(OAuth2Provider.KAKAO).cacheKey).isEqualTo("key")
+        assertThat(properties.get(OAuth2Provider.KAKAO).issuers).containsExactly("issuer")
+        assertThat(properties.get(OAuth2Provider.KAKAO).audiences).containsExactly("aud")
         assertThat(properties.configuredProviders()).containsExactly(OAuth2Provider.KAKAO)
+    }
+
+    @Test
+    @DisplayName("issuer와 audience는 여러 값을 그대로 들고 있는다")
+    fun get_keepsMultipleIssuersAndAudiences() {
+        val properties = OIDCProperties(
+            providers = mutableMapOf(
+                "google" to OIDCProperties.Provider(
+                    issuers = mutableListOf("https://accounts.google.com", "accounts.google.com"),
+                    audiences = mutableListOf("web-client-id", "ios-client-id"),
+                    cacheKey = "g",
+                    jwksUri = "uri"
+                )
+            )
+        )
+
+        val config = properties.get(OAuth2Provider.GOOGLE)
+
+        assertThat(config.issuers).containsExactly("https://accounts.google.com", "accounts.google.com")
+        assertThat(config.audiences).containsExactly("web-client-id", "ios-client-id")
+    }
+
+    @Test
+    @DisplayName("환경변수를 비워 둔 audience는 걸러 낸다")
+    fun get_dropsBlankAudiences() {
+        // given: 쓰지 않는 플랫폼의 client ID를 빈 문자열로 남겨 둔 배포를 흉내 낸다.
+        val properties = OIDCProperties(
+            providers = mutableMapOf(
+                "apple" to OIDCProperties.Provider(
+                    issuers = mutableListOf("https://appleid.apple.com", ""),
+                    audiences = mutableListOf("bundle-id", "", "   "),
+                    cacheKey = "a",
+                    jwksUri = "uri"
+                )
+            )
+        )
+
+        val config = properties.get(OAuth2Provider.APPLE)
+
+        assertThat(config.issuers).containsExactly("https://appleid.apple.com")
+        assertThat(config.audiences).containsExactly("bundle-id")
     }
 
     @Test
@@ -30,16 +73,18 @@ class OIDCPropertiesTest {
     fun configuredProviders_returnsAllInEntriesOrder() {
         val properties = OIDCProperties(
             providers = mutableMapOf(
+                "apple" to OIDCProperties.Provider(cacheKey = "a"),
                 "google" to OIDCProperties.Provider(cacheKey = "g"),
                 "kakao" to OIDCProperties.Provider(cacheKey = "k")
             )
         )
 
-        // 삽입 순서(google, kakao)와 무관하게 enum 선언 순서(KAKAO, GOOGLE)로 반환
+        // 삽입 순서(apple, google, kakao)와 무관하게 enum 선언 순서(KAKAO, GOOGLE, APPLE)로 반환
         assertThat(properties.configuredProviders())
-            .containsExactly(OAuth2Provider.KAKAO, OAuth2Provider.GOOGLE)
+            .containsExactly(OAuth2Provider.KAKAO, OAuth2Provider.GOOGLE, OAuth2Provider.APPLE)
         assertThat(properties.get(OAuth2Provider.GOOGLE).cacheKey).isEqualTo("g")
         assertThat(properties.get(OAuth2Provider.KAKAO).cacheKey).isEqualTo("k")
+        assertThat(properties.get(OAuth2Provider.APPLE).cacheKey).isEqualTo("a")
     }
 
     @Test

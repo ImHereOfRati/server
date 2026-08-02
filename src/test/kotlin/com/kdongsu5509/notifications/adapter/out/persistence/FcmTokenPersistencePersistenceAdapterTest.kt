@@ -11,6 +11,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class FcmTokenPersistenceAdapterTest {
@@ -32,9 +33,10 @@ class FcmTokenPersistenceAdapterTest {
     @DisplayName("FcmToken을 저장하면 Entity로 변환되어 repository를 통해 저장된다")
     fun save_success() {
         // given
-        val domain = FcmToken(email = "test@ex.com", fcmToken = "token", deviceType = DeviceType.AOS)
-        val entity = FcmTokenJpaEntity(email = "test@ex.com", token = "token", deviceType = DeviceType.AOS)
-        
+        val ownerId = UUID.randomUUID()
+        val domain = FcmToken(ownerId = ownerId, fcmToken = "token", deviceType = DeviceType.AOS)
+        val entity = FcmTokenJpaEntity(ownerId = ownerId, token = "token", deviceType = DeviceType.AOS)
+
         `when`(fcmTokenMapper.toEntity(domain)).thenReturn(entity)
 
         // when
@@ -46,32 +48,32 @@ class FcmTokenPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("이메일로 조회 시 Entity가 존재하면 Domain으로 변환하여 반환한다")
-    fun findByUserEmail_success() {
+    @DisplayName("소유자 식별자로 조회 시 Entity가 존재하면 Domain으로 변환하여 반환한다")
+    fun findByOwnerId_success() {
         // given
-        val email = "test@ex.com"
-        val entity = FcmTokenJpaEntity(email = email, token = "token", deviceType = DeviceType.AOS)
-        val domain = FcmToken(email = email, fcmToken = "token", deviceType = DeviceType.AOS)
+        val ownerId = UUID.randomUUID()
+        val entity = FcmTokenJpaEntity(ownerId = ownerId, token = "token", deviceType = DeviceType.AOS)
+        val domain = FcmToken(ownerId = ownerId, fcmToken = "token", deviceType = DeviceType.AOS)
 
-        `when`(repository.findByEmail(email)).thenReturn(entity)
+        `when`(repository.findByOwnerId(ownerId)).thenReturn(entity)
         `when`(fcmTokenMapper.toDomain(entity)).thenReturn(domain)
 
         // when
-        val result = adapter.findByUserEmail(email)
+        val result = adapter.findByOwnerId(ownerId)
 
         // then
         assertThat(result).isEqualTo(domain)
     }
 
     @Test
-    @DisplayName("이메일로 조회 시 Entity가 없으면 null을 반환한다")
-    fun findByUserEmail_returnsNull() {
+    @DisplayName("소유자 식별자로 조회 시 Entity가 없으면 null을 반환한다")
+    fun findByOwnerId_returnsNull() {
         // given
-        val email = "test@ex.com"
-        `when`(repository.findByEmail(email)).thenReturn(null)
+        val ownerId = UUID.randomUUID()
+        `when`(repository.findByOwnerId(ownerId)).thenReturn(null)
 
         // when
-        val result = adapter.findByUserEmail(email)
+        val result = adapter.findByOwnerId(ownerId)
 
         // then
         assertThat(result).isNull()

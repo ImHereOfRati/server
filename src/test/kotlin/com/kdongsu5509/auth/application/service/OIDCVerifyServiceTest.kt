@@ -54,16 +54,22 @@ class OIDCVerifyServiceTest {
         oidcProperties = OIDCProperties(
             providers = mutableMapOf(
                 "kakao" to OIDCProperties.Provider(
-                    issuer = "https://kauth.kakao.com",
-                    audience = "kakao-client-id",
+                    issuers = mutableListOf("https://kauth.kakao.com"),
+                    audiences = mutableListOf("kakao-client-id"),
                     cacheKey = "kakao-cache",
                     jwksUri = "https://kauth.kakao.com/.well-known/jwks.json"
                 ),
                 "google" to OIDCProperties.Provider(
-                    issuer = "https://accounts.google.com",
-                    audience = "google-client-id",
+                    issuers = mutableListOf("https://accounts.google.com", "accounts.google.com"),
+                    audiences = mutableListOf("google-web-client-id", "google-ios-client-id"),
                     cacheKey = "google-cache",
                     jwksUri = "https://www.googleapis.com/oauth2/v3/certs"
+                ),
+                "apple" to OIDCProperties.Provider(
+                    issuers = mutableListOf("https://appleid.apple.com"),
+                    audiences = mutableListOf("apple-bundle-id"),
+                    cacheKey = "apple-cache",
+                    jwksUri = "https://appleid.apple.com/auth/keys"
                 )
             )
         )
@@ -73,11 +79,11 @@ class OIDCVerifyServiceTest {
     @Test
     @DisplayName("Google ID 토큰 검증에 성공하여 유저 정보를 반환한다")
     fun verify_success_google() {
-        // given
+        // given: Google ID 토큰에는 nickname이 없고 name만 있다.
         givenTokenVerificationSucceeds(
             OAuth2Provider.GOOGLE,
             "accounts.google.com",
-            "google-client-id",
+            "google-ios-client-id",
             NONCE,
             null,
             "구글친구"
@@ -91,8 +97,59 @@ class OIDCVerifyServiceTest {
         assertThat(result.nickname).isEqualTo("구글친구")
         assertThat(result.sub).isEqualTo(SUB)
 
-        then(oidcIdTokenVerifyPort).should()
-            .verifyPayLoad(any(), eq("https://accounts.google.com"), eq("google-client-id"), eq(NONCE))
+        // 허용 issuer·audience는 설정에 담긴 목록이 그대로 넘어간다.
+        then(oidcIdTokenVerifyPort).should().verifyPayLoad(
+            any(),
+            eq(listOf("https://accounts.google.com", "accounts.google.com")),
+            eq(listOf("google-web-client-id", "google-ios-client-id")),
+            eq(NONCE)
+        )
+    }
+
+    @Test
+    @DisplayName("Apple ID 토큰은 표시 이름이 없어 이메일 앞부분을 닉네임으로 쓴다")
+    fun verify_success_apple() {
+        // given: Apple ID 토큰에는 nickname도 name도 없다. 표시 이름은 인가 응답 본문으로만 온다.
+        givenTokenVerificationSucceeds(
+            OAuth2Provider.APPLE,
+            "https://appleid.apple.com",
+            "apple-bundle-id",
+            NONCE,
+            null,
+            null
+        )
+
+        // when
+        val result = verifyService.verify(OAuth2Provider.APPLE, ID_TOKEN, NONCE)
+
+        // then
+        assertThat(result.email).isEqualTo(EMAIL)
+        assertThat(result.nickname).isEqualTo(EMAIL.substringBefore("@"))
+        assertThat(result.sub).isEqualTo(SUB)
+
+        then(oidcIdTokenVerifyPort).should().verifyPayLoad(
+            any(),
+            eq(listOf("https://appleid.apple.com")),
+            eq(listOf("apple-bundle-id")),
+            eq(NONCE)
+        )
+    }
+
+    @Test
+    @DisplayName("Apple ID 토큰에 이메일이 없으면 로그인을 거절한다")
+    fun verify_fail_apple_missing_email() {
+        // given: 사용자가 email scope를 주지 않은 경우다. users.email이 필수라 가입시킬 수 없다.
+        givenTokenSignatureVerificationSucceeds(
+            OAuth2Provider.APPLE,
+            "https://appleid.apple.com",
+            "apple-bundle-id"
+        )
+        givenClaimsHasEmail(null, NONCE)
+
+        // when & then
+        assertUnauthorizedException("ID 토큰에 이메일 정보가 없습니다.") {
+            verifyService.verify(OAuth2Provider.APPLE, ID_TOKEN, NONCE)
+        }
     }
 
     @Test

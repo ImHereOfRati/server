@@ -71,21 +71,43 @@ class JjwtOIDCTokenVerifyAdapterTest {
     }
 
     @Test
-    @DisplayName("페이로드의 issuer와 audience가 설정과 일치하면 검증을 통과한다")
+    @DisplayName("페이로드의 issuer와 audience가 허용 목록에 있으면 검증을 통과한다")
     fun verifyPayLoad_success() {
-        // given
-        val issuer = "https://accounts.google.com"
+        // given: Google은 iss를 스킴 미포함으로도 발급하므로 두 형태를 함께 허용한다.
+        val issuers = listOf("https://accounts.google.com", "accounts.google.com")
         val audience = "test-app-key"
         val nonce = "test-nonce"
         val payload =
             OIDCDecodePayload(iss = "accounts.google.com", aud = audience, sub = "sub", nonce = nonce, email = "test@test.com", nickname = "nick")
 
         // when & then (예외가 발생하지 않아야 함)
-        jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, issuer, audience, nonce)
+        jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, issuers, listOf(audience), nonce)
     }
 
     @Test
-    @DisplayName("페이로드의 issuer가 일치하지 않으면 UnauthorizedException 발생시킨다")
+    @DisplayName("audience가 여러 개면 그 중 하나와 일치해도 통과한다")
+    fun verifyPayLoad_matchesAnyAudience() {
+        // given: 플랫폼마다 client ID가 갈리므로 iOS 토큰도 같은 설정으로 통과해야 한다.
+        val payload = OIDCDecodePayload(
+            iss = "https://appleid.apple.com",
+            aud = "ios-bundle-id",
+            sub = "sub",
+            nonce = "test-nonce",
+            email = "test@privaterelay.appleid.com",
+            nickname = null
+        )
+
+        // when & then
+        jjwtOIDCTokenVerifyAdapter.verifyPayLoad(
+            payload,
+            listOf("https://appleid.apple.com"),
+            listOf("web-service-id", "ios-bundle-id"),
+            "test-nonce"
+        )
+    }
+
+    @Test
+    @DisplayName("페이로드의 issuer가 허용 목록에 없으면 UnauthorizedException 발생시킨다")
     fun verifyPayLoad_invalidIssuer_throwsException() {
         // given
         val payload = OIDCDecodePayload(
@@ -99,14 +121,19 @@ class JjwtOIDCTokenVerifyAdapterTest {
 
         // when & then
         assertThrows<UnauthorizedException> {
-            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, "https://kauth.kakao.com", "test-app-key", "test-nonce")
+            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(
+                payload,
+                listOf("https://kauth.kakao.com"),
+                listOf("test-app-key"),
+                "test-nonce"
+            )
         }.also {
             assertThat(it.message).contains("OIDC ID 토큰의 형식이나 구성이 올바르지 않습니다.")
         }
     }
 
     @Test
-    @DisplayName("페이로드의 audience가 일치하지 않으면 UnauthorizedException을 발생시킨다")
+    @DisplayName("페이로드의 audience가 허용 목록에 없으면 UnauthorizedException을 발생시킨다")
     fun verifyPayLoad_invalidAudience_throwsException() {
         // given
         val issuer = "https://kauth.kakao.com"
@@ -121,7 +148,28 @@ class JjwtOIDCTokenVerifyAdapterTest {
 
         // when & then
         assertThrows<UnauthorizedException> {
-            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, issuer, "valid-aud", "test-nonce")
+            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, listOf(issuer), listOf("valid-aud"), "test-nonce")
+        }.also {
+            assertThat(it.message).contains("OIDC ID 토큰의 형식이나 구성이 올바르지 않습니다.")
+        }
+    }
+
+    @Test
+    @DisplayName("허용 목록이 비어 있으면 검증을 통과시키지 않는다")
+    fun verifyPayLoad_emptyAllowList_throwsException() {
+        // given: 설정하지 않은 제공자로 로그인을 시도하는 경우다.
+        val payload = OIDCDecodePayload(
+            iss = "https://appleid.apple.com",
+            aud = "",
+            sub = "sub",
+            nonce = "test-nonce",
+            email = "test@test.com",
+            nickname = null
+        )
+
+        // when & then
+        assertThrows<UnauthorizedException> {
+            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, emptyList(), emptyList(), "test-nonce")
         }.also {
             assertThat(it.message).contains("OIDC ID 토큰의 형식이나 구성이 올바르지 않습니다.")
         }
@@ -144,7 +192,7 @@ class JjwtOIDCTokenVerifyAdapterTest {
 
         // when & then
         assertThrows<UnauthorizedException> {
-            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, issuer, audience, "expected-nonce")
+            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, listOf(issuer), listOf(audience), "expected-nonce")
         }.also {
             assertThat(it.message).contains("OIDC ID 토큰의 nonce 검증에 실패했습니다.")
         }

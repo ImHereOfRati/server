@@ -7,12 +7,9 @@ interface OidcProviderConfigPort {
     fun configuredProviders(): List<OAuth2Provider>
 }
 
-/**
- * application이 소유하는 provider 설정 값객체. (adapter 바인딩 타입과 분리)
- */
 data class OidcProviderConfig(
-    val issuer: String,
-    val audience: String,
+    val issuers: List<String>,
+    val audiences: List<String>,
     val cacheKey: String,
     val jwksUri: String,
 )

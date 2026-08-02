@@ -23,14 +23,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-/**
- * AuthController E2E 통합 테스트.
- *
- * 실제 Spring Security 필터 체인과 DB를 사용하여 OIDC 인증 플로우를 검증하며,
- * 정상/실패 케이스 모두 RestDocs(epages)로 문서화한다.
- *
- * `/api/auth`는 가입과 로그인을 구분하지 않는다. 계정이 없으면 만들고, 있으면 그대로 로그인시킨다.
- */
 class AuthControllerIntegrationTest : WebIntegrationTestSupport() {
 
     companion object {

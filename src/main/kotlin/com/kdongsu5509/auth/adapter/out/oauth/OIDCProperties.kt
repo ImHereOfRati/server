@@ -12,8 +12,8 @@ data class OIDCProperties(
     var providers: MutableMap<String, Provider> = mutableMapOf()
 ) : OidcProviderConfigPort {
     data class Provider(
-        var issuer: String = "",
-        var audience: String = "",
+        var issuers: MutableList<String> = mutableListOf(),
+        var audiences: MutableList<String> = mutableListOf(),
         var cacheKey: String = "",
         var jwksUri: String = ""
     )
@@ -25,7 +25,12 @@ data class OIDCProperties(
         OAuth2Provider.entries.filter { providers.containsKey(it.configKey()) }
 
     private fun Provider.toConfig(): OidcProviderConfig =
-        OidcProviderConfig(issuer = issuer, audience = audience, cacheKey = cacheKey, jwksUri = jwksUri)
+        OidcProviderConfig(
+            issuers = issuers.filter { it.isNotBlank() },
+            audiences = audiences.filter { it.isNotBlank() },
+            cacheKey = cacheKey,
+            jwksUri = jwksUri
+        )
 
     private fun OAuth2Provider.configKey(): String = name.lowercase()
 }

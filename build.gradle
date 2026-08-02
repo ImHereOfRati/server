@@ -47,6 +47,7 @@ configurations {
 
 dependencies {
     implementation platform("org.springframework.boot:spring-boot-dependencies:4.1.0")
+    ksp platform("org.springframework.boot:spring-boot-dependencies:4.1.0")
     implementation platform("org.springframework.modulith:spring-modulith-bom:2.1.0")
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 
@@ -85,11 +86,12 @@ dependencies {
 
     //Spring Modulith
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
-    implementation 'org.springframework.modulith:spring-modulith-starter-jdbc'
+    implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
 
-    // RabbitMQ
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'org.springframework.retry:spring-retry:2.0.6'
+    implementation 'org.springframework:spring-aop'
+    implementation 'org.aspectj:aspectjweaver'
 
     // TEST (Spring BOM 적용)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -101,10 +103,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
     testImplementation 'com.h2database:h2'
     testImplementation "org.mockito.kotlin:mockito-kotlin:5.2.1"
-
-    testImplementation platform("org.testcontainers:testcontainers-bom:1.20.1")
-    testImplementation 'org.testcontainers:junit-jupiter'
-    testImplementation 'org.testcontainers:testcontainers'
 
     // TEST Docs
     testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.20.0'
@@ -134,6 +132,7 @@ ext {
 }
 
 test {
+    useJUnitPlatform()
     outputs.dir snippetsDir
 }
 

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: "ImHere production infra (two EC2: app medium + rabbitmq small, EIP, ECR, GitHub Actions OIDC role)"
+Description: "ImHere production infra (single EC2 running the whole compose stack, EIP, ECR, GitHub Actions OIDC role)"
 
 Parameters:
   KeyName:
@@ -7,20 +7,14 @@ Parameters:
     Description: EC2 SSH key pair name
   AppInstanceType:
     Type: String
-    Default: t3.small
+    Default: t3.medium
     AllowedValues:
       - t3.micro
       - t3.small
       - t3.medium
-    Description: App EC2 instance type
-  RabbitMqInstanceType:
-    Type: String
-    Default: t3.micro
-    AllowedValues:
-      - t3.micro
-      - t3.small
-      - t3.medium
-    Description: RabbitMQ EC2 instance type
+    Description: >-
+      App EC2 instance type. The single host runs the entire docker-compose stack
+      (app, dsko, nginx, prometheus, grafana, alloy), so t3.medium is the practical floor.
   VpcCidr:
     Type: String
     Default: 10.50.0.0/16
@@ -37,16 +31,6 @@ Parameters:
     Type: String
     Default: imhere/dsko
     Description: ECR repository name for the app image
-  RabbitMqUser:
-    Type: String
-    Default: imhere
-  RabbitMqPassword:
-    Type: String
-    NoEcho: true
-    Default: imhere-rabbit
-  RabbitMqVHost:
-    Type: String
-    Default: /main
 
 Resources:
   AppVpc:
@@ -125,27 +109,6 @@ Resources:
         - Key: Name
           Value: imhere-prod-app-sg
 
-  RabbitMqSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: ImHere RabbitMQ security group
-      VpcId: !Ref AppVpc
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 5672
-          ToPort: 5672
-          SourceSecurityGroupId: !Ref AppSecurityGroup
-        - IpProtocol: tcp
-          FromPort: 15672
-          ToPort: 15672
-          SourceSecurityGroupId: !Ref AppSecurityGroup
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: imhere-prod-rabbitmq-sg
-
   AppInstance:
     Type: AWS::EC2::Instance
     Properties:
@@ -182,58 +145,6 @@ Resources:
     Properties:
       AllocationId: !GetAtt AppElasticIp.AllocationId
       InstanceId: !Ref AppInstance
-
-  RabbitMqInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: !Ref RabbitMqInstanceType
-      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
-      KeyName: !Ref KeyName
-      SubnetId: !Ref PublicSubnet
-      SecurityGroupIds:
-        - !Ref RabbitMqSecurityGroup
-      Tags:
-        - Key: Name
-          Value: imhere-prod-rabbitmq
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash -xe
-          dnf update -y
-          dnf install -y docker
-          systemctl enable --now docker
-          usermod -aG docker ec2-user || true
-          RABBITMQ_IMAGE='rabbitmq:4-management-alpine'
-          RABBITMQ_CONTAINER='rabbitmq-container'
-          RABBITMQ_USER='${RabbitMqUser}'
-          RABBITMQ_PASSWORD='${RabbitMqPassword}'
-          RABBITMQ_VHOST='${RabbitMqVHost}'
-          docker volume create rabbitmq_data || true
-          docker rm -f "$RABBITMQ_CONTAINER" || true
-          docker run -d --name "$RABBITMQ_CONTAINER" --restart unless-stopped \
-            -p 5672:5672 \
-            -p 15672:15672 \
-            --health-cmd='rabbitmq-diagnostics -q ping' \
-            --health-interval=10s \
-            --health-timeout=5s \
-            --health-retries=12 \
-            -v rabbitmq_data:/var/lib/rabbitmq \
-            "$RABBITMQ_IMAGE"
-
-          for attempt in $(seq 1 30); do
-            if docker exec "$RABBITMQ_CONTAINER" rabbitmq-diagnostics -q ping; then
-              break
-            fi
-            if [ "$attempt" -eq 30 ]; then
-              echo "RabbitMQ did not become ready in time" >&2
-              exit 1
-            fi
-            sleep 5
-          done
-
-          docker exec "$RABBITMQ_CONTAINER" rabbitmqctl add_vhost "$RABBITMQ_VHOST" || true
-          docker exec "$RABBITMQ_CONTAINER" rabbitmqctl add_user "$RABBITMQ_USER" "$RABBITMQ_PASSWORD" || true
-          docker exec "$RABBITMQ_CONTAINER" rabbitmqctl change_password "$RABBITMQ_USER" "$RABBITMQ_PASSWORD"
-          docker exec "$RABBITMQ_CONTAINER" rabbitmqctl set_permissions -p "$RABBITMQ_VHOST" "$RABBITMQ_USER" ".*" ".*" ".*"
 
   GitHubActionsDeployRole:
     Type: AWS::IAM::Role
@@ -315,18 +226,9 @@ Outputs:
   Ec2InstanceId:
     Description: App EC2 instance ID
     Value: !Ref AppInstance
-  RabbitMqInstanceId:
-    Description: RabbitMQ EC2 instance ID
-    Value: !Ref RabbitMqInstance
-  RabbitMqPrivateIp:
-    Description: RabbitMQ private IP for the app host to reach
-    Value: !GetAtt RabbitMqInstance.PrivateIp
   SecurityGroupId:
     Description: App security group ID
     Value: !Ref AppSecurityGroup
-  RabbitMqSecurityGroupId:
-    Description: RabbitMQ security group ID
-    Value: !Ref RabbitMqSecurityGroup
   GitHubActionsRoleArn:
     Description: GitHub Actions deploy role ARN
     Value: !GetAtt GitHubActionsDeployRole.Arn

@@ -2,10 +2,11 @@ package com.kdongsu5509.friends.controller
 
 import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
+import com.kdongsu5509.friends.domain.FriendRelationStatus
 import com.kdongsu5509.friends.service.FriendRelationCommandService
 import com.kdongsu5509.friends.service.FriendRelationQueryService
 import com.kdongsu5509.friends.service.dto.*
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -43,7 +44,7 @@ class FriendRequestControllerWebMvcTest {
     private lateinit var friendRelationQueryService: FriendRelationQueryService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     private val requesterId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val otherId = UUID.fromString("00000000-0000-0000-0000-000000000002")
@@ -107,14 +108,14 @@ class FriendRequestControllerWebMvcTest {
         // given
         val id = UUID.randomUUID()
         given(friendRelationCommandService.acceptRequest(eq(id), eq(requesterId)))
-            .willReturn(FriendshipView(id, me, other, me.nickname, now, now))
+            .willReturn(FriendshipView(id, me, other, other.nickname, now, now))
 
         // when & then
         mockMvc.perform(post("/api/friends/requests/$id/accept").with(user(principal)).with(csrf()))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.owner.email").value(me.email))
             .andExpect(jsonPath("$.data.friend.email").value(other.email))
-            .andExpect(jsonPath("$.data.friendAlias").value(me.nickname))
+            .andExpect(jsonPath("$.data.friendAlias").value(other.nickname))
     }
 
     @Test
@@ -124,7 +125,7 @@ class FriendRequestControllerWebMvcTest {
         val id = UUID.randomUUID()
         given(friendRelationCommandService.rejectRequest(eq(id), eq(requesterId)))
             .willReturn(
-                FriendRestrictionView(id, me, other, FriendRestrictionType.REJECT, now, now, now.plusMonths(1))
+                FriendRestrictionView(id, me, other, FriendRelationStatus.REJECTED, now, now, now.plusMonths(1))
             )
 
         // when & then
@@ -132,7 +133,7 @@ class FriendRequestControllerWebMvcTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.restrictor.email").value(me.email))
             .andExpect(jsonPath("$.data.restricted.email").value(other.email))
-            .andExpect(jsonPath("$.data.type").value("REJECT"))
+            .andExpect(jsonPath("$.data.type").value("REJECTED"))
     }
 
     private fun requestView(id: UUID = UUID.randomUUID()) =

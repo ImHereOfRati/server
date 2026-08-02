@@ -12,12 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.util.*
 
-/**
- * 관리자 관계 화면.
- *
- * 세 페이지 컨트롤러가 서비스만 다르고 구조가 같았다.
- * 경로·모델 속성 이름·템플릿 이름은 화면 계약이라 그대로 둔다.
- */
 @Controller
 class FriendRelationAdminPageController(
     private val friendRelationAdminQueryService: FriendRelationAdminQueryService,

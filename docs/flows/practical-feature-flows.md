@@ -46,7 +46,7 @@
 |---|---|
 | 시작점 | `geofence_background_callback`, `geofence_background_runtime`, `geofence_delivery_pipeline` |
 | 흐름 | 디바이스 geofence 이벤트 수신 -> background runtime 기동 -> 수신자 해석 -> snapshot 생성 -> queue 적재 -> 즉시 전송 시도 -> 실패 시 retry scheduler -> terminal failure 기록 |
-| 서버에서 같이 봐야 할 문서 | [notification-pipeline.md](notification-pipeline.md), [rabbitmq-dlq-replay.md](rabbitmq-dlq-replay.md), [fcm-token-failure-chain.md](fcm-token-failure-chain.md) |
+| 서버에서 같이 봐야 할 문서 | [notification-pipeline.md](notification-pipeline.md), [failed-notification-replay.md](failed-notification-replay.md), [fcm-token-failure-chain.md](fcm-token-failure-chain.md) |
 
 ### 5. FCM Notification Lifecycle
 
@@ -54,7 +54,7 @@
 |---|---|
 | 시작점 | `firebase_cloud_message_service`, `fcm_message_handler`, `fcm_token_service` |
 | 흐름 | 앱 시작 후 권한 요청 -> 로그인 후 FCM 토큰 생성/재등록 -> foreground 수신 + local notification -> payload path 추출 -> router 준비 후 이동 |
-| 서버에서 같이 봐야 할 문서 | [fcm-token-failure-chain.md](fcm-token-failure-chain.md), [notification-pipeline.md](notification-pipeline.md), [rabbitmq-dlq-replay.md](rabbitmq-dlq-replay.md) |
+| 서버에서 같이 봐야 할 문서 | [fcm-token-failure-chain.md](fcm-token-failure-chain.md), [notification-pipeline.md](notification-pipeline.md), [failed-notification-replay.md](failed-notification-replay.md) |
 
 ### 6. Friend / Contact / Restriction
 

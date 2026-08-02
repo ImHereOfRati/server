@@ -22,7 +22,7 @@ class FriendRelationTest {
 
         private fun requestedByAlice() = FriendRelation(ALICE, BOB, MESSAGE)
 
-        private fun FriendRelation.acceptWithNicknames() = accept(lowAlias = "alice", highAlias = "bob")
+        private fun FriendRelation.acceptWithNicknames() = accept(lowNickname = "alice", highNickname = "bob")
     }
 
     @Nested
@@ -80,13 +80,16 @@ class FriendRelationTest {
     inner class Accept {
 
         @Test
-        @DisplayName("수락하면 ACCEPTED가 되고 넘겨받은 별칭이 각 자리에 놓인다")
+        @DisplayName("수락하면 ACCEPTED가 되고 각자 상대 닉네임을 별칭으로 갖는다")
         fun accept_sets_both_aliases() {
             val accepted = requestedByAlice().acceptWithNicknames()
 
             assertThat(accepted.status).isEqualTo(FriendRelationStatus.ACCEPTED)
-            assertThat(accepted.lowAlias?.value).isEqualTo("alice")
-            assertThat(accepted.highAlias?.value).isEqualTo("bob")
+            // 별칭 칸은 주인이 상대를 부르는 이름이므로 low 칸에는 high의 닉네임이 들어간다.
+            assertThat(accepted.lowAlias?.value).isEqualTo("bob")
+            assertThat(accepted.highAlias?.value).isEqualTo("alice")
+            assertThat(accepted.getAlias(ALICE)?.value).isEqualTo("bob")
+            assertThat(accepted.getAlias(BOB)?.value).isEqualTo("alice")
             assertThat(accepted.message).isNull()
         }
 

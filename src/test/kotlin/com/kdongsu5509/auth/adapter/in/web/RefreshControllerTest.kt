@@ -4,7 +4,7 @@ import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.adapter.`in`.web.dto.TokenRefreshRequest
 import com.kdongsu5509.auth.application.port.`in`.TokenRefreshUseCase
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
@@ -37,7 +37,7 @@ class RefreshControllerTest {
     private lateinit var tokenRefreshUseCase: TokenRefreshUseCase
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @Test
     @DisplayName("RefreshToken을 사용하여 토큰을 갱신한다")

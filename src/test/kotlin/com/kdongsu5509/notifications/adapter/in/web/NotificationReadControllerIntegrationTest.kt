@@ -1,169 +1,80 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.common.testsupport.WebIntegrationTestSupport
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.notifications.adapter.out.persistence.NotificationHistoryJpaEntity
-import com.kdongsu5509.notifications.adapter.out.persistence.SpringDataNotificationHistoryRepository
+import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
+import com.kdongsu5509.notifications.domain.Notification
+import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationTemplate
+import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.restdocs.payload.PayloadDocumentation.*
-import org.springframework.restdocs.request.RequestDocumentation.*
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.util.UUID
 
 class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
-
     @Autowired
-    private lateinit var notificationHistoryRepository: SpringDataNotificationHistoryRepository
+    private lateinit var persistencePort: NotificationPersistencePort
 
     private val userDetails = ImHereUserDetails(
         email = "receiver@example.com",
-        nickname = "receiverNick",
+        nickname = "receiver",
         role = "USER",
-        status = "ACTIVE"
-    )
-
-    private fun errorResponseFields() = relaxedResponseFields(
-        fieldWithPath("imhereResponseCode").description("에러 코드"),
-        fieldWithPath("message").description("에러 메시지"),
-        fieldWithPath("data.id").description("문제가 발생한 알림 식별자").optional()
+        status = "ACTIVE",
+        userId = UUID.randomUUID(),
     )
 
     @Test
-    @DisplayName("알림 조회 요청은 저장된 알림 목록을 반환한다")
-    fun getNotificationsSuccess() {
-        notificationHistoryRepository.save(
-            NotificationHistoryJpaEntity(
-                receiverEmail = userDetails.email,
-                senderNickname = "senderNick",
-                title = "title-1",
-                body = "body-1",
-                type = "TERMS_UPDATE_NOTICE",
-                path = null,
-                isRead = false
-            )
-        )
+    @DisplayName("수신함은 SENT FCM만 기존 응답 스키마로 반환하고 SMS와 미발송 알림을 제외한다")
+    fun inbox_filters_by_method_and_status() {
+        val sentFcm =
+            persistencePort.save(requested("sent-fcm", NotificationMethod.FCM).markSent(java.time.LocalDateTime.now()))
+        persistencePort.save(requested("pending-fcm", NotificationMethod.FCM))
+        persistencePort.save(requested("sent-sms", NotificationMethod.SMS).markSent(java.time.LocalDateTime.now()))
 
-        mockMvc.perform(
-            get("/api/notifications")
-                .param("page", "0")
-                .param("size", "20")
-                .with(user(userDetails))
-        )
+        mockMvc.perform(get("/api/notifications").with(user(userDetails)))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data[0].senderNickname").value("senderNick"))
-            .andExpect(jsonPath("$.data[0].title").value("title-1"))
-            .andExpect(jsonPath("$.data[0].isRead").value(false))
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "notifications-get-success",
-                    snippets = arrayOf(
-                        queryParameters(
-                            parameterWithName("page").description("조회할 페이지 번호"),
-                            parameterWithName("size").description("페이지 크기")
-                        ),
-                        responseFields(
-                            fieldWithPath("imhereResponseCode").description("응답 코드"),
-                            fieldWithPath("message").description("응답 메시지"),
-                            fieldWithPath("data[].id").description("알림 ID"),
-                            fieldWithPath("data[].senderNickname").description("보낸 사람 닉네임"),
-                            fieldWithPath("data[].title").description("알림 제목"),
-                            fieldWithPath("data[].body").description("알림 본문"),
-                            fieldWithPath("data[].type").description("알림 타입"),
-                            fieldWithPath("data[].path").description("이동 경로").optional(),
-                            fieldWithPath("data[].isRead").description("읽음 여부"),
-                            fieldWithPath("data[].createdAt").description("생성 시각").optional()
-                        )
-                    )
-                )
-            )
+            .andExpect(jsonPath("$.data.length()").value(1))
+            .andExpect(jsonPath("$.data[0].id").value(sentFcm.id))
+            .andExpect(jsonPath("$.data[0].senderAlias").value("sender"))
+            .andExpect(jsonPath("$.data[0].type").value(NotificationType.FRIEND_REQUEST_RECEIVED.name))
     }
 
     @Test
-    @DisplayName("알림 읽음 요청은 읽음 상태를 true로 변경한다")
-    fun markAsReadSuccess() {
-        val saved = notificationHistoryRepository.save(
-            NotificationHistoryJpaEntity(
-                receiverEmail = userDetails.email,
-                senderNickname = "senderNick",
-                title = "title-1",
-                body = "body-1",
-                type = "TERMS_UPDATE_NOTICE",
-                path = null,
-                isRead = false
-            )
+    @DisplayName("수신함 알림 읽음 처리는 Notification 애그리게이트에 저장된다")
+    fun mark_as_read_updates_notification() {
+        val sent = persistencePort.save(
+            requested(
+                "read-target",
+                NotificationMethod.FCM
+            ).markSent(java.time.LocalDateTime.now())
         )
 
         mockMvc.perform(
-            patch("/api/notifications/{id}/read", saved.id)
+            patch("/api/notifications/{id}/read", sent.id)
                 .with(csrf())
                 .with(user(userDetails))
         ).andExpect(status().isNoContent)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "notifications-mark-as-read-success",
-                    snippets = arrayOf(
-                        pathParameters(
-                            parameterWithName("id").description("읽음 처리할 알림 식별자")
-                        )
-                    )
-                )
-            )
 
-        val updated = notificationHistoryRepository.findById(saved.id!!).orElseThrow()
-        assertThat(updated.isRead).isTrue()
+        assertThat(persistencePort.findById(requireNotNull(sent.id))!!.isRead).isTrue()
     }
 
-    @Test
-    @DisplayName("존재하지 않는 알림 읽음 요청은 404 Not Found를 반환한다")
-    fun markAsReadFailNotFound() {
-        mockMvc.perform(
-            patch("/api/notifications/{id}/read", 999999L)
-                .with(csrf())
-                .with(user(userDetails))
+    private fun requested(key: String, method: NotificationMethod): Notification =
+        Notification.request(
+            dedupeKey = "$key:$method",
+            targetIdentifier = userDetails.requiredUserId.toString(),
+            method = method,
+            rendered = NotificationTemplate.render(
+                type = NotificationType.FRIEND_REQUEST_RECEIVED,
+                senderAlias = "sender",
+            ),
+            bodyOverride = if (method == NotificationMethod.SMS) "문자 본문" else null,
         )
-            .andExpect(status().isNotFound)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "notifications-mark-as-read-fail-not-found",
-                    snippets = arrayOf(errorResponseFields())
-                )
-            )
-    }
-
-    @Test
-    @DisplayName("내 알림이 아닌 읽음 요청은 403 Forbidden을 반환한다")
-    fun markAsReadFailForbidden() {
-        val saved = notificationHistoryRepository.save(
-            NotificationHistoryJpaEntity(
-                receiverEmail = "other@example.com",
-                senderNickname = "senderNick",
-                title = "title-1",
-                body = "body-1",
-                type = "TERMS_UPDATE_NOTICE",
-                path = null,
-                isRead = false
-            )
-        )
-
-        mockMvc.perform(
-            patch("/api/notifications/{id}/read", saved.id)
-                .with(csrf())
-                .with(user(userDetails))
-        )
-            .andExpect(status().isForbidden)
-            .andDo(
-                MockMvcRestDocumentationWrapper.document(
-                    identifier = "notifications-mark-as-read-fail-forbidden",
-                    snippets = arrayOf(errorResponseFields())
-                )
-            )
-    }
 }

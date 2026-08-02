@@ -3,6 +3,7 @@ package com.kdongsu5509.notifications.adapter.out.persistence
 import com.kdongsu5509.notifications.application.port.out.FcmTokenPersistencePort
 import com.kdongsu5509.notifications.domain.FcmToken
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 class FcmTokenPersistenceAdapter(
@@ -16,8 +17,8 @@ class FcmTokenPersistenceAdapter(
         )
     }
 
-    override fun findByUserEmail(userEmail: String): FcmToken? {
-        return springDataFcmTokenRepository.findByEmail(userEmail)
+    override fun findByOwnerId(ownerId: UUID): FcmToken? {
+        return springDataFcmTokenRepository.findByOwnerId(ownerId)
             ?.let { fcmTokenMapper.toDomain(it) }
     }
 

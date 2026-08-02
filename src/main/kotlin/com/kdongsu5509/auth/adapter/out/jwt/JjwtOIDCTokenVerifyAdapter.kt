@@ -22,12 +22,6 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
 
     companion object {
         private val KID_PATTERN = """ "kid"\s*:\s*"([^"]+)" """.trim().toRegex()
-
-        // Google은 iss를 스킴 포함/미포함 두 형태로 발급하므로 둘 다 허용한다.
-        // (해당 지식을 config로 완전 이관하려면 verifyPayLoad 포트가 허용 issuer 집합을
-        //  받도록 시그니처를 바꿔야 해 경계 제약상 보류 — 여기서는 상수로 명시만 한다.)
-        private const val GOOGLE_ISSUER = "https://accounts.google.com"
-        private const val GOOGLE_ISSUER_NO_SCHEME = "accounts.google.com"
     }
 
     override fun getKid(token: String): String {
@@ -41,9 +35,14 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
         return kidMatch?.groupValues?.get(1) ?: AuthException.OIDC_FORMAT_INVALID.throwIt()
     }
 
-    override fun verifyPayLoad(payload: OIDCDecodePayload, issuer: String, audience: String, nonce: String) {
-        verifyIssuer(payload.iss, issuer)
-        verifyAudience(payload.aud, audience)
+    override fun verifyPayLoad(
+        payload: OIDCDecodePayload,
+        allowedIssuers: Collection<String>,
+        allowedAudiences: Collection<String>,
+        nonce: String
+    ) {
+        verifyIssuer(payload.iss, allowedIssuers)
+        verifyAudience(payload.aud, allowedAudiences)
         verifyNonce(payload.nonce, nonce)
     }
 
@@ -63,19 +62,14 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
         }
     }
 
-    private fun verifyIssuer(actualIssuer: String, expectedIssuer: String) {
-        val allowedIssuers = when (expectedIssuer) {
-            GOOGLE_ISSUER -> setOf(GOOGLE_ISSUER, GOOGLE_ISSUER_NO_SCHEME)
-            else -> setOf(expectedIssuer)
-        }
-
-        if (actualIssuer !in allowedIssuers) {
+    private fun verifyIssuer(actualIssuer: String, allowedIssuers: Collection<String>) {
+        if (allowedIssuers.isEmpty() || actualIssuer !in allowedIssuers) {
             AuthException.OIDC_FORMAT_INVALID.throwIt()
         }
     }
 
-    private fun verifyAudience(actualAudience: String, expectedAudience: String) {
-        if (actualAudience != expectedAudience) {
+    private fun verifyAudience(actualAudience: String, allowedAudiences: Collection<String>) {
+        if (allowedAudiences.isEmpty() || actualAudience !in allowedAudiences) {
             AuthException.OIDC_FORMAT_INVALID.throwIt()
         }
     }

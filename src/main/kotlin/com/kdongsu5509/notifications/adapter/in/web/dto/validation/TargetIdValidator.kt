@@ -1,15 +1,13 @@
 package com.kdongsu5509.notifications.adapter.`in`.web.dto.validation
 
-import com.kdongsu5509.notifications.adapter.`in`.web.dto.MultiNotificationRequest
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationRequest
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
-
+import java.util.*
 
 class TargetIdValidator : ConstraintValidator<ValidTargetId, Any> {
 
-    private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
     private val phoneRegex = Regex("^01[0-9]-?[0-9]{3,4}-?[0-9]{4}\$")
 
     override fun isValid(value: Any?, context: ConstraintValidatorContext): Boolean {
@@ -31,24 +29,26 @@ class TargetIdValidator : ConstraintValidator<ValidTargetId, Any> {
 
     private fun extractTargetInfo(value: Any): Pair<NotificationMethod, List<String>>? {
         return when (value) {
-            is NotificationRequest -> Pair(value.notificationMethod, listOf(value.targetId))
-            is MultiNotificationRequest -> Pair(value.notificationMethod, value.targetIds)
+            is NotificationRequest -> Pair(value.notificationMethod, value.targetIds)
             else -> null
         }
     }
 
     private fun isValidFormat(type: NotificationMethod, targetId: String): Boolean {
         return when (type) {
-            NotificationMethod.FCM -> emailRegex.matches(targetId)
+            NotificationMethod.FCM -> isUuid(targetId)
             NotificationMethod.SMS -> phoneRegex.matches(targetId)
         }
     }
+
+    private fun isUuid(value: String): Boolean =
+        runCatching { UUID.fromString(value) }.isSuccess
 
     private fun buildErrorMessage(context: ConstraintValidatorContext, type: NotificationMethod) {
         context.disableDefaultConstraintViolation()
 
         val message = when (type) {
-            NotificationMethod.FCM -> "올바른 이메일 형식이 아닙니다."
+            NotificationMethod.FCM -> "올바른 사용자 ID 형식이 아닙니다."
             NotificationMethod.SMS -> "올바른 휴대전화 번호 형식이 아닙니다."
         }
 

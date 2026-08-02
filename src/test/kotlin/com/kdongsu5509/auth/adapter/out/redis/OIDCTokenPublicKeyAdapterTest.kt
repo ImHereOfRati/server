@@ -32,8 +32,8 @@ class OIDCTokenPublicKeyAdapterTest {
         oidcProperties = OIDCProperties(
             providers = mutableMapOf(
                 "kakao" to OIDCProperties.Provider(
-                    issuer = "https://kauth.kakao.com",
-                    audience = "kakao-client-id",
+                    issuers = mutableListOf("https://kauth.kakao.com"),
+                    audiences = mutableListOf("kakao-client-id"),
                     cacheKey = "kakao-cache",
                     jwksUri = "https://kauth.kakao.com/.well-known/jwks.json"
                 )

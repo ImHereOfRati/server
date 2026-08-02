@@ -2,10 +2,11 @@ package com.kdongsu5509.friends.controller
 
 import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
+import com.kdongsu5509.friends.domain.FriendRelationStatus
 import com.kdongsu5509.friends.service.FriendRelationAdminCommandService
 import com.kdongsu5509.friends.service.FriendRelationAdminQueryService
 import com.kdongsu5509.friends.service.dto.*
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -35,7 +36,7 @@ class FriendRelationAdminControllerWebMvcTest {
     private lateinit var friendRelationAdminCommandService: FriendRelationAdminCommandService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     private val admin = ImHereUserDetails(
         email = "admin@example.com",
@@ -97,7 +98,7 @@ class FriendRelationAdminControllerWebMvcTest {
                 SliceImpl(
                     listOf(
                         FriendRestrictionView(
-                            UUID.randomUUID(), low, high, FriendRestrictionType.BLOCK, now, now, null
+                            UUID.randomUUID(), low, high, FriendRelationStatus.BLOCKED, now, now, null
                         )
                     ),
                     pageable,
@@ -108,6 +109,6 @@ class FriendRelationAdminControllerWebMvcTest {
         // when & then
         mockMvc.perform(get("/api/admin/friend-restrictions").with(user(admin)))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].type").value("BLOCK"))
+            .andExpect(jsonPath("$.data.content[0].type").value("BLOCKED"))
     }
 }

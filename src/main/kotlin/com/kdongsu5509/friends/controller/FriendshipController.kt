@@ -35,9 +35,9 @@ class FriendshipController(
     fun checkFriendStatus(
         @AuthenticationPrincipal(expression = "userId") userId: UUID,
         @PathVariable targetUserId: UUID
-    ): ResponseEntity<ApiResponse<Boolean>> {
+    ): Boolean {
         val friendship = friendRelationQueryService.findFriendByTarget(userId, targetUserId)
-        return (friendship != null).toOkResponse()
+        return (friendship != null)
     }
 
     @GetMapping("/{id}")

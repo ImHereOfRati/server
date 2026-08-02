@@ -3,8 +3,9 @@ package com.kdongsu5509.auth.security.handler
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.kdongsu5509.auth.security.ClientIpResolver
-import com.kdongsu5509.support.external.DiscordMessageDto
-import com.kdongsu5509.support.external.DiscordMessageSender
+import com.kdongsu5509.support.external.AlertChannel
+import com.kdongsu5509.support.external.AlertMessage
+import com.kdongsu5509.support.external.ErrorAlertPort
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
@@ -19,8 +20,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 class ImHereOttSuccessHandler(
-    private val discordMessageSender: DiscordMessageSender,
-    @param:Value("\${discord.url.ott}") private val ottAlertChannelWebhookUrl: String
+    private val errorAlertPort: ErrorAlertPort,
 ) : OneTimeTokenGenerationSuccessHandler {
 
     companion object {
@@ -55,8 +55,7 @@ class ImHereOttSuccessHandler(
             return
         }
 
-        val message = DiscordMessageDto(createOTTMessage(oneTimeToken, clientIp))
-        discordMessageSender.sendMessage(ottAlertChannelWebhookUrl, message)
+        errorAlertPort.send(AlertChannel.ADMIN_OTT, AlertMessage(createOTTMessage(oneTimeToken, clientIp)))
         response.sendRedirect("/admin/ott?username=${URLEncoder.encode(oneTimeToken.username, StandardCharsets.UTF_8)}")
     }
 

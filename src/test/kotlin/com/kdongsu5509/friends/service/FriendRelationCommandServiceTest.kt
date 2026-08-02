@@ -5,8 +5,10 @@ import com.kdongsu5509.friends.domain.FriendPair
 import com.kdongsu5509.friends.domain.FriendRelation
 import com.kdongsu5509.friends.domain.FriendRelationStatus
 import com.kdongsu5509.friends.domain.RequestMessage
+import com.kdongsu5509.friends.event.FriendRequestAccepted
+import com.kdongsu5509.friends.event.FriendRequestSent
 import com.kdongsu5509.friends.repository.FriendRelationRepository
-import com.kdongsu5509.shared.notification.NotificationPort
+import com.kdongsu5509.shared.event.DomainEventPublisher
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.user.api.UserLookupContract
 import com.kdongsu5509.user.api.UserResult
@@ -23,11 +25,10 @@ class FriendRelationCommandServiceTest {
 
     private val friendRelationRepository = mock<FriendRelationRepository>()
     private val userLookupContract = mock<UserLookupContract>()
-    private val notificationPort = mock<NotificationPort>()
+    private val eventPublisher = mock<DomainEventPublisher>()
 
     private lateinit var friendRelationCommandService: FriendRelationCommandService
 
-    /** 쌍은 (low, high)로 정규화되므로 어느 쪽이 low인지 고정해야 별칭 자리를 단언할 수 있다. */
     private val requesterId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val otherId = UUID.fromString("00000000-0000-0000-0000-000000000002")
 
@@ -57,7 +58,7 @@ class FriendRelationCommandServiceTest {
             friendRelationRepository,
             FriendMemberLoader(userLookupContract),
             userLookupContract,
-            notificationPort
+            eventPublisher
         )
     }
 
@@ -81,7 +82,10 @@ class FriendRelationCommandServiceTest {
             assertThat(result.requester.id).isEqualTo(requesterId)
             assertThat(result.receiver.id).isEqualTo(otherId)
             assertThat(result.message).isEqualTo(message)
-            then(notificationPort).should().send(any())
+            then(eventPublisher).should().publish(check<FriendRequestSent> {
+                assertThat(it.requesterId).isEqualTo(meResult.id)
+                assertThat(it.receiverId).isEqualTo(otherResult.id)
+            })
         }
 
         @Test
@@ -91,7 +95,7 @@ class FriendRelationCommandServiceTest {
             given(userLookupContract.findById(requesterId)).willReturn(meResult)
             given(userLookupContract.findById(otherId)).willReturn(otherResult)
             given(friendRelationRepository.findByPair(requesterId, otherId))
-                .willReturn(FriendRelation(requesterId, otherId, message).accept(lowAlias = "me", highAlias = "other"))
+                .willReturn(FriendRelation(requesterId, otherId, message).accept(lowNickname = "me", highNickname = "other"))
 
             // when
             val exception = assertThrows<ImHereBaseException> {
@@ -101,7 +105,7 @@ class FriendRelationCommandServiceTest {
             // then
             assertThat(exception.errorCode).isEqualTo(FriendException.ALREADY_FRIEND)
             then(friendRelationRepository).should(never()).save(any())
-            then(notificationPort).shouldHaveNoInteractions()
+            then(eventPublisher).shouldHaveNoInteractions()
         }
 
         @Test
@@ -213,11 +217,14 @@ class FriendRelationCommandServiceTest {
             // then
             assertThat(result.owner.id).isEqualTo(requesterId)
             assertThat(result.friend.id).isEqualTo(otherId)
-            then(notificationPort).should().send(any())
+            then(eventPublisher).should().publish(check<FriendRequestAccepted> {
+                assertThat(it.accepterId).isEqualTo(meResult.id)
+                assertThat(it.requesterId).isEqualTo(otherResult.id)
+            })
         }
 
         @Test
-        @DisplayName("수락하면 양쪽 별칭이 각 자리의 닉네임으로 채워진다")
+        @DisplayName("수락하면 양쪽 별칭이 상대 닉네임으로 채워진다")
         fun accept_fills_aliases_with_nicknames() {
             // given
             val id = UUID.randomUUID()
@@ -229,11 +236,12 @@ class FriendRelationCommandServiceTest {
             // when
             friendRelationCommandService.acceptRequest(id, requesterId)
 
-            // then: meId가 low라 low 자리에 me의 닉네임이 들어간다.
+            // then: meId가 low라 low 자리에는 상대(other)의 닉네임이 들어간다.
             val saved = argumentCaptor<FriendRelation>()
             then(friendRelationRepository).should().save(saved.capture())
-            assertThat(saved.firstValue.lowAlias?.value).isEqualTo(meResult.nickname)
-            assertThat(saved.firstValue.highAlias?.value).isEqualTo(otherResult.nickname)
+            assertThat(saved.firstValue.lowAlias?.value).isEqualTo(otherResult.nickname)
+            assertThat(saved.firstValue.highAlias?.value).isEqualTo(meResult.nickname)
+            assertThat(saved.firstValue.getAlias(requesterId)?.value).isEqualTo(otherResult.nickname)
         }
 
         @Test
@@ -278,7 +286,7 @@ class FriendRelationCommandServiceTest {
             val id = UUID.randomUUID()
             given(friendRelationRepository.findById(id)).willReturn(
                 storedRequest(id, requesterId = otherId, receiverId = requesterId)
-                    .accept(lowAlias = "me", highAlias = "other")
+                    .accept(lowNickname = "me", highNickname = "other")
             )
 
             // when
@@ -330,12 +338,6 @@ class FriendRelationCommandServiceTest {
         }
     }
 
-    /**
-     * 관계를 끊는 방법은 거절과 차단 둘뿐이다.
-     *
-     * 차단은 친구든 아니든 하나의 연산으로 처리한다. 예전에는 "친구 차단"과 "사용자 차단"이
-     * 나뉘어 있었지만 결과 상태가 같아서 합쳤다.
-     */
     @Nested
     @DisplayName("차단")
     inner class Block {
@@ -469,7 +471,6 @@ class FriendRelationCommandServiceTest {
         }
     }
 
-    /** 저장된 요청 행을 흉내 낸다. 식별자가 있어야 유스케이스가 삭제·전이를 걸 수 있다. */
     private fun storedRequest(id: UUID, requesterId: UUID, receiverId: UUID): FriendRelation =
         FriendRelation(
             id = id,
@@ -481,8 +482,7 @@ class FriendRelationCommandServiceTest {
             updatedAt = now
         )
 
-    /** 저장된 친구 관계 행. 수락 시점에 양쪽 별칭이 각자 닉네임으로 채워져 있다. */
     private fun storedFriendship(id: UUID): FriendRelation =
         storedRequest(id, requesterId = otherId, receiverId = requesterId)
-            .accept(lowAlias = meResult.nickname, highAlias = otherResult.nickname)
+            .accept(lowNickname = meResult.nickname, highNickname = otherResult.nickname)
 }

@@ -7,7 +7,12 @@ import io.jsonwebtoken.Jws
 interface OIDCIdTokenVerifyPort {
     fun getKid(token: String): String
 
-    fun verifyPayLoad(payload: OIDCDecodePayload, issuer: String, audience: String, nonce: String)
+    fun verifyPayLoad(
+        payload: OIDCDecodePayload,
+        allowedIssuers: Collection<String>,
+        allowedAudiences: Collection<String>,
+        nonce: String
+    )
 
     fun verifySignature(token: String, modulus: String, exponent: String): Jws<Claims>
 }

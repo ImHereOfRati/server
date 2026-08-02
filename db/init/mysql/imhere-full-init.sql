@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS friend_relations;
 DROP TABLE IF EXISTS friend_relationships;
 DROP TABLE IF EXISTS friend_restrictions;
 DROP TABLE IF EXISTS friend_request;
-DROP TABLE IF EXISTS notification_history;
+DROP TABLE IF EXISTS notification;
 DROP TABLE IF EXISTS fcm_token;
 DROP TABLE IF EXISTS one_time_tokens;
 DROP TABLE IF EXISTS event_publication;
@@ -26,11 +26,11 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users
 (
-    id                    CHAR(36)                                           NOT NULL,
+    id                    BINARY(16)                                         NOT NULL,
     email                 VARCHAR(255)                                       NOT NULL,
     nickname              VARCHAR(255)                                       NOT NULL,
     role                  ENUM ('NORMAL', 'ADMIN')                           NOT NULL,
-    provider              ENUM ('KAKAO', 'GOOGLE', 'NAVER')                  NOT NULL,
+    provider              ENUM ('KAKAO', 'GOOGLE', 'APPLE')                  NOT NULL,
     status                ENUM ('PENDING', 'ACTIVE', 'BLOCKED', 'WITHDRAWN') NOT NULL,
     oidc_subject          VARCHAR(255)                                       NULL,
     refresh_token_version BIGINT                                             NOT NULL DEFAULT 0,
@@ -64,11 +64,15 @@ CREATE TABLE terms
 
 CREATE TABLE user_agreement
 (
-    id               CHAR(36)    NOT NULL,
-    user_id          CHAR(36)    NOT NULL,
-    terms_version_id BIGINT      NOT NULL,
-    action           VARCHAR(20) NOT NULL,
-    occurred_at      DATETIME(6) NOT NULL,
+    id               BINARY(16)   NOT NULL,
+    user_id          BINARY(16)   NOT NULL,
+    terms_version_id BIGINT       NOT NULL,
+    action           VARCHAR(20)  NOT NULL,
+    occurred_at      DATETIME(6)  NOT NULL,
+    created_by       VARCHAR(255) NULL,
+    updated_by       VARCHAR(255) NULL,
+    created_at       DATETIME(6)  NOT NULL,
+    updated_at       DATETIME(6)  NOT NULL,
     PRIMARY KEY (id),
     INDEX idx_user_agreement_history (user_id, terms_version_id, occurred_at),
     CONSTRAINT fk_user_agreement_user FOREIGN KEY (user_id) REFERENCES users (id),
@@ -83,58 +87,78 @@ CREATE TABLE user_agreement
 -- 두 행이 한 쌍이라는 사실을 스키마가 표현하지 못해 한쪽만 지워지면 유령 관계가 남았다.
 -- 이제 status가 관계의 생애 주기를 표현하고, uk_friend_pair가 한 쌍 한 행을 강제한다.
 --
--- low/high 정렬은 애플리케이션이 정한다. MySQL의 CHAR 비교와 Java UUID.compareTo의
+-- low/high 정렬은 애플리케이션이 정한다. SQL의 바이트 비교와 Java UUID.compareTo의
 -- 정렬 결과가 다를 수 있어 SQL에서 순서를 정하면 도메인과 어긋난다.
 CREATE TABLE friend_relations
 (
-    friend_relation_id CHAR(36)                                             NOT NULL,
-    low_user_id        CHAR(36)                                             NOT NULL,
-    high_user_id       CHAR(36)                                             NOT NULL,
-    status             ENUM ('REQUESTED', 'ACCEPTED', 'REJECTED', 'BLOCKED') NOT NULL,
-    initiated_by       CHAR(36)                                             NOT NULL,
-    message            VARCHAR(255)                                         NULL,
-    low_alias          VARCHAR(20)                                          NULL,
-    high_alias         VARCHAR(20)                                          NULL,
-    expires_at         DATETIME(6)                                          NULL,
-    created_at         DATETIME(6)                                          NOT NULL,
-    updated_at         DATETIME(6)                                          NOT NULL,
+    friend_relation_id BINARY(16)                                                       NOT NULL,
+    low_user_id        BINARY(16)                                                       NOT NULL,
+    high_user_id       BINARY(16)                                                       NOT NULL,
+    status             ENUM ('REQUESTED', 'ACCEPTED', 'REJECTED', 'BLOCKED', 'CANCEL')  NOT NULL,
+    initiated_user_id  BINARY(16)                                                       NOT NULL,
+    message            VARCHAR(255)                                                     NULL,
+    low_alias          VARCHAR(10)                                                      NULL,
+    high_alias         VARCHAR(10)                                                      NULL,
+    expired_at         DATETIME(6)                                                      NULL,
+    created_at         DATETIME(6)                                                      NOT NULL,
+    updated_at         DATETIME(6)                                                      NOT NULL,
     PRIMARY KEY (friend_relation_id),
     UNIQUE KEY uk_friend_pair (low_user_id, high_user_id),
     KEY idx_friend_relations_low (low_user_id, status),
     KEY idx_friend_relations_high (high_user_id, status),
-    KEY idx_friend_relations_expires_at (expires_at),
+    KEY idx_friend_relations_expired_at (expired_at),
     CONSTRAINT fk_friend_relations_low FOREIGN KEY (low_user_id) REFERENCES users (id),
     CONSTRAINT fk_friend_relations_high FOREIGN KEY (high_user_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
+-- 토큰의 주인을 이메일이 아니라 사용자 식별자로 지목한다.
+-- 이메일은 사용자가 바꿀 수 있는 표시 정보라 소유 관계를 붙들어 두기에 적합하지 않다.
+-- 한 사용자당 토큰 한 개이므로 owner_id에 유니크를 건다.
 CREATE TABLE fcm_token
 (
     id          BIGINT              NOT NULL AUTO_INCREMENT,
     token       VARCHAR(255)        NOT NULL,
-    email       VARCHAR(255)        NOT NULL,
+    owner_id    BINARY(16)          NOT NULL,
     device_type ENUM ('AOS', 'IOS') NOT NULL,
     created_at  DATETIME(6)         NOT NULL,
     updated_at  DATETIME(6)         NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_fcm_token_owner_id (owner_id),
+    CONSTRAINT fk_fcm_token_owner FOREIGN KEY (owner_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
-CREATE TABLE notification_history
+-- 알림 한 건의 발송 생애주기를 담는다.
+-- 요청 접수(PENDING)부터
+-- 성공(SENT) / 재시도 가능한 실패(FAILED) / 재시도 소진(DEAD)까지를 status가 표현한다.
+-- DEAD는 재시도 소진 후 운영자 확인이 필요한 알림을 나타낸다.
+--
+-- uk_notification_dedupe_key가 멱등성 장치다. 같은 발송 요청이 두 번 들어와도 행은 하나만 생긴다.
+CREATE TABLE notification
 (
-    id              BIGINT       NOT NULL AUTO_INCREMENT,
-    receiver_email  VARCHAR(255) NOT NULL,
-    sender_nickname VARCHAR(255) NOT NULL,
-    title           VARCHAR(255) NOT NULL,
-    body            VARCHAR(255) NOT NULL,
-    type            VARCHAR(255) NOT NULL,
-    path            VARCHAR(255) NULL,
-    is_read         BIT(1)       NOT NULL,
-    created_at      DATETIME(6)  NOT NULL,
-    updated_at      DATETIME(6)  NOT NULL,
-    PRIMARY KEY (id)
+    id                BIGINT                                  NOT NULL AUTO_INCREMENT,
+    dedupe_key        VARCHAR(120)                            NOT NULL,
+    target_identifier VARCHAR(255)                            NOT NULL,
+    method            ENUM ('SMS', 'FCM')                     NOT NULL,
+    sender_alias      VARCHAR(255)                            NOT NULL,
+    type              VARCHAR(255)                            NOT NULL,
+    title             VARCHAR(255)                            NOT NULL,
+    body              VARCHAR(500)                            NOT NULL,
+    extra_data        VARCHAR(2000)                           NOT NULL,
+    status            ENUM ('PENDING', 'SENT', 'FAILED', 'DEAD') NOT NULL,
+    attempts          INT                                     NOT NULL DEFAULT 0,
+    last_error        VARCHAR(500)                            NULL,
+    sent_at           DATETIME(6)                             NULL,
+    is_read           BIT(1)                                  NOT NULL DEFAULT b'0',
+    created_at        DATETIME(6)                             NOT NULL,
+    updated_at        DATETIME(6)                             NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_notification_dedupe_key (dedupe_key),
+    KEY idx_notification_inbox (target_identifier, method, status, created_at),
+    KEY idx_notification_status (status, created_at)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
@@ -154,7 +178,7 @@ CREATE TABLE one_time_tokens
 
 CREATE TABLE event_publication
 (
-    id                     VARCHAR(36)   NOT NULL,
+    id                     BINARY(16)    NOT NULL,
     listener_id            VARCHAR(512)  NOT NULL,
     event_type             VARCHAR(512)  NOT NULL,
     serialized_event       VARCHAR(4000) NOT NULL,

@@ -33,7 +33,7 @@ class FriendRelationQueryRepositoryTest : PersistenceTestSupport() {
 
     private fun acceptedBetween(one: UUID, other: UUID): FriendRelation =
         friendRelationRepository.save(
-            FriendRelation(one, other, message).accept(lowAlias = "low", highAlias = "high")
+            FriendRelation(one, other, message).accept(lowNickname = "low", highNickname = "high")
         )
 
     @Test

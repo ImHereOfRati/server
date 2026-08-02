@@ -10,7 +10,7 @@ enum class FriendException(
 ) : ImHereBaseErrorCode {
     // --- 0xx: Bad Request (400) ---
     SELF_FRIENDSHIP(CommonErrorCode.INVALID_INPUT, "FRIEND-000", "자신에게는 친구 요청을 보낼 수 없습니다."),
-    FRIEND_ALIAS_TOO_LONG(CommonErrorCode.INVALID_INPUT, "FRIEND-001", "친구 별칭은 20자를 넘을 수 없습니다."),
+    FRIEND_ALIAS_TOO_LONG(CommonErrorCode.INVALID_INPUT, "FRIEND-001", "친구 별칭은 10자를 넘을 수 없습니다."),
     FRIENDSHIP_REQUEST_RECEIVER_MISS_MATCH(CommonErrorCode.INVALID_INPUT, "FRIEND-002", "본인에게 온 친구 요청이 아닙니다."),
     FRIEND_ALIAS_BLANK(CommonErrorCode.INVALID_INPUT, "FRIEND-003", "친구 별칭은 비어있을 수 없습니다."),
     REQUEST_MESSAGE_SIZE_MORE_THAN_TEN(CommonErrorCode.INVALID_INPUT, "FRIEND-004", "친구 요청 메시지는 10자 이상이어야 합니다."),

@@ -8,5 +8,5 @@ import org.springframework.web.service.annotation.HttpExchange
 interface OidcPublicKeyApiClient {
 
     @GetExchange("/.well-known/jwks.json")
-    fun fetchPublicKey(): OIDCPublicKeyResponse
+    fun fetchKakaoPublicKey(): OIDCPublicKeyResponse
 }

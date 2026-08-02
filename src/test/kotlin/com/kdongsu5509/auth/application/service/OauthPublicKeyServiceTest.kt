@@ -30,14 +30,14 @@ class OauthPublicKeyServiceTest {
         oidcProperties = OIDCProperties(
             providers = mutableMapOf(
                 "kakao" to OIDCProperties.Provider(
-                    issuer = "https://kauth.kakao.com",
-                    audience = "kakao-client-id",
+                    issuers = mutableListOf("https://kauth.kakao.com"),
+                    audiences = mutableListOf("kakao-client-id"),
                     cacheKey = "kakao-cache",
                     jwksUri = "https://kauth.kakao.com/.well-known/jwks.json"
                 ),
                 "google" to OIDCProperties.Provider(
-                    issuer = "https://accounts.google.com",
-                    audience = "google-client-id",
+                    issuers = mutableListOf("https://accounts.google.com"),
+                    audiences = mutableListOf("google-client-id"),
                     cacheKey = "google-cache",
                     jwksUri = "https://www.googleapis.com/oauth2/v3/certs"
                 )
@@ -73,7 +73,7 @@ class OauthPublicKeyServiceTest {
         // given
         val configPort = mock(OidcProviderConfigPort::class.java)
         given(configPort.get(OAuth2Provider.KAKAO))
-            .willReturn(OidcProviderConfig("iss", "aud", "cache-k", "uri-k"))
+            .willReturn(OidcProviderConfig(listOf("iss"), listOf("aud"), "cache-k", "uri-k"))
         val service = OauthPublicKeyService(oauthClientPort, configPort)
 
         // when

@@ -9,7 +9,7 @@ ImHere 서버를 **어떤 인프라 위에, 왜 그렇게 구성했는지** 정�
 | 결정 | 내용 | 근거 |
 |---|---|---|
 | 퍼블릭 서브넷 단일 구성 | Private Subnet / NAT Gateway 없이 모든 리소스를 퍼블릭 서브넷에 배치 | [aws.md](aws.md#선택-이유) |
-| App EC2와 RabbitMQ EC2 분리 | `dsko` + `nginx` + `alloy`는 앱 EC2, RabbitMQ는 별도 EC2 | [aws.md](aws.md#선택-이유) |
+| 앱 단일 배포 단위 | `dsko` + `nginx` + `alloy`만 운영 Compose에서 실행 | [docker.md](docker.md#운영-실행-구성) |
 | Elastic IP 고정 | 앱 EC2 교체 시에도 DNS를 다시 바꾸지 않도록 EIP 사용 | [aws.md](aws.md#선택-이유) |
 | GitHub OIDC 배포 권한 | 장기 Access Key 없이 GitHub Actions가 IAM Role Assume | [aws.md](aws.md#iam-github-actions-oidc) |
 | DB는 가비아 MySQL 사용 | 현재 규모와 운영 비용 기준에서 AWS RDS보다 단순 | [gabia.md](gabia.md#선택-이유) |

@@ -1,7 +1,7 @@
 package com.kdongsu5509.auth.adapter.out.oauth
 
 import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKeyResponse
-import com.kdongsu5509.auth.application.port.out.CachePort
+import com.kdongsu5509.shared.cache.CachePort
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -12,8 +12,8 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.whenever
-import java.time.Duration
 import org.springframework.web.client.RestClient
+import java.time.Duration
 
 @ExtendWith(MockitoExtension::class)
 class OidcPublicKeyClientTest {
@@ -40,13 +40,13 @@ class OidcPublicKeyClientTest {
         val mockResponse = OIDCPublicKeyResponse(keys = emptyList())
         val key = "kakaoOidcKeys::kakaoPublicKeySet"
         whenever(cachePort.find(key, OIDCPublicKeyResponse::class.java)).thenReturn(null)
-        whenever(oidcPublicKeyApiClient.fetchPublicKey()).thenReturn(mockResponse)
+        whenever(oidcPublicKeyApiClient.fetchKakaoPublicKey()).thenReturn(mockResponse)
 
         val result = client.fetch(key, "https://kauth.kakao.com/.well-known/jwks.json")
 
         assertThat(result).isSameAs(mockResponse)
         verify(cachePort).find(key, OIDCPublicKeyResponse::class.java)
-        verify(oidcPublicKeyApiClient).fetchPublicKey()
+        verify(oidcPublicKeyApiClient).fetchKakaoPublicKey()
         verify(cachePort).save(key, mockResponse, Duration.ofDays(8))
     }
 
@@ -69,12 +69,12 @@ class OidcPublicKeyClientTest {
     fun refresh() {
         val mockResponse = OIDCPublicKeyResponse(keys = emptyList())
         val key = "kakaoOidcKeys::kakaoPublicKeySet"
-        whenever(oidcPublicKeyApiClient.fetchPublicKey()).thenReturn(mockResponse)
+        whenever(oidcPublicKeyApiClient.fetchKakaoPublicKey()).thenReturn(mockResponse)
 
         val result = client.refresh(key, "https://kauth.kakao.com/.well-known/jwks.json")
 
         assertThat(result).isSameAs(mockResponse)
-        verify(oidcPublicKeyApiClient).fetchPublicKey()
+        verify(oidcPublicKeyApiClient).fetchKakaoPublicKey()
         verify(cachePort).save(key, mockResponse, Duration.ofDays(8))
     }
 }

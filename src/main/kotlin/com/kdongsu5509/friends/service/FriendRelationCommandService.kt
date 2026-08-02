@@ -4,15 +4,14 @@ import com.kdongsu5509.friends.FriendException
 import com.kdongsu5509.friends.FriendException.FRIEND_RELATIONSHIP_NOT_FOUND
 import com.kdongsu5509.friends.domain.FriendRelation
 import com.kdongsu5509.friends.domain.FriendRelationStatus
+import com.kdongsu5509.friends.event.FriendRequestAccepted
+import com.kdongsu5509.friends.event.FriendRequestSent
 import com.kdongsu5509.friends.repository.FriendRelationRepository
 import com.kdongsu5509.friends.service.dto.FriendMember
 import com.kdongsu5509.friends.service.dto.FriendRequestView
 import com.kdongsu5509.friends.service.dto.FriendRestrictionView
 import com.kdongsu5509.friends.service.dto.FriendshipView
-import com.kdongsu5509.shared.notification.NotificationPort
-import com.kdongsu5509.shared.notification.dto.NotificationCategory
-import com.kdongsu5509.shared.notification.dto.NotificationPersonInfo
-import com.kdongsu5509.shared.notification.dto.NotificationSendRequest
+import com.kdongsu5509.shared.event.DomainEventPublisher
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.exception.throwIt
@@ -22,26 +21,13 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
 
-/**
- * 관계를 바꾸는 유스케이스.
- *
- * 조회와 갈라 둔 이유는 두 쪽이 필요로 하는 것이 다르기 때문이다. 여기서는 상태 전이를 걸어야
- * 하므로 [FriendRelation]을 다뤄야 하고, 되돌리는 값이 곧 규칙을 지키는 근거가 된다.
- *
- * 애그리게이트는 식별자만 안다. 별칭에 쓸 닉네임이나 알림에 쓸 이메일처럼 사용자 표시 정보가
- * 필요한 자리에서만 [UserLookupContract]로 가져와 넘긴다. 삭제처럼 표시가 필요 없는 명령은
- * 사용자 조회를 일으키지 않는다.
- *
- * 클래스가 갈라지면서 트랜잭션 경계도 갈라진다. 이 클래스는 통째로 쓰기 트랜잭션이고,
- * 조회 쪽은 통째로 읽기 전용이다.
- */
 @Service
 @Transactional
 class FriendRelationCommandService(
     private val friendRelationRepository: FriendRelationRepository,
     private val friendMemberLoader: FriendMemberLoader,
     private val userLookupContract: UserLookupContract,
-    private val notificationPort: NotificationPort
+    private val eventPublisher: DomainEventPublisher,
 ) {
     fun sendRequest(requesterId: UUID, receiverId: UUID, message: String): FriendRequestView {
         val requester = FriendMember.from(userLookupContract.findById(requesterId))
@@ -58,12 +44,11 @@ class FriendRelationCommandService(
             )
         )
 
-        //TODO : RabbitMQ 제거할 방법 찾기. -> 이벤트 기반 비동기 @TransactionalEventLister 혹은 Modulith Event Publish.
-        notificationPort.send(
-            NotificationSendRequest(
-                category = NotificationCategory.FRIEND_REQUEST_RECEIVED,
-                sender = NotificationPersonInfo(requester.email, requester.nickname),
-                receiver = NotificationPersonInfo(receiver.email, receiver.nickname)
+        eventPublisher.publish(
+            FriendRequestSent(
+                requesterId = requester.id,
+                requesterNickname = requester.nickname,
+                receiverId = receiver.id,
             )
         )
 
@@ -76,27 +61,25 @@ class FriendRelationCommandService(
 
         val accepted = friendRelationRepository.save(
             relation.accept(
-                lowAlias = members.getValue(relation.pair.low).nickname,
-                highAlias = members.getValue(relation.pair.high).nickname
+                lowNickname = members.getValue(relation.pair.low).nickname,
+                highNickname = members.getValue(relation.pair.high).nickname
             )
         )
 
         val initiator = members.getValue(accepted.initiator())
         val target = members.getValue(accepted.target())
 
-        //TODO : notification -> eventListner
-        notificationPort.send(
-            NotificationSendRequest(
-                category = NotificationCategory.FRIEND_REQUEST_ACCEPTED,
-                sender = NotificationPersonInfo(target.email, target.nickname),
-                receiver = NotificationPersonInfo(initiator.email, initiator.nickname)
+        eventPublisher.publish(
+            FriendRequestAccepted(
+                accepterId = target.id,
+                accepterNickname = target.nickname,
+                requesterId = initiator.id,
             )
         )
 
         return FriendshipView.of(accepted, accepterId, members)
     }
 
-    /** 거절한 쪽이 제한의 주체가 되므로 관계의 방향이 뒤집힌다. */
     fun rejectRequest(relationId: UUID, rejecterId: UUID): FriendRestrictionView {
         val relation = findReceivedFriendRequests(relationId, rejecterId)
         val rejected = friendRelationRepository.save(relation.reject(LocalDateTime.now()))
@@ -107,7 +90,6 @@ class FriendRelationCommandService(
         )
     }
 
-    /** 받은 요청을 지운다. 거절과 달리 제한 기록을 남기지 않는다. */
     fun deleteReceivedRequest(requestId: UUID, receiverId: UUID) {
         findReceivedFriendRequests(requestId, receiverId)
         friendRelationRepository.deleteById(requestId)

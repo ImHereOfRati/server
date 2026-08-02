@@ -25,9 +25,6 @@ object OidcTestJwtProvider {
     val testPublicKey = keyPair.public
     val testPrivateKey = keyPair.private
 
-    /**
-     * 유효한 카카오 규격의 ID 토큰을 생성합니다.
-     */
     fun buildIdToken(email: String = PAYLOAD_EMAIL): String {
         val now = Instant.now()
         val issuedAt = Date.from(now)

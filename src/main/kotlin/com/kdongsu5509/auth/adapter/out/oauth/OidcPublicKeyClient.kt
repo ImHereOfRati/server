@@ -1,10 +1,10 @@
 package com.kdongsu5509.auth.adapter.out.oauth
 
 import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKeyResponse
-import com.kdongsu5509.auth.application.port.out.CachePort
 import com.kdongsu5509.auth.application.port.out.OauthClientPort
-import org.springframework.web.client.RestClient
+import com.kdongsu5509.shared.cache.CachePort
 import org.springframework.stereotype.Component
+import org.springframework.web.client.RestClient
 import java.time.Duration
 
 @Component
@@ -45,7 +45,7 @@ class OidcPublicKeyClient(
 
     private fun fetchRemote(jwksUri: String): OIDCPublicKeyResponse? {
         if (jwksUri.contains(KAKAO_JWKS_HOST)) {
-            return runCatching { oidcPublicKeyApiClient.fetchPublicKey() }.getOrNull()
+            return runCatching { oidcPublicKeyApiClient.fetchKakaoPublicKey() }.getOrNull()
         }
 
         return runCatching {

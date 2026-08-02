@@ -4,7 +4,7 @@ import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.adapter.`in`.web.dto.OIDCAuthRequest
 import com.kdongsu5509.auth.application.port.`in`.AuthUseCase
 import com.kdongsu5509.auth.application.service.dto.ImHereJwtToken
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import com.kdongsu5509.user.domain.OAuth2Provider
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -38,7 +38,7 @@ class AuthControllerTest {
     private lateinit var authUseCase: AuthUseCase
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @Test
     @DisplayName("정상 요청이면 200 OK와 토큰을 반환한다")

@@ -15,6 +15,9 @@ data class ImHereUserDetails(
     val status: String,
     val userId: UUID? = null,
 ) : UserDetails {
+    val requiredUserId: UUID
+        get() = userId ?: throw IllegalStateException("인증 주체에 사용자 식별자가 없습니다.")
+
     override fun getAuthorities(): Collection<GrantedAuthority> {
         return listOf(
             SimpleGrantedAuthority(RoleAuthority.toAuthority(role)),

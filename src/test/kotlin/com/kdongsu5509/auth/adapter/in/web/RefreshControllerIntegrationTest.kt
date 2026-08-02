@@ -17,12 +17,6 @@ import org.springframework.restdocs.payload.PayloadDocumentation.*
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-/**
- * RefreshController E2E 통합 테스트.
- *
- * 실제 Spring Security 필터 체인과 JWT 토큰 파서를 사용하여 토큰 재발급 플로우를 검증하며,
- * 정상/실패 케이스 모두 RestDocs(epages)로 문서화한다.
- */
 class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
 
     @Autowired

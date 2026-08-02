@@ -14,11 +14,6 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 
-/**
- * 401(인증 필요)과 403(권한 없음)을 가르는 판정만 검증한다.
- *
- * 응답 포맷과 imhereErrorCode 문자열은 클라이언트 계약이므로 값까지 고정한다.
- */
 class AuthAccessDeniedExceptionHandlerTest {
 
     private val handler = AuthAccessDeniedExceptionHandler()

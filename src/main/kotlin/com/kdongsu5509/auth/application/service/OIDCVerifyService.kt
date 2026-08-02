@@ -41,8 +41,8 @@ class OIDCVerifyService(
 
         oidcIdTokenVerifyPort.verifyPayLoad(
             payload,
-            providerProperties.issuer,
-            providerProperties.audience,
+            providerProperties.issuers,
+            providerProperties.audiences,
             expectedNonce
         )
 

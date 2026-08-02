@@ -1,25 +1,27 @@
 package com.kdongsu5509.auth.adapter.`in`.web
 
-import com.kdongsu5509.friends.service.dto.FriendMember
-import com.kdongsu5509.friends.service.dto.FriendRestrictionType
+import com.common.testsupport.WebIntegrationTestSupport
+import com.kdongsu5509.auth.security.shared.ImHereUserDetails
+import com.kdongsu5509.friends.domain.FriendRelationStatus
 import com.kdongsu5509.friends.service.FriendRelationAdminCommandService
 import com.kdongsu5509.friends.service.FriendRelationAdminQueryService
+import com.kdongsu5509.friends.service.dto.FriendMember
 import com.kdongsu5509.friends.service.dto.FriendRequestView
 import com.kdongsu5509.friends.service.dto.FriendRestrictionView
 import com.kdongsu5509.friends.service.dto.FriendshipView
-import com.kdongsu5509.user.service.UserQueryService
-import com.common.testsupport.WebIntegrationTestSupport
-import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.notifications.application.service.FailedNotificationAdminService
+import com.kdongsu5509.notifications.application.port.`in`.NotificationUseCase
+import com.kdongsu5509.notifications.domain.Notification
+import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationStatus
+import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
 import com.kdongsu5509.terms.service.TermService
+import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.domain.OAuth2Provider
-import com.kdongsu5509.user.domain.User
 import com.kdongsu5509.user.domain.UserRole
 import com.kdongsu5509.user.domain.UserStatus
-import com.kdongsu5509.user.api.UserResult
+import com.kdongsu5509.user.service.UserQueryService
 import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -32,14 +34,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.time.LocalDateTime
 import java.util.UUID.randomUUID
 
 class AdminWebIntegrationTest : WebIntegrationTestSupport() {
 
-    private val now: java.time.LocalDateTime = java.time.LocalDateTime.of(2026, 7, 27, 12, 0)
+    private val now: LocalDateTime = LocalDateTime.of(2026, 7, 27, 12, 0)
 
     @MockitoBean
-    private lateinit var failedNotificationAdminService: FailedNotificationAdminService
+    private lateinit var failedNotificationAdminService: NotificationUseCase
 
     @MockitoBean
     private lateinit var userQueryService: UserQueryService
@@ -52,7 +55,6 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
 
     @MockitoBean
     private lateinit var friendRelationAdminCommandService: FriendRelationAdminCommandService
-
 
 
     private val adminDetails = ImHereUserDetails(
@@ -92,8 +94,27 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     @Test
     @DisplayName("관리자는 실패 알림 관리 페이지에 접근할 수 있다")
     fun failedNotificationPageAccessibleForAdmin() {
-        whenever(failedNotificationAdminService.findAll(NotificationStatus.DEAD, 0, 100))
-            .thenReturn(emptyList())
+        whenever(failedNotificationAdminService.findAll(NotificationStatus.DEAD, 0, 100)).thenReturn(
+            listOf(
+                Notification.reconstruct(
+                    id = 1L,
+                    dedupeKey = "event:FCM",
+                    targetIdentifier = "receiver@example.com",
+                    method = NotificationMethod.FCM,
+                    senderAlias = "sender",
+                    type = NotificationType.FRIEND_REQUEST_RECEIVED,
+                    title = "제목",
+                    body = "본문",
+                    extraData = emptyMap(),
+                    status = NotificationStatus.DEAD,
+                    attempts = 3,
+                    lastError = "FCM 실패",
+                    sentAt = null,
+                    isRead = false,
+                    createdAt = now,
+                )
+            )
+        )
 
         mockMvc.perform(
             get("/admin/failed-notifications")
@@ -101,7 +122,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
         )
             .andExpect(status().isOk)
             .andExpect(content().string(containsString("실패 알림 관리")))
-            .andExpect(content().string(containsString("실패 알림이 없습니다.")))
+            .andExpect(content().string(containsString("receiver@example.com")))
     }
 
     @Test
@@ -137,7 +158,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
     @DisplayName("관리자는 약관 관리 페이지에 접근할 수 있다")
     fun termsPageAccessibleForAdmin() {
         whenever(termService.findAll()).thenReturn(
-            listOf(TermResult(1L, 1L, TermTypes.SERVICE, "서비스 이용약관", "내용", java.time.LocalDateTime.now(), true))
+            listOf(TermResult(1L, 1L, TermTypes.SERVICE, "서비스 이용약관", "내용", LocalDateTime.now(), true))
         )
 
         mockMvc.perform(
@@ -183,7 +204,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
             SliceImpl(
                 listOf(
                     FriendRestrictionView(
-                        randomUUID(), restrictor, restricted, FriendRestrictionType.BLOCK, now, now, null
+                        randomUUID(), restrictor, restricted, FriendRelationStatus.BLOCKED, now, now, null
                     )
                 ),
                 PageRequest.of(0, 20),
@@ -198,7 +219,7 @@ class AdminWebIntegrationTest : WebIntegrationTestSupport() {
         )
             .andExpect(status().isOk)
             .andExpect(content().string(containsString("친구 차단 관리")))
-            .andExpect(content().string(containsString("BLOCK")))
+            .andExpect(content().string(containsString("BLOCKED")))
     }
 
     @Test

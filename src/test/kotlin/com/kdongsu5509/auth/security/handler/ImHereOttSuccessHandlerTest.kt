@@ -1,6 +1,7 @@
 package com.kdongsu5509.auth.security.handler
 
-import com.kdongsu5509.support.external.DiscordMessageSender
+import com.kdongsu5509.support.external.AlertChannel
+import com.kdongsu5509.support.external.ErrorAlertPort
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -20,18 +21,17 @@ import java.time.Instant
 class ImHereOttSuccessHandlerTest {
 
     @Mock
-    private lateinit var discordMessageSender: DiscordMessageSender
+    private lateinit var errorAlertPort: ErrorAlertPort
 
-    private val webhookUrl = "http://discord.webhook"
     private lateinit var handler: ImHereOttSuccessHandler
 
     @BeforeEach
     fun setUp() {
-        handler = ImHereOttSuccessHandler(discordMessageSender, webhookUrl)
+        handler = ImHereOttSuccessHandler(errorAlertPort)
     }
 
     @Test
-    @DisplayName("handle 호출 시 Discord 메시지를 전송하고 OTT 입력 페이지로 이동시킨다")
+    @DisplayName("handle 호출 시 OTT 채널로 경보를 보내고 OTT 입력 페이지로 이동시킨다")
     fun handle() {
         val request = MockHttpServletRequest()
         val response = MockHttpServletResponse()
@@ -39,7 +39,7 @@ class ImHereOttSuccessHandlerTest {
 
         handler.handle(request, response, token)
 
-        verify(discordMessageSender).sendMessage(eq(webhookUrl), any())
+        verify(errorAlertPort).send(eq(AlertChannel.ADMIN_OTT), any())
         assert(response.status == 302)
         assert(response.redirectedUrl == "/admin/ott?username=admin")
     }

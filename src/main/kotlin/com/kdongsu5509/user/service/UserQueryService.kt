@@ -29,15 +29,14 @@ class UserQueryService(
         if (ids.isEmpty()) emptyList()
         else userRepository.findAllByIds(ids).map(UserResult::fromDomain)
 
-    fun findAll(pageable: Pageable): Slice<UserResult> =
-        userRepository.findAll(pageable)
-            .map(UserResult::fromDomain)
-
-    fun findByKeyword(
-        email: String,
+    override fun searchActiveByKeyword(
         keyword: String,
+        excludedUserIds: Set<UUID>,
         pageable: Pageable,
     ): Slice<UserResult> =
-        userRepository.findSliceByEmailAndNickname(email, keyword, pageable)
+        userRepository.searchActiveByKeyword(keyword, excludedUserIds, pageable)
             .map(UserResult::fromDomain)
+
+    fun findAll(pageable: Pageable): Slice<UserResult> =
+        userRepository.findAll(pageable).map(UserResult::fromDomain)
 }

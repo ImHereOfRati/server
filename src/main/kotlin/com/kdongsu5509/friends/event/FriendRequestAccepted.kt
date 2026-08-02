@@ -5,9 +5,9 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 data class FriendRequestAccepted(
-    val accepterEmail: String,
+    val accepterId: UUID,
     val accepterNickname: String,
-    val requesterEmail: String,
+    val requesterId: UUID,
     override val eventId: UUID = UUID.randomUUID(),
     override val occurredAt: LocalDateTime = LocalDateTime.now(),
 ) : DomainEvent

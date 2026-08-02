@@ -21,7 +21,6 @@ class FriendRelationQueryDslRepository(
 
     private val relation = QFriendRelationJpaEntity.friendRelationJpaEntity
 
-    /** 상태가 같은, 내가 낀 모든 관계. 방향을 가리지 않는다. */
     fun findAllByParticipantAndStatus(
         userId: UUID,
         status: FriendRelationStatus,
@@ -29,7 +28,6 @@ class FriendRelationQueryDslRepository(
     ): Slice<FriendRelationJpaEntity> =
         slice(pageable, participates(userId), statusEq(status))
 
-    /** 내가 건 관계. 보낸 요청과 내가 건 제한이 여기 해당한다. */
     fun findAllInitiatedBy(
         userId: UUID,
         status: FriendRelationStatus,
@@ -37,7 +35,6 @@ class FriendRelationQueryDslRepository(
     ): Slice<FriendRelationJpaEntity> =
         slice(pageable, participates(userId), statusEq(status), relation.initiatedUserId.eq(userId))
 
-    /** 내가 당한 관계. 받은 요청이 여기 해당한다. */
     fun findAllTargetedAt(
         userId: UUID,
         status: FriendRelationStatus,
@@ -51,7 +48,17 @@ class FriendRelationQueryDslRepository(
         pageable: Pageable
     ): Slice<FriendRelationJpaEntity> =
         slice(pageable, participates(userId), statusIn(statuses), relation.initiatedUserId.eq(userId))
-    
+
+    fun findRelatedUserIds(userId: UUID): Set<UUID> =
+        queryFactory.select(relation.lowUserId, relation.highUserId)
+            .from(relation)
+            .where(participates(userId))
+            .fetch()
+            .mapNotNullTo(mutableSetOf()) { tuple ->
+                val low = tuple.get(relation.lowUserId)
+                if (low == userId) tuple.get(relation.highUserId) else low
+            }
+
     fun existsActiveRestriction(
         lowUserId: UUID,
         highUserId: UUID,

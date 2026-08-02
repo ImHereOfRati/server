@@ -1,6 +1,6 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.UserRole
@@ -43,7 +43,7 @@ class UserAdminPageControllerTest {
     private lateinit var userQueryService: UserQueryService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @Test
     @DisplayName("사용자 관리 페이지는 조회 결과와 다음 페이지 존재 여부를 모델에 담아 admin/users 뷰를 반환한다")

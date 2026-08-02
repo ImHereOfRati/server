@@ -42,12 +42,12 @@ class UserRepository(
             .map { userMapper.toDomain(it)!! }
     }
 
-    fun findSliceByEmailAndNickname(
-        userEmail: String,
+    fun searchActiveByKeyword(
         keyword: String,
+        excludedUserIds: Set<UUID>,
         pageable: Pageable
     ): Slice<User> {
-        val findJpaEntities = springQueryDSLUserRepository.findAllActiveByEmailAndKeyword(userEmail, keyword, pageable)
+        val findJpaEntities = springQueryDSLUserRepository.findAllActiveByKeyword(keyword, excludedUserIds, pageable)
         return findJpaEntities.map { userMapper.toDomain(it)!! }
     }
 

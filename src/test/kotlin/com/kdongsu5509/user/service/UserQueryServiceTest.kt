@@ -93,12 +93,12 @@ class UserQueryServiceTest {
 
     @Test
     @DisplayName("키워드로 사용자를 조회하면 도메인 객체를 사용자 결과로 변환한다")
-    fun findByKeyword_maps_users_to_results() {
+    fun searchActiveByKeyword_maps_users_to_results() {
         val pageable = PageRequest.of(0, 20)
-        whenever(userRepository.findSliceByEmailAndNickname(testEmail, "test", pageable))
+        whenever(userRepository.searchActiveByKeyword("test", emptySet(), pageable))
             .thenReturn(SliceImpl(listOf(testUser), pageable, false))
 
-        val result = userQueryService.findByKeyword(testEmail, "test", pageable)
+        val result = userQueryService.searchActiveByKeyword("test", emptySet(), pageable)
 
         assertThat(result.content).containsExactly(UserResult.fromDomain(testUser))
     }

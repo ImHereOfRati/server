@@ -21,19 +21,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
 
-/**
- * 관계를 바꾸는 유스케이스.
- *
- * 조회와 갈라 둔 이유는 두 쪽이 필요로 하는 것이 다르기 때문이다. 여기서는 상태 전이를 걸어야
- * 하므로 [FriendRelation]을 다뤄야 하고, 되돌리는 값이 곧 규칙을 지키는 근거가 된다.
- *
- * 애그리게이트는 식별자만 안다. 별칭에 쓸 닉네임이나 알림에 쓸 이메일처럼 사용자 표시 정보가
- * 필요한 자리에서만 [UserLookupContract]로 가져와 넘긴다. 삭제처럼 표시가 필요 없는 명령은
- * 사용자 조회를 일으키지 않는다.
- *
- * 클래스가 갈라지면서 트랜잭션 경계도 갈라진다. 이 클래스는 통째로 쓰기 트랜잭션이고,
- * 조회 쪽은 통째로 읽기 전용이다.
- */
 @Service
 @Transactional
 class FriendRelationCommandService(
@@ -59,9 +46,9 @@ class FriendRelationCommandService(
 
         eventPublisher.publish(
             FriendRequestSent(
-                requesterEmail = requester.email,
+                requesterId = requester.id,
                 requesterNickname = requester.nickname,
-                receiverEmail = receiver.email,
+                receiverId = receiver.id,
             )
         )
 
@@ -74,8 +61,8 @@ class FriendRelationCommandService(
 
         val accepted = friendRelationRepository.save(
             relation.accept(
-                lowAlias = members.getValue(relation.pair.low).nickname,
-                highAlias = members.getValue(relation.pair.high).nickname
+                lowNickname = members.getValue(relation.pair.low).nickname,
+                highNickname = members.getValue(relation.pair.high).nickname
             )
         )
 
@@ -84,16 +71,15 @@ class FriendRelationCommandService(
 
         eventPublisher.publish(
             FriendRequestAccepted(
-                accepterEmail = target.email,
+                accepterId = target.id,
                 accepterNickname = target.nickname,
-                requesterEmail = initiator.email,
+                requesterId = initiator.id,
             )
         )
 
         return FriendshipView.of(accepted, accepterId, members)
     }
 
-    /** 거절한 쪽이 제한의 주체가 되므로 관계의 방향이 뒤집힌다. */
     fun rejectRequest(relationId: UUID, rejecterId: UUID): FriendRestrictionView {
         val relation = findReceivedFriendRequests(relationId, rejecterId)
         val rejected = friendRelationRepository.save(relation.reject(LocalDateTime.now()))
@@ -104,7 +90,6 @@ class FriendRelationCommandService(
         )
     }
 
-    /** 받은 요청을 지운다. 거절과 달리 제한 기록을 남기지 않는다. */
     fun deleteReceivedRequest(requestId: UUID, receiverId: UUID) {
         findReceivedFriendRequests(requestId, receiverId)
         friendRelationRepository.deleteById(requestId)

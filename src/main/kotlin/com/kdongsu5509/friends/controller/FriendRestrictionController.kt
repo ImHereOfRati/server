@@ -31,7 +31,6 @@ class FriendRestrictionController(
         return sliceResponse.toOkResponse()
     }
 
-    /** 친구든 아니든 이 하나로 차단한다. */
     @PostMapping
     fun block(
         @AuthenticationPrincipal(expression = "userId") userId: UUID,

@@ -1,6 +1,6 @@
 package com.kdongsu5509.friends.controller.dto
 
-import com.kdongsu5509.friends.service.dto.FriendRestrictionType
+import com.kdongsu5509.friends.domain.FriendRelationStatus
 import com.kdongsu5509.friends.service.dto.FriendRestrictionView
 import java.time.LocalDateTime
 import java.util.*
@@ -9,7 +9,7 @@ data class FriendRestrictionResponse(
     val id: UUID?,
     val restrictor: FriendRequestUserResponse,
     val restricted: FriendRequestUserResponse,
-    val type: FriendRestrictionType,
+    val type: FriendRelationStatus,
     val createdAt: LocalDateTime?,
     val updatedAt: LocalDateTime?,
     val expiredAt: LocalDateTime?

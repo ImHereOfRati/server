@@ -82,6 +82,11 @@ class FriendRelationQueryRepository(
         )
     }
 
+    // --- 사용자 검색 ------------------------------------------------------
+
+    fun findRelatedUserIds(userId: UUID): Set<UUID> =
+        friendRelationQueryDslRepository.findRelatedUserIds(userId)
+
     // --- 관리자 -----------------------------------------------------------
 
     fun findAllRequests(pageable: Pageable): Slice<FriendRelation> =

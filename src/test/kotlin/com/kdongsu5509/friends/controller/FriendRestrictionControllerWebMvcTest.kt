@@ -2,12 +2,12 @@ package com.kdongsu5509.friends.controller
 
 import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
+import com.kdongsu5509.friends.domain.FriendRelationStatus
 import com.kdongsu5509.friends.service.FriendRelationCommandService
 import com.kdongsu5509.friends.service.FriendRelationQueryService
 import com.kdongsu5509.friends.service.dto.FriendMember
-import com.kdongsu5509.friends.service.dto.FriendRestrictionType
 import com.kdongsu5509.friends.service.dto.FriendRestrictionView
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -45,7 +45,7 @@ class FriendRestrictionControllerWebMvcTest {
     private lateinit var friendRelationQueryService: FriendRelationQueryService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     private val requesterId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val otherId = UUID.fromString("00000000-0000-0000-0000-000000000002")
@@ -75,11 +75,11 @@ class FriendRestrictionControllerWebMvcTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.content[0].restrictor.email").value(me.email))
             .andExpect(jsonPath("$.data.content[0].restricted.email").value(other.email))
-            .andExpect(jsonPath("$.data.content[0].type").value("BLOCK"))
+            .andExpect(jsonPath("$.data.content[0].type").value("BLOCKED"))
     }
 
     @Test
-    @DisplayName("차단 응답의 type은 BLOCK이다")
+    @DisplayName("차단 응답의 type은 BLOCKED이다")
     fun block_returns_block_type() {
         // given
         given(friendRelationCommandService.block(eq(requesterId), eq(otherId))).willReturn(blockView())
@@ -93,7 +93,7 @@ class FriendRestrictionControllerWebMvcTest {
                 .with(csrf())
         )
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.type").value("BLOCK"))
+            .andExpect(jsonPath("$.data.type").value("BLOCKED"))
             .andExpect(jsonPath("$.data.restrictor.email").value(me.email))
     }
 
@@ -109,7 +109,6 @@ class FriendRestrictionControllerWebMvcTest {
             .andExpect(jsonPath("$.data").value(true))
     }
 
-    /** 차단은 만료되지 않으므로 만료 시각이 사실상 무한대다. */
     private fun blockView(id: UUID = UUID.randomUUID()) =
-        FriendRestrictionView(id, me, other, FriendRestrictionType.BLOCK, now, now, null)
+        FriendRestrictionView(id, me, other, FriendRelationStatus.BLOCKED, now, now, null)
 }

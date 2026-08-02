@@ -1,23 +1,11 @@
 package com.kdongsu5509.user.controller
 
-import com.kdongsu5509.shared.response.ApiResponse
-import com.kdongsu5509.shared.response.SliceResponse
-import com.kdongsu5509.shared.response.toOkResponse
-import com.kdongsu5509.support.exception.throwIt
-import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.controller.dto.CompactUserResponse
-import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.service.UserQueryService
-import jakarta.validation.constraints.NotBlank
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Slice
-import org.springframework.data.web.PageableDefault
-import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.*
 
@@ -29,18 +17,7 @@ class UserReadController(
 ) {
     @GetMapping("/my")
     fun readMe(@AuthenticationPrincipal(expression = "userId") userId: UUID): CompactUserResponse {
-        val result = userQueryService.findById(userId) ?: UserException.USER_NOT_FOUND.throwIt()
+        val result = userQueryService.findById(userId)
         return CompactUserResponse.from(result)
-    }
-
-    @GetMapping(params = ["keyword"])
-    fun findOther(
-        @AuthenticationPrincipal(expression = "email") userEmail: String,
-        @RequestParam @NotBlank(message = "검색어(이메일 또는 닉네임)는 필수입니다.") keyword: String,
-        @PageableDefault(size = 15) pageable: Pageable
-    ): ResponseEntity<ApiResponse<SliceResponse<CompactUserResponse>>> {
-        val findingUsers: Slice<UserResult> = userQueryService.findByKeyword(userEmail, keyword, pageable)
-        val sliceResponse = SliceResponse.from(findingUsers.map { CompactUserResponse.from(it) })
-        return sliceResponse.toOkResponse()
     }
 }

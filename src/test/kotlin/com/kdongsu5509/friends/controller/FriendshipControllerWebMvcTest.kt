@@ -6,7 +6,7 @@ import com.kdongsu5509.friends.service.FriendRelationCommandService
 import com.kdongsu5509.friends.service.FriendRelationQueryService
 import com.kdongsu5509.friends.service.dto.FriendMember
 import com.kdongsu5509.friends.service.dto.FriendshipView
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -43,7 +43,7 @@ class FriendshipControllerWebMvcTest {
     private lateinit var friendRelationQueryService: FriendRelationQueryService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     private val requesterId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val friendId = UUID.fromString("00000000-0000-0000-0000-000000000002")
@@ -133,7 +133,6 @@ class FriendshipControllerWebMvcTest {
             .andExpect(status().isNoContent)
     }
 
-    /** 수락 시점에 내 자리 별칭이 내 닉네임으로 채워진 상태를 흉내 낸다. */
     private fun friendshipView(id: UUID = UUID.randomUUID()) =
         FriendshipView(id, me, friend, me.nickname, now, now)
 }

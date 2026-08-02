@@ -135,11 +135,11 @@ class FriendRelationQueryServiceTest {
         // when
         val result = friendRelationQueryService.findFriends(requesterId, pageable)
 
-        // then: friendAlias는 보는 사람 자리에 저장된 별칭이다. 수락 시점엔 본인 닉네임으로 채워진다.
+        // then: friendAlias는 보는 사람 자리에 저장된 별칭이고, 수락 시점엔 상대 닉네임으로 채워진다.
         assertThat(result.content).hasSize(1)
         assertThat(result.content[0].owner.id).isEqualTo(requesterId)
         assertThat(result.content[0].friend.id).isEqualTo(otherId)
-        assertThat(result.content[0].friendAlias).isEqualTo(meResult.nickname)
+        assertThat(result.content[0].friendAlias).isEqualTo(otherResult.nickname)
     }
 
     @Test
@@ -214,7 +214,6 @@ class FriendRelationQueryServiceTest {
         then(friendRelationQueryRepository).shouldHaveNoInteractions()
     }
 
-    /** 저장된 요청 행을 흉내 낸다. 쌍은 늘 (requesterId, otherId)이고 방향만 [initiatedBy]로 정한다. */
     private fun storedRequest(initiatedBy: UUID, id: UUID = UUID.randomUUID()): FriendRelation =
         FriendRelation(
             id = id,
@@ -226,8 +225,7 @@ class FriendRelationQueryServiceTest {
             updatedAt = now
         )
 
-    /** 저장된 친구 관계 행. 수락 시점에 양쪽 별칭이 각자 닉네임으로 채워져 있다. */
     private fun storedFriendship(id: UUID = UUID.randomUUID()): FriendRelation =
         storedRequest(initiatedBy = otherId, id = id)
-            .accept(lowAlias = meResult.nickname, highAlias = otherResult.nickname)
+            .accept(lowNickname = meResult.nickname, highNickname = otherResult.nickname)
 }

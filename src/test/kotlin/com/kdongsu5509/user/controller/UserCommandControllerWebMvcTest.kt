@@ -2,7 +2,7 @@ package com.kdongsu5509.user.controller
 
 import com.common.testsupport.ImHereLightWebMvcTest
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import com.kdongsu5509.user.controller.dto.NicknameUpdateRequest
 import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.UserRole
@@ -48,7 +48,7 @@ class UserCommandControllerWebMvcTest {
     private lateinit var userLifecycleService: UserLifecycleService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @Autowired
     private lateinit var objectMapper: JsonMapper

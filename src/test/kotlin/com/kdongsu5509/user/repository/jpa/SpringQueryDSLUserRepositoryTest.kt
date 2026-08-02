@@ -45,9 +45,9 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
     @ParameterizedTest
     @DisplayName("키워드(닉네임/이메일)가 활성 사용자와 일치하면 정확히 찾는다")
     @ValueSource(strings = ["테스트2", "test2@kakao.com"])
-    fun findAllActiveByEmailAndKeyword_success(testKeyword: String) {
+    fun findAllActiveByKeyword_success(testKeyword: String) {
         // when
-        val result = userRepository.findAllActiveByEmailAndKeyword(TEST_OWNER_EMAIL, testKeyword)
+        val result = userRepository.findAllActiveByKeyword(testKeyword, emptySet())
 
         // then
         assertThat(result.content).hasSize(1)
@@ -55,7 +55,7 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
 
     @Test
     @DisplayName("중복된 닉네임이 있는 경우 모두 조회한다")
-    fun findAllActiveByEmailAndKeyword_duplication() {
+    fun findAllActiveByKeyword_duplication() {
         // given
         val dupNickname = "중복닉네임"
         saveAll(
@@ -66,9 +66,9 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
         )
 
         // when
-        val result = userRepository.findAllActiveByEmailAndKeyword(
-            TEST_OWNER_EMAIL,
+        val result = userRepository.findAllActiveByKeyword(
             dupNickname,
+            emptySet(),
             PageRequest.of(0, 1)
         )
 
@@ -77,16 +77,33 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
     }
 
     @Test
+    @DisplayName("제외 목록에 있는 사용자는 키워드가 일치해도 결과에서 뺀다")
+    fun findAllActiveByKeyword_excludes_given_ids() {
+        // given
+        val excludedNickname = "제외대상"
+        val excluded = createTestUser(200, UserStatus.ACTIVE, excludedNickname)
+        val kept = createTestUser(201, UserStatus.ACTIVE, excludedNickname)
+        saveAll(listOf(excluded, kept))
+
+        // when
+        val result = userRepository.findAllActiveByKeyword(excludedNickname, setOf(excluded.id!!))
+
+        // then
+        assertThat(result.content).hasSize(1)
+        assertThat(result.content[0].id).isEqualTo(kept.id)
+    }
+
+    @Test
     @DisplayName("키워드(이메일/닉네임)가 비어 있거나 일치하는게 없으면 빈 리스트를 반환한다")
-    fun findAllActiveByEmailAndKeyword_empty_or_zero_match() {
+    fun findAllActiveByKeyword_empty_or_zero_match() {
         // when & then
-        assertThat(userRepository.findAllActiveByEmailAndKeyword(TEST_OWNER_EMAIL, "").content).isEmpty()
-        assertThat(userRepository.findAllActiveByEmailAndKeyword(TEST_OWNER_EMAIL, "존재하지않음").content).isEmpty()
+        assertThat(userRepository.findAllActiveByKeyword("", emptySet()).content).isEmpty()
+        assertThat(userRepository.findAllActiveByKeyword("존재하지않음", emptySet()).content).isEmpty()
     }
 
     @Test
     @DisplayName("무한 스크롤(Slice) 조회 시 다음 페이지 존재 여부(hasNext)가 참(true)인 경우를 정확히 테스트한다")
-    fun findAllActiveByEmailAndKeyword_slice_hasNext_true() {
+    fun findAllActiveByKeyword_slice_hasNext_true() {
         // given
         val sliceNickname = "슬라이스닉네임"
         saveAll(
@@ -99,9 +116,9 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
         val pageable = PageRequest.of(0, 2)
 
         // when
-        val result = userRepository.findAllActiveByEmailAndKeyword(
-            userEmail = TEST_OWNER_EMAIL,
+        val result = userRepository.findAllActiveByKeyword(
             keyword = sliceNickname,
+            excludedUserIds = emptySet(),
             pageable = pageable
         )
 
@@ -112,7 +129,7 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
 
     @Test
     @DisplayName("무한 스크롤(Slice) 조회 시 다음 페이지 존재 여부(hasNext)가 거짓(false)인 경우를 정확히 테스트한다")
-    fun findAllActiveByEmailAndKeyword_slice_hasNext_false() {
+    fun findAllActiveByKeyword_slice_hasNext_false() {
         // given
         val sliceNickname = "슬라이스닉네임"
         saveAll(
@@ -125,9 +142,9 @@ class SpringQueryDSLUserRepositoryTest @Autowired constructor(
         val pageable = PageRequest.of(0, 3)
 
         // when
-        val result = userRepository.findAllActiveByEmailAndKeyword(
-            userEmail = TEST_OWNER_EMAIL,
+        val result = userRepository.findAllActiveByKeyword(
             keyword = sliceNickname,
+            excludedUserIds = emptySet(),
             pageable = pageable
         )
 

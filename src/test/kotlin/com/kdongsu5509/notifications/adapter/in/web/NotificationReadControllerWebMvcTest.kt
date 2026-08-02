@@ -1,12 +1,12 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.notifications.application.port.`in`.NotificationInboxUseCase
+import com.kdongsu5509.notifications.application.port.`in`.NotificationUseCase
 import com.kdongsu5509.notifications.domain.Notification
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationStatus
 import com.kdongsu5509.notifications.domain.NotificationType
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -30,6 +30,7 @@ import org.springframework.web.context.WebApplicationContext
 import org.springframework.web.filter.CharacterEncodingFilter
 import tools.jackson.databind.json.JsonMapper
 import java.time.LocalDateTime
+import java.util.UUID
 
 @WebMvcTest(NotificationReadController::class)
 class NotificationReadControllerWebMvcTest {
@@ -41,16 +42,17 @@ class NotificationReadControllerWebMvcTest {
     private lateinit var jsonMapper: JsonMapper
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @MockitoBean
-    private lateinit var notificationInboxUseCase: NotificationInboxUseCase
+    private lateinit var notificationInboxUseCase: NotificationUseCase
 
     private val userDetails = ImHereUserDetails(
         email = "test@example.com",
         nickname = "tester",
         role = "USER",
-        status = "ACTIVE"
+        status = "ACTIVE",
+        userId = UUID.randomUUID(),
     )
 
     @BeforeEach
@@ -68,14 +70,12 @@ class NotificationReadControllerWebMvcTest {
         val history = Notification.reconstruct(
             id = 1L,
             dedupeKey = "event:FCM",
-            targetIdentifier = userDetails.email,
+            targetIdentifier = userDetails.requiredUserId.toString(),
             method = NotificationMethod.FCM,
-            senderEmail = "sender@example.com",
-            senderNickname = "sender",
+            senderAlias = "sender",
             title = "test title",
             body = "test body",
             type = NotificationType.TERMS_UPDATE_NOTICE,
-            path = null,
             extraData = emptyMap(),
             status = NotificationStatus.SENT,
             attempts = 0,
@@ -85,7 +85,7 @@ class NotificationReadControllerWebMvcTest {
             createdAt = LocalDateTime.now()
         )
 
-        whenever(notificationInboxUseCase.findByReceiverEmail(userDetails.email, 0, 20))
+        whenever(notificationInboxUseCase.findByRecipientId(userDetails.requiredUserId, 0, 20))
             .thenReturn(listOf(history))
 
         mockMvc.perform(
@@ -98,7 +98,7 @@ class NotificationReadControllerWebMvcTest {
             .andExpect(jsonPath("$.data.[0].id").value(1))
             .andExpect(jsonPath("$.data.[0].title").value("test title"))
 
-        verify(notificationInboxUseCase).findByReceiverEmail(userDetails.email, 0, 20)
+        verify(notificationInboxUseCase).findByRecipientId(userDetails.requiredUserId, 0, 20)
     }
 
     @Test
@@ -112,6 +112,6 @@ class NotificationReadControllerWebMvcTest {
                 .with(user(userDetails))
         ).andExpect(status().isNoContent)
 
-        verify(notificationInboxUseCase).markAsRead(userDetails.email, notificationId)
+        verify(notificationInboxUseCase).markAsRead(userDetails.requiredUserId, notificationId)
     }
 }

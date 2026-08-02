@@ -2,7 +2,7 @@ package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.FailedNotificationResponse
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationRedeliveryResponse
-import com.kdongsu5509.notifications.application.service.FailedNotificationAdminService
+import com.kdongsu5509.notifications.application.port.`in`.NotificationUseCase
 import com.kdongsu5509.notifications.domain.NotificationStatus
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.toOkResponse
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/admin/failed-notifications", version = "1")
 class FailedNotificationAdminController(
-    private val service: FailedNotificationAdminService,
+    private val service: NotificationUseCase,
 ) {
     @GetMapping
     fun findAll(
@@ -38,7 +38,7 @@ class FailedNotificationAdminController(
     fun redeliver(
         @RequestParam(required = false) count: Int?,
     ): ResponseEntity<ApiResponse<NotificationRedeliveryResponse>> =
-        NotificationRedeliveryResponse(service.redeliver(count)).toOkResponse()
+        NotificationRedeliveryResponse(service.redeliverAll(count)).toOkResponse()
 
     @PostMapping("/{id}/redelivery-jobs")
     fun redeliverOne(@PathVariable id: Long): ResponseEntity<ApiResponse<Unit>> {

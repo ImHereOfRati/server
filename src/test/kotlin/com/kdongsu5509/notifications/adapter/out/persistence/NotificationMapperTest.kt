@@ -3,6 +3,7 @@ package com.kdongsu5509.notifications.adapter.out.persistence
 import com.kdongsu5509.notifications.domain.Notification
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationStatus
+import com.kdongsu5509.notifications.domain.NotificationTemplate
 import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -18,11 +19,10 @@ class NotificationMapperTest {
         dedupeKey = "event-1:FCM",
         targetIdentifier = "receiver@imhere.com",
         method = NotificationMethod.FCM,
-        senderEmail = "sender@imhere.com",
-        rendered = NotificationType.ARRIVAL.render(
-            senderNickname = "홍길동",
-            senderEmail = "sender@imhere.com",
-            extraData = mapOf(NotificationType.PLACE_NAME_KEY to "학교"),
+        rendered = NotificationTemplate.render(
+            type = NotificationType.ARRIVAL,
+            senderAlias = "길동이",
+            extraData = mapOf(NotificationTemplate.PLACE_NAME_KEY to "학교"),
         ),
     )
 
@@ -36,7 +36,7 @@ class NotificationMapperTest {
         val entity = mapper.toEntity(domain)
 
         // then
-        assertThat(entity.dedupeKey).isEqualTo(domain.dedupeKey)
+        assertThat(entity.dedupeKey).isEqualTo(domain.deduplicationKey)
         assertThat(entity.targetIdentifier).isEqualTo(domain.targetIdentifier)
         assertThat(entity.method).isEqualTo(NotificationMethod.FCM)
         assertThat(entity.type).isEqualTo(NotificationType.ARRIVAL.name)
@@ -56,11 +56,11 @@ class NotificationMapperTest {
         val restored = mapper.toDomain(mapper.toEntity(original))
 
         // then
-        assertThat(restored.dedupeKey).isEqualTo(original.dedupeKey)
+        assertThat(restored.deduplicationKey).isEqualTo(original.deduplicationKey)
         assertThat(restored.type).isEqualTo(original.type)
         assertThat(restored.title).isEqualTo(original.title)
         assertThat(restored.body).isEqualTo(original.body)
-        assertThat(restored.path).isEqualTo(original.path)
+        assertThat(restored.senderAlias).isEqualTo(original.senderAlias)
         assertThat(restored.extraData).isEqualTo(original.extraData)
         assertThat(restored.status).isEqualTo(NotificationStatus.SENT)
         assertThat(restored.sentAt).isEqualTo(now)

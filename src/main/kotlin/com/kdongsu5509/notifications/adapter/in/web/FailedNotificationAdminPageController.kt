@@ -1,6 +1,6 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
-import com.kdongsu5509.notifications.application.service.FailedNotificationAdminService
+import com.kdongsu5509.notifications.application.port.`in`.NotificationUseCase
 import com.kdongsu5509.notifications.domain.NotificationStatus
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes
 @Controller
 @RequestMapping("/admin/failed-notifications")
 class FailedNotificationAdminPageController(
-    private val service: FailedNotificationAdminService,
+    private val service: NotificationUseCase,
 ) {
     @GetMapping
     fun page(model: Model): String {

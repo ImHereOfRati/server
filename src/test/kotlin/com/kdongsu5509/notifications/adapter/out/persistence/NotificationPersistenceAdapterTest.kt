@@ -5,6 +5,7 @@ import com.kdongsu5509.notifications.application.port.out.NotificationPersistenc
 import com.kdongsu5509.notifications.domain.Notification
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationStatus
+import com.kdongsu5509.notifications.domain.NotificationTemplate
 import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -37,11 +38,10 @@ class NotificationPersistenceAdapterTest : PersistenceTestSupport() {
         dedupeKey = dedupeKey,
         targetIdentifier = "receiver@imhere.com",
         method = NotificationMethod.FCM,
-        senderEmail = "sender@imhere.com",
-        rendered = NotificationType.ARRIVAL.render(
-            senderNickname = "홍길동",
-            senderEmail = "sender@imhere.com",
-            extraData = mapOf(NotificationType.PLACE_NAME_KEY to "학교"),
+        rendered = NotificationTemplate.render(
+            type = NotificationType.ARRIVAL,
+            senderAlias = "길동이",
+            extraData = mapOf(NotificationTemplate.PLACE_NAME_KEY to "학교"),
         ),
     )
 
@@ -55,7 +55,7 @@ class NotificationPersistenceAdapterTest : PersistenceTestSupport() {
         assertThat(saved.id).isNotNull()
         assertThat(saved.status).isEqualTo(NotificationStatus.PENDING)
         assertThat(saved.type).isEqualTo(NotificationType.ARRIVAL)
-        assertThat(saved.extraData).containsEntry(NotificationType.PLACE_NAME_KEY, "학교")
+        assertThat(saved.extraData).containsEntry(NotificationTemplate.PLACE_NAME_KEY, "학교")
     }
 
     @Test
@@ -99,7 +99,7 @@ class NotificationPersistenceAdapterTest : PersistenceTestSupport() {
 
         // then
         assertThat(found).isNotNull
-        assertThat(found!!.dedupeKey).isEqualTo("event-42:FCM")
+        assertThat(found!!.deduplicationKey).isEqualTo("event-42:FCM")
     }
 
     @Test

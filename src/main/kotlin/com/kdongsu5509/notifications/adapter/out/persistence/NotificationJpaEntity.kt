@@ -35,10 +35,7 @@ class NotificationJpaEntity(
     val method: NotificationMethod,
 
     @Column(nullable = false)
-    val senderEmail: String,
-
-    @Column(nullable = false)
-    val senderNickname: String,
+    val senderAlias: String,
 
     @Column(nullable = false)
     val type: String,
@@ -48,9 +45,6 @@ class NotificationJpaEntity(
 
     @Column(nullable = false, length = 500)
     val body: String,
-
-    @Column(nullable = true)
-    val path: String?,
 
     @Convert(converter = ExtraDataConverter::class)
     @Column(nullable = false, length = 2000)

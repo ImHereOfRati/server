@@ -7,16 +7,16 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class NotificationTest {
 
     private val now: LocalDateTime = LocalDateTime.of(2026, 7, 29, 15, 0, 0)
 
     private fun rendered(): RenderedNotification =
-        NotificationType.FRIEND_REQUEST_RECEIVED.render(
-            senderNickname = "홍길동",
-            senderEmail = "sender@imhere.com",
+        NotificationTemplate.render(
+            type = NotificationType.FRIEND_REQUEST_RECEIVED,
+            senderAlias = "홍길동",
         )
 
     private fun requested(
@@ -26,11 +26,9 @@ class NotificationTest {
         dedupeKey = dedupeKey,
         targetIdentifier = "receiver@imhere.com",
         method = method,
-        senderEmail = "sender@imhere.com",
         rendered = rendered(),
     )
 
-    /** MAX_ATTEMPTS 회 실패시켜 DEAD로 만든다. */
     private fun dead(): Notification {
         var notification = requested()
         repeat(Notification.MAX_ATTEMPTS) { notification = notification.markFailed("일시적 오류") }
@@ -56,7 +54,7 @@ class NotificationTest {
             assertThat(notification.type).isEqualTo(NotificationType.FRIEND_REQUEST_RECEIVED)
             assertThat(notification.title).isEqualTo(rendered().title)
             assertThat(notification.body).isEqualTo(rendered().body)
-            assertThat(notification.path).isEqualTo(rendered().path)
+            assertThat(notification.senderAlias).isEqualTo(rendered().senderAlias)
             assertThat(notification.extraData).isEqualTo(rendered().data)
         }
 
@@ -74,7 +72,6 @@ class NotificationTest {
                     dedupeKey = " ",
                     targetIdentifier = "receiver@imhere.com",
                     method = NotificationMethod.FCM,
-                    senderEmail = "sender@imhere.com",
                     rendered = rendered(),
                 )
             }.isInstanceOf(ImHereBaseException::class.java)

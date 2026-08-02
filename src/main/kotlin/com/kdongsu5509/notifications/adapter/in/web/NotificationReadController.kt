@@ -1,35 +1,31 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
-import com.kdongsu5509.auth.security.shared.ImHereUserDetails
-import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationInboxResponse
-import com.kdongsu5509.notifications.application.port.`in`.NotificationInboxUseCase
-import com.kdongsu5509.shared.response.ApiResponse
-import com.kdongsu5509.shared.response.toOkResponse
+import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationResponse
+import com.kdongsu5509.notifications.application.port.`in`.NotificationUseCase
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/api/notifications", version = "1")
 class NotificationReadController(
-    private val notificationInboxUseCase: NotificationInboxUseCase,
+    private val notificationInboxUseCase: NotificationUseCase,
 ) {
     @GetMapping
     fun getNotifications(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "userId") requesterID: UUID,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int
-    ): ResponseEntity<ApiResponse<List<NotificationInboxResponse>>> =
+    ): List<NotificationResponse> =
         notificationInboxUseCase
-            .findByReceiverEmail(userDetails.email, page, size)
-            .map { NotificationInboxResponse.from(it) }
-            .toOkResponse()
+            .findByRecipientId(requesterID, page, size)
+            .map { NotificationResponse.from(it) }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/read")
     fun markAsRead(
-        @AuthenticationPrincipal userDetails: ImHereUserDetails,
+        @AuthenticationPrincipal(expression = "userId") requesterID: UUID,
         @PathVariable id: Long
-    ) = notificationInboxUseCase.markAsRead(userDetails.email, id)
+    ) = notificationInboxUseCase.markAsRead(requesterID, id)
 }

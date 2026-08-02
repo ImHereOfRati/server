@@ -6,12 +6,7 @@ import com.kdongsu5509.notifications.adapter.out.persistence.SpringDataFcmTokenR
 import com.kdongsu5509.notifications.adapter.out.persistence.SpringDataNotificationRepository
 import com.kdongsu5509.notifications.application.port.out.FcmTokenPersistencePort
 import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
-import com.kdongsu5509.notifications.domain.DeviceType
-import com.kdongsu5509.notifications.domain.FcmToken
-import com.kdongsu5509.notifications.domain.Notification
-import com.kdongsu5509.notifications.domain.NotificationMethod
-import com.kdongsu5509.notifications.domain.NotificationStatus
-import com.kdongsu5509.notifications.domain.NotificationType
+import com.kdongsu5509.notifications.domain.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -19,14 +14,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.util.UUID
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class FailedNotificationAdminControllerIntegrationTest : WebIntegrationTestSupport() {
@@ -157,13 +150,17 @@ class FailedNotificationAdminControllerIntegrationTest : WebIntegrationTestSuppo
     private fun requested(key: String): Notification =
         Notification.request(
             dedupeKey = "$key:FCM",
-            targetIdentifier = "$key@example.com",
+            targetIdentifier = recipientIdOf(key).toString(),
             method = NotificationMethod.FCM,
-            senderEmail = "sender@example.com",
-            rendered = NotificationType.DELIVERY_FAILED_NOTICE.render("ImHere", "sender@example.com"),
+            rendered = NotificationTemplate.render(NotificationType.DELIVERY_FAILED_NOTICE, "ImHere"),
         )
 
-    private fun saveToken(email: String) {
-        fcmTokenPersistencePort.save(FcmToken.create(email, "token-$email", DeviceType.AOS))
+    private fun recipientIdOf(key: String): UUID = UUID.nameUUIDFromBytes(key.toByteArray())
+
+    private fun saveToken(targetIdentifier: String) {
+        val ownerId = UUID.fromString(targetIdentifier)
+        fcmTokenPersistencePort.save(
+            FcmToken(ownerId = ownerId, fcmToken = "token-$ownerId", deviceType = DeviceType.AOS)
+        )
     }
 }

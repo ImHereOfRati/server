@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Component
 class NotificationPersistenceAdapter(
@@ -29,9 +30,9 @@ class NotificationPersistenceAdapter(
             .content
             .map(mapper::toDomain)
 
-    override fun findInbox(receiverEmail: String, page: Int, size: Int): List<Notification> =
+    override fun findInbox(recipientId: UUID, page: Int, size: Int): List<Notification> =
         repository.findByTargetIdentifierAndMethodAndStatus(
-            receiverEmail,
+            recipientId.toString(),
             NotificationMethod.FCM,
             NotificationStatus.SENT,
             pageRequest(page, size),

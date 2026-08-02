@@ -19,6 +19,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.util.UUID
 
 class FcmTokenEnrollControllerIntegrationTest : WebIntegrationTestSupport() {
 
@@ -29,7 +30,8 @@ class FcmTokenEnrollControllerIntegrationTest : WebIntegrationTestSupport() {
         email = "test@example.com",
         nickname = "tester",
         role = "USER",
-        status = "ACTIVE"
+        status = "ACTIVE",
+        userId = UUID.randomUUID(),
     )
 
     @Test
@@ -59,7 +61,7 @@ class FcmTokenEnrollControllerIntegrationTest : WebIntegrationTestSupport() {
                 )
             )
 
-        val saved = fcmTokenRepository.findByEmail(userDetails.email)
+        val saved = fcmTokenRepository.findByOwnerId(userDetails.requiredUserId)
         assertThat(saved).isNotNull
         assertThat(saved!!.token).isEqualTo("token-1")
         assertThat(saved.deviceType).isEqualTo(DeviceType.IOS)
@@ -71,7 +73,7 @@ class FcmTokenEnrollControllerIntegrationTest : WebIntegrationTestSupport() {
         fcmTokenRepository.save(
             FcmTokenJpaEntity(
                 token = "old-token",
-                email = userDetails.email,
+                ownerId = userDetails.requiredUserId,
                 deviceType = DeviceType.AOS
             )
         )
@@ -100,7 +102,7 @@ class FcmTokenEnrollControllerIntegrationTest : WebIntegrationTestSupport() {
                 )
             )
 
-        val saved = fcmTokenRepository.findByEmail(userDetails.email)
+        val saved = fcmTokenRepository.findByOwnerId(userDetails.requiredUserId)
         assertThat(saved).isNotNull
         assertThat(saved!!.token).isEqualTo("new-token")
         assertThat(saved.deviceType).isEqualTo(DeviceType.AOS)

@@ -5,14 +5,15 @@ import com.kdongsu5509.notifications.domain.NotificationType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import java.util.UUID
 
 class NotificationCommandTest {
 
     private fun command(extraData: Map<String, String>) = NotificationCommand(
         senderNickname = "sender",
-        senderEmail = "sender@example.com",
+        senderId = UUID.randomUUID(),
         notificationMethod = NotificationMethod.SMS,
-        targetIdentifier = "01012345678",
+        targetIdentifiers = listOf("01012345678"),
         type = NotificationType.FRIEND_REQUEST_RECEIVED,
         extraData = extraData,
     )

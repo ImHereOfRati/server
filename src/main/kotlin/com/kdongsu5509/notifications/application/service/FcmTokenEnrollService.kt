@@ -6,14 +6,15 @@ import com.kdongsu5509.notifications.domain.DeviceType
 import com.kdongsu5509.notifications.domain.FcmToken
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 @Transactional
 class FcmTokenEnrollService(
     private val fcmTokenPersistencePort: FcmTokenPersistencePort,
 ) : FcmTokenEnrollUseCase {
-    override fun save(email: String, fcmToken: String, deviceType: DeviceType) {
-        val existingToken = fcmTokenPersistencePort.findByUserEmail(email)
+    override fun save(ownerId: UUID, fcmToken: String, deviceType: DeviceType) {
+        val existingToken = fcmTokenPersistencePort.findByOwnerId(ownerId)
 
         if (existingToken != null) {
             val updatedToken = existingToken.update(fcmToken)
@@ -21,7 +22,7 @@ class FcmTokenEnrollService(
             return
         }
 
-        val newFcmToken = FcmToken.create(email = email, fcmToken = fcmToken, deviceType = deviceType)
+        val newFcmToken = FcmToken(ownerId = ownerId, fcmToken = fcmToken, deviceType = deviceType)
         fcmTokenPersistencePort.save(newFcmToken)
     }
 }

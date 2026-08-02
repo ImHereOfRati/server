@@ -30,7 +30,7 @@ CREATE TABLE users
     email                 VARCHAR(255)                                       NOT NULL,
     nickname              VARCHAR(255)                                       NOT NULL,
     role                  ENUM ('NORMAL', 'ADMIN')                           NOT NULL,
-    provider              ENUM ('KAKAO', 'GOOGLE')                           NOT NULL,
+    provider              ENUM ('KAKAO', 'GOOGLE', 'APPLE')                  NOT NULL,
     status                ENUM ('PENDING', 'ACTIVE', 'BLOCKED', 'WITHDRAWN') NOT NULL,
     oidc_subject          VARCHAR(255)                                       NULL,
     refresh_token_version BIGINT                                             NOT NULL DEFAULT 0,
@@ -113,15 +113,20 @@ CREATE TABLE friend_relations
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
+-- 토큰의 주인을 이메일이 아니라 사용자 식별자로 지목한다.
+-- 이메일은 사용자가 바꿀 수 있는 표시 정보라 소유 관계를 붙들어 두기에 적합하지 않다.
+-- 한 사용자당 토큰 한 개이므로 owner_id에 유니크를 건다.
 CREATE TABLE fcm_token
 (
     id          BIGINT              NOT NULL AUTO_INCREMENT,
     token       VARCHAR(255)        NOT NULL,
-    email       VARCHAR(255)        NOT NULL,
+    owner_id    BINARY(16)          NOT NULL,
     device_type ENUM ('AOS', 'IOS') NOT NULL,
     created_at  DATETIME(6)         NOT NULL,
     updated_at  DATETIME(6)         NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_fcm_token_owner_id (owner_id),
+    CONSTRAINT fk_fcm_token_owner FOREIGN KEY (owner_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
@@ -138,12 +143,10 @@ CREATE TABLE notification
     dedupe_key        VARCHAR(120)                            NOT NULL,
     target_identifier VARCHAR(255)                            NOT NULL,
     method            ENUM ('SMS', 'FCM')                     NOT NULL,
-    sender_email      VARCHAR(255)                            NOT NULL,
-    sender_nickname   VARCHAR(255)                            NOT NULL,
+    sender_alias      VARCHAR(255)                            NOT NULL,
     type              VARCHAR(255)                            NOT NULL,
     title             VARCHAR(255)                            NOT NULL,
     body              VARCHAR(500)                            NOT NULL,
-    path              VARCHAR(255)                            NULL,
     extra_data        VARCHAR(2000)                           NOT NULL,
     status            ENUM ('PENDING', 'SENT', 'FAILED', 'DEAD') NOT NULL,
     attempts          INT                                     NOT NULL DEFAULT 0,

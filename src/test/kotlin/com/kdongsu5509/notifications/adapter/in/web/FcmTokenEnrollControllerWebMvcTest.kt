@@ -4,7 +4,7 @@ import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.FcmTokenEnrollRequest
 import com.kdongsu5509.notifications.application.port.`in`.FcmTokenEnrollUseCase
 import com.kdongsu5509.notifications.domain.DeviceType
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
 import org.springframework.web.filter.CharacterEncodingFilter
 import tools.jackson.databind.json.JsonMapper
+import java.util.UUID
 
 @WebMvcTest(FcmTokenEnrollController::class)
 class FcmTokenEnrollControllerWebMvcTest {
@@ -39,13 +40,14 @@ class FcmTokenEnrollControllerWebMvcTest {
     private lateinit var jsonMapper: JsonMapper
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     private val userDetails = ImHereUserDetails(
         email = "test@example.com",
         nickname = "tester",
         role = "USER",
-        status = "ACTIVE"
+        status = "ACTIVE",
+        userId = UUID.randomUUID(),
     )
 
     @BeforeEach
@@ -74,7 +76,7 @@ class FcmTokenEnrollControllerWebMvcTest {
         ).andExpect(status().isCreated)
 
         verify(fcmTokenEnrollUseCase).save(
-            userDetails.email,
+            userDetails.requiredUserId,
             requestDto.fcmToken,
             requestDto.deviceType
         )

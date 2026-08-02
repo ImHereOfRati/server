@@ -5,11 +5,11 @@ import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.shared.event.DomainEvent
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
-data class NotificationRequested(
+data class NotificationEvent(
     val senderNickname: String,
-    val senderEmail: String,
+    val senderId: UUID,
     val notificationMethod: NotificationMethod,
     val targetIdentifier: String,
     val type: NotificationType,
@@ -18,22 +18,25 @@ data class NotificationRequested(
     override val occurredAt: LocalDateTime = LocalDateTime.now(),
 ) : DomainEvent {
     companion object {
-        fun from(command: NotificationCommand): NotificationRequested =
-            NotificationRequested(
-                senderNickname = command.senderNickname,
-                senderEmail = command.senderEmail,
-                notificationMethod = command.notificationMethod,
-                targetIdentifier = command.targetIdentifier,
-                type = command.type,
-                extraData = command.extraData,
-            )
+        fun from(command: NotificationCommand): List<NotificationEvent> =
+            command.targetIdentifiers.map {
+                NotificationEvent(
+                    senderNickname = command.senderNickname,
+                    senderId = command.senderId,
+                    notificationMethod = command.notificationMethod,
+                    targetIdentifier = it,
+                    type = command.type,
+                    extraData = command.extraData,
+                )
+            }
 
-        fun deliveryReceipt(senderEmail: String, type: NotificationType): NotificationRequested =
-            NotificationRequested(
+
+        fun deliveryReceipt(senderId: UUID, type: NotificationType): NotificationEvent =
+            NotificationEvent(
                 senderNickname = "ImHere",
-                senderEmail = senderEmail,
+                senderId = senderId,
                 notificationMethod = NotificationMethod.FCM,
-                targetIdentifier = senderEmail,
+                targetIdentifier = senderId.toString(),
                 type = type,
             )
     }

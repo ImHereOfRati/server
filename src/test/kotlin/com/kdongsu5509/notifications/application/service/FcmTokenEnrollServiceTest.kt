@@ -11,6 +11,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class FcmTokenEnrollServiceTest {
@@ -29,20 +30,20 @@ class FcmTokenEnrollServiceTest {
     @DisplayName("기존에 등록된 토큰이 없으면 새로운 토큰 객체를 생성하여 저장한다")
     fun save_whenNoExistingToken_savesNewToken() {
         // given
-        val email = "test@example.com"
+        val ownerId = UUID.randomUUID()
         val newFcmToken = "new-fcm-token"
         val deviceType = DeviceType.IOS
 
-        `when`(fcmTokenPersistencePort.findByUserEmail(email)).thenReturn(null)
+        `when`(fcmTokenPersistencePort.findByOwnerId(ownerId)).thenReturn(null)
 
         // when
-        fcmTokenEnrollService.save(email, newFcmToken, deviceType)
+        fcmTokenEnrollService.save(ownerId, newFcmToken, deviceType)
 
         // then
-        verify(fcmTokenPersistencePort).findByUserEmail(email)
+        verify(fcmTokenPersistencePort).findByOwnerId(ownerId)
         verify(fcmTokenPersistencePort).save(
             org.mockito.kotlin.check { token ->
-                org.assertj.core.api.Assertions.assertThat(token.email).isEqualTo(email)
+                org.assertj.core.api.Assertions.assertThat(token.ownerId).isEqualTo(ownerId)
                 org.assertj.core.api.Assertions.assertThat(token.fcmToken).isEqualTo(newFcmToken)
                 org.assertj.core.api.Assertions.assertThat(token.deviceType).isEqualTo(deviceType)
                 org.assertj.core.api.Assertions.assertThat(token.id).isNull()
@@ -54,28 +55,28 @@ class FcmTokenEnrollServiceTest {
     @DisplayName("기존에 등록된 토큰이 있으면 기존 객체의 토큰값을 갱신하여 저장한다")
     fun save_whenExistingToken_updatesAndSavesToken() {
         // given
-        val email = "test@example.com"
+        val ownerId = UUID.randomUUID()
         val newFcmToken = "updated-fcm-token"
         val deviceType = DeviceType.AOS
 
         val existingToken = FcmToken(
             id = 1L,
-            email = email,
+            ownerId = ownerId,
             fcmToken = "old-fcm-token",
             deviceType = deviceType
         )
 
-        `when`(fcmTokenPersistencePort.findByUserEmail(email)).thenReturn(existingToken)
+        `when`(fcmTokenPersistencePort.findByOwnerId(ownerId)).thenReturn(existingToken)
 
         // when
-        fcmTokenEnrollService.save(email, newFcmToken, deviceType)
+        fcmTokenEnrollService.save(ownerId, newFcmToken, deviceType)
 
         // then
-        verify(fcmTokenPersistencePort).findByUserEmail(email)
+        verify(fcmTokenPersistencePort).findByOwnerId(ownerId)
         verify(fcmTokenPersistencePort).save(
             org.mockito.kotlin.check { token ->
                 org.assertj.core.api.Assertions.assertThat(token.id).isEqualTo(1L)
-                org.assertj.core.api.Assertions.assertThat(token.email).isEqualTo(email)
+                org.assertj.core.api.Assertions.assertThat(token.ownerId).isEqualTo(ownerId)
                 org.assertj.core.api.Assertions.assertThat(token.fcmToken).isEqualTo(newFcmToken)
                 org.assertj.core.api.Assertions.assertThat(token.deviceType).isEqualTo(deviceType)
             }

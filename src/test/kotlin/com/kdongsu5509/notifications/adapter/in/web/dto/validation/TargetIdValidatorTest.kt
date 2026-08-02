@@ -1,9 +1,8 @@
 package com.kdongsu5509.notifications.adapter.`in`.web.dto.validation
 
-import com.kdongsu5509.notifications.domain.NotificationType
-import com.kdongsu5509.notifications.adapter.`in`.web.dto.MultiNotificationRequest
 import com.kdongsu5509.notifications.adapter.`in`.web.dto.NotificationRequest
 import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.NotificationType
 import jakarta.validation.ConstraintValidatorContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -13,6 +12,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
+import java.util.*
 
 class TargetIdValidatorTest {
 
@@ -48,10 +48,10 @@ class TargetIdValidatorTest {
     }
 
     @Test
-    @DisplayName("NotificationMethod가 이메일일 때 올바른 이메일 형식이면 true를 반환한다")
-    fun isValid_email_success() {
+    @DisplayName("NotificationMethod가 FCM일 때 올바른 사용자 ID 형식이면 true를 반환한다")
+    fun isValid_userId_success() {
         val request = NotificationRequest(
-            targetId = "test@example.com",
+            targetIds = listOf(UUID.randomUUID().toString()),
             notificationMethod = NotificationMethod.FCM,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
@@ -59,30 +59,30 @@ class TargetIdValidatorTest {
     }
 
     @Test
-    @DisplayName("NotificationMethod가 이메일일 때 잘못된 이메일 형식이면 false를 반환한다")
-    fun isValid_email_fail() {
+    @DisplayName("NotificationMethod가 FCM일 때 사용자 ID가 아니면 false를 반환한다")
+    fun isValid_userId_fail() {
         val request = NotificationRequest(
-            targetId = "test-example.com", // No @
+            targetIds = listOf("test@example.com"), // 더 이상 이메일로 지목하지 않는다
             notificationMethod = NotificationMethod.FCM,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
-        setupContextMock("올바른 이메일 형식이 아닙니다.")
+        setupContextMock("올바른 사용자 ID 형식이 아닙니다.")
 
         assertThat(validator.isValid(request, context)).isFalse()
         verify(context).disableDefaultConstraintViolation()
-        verify(context).buildConstraintViolationWithTemplate("올바른 이메일 형식이 아닙니다.")
+        verify(context).buildConstraintViolationWithTemplate("올바른 사용자 ID 형식이 아닙니다.")
     }
 
     @Test
     @DisplayName("NotificationMethod가 휴대전화일 때 올바른 형식이면 true를 반환한다")
     fun isValid_phone_success() {
         val request1 = NotificationRequest(
-            targetId = "010-1234-5678",
+            targetIds = listOf("010-1234-5678"),
             notificationMethod = NotificationMethod.SMS,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
         val request2 = NotificationRequest(
-            targetId = "01012345678",
+            targetIds = listOf("01012345678"),
             notificationMethod = NotificationMethod.SMS,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
@@ -94,7 +94,7 @@ class TargetIdValidatorTest {
     @DisplayName("NotificationMethod가 휴대전화일 때 잘못된 형식이면 false를 반환한다")
     fun isValid_phone_fail() {
         val request = NotificationRequest(
-            targetId = "02-123-4567", // Not 01X
+            targetIds = listOf("02-123-4567"), // Not 01X
             notificationMethod = NotificationMethod.SMS,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
@@ -106,23 +106,23 @@ class TargetIdValidatorTest {
     }
 
     @Test
-    @DisplayName("MultiNotificationRequest의 타겟 중 하나라도 잘못되면 false를 반환한다")
+    @DisplayName("NotificationRequest의 타겟 중 하나라도 잘못되면 false를 반환한다")
     fun isValid_multi_fail() {
-        val request = MultiNotificationRequest(
-            targetIds = listOf("test@ex.com", "wrong-email"),
+        val request = NotificationRequest(
+            targetIds = listOf(UUID.randomUUID().toString(), "not-a-user-id"),
             notificationMethod = NotificationMethod.FCM,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )
-        setupContextMock("올바른 이메일 형식이 아닙니다.")
+        setupContextMock("올바른 사용자 ID 형식이 아닙니다.")
 
         assertThat(validator.isValid(request, context)).isFalse()
     }
 
     @Test
-    @DisplayName("MultiNotificationRequest의 타겟이 모두 맞으면 true를 반환한다")
+    @DisplayName("NotificationRequest의 타겟이 모두 맞으면 true를 반환한다")
     fun isValid_multi_success() {
-        val request = MultiNotificationRequest(
-            targetIds = listOf("test1@ex.com", "test2@ex.com"),
+        val request = NotificationRequest(
+            targetIds = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
             notificationMethod = NotificationMethod.FCM,
             type = NotificationType.FRIEND_REQUEST_RECEIVED
         )

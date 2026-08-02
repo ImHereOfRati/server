@@ -47,6 +47,7 @@ configurations {
 
 dependencies {
     implementation platform("org.springframework.boot:spring-boot-dependencies:4.1.0")
+    ksp platform("org.springframework.boot:spring-boot-dependencies:4.1.0")
     implementation platform("org.springframework.modulith:spring-modulith-bom:2.1.0")
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 
@@ -131,6 +132,7 @@ ext {
 }
 
 test {
+    useJUnitPlatform()
     outputs.dir snippetsDir
 }
 

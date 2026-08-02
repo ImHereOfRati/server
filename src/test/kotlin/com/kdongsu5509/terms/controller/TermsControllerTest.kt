@@ -1,6 +1,6 @@
 package com.kdongsu5509.terms.controller
 
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
 import com.kdongsu5509.terms.service.TermService
@@ -31,7 +31,7 @@ class TermsControllerTest {
     private lateinit var termService: TermService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @Test
     @DisplayName("isActive 파라미터가 true이면 활성화된 약관을 조회한다")

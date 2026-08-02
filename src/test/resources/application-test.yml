@@ -40,15 +40,28 @@ security:
 oidc:
   providers:
     kakao:
-      issuer: "https://kauth.kakao.com"
-      audience: "bf284f33bfeba9bc59575706d0eb0e9c"
+      issuers:
+        - "https://kauth.kakao.com"
+      audiences:
+        - "bf284f33bfeba9bc59575706d0eb0e9c"
       cacheKey: "kakaoOidcKeys::kakaoPublicKeySet"
       jwksUri: "https://kauth.kakao.com/.well-known/jwks.json"
     google:
-      issuer: "https://accounts.google.com"
-      audience: "test-google-client-id"
+      issuers:
+        - "https://accounts.google.com"
+        - "accounts.google.com"
+      audiences:
+        - "test-google-client-id"
+        - "test-google-ios-client-id"
       cacheKey: "googleOidcKeys::googlePublicKeySet"
       jwksUri: "https://www.googleapis.com/oauth2/v3/certs"
+    apple:
+      issuers:
+        - "https://appleid.apple.com"
+      audiences:
+        - "test-apple-client-id"
+      cacheKey: "appleOidcKeys::applePublicKeySet"
+      jwksUri: "https://appleid.apple.com/auth/keys"
 
 logging:
   file:

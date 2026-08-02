@@ -34,7 +34,7 @@
                             <td th:text="${restriction.restricted.email}"></td>
                             <td>
                                 <span class="badge" 
-                                      th:classappend="${restriction.type.name() == 'BLOCK' ? 'orange' : 'gray'}"
+                                      th:classappend="${restriction.type.name() == 'BLOCKED' ? 'orange' : 'gray'}"
                                       th:text="${restriction.type}"></span>
                             </td>
                             <td>

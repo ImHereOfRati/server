@@ -1,6 +1,6 @@
 package com.kdongsu5509.terms.controller
 
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
 import com.kdongsu5509.terms.service.TermService
@@ -34,7 +34,7 @@ class TermsAdminPageControllerTest {
     private lateinit var termService: TermService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @Test
     @DisplayName("약관 관리 페이지는 전체 약관을 모델에 담아 admin/terms 뷰를 반환한다")

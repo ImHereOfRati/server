@@ -1,6 +1,6 @@
 package com.kdongsu5509.terms.controller
 
-import com.kdongsu5509.support.external.DiscordUserErrorNotifier
+import com.kdongsu5509.support.external.UserErrorAlertNotifier
 import com.kdongsu5509.terms.controller.dto.TermCreateRequest
 import com.kdongsu5509.terms.domain.TermTypes
 import com.kdongsu5509.terms.service.TermResult
@@ -39,7 +39,7 @@ class TermsAdminControllerTest {
     private lateinit var termService: TermService
 
     @MockitoBean
-    private lateinit var discordUserErrorNotifier: DiscordUserErrorNotifier
+    private lateinit var userErrorAlertNotifier: UserErrorAlertNotifier
 
     @Test
     @DisplayName("모든 약관을 조회한다")

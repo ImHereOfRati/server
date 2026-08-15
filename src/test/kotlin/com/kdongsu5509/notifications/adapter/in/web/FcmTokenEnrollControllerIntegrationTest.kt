@@ -105,7 +105,7 @@ class FcmTokenEnrollControllerIntegrationTest : WebIntegrationTestSupport() {
         val saved = fcmTokenRepository.findByOwnerId(userDetails.requiredUserId)
         assertThat(saved).isNotNull
         assertThat(saved!!.token).isEqualTo("new-token")
-        assertThat(saved.deviceType).isEqualTo(DeviceType.AOS)
+        assertThat(saved.deviceType).isEqualTo(DeviceType.IOS)
     }
 
     @Test

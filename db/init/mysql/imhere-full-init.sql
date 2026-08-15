@@ -81,27 +81,21 @@ CREATE TABLE user_agreement
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
--- 관계는 두 사람당 한 행이다.
--- 예전에는 요청(friend_request) / 친구(friend_relationships) / 제한(friend_restrictions)이
--- 세 테이블로 나뉘었고, 친구는 방향별로 두 행에 나뉘어 저장됐다.
--- 두 행이 한 쌍이라는 사실을 스키마가 표현하지 못해 한쪽만 지워지면 유령 관계가 남았다.
--- 이제 status가 관계의 생애 주기를 표현하고, uk_friend_pair가 한 쌍 한 행을 강제한다.
---
--- low/high 정렬은 애플리케이션이 정한다. SQL의 바이트 비교와 Java UUID.compareTo의
--- 정렬 결과가 다를 수 있어 SQL에서 순서를 정하면 도메인과 어긋난다.
+-- 친구 관계는 요청, 수락, 거절, 차단, 취소 상태를 하나의 pair row로 관리한다.
+-- low/high 정렬은 양방향 친구 관계를 하나의 유니크 pair로 묶기 위한 식별 기준이다.
 CREATE TABLE friend_relations
 (
-    friend_relation_id BINARY(16)                                                       NOT NULL,
-    low_user_id        BINARY(16)                                                       NOT NULL,
-    high_user_id       BINARY(16)                                                       NOT NULL,
-    status             ENUM ('REQUESTED', 'ACCEPTED', 'REJECTED', 'BLOCKED', 'CANCEL')  NOT NULL,
-    initiated_user_id  BINARY(16)                                                       NOT NULL,
-    message            VARCHAR(255)                                                     NULL,
-    low_alias          VARCHAR(10)                                                      NULL,
-    high_alias         VARCHAR(10)                                                      NULL,
-    expired_at         DATETIME(6)                                                      NULL,
-    created_at         DATETIME(6)                                                      NOT NULL,
-    updated_at         DATETIME(6)                                                      NOT NULL,
+    friend_relation_id BINARY(16)                                                      NOT NULL,
+    low_user_id        BINARY(16)                                                      NOT NULL,
+    high_user_id       BINARY(16)                                                      NOT NULL,
+    status             ENUM ('REQUESTED', 'ACCEPTED', 'REJECTED', 'BLOCKED', 'CANCEL') NOT NULL,
+    initiated_user_id  BINARY(16)                                                      NOT NULL,
+    message            VARCHAR(255)                                                    NULL,
+    low_alias          VARCHAR(10)                                                     NULL,
+    high_alias         VARCHAR(10)                                                     NULL,
+    expired_at         DATETIME(6)                                                     NULL,
+    created_at         DATETIME(6)                                                     NOT NULL,
+    updated_at         DATETIME(6)                                                     NOT NULL,
     PRIMARY KEY (friend_relation_id),
     UNIQUE KEY uk_friend_pair (low_user_id, high_user_id),
     KEY idx_friend_relations_low (low_user_id, status),
@@ -113,9 +107,8 @@ CREATE TABLE friend_relations
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
--- 토큰의 주인을 이메일이 아니라 사용자 식별자로 지목한다.
--- 이메일은 사용자가 바꿀 수 있는 표시 정보라 소유 관계를 붙들어 두기에 적합하지 않다.
--- 한 사용자당 토큰 한 개이므로 owner_id에 유니크를 건다.
+-- FCM 토큰의 소유자는 이메일이 아니라 user id로 식별한다.
+-- 현재 서버 로직은 사용자당 하나의 활성 토큰을 유지한다.
 CREATE TABLE fcm_token
 (
     id          BIGINT              NOT NULL AUTO_INCREMENT,
@@ -131,30 +124,26 @@ CREATE TABLE fcm_token
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
--- 알림 한 건의 발송 생애주기를 담는다.
--- 요청 접수(PENDING)부터
--- 성공(SENT) / 재시도 가능한 실패(FAILED) / 재시도 소진(DEAD)까지를 status가 표현한다.
--- DEAD는 재시도 소진 후 운영자 확인이 필요한 알림을 나타낸다.
---
--- uk_notification_dedupe_key가 멱등성 장치다. 같은 발송 요청이 두 번 들어와도 행은 하나만 생긴다.
+-- notification은 알림 발송과 알림함 표시의 생명주기를 저장한다.
+-- PENDING, SENT, FAILED, DEAD 상태와 dedupe key로 중복 발송과 재시도를 제어한다.
 CREATE TABLE notification
 (
-    id                BIGINT                                  NOT NULL AUTO_INCREMENT,
-    dedupe_key        VARCHAR(120)                            NOT NULL,
-    target_identifier VARCHAR(255)                            NOT NULL,
-    method            ENUM ('SMS', 'FCM')                     NOT NULL,
-    sender_alias      VARCHAR(255)                            NOT NULL,
-    type              VARCHAR(255)                            NOT NULL,
-    title             VARCHAR(255)                            NOT NULL,
-    body              VARCHAR(500)                            NOT NULL,
-    extra_data        VARCHAR(2000)                           NOT NULL,
-    status            ENUM ('PENDING', 'SENT', 'FAILED', 'DEAD') NOT NULL,
-    attempts          INT                                     NOT NULL DEFAULT 0,
-    last_error        VARCHAR(500)                            NULL,
-    sent_at           DATETIME(6)                             NULL,
-    is_read           BIT(1)                                  NOT NULL DEFAULT b'0',
-    created_at        DATETIME(6)                             NOT NULL,
-    updated_at        DATETIME(6)                             NOT NULL,
+    id                BIGINT                                      NOT NULL AUTO_INCREMENT,
+    dedupe_key        VARCHAR(120)                                NOT NULL,
+    target_identifier VARCHAR(255)                                NOT NULL,
+    method            ENUM ('SMS', 'FCM')                         NOT NULL,
+    sender_alias      VARCHAR(255)                                NOT NULL,
+    type              VARCHAR(255)                                NOT NULL,
+    title             VARCHAR(255)                                NOT NULL,
+    body              VARCHAR(500)                                NOT NULL,
+    extra_data        VARCHAR(2000)                               NOT NULL,
+    status            ENUM ('PENDING', 'SENT', 'FAILED', 'DEAD')  NOT NULL,
+    attempts          INT                                         NOT NULL DEFAULT 0,
+    last_error        VARCHAR(500)                                NULL,
+    sent_at           DATETIME(6)                                 NULL,
+    is_read           BIT(1)                                      NOT NULL DEFAULT b'0',
+    created_at        DATETIME(6)                                 NOT NULL,
+    updated_at        DATETIME(6)                                 NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_notification_dedupe_key (dedupe_key),
     KEY idx_notification_inbox (target_identifier, method, status, created_at),
@@ -199,7 +188,7 @@ CREATE TABLE event_publication
 -- GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, DROP ON rati.* TO 'imhere_app'@'%';
 -- FLUSH PRIVILEGES;
 
--- Seed default terms.
+-- Seed default terms. Version and enum values are intentionally kept compatible with the current server enum.
 INSERT INTO terms (version,
                    type,
                    title,
@@ -213,23 +202,30 @@ INSERT INTO terms (version,
 VALUES (1,
         'SERVICE',
         '서비스 이용약관',
-        '본 약관은 Rati(이하 "서비스")의 이용과 관련하여 서비스 제공자와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
+        '이 약관은 Imhere 서비스의 이용 조건과 회원 및 운영자의 권리, 의무, 책임사항을 정합니다.
 
-      제1조 (서비스의 제공)
-      1. 서비스는 위치 기반 도착·출발 알림, 친구 관리, 알림 전송 등의 기능을 제공합니다.
-      2. 서비스 제공자는 서비스 운영상 필요에 따라 제공 기능을 변경할 수 있습니다.
+1. 서비스의 제공
+- 서비스는 위치 기반 도착 및 출발 알림, 친구 관계 관리, 알림함, 푸시 알림, 필요한 경우 문자 알림, 계정 인증 및 보안 기능을 제공합니다.
+- 알림에는 화면 이동에 필요한 최소한의 유형 정보와 부가 데이터가 포함될 수 있습니다.
+- 운영자는 서비스 안정성, 보안, 정책 변경, 법령 준수 또는 기능 개선을 위해 서비스의 일부를 변경하거나 중단할 수 있습니다.
 
-      제2조 (이용자의 의무)
-      1. 이용자는 관련 법령 및 본 약관을 준수하여야 합니다.
-      2. 이용자는 타인의 개인정보 또는 위치정보를 무단으로 수집·이용·공유하여서는 안 됩니다.
-      3. 이용자는 서비스의 정상적인 운영을 방해하는 행위를 하여서는 안 됩니다.
+2. 회원의 의무
+- 회원은 관계 법령과 이 약관, 서비스 화면의 안내를 준수해야 합니다.
+- 회원은 타인의 계정, 개인정보, 위치정보 또는 알림 정보를 무단으로 수집, 이용, 공유해서는 안 됩니다.
+- 회원은 허위 정보 입력, 비정상적인 접근, 자동화된 요청, 시스템 장애 유발 등 서비스 운영을 방해하는 행위를 해서는 안 됩니다.
 
-      제3조 (서비스 이용 제한)
-      서비스 제공자는 법령 또는 본 약관을 위반한 이용자에 대하여 서비스 이용을 제한하거나 계정을 정지할 수 있습니다.
+3. 친구 및 알림 기능
+- 친구 요청, 수락, 차단, 취소 등 관계 상태에 따라 알림 수신 범위가 달라질 수 있습니다.
+- 알림은 기기 설정, 네트워크 상태, 운영체제 정책, FCM 토큰 등록 여부, 문자 발송 사업자 상태에 따라 지연되거나 전달되지 않을 수 있습니다.
+- 운영자는 중복 발송 방지, 실패 재시도, 알림함 표시를 위해 필요한 범위에서 알림 처리 기록을 보관할 수 있습니다.
 
-      제4조 (면책)
-      1. 서비스 제공자는 천재지변, 통신 장애 등 불가항력으로 인한 서비스 중단에 대하여 책임을 지지 않습니다.
-      2. 이용자의 기기 설정, 네트워크 환경 또는 운영체제 정책으로 인해 알림이 정상 동작하지 않는 경우 책임을 지지 않습니다.',
+4. 이용 제한
+- 운영자는 회원이 법령, 약관 또는 서비스 정책을 위반한 경우 서비스 이용을 제한하거나 계정을 정지할 수 있습니다.
+- 부정 사용, 보안 사고, 타인의 권리 침해가 의심되는 경우 필요한 범위에서 관련 기록을 확인할 수 있습니다.
+
+5. 면책
+- 천재지변, 통신 장애, 외부 플랫폼 장애, 회원 기기 설정 또는 권한 거부로 인해 서비스가 정상 동작하지 않을 수 있습니다.
+- 위치 및 알림 기능은 보조적인 편의 기능이며, 긴급 구조나 안전 보장을 목적으로 제공되지 않습니다.',
         '2026-06-29 00:00:00',
         b'1',
         NOW(6),
@@ -239,28 +235,47 @@ VALUES (1,
        (1,
         'PRIVACY',
         '개인정보 처리방침',
-        '서비스는 개인정보 보호법에 따라 이용자의 개인정보를 보호합니다.
+        'Imhere는 개인정보 보호법 등 관련 법령에 따라 회원의 개인정보를 보호합니다.
 
-    1. 수집 항목
-    - 이메일 주소
-    - 닉네임
-    - 로그인 제공자 정보
-    - 서비스 이용 기록
+1. 수집하는 개인정보
+- 계정 정보: 이메일 주소, 닉네임, 로그인 제공자, 제공자 식별값, 회원 상태, 권한, refresh token version
+- 인증 및 보안 정보: 일회용 토큰 값, 사용자 식별자, 발급 시각, 만료 시각, 로그인 및 인증 처리 기록
+- 친구 기능 정보: 친구 관계 식별자, 요청자와 상대방 식별자, 관계 상태, 요청 메시지, 별칭, 요청 만료 시각
+- 알림 정보: 알림 대상 식별자, 발송 수단, 발신자 별칭, 알림 유형, 제목, 본문, 화면 이동용 부가 데이터, 발송 상태, 시도 횟수, 오류 내용, 발송 시각, 읽음 여부
+- 기기 및 푸시 정보: FCM 토큰, 기기 종류, 토큰 등록 및 갱신 시각
+- 위치 기능 정보: 위치 권한이 허용되고 기능이 활성화된 경우 도착 및 출발 판정, 친구 위치 기반 알림 제공에 필요한 위치 관련 정보
+- 서비스 이용 및 분석 정보: 화면 이동, 기능 사용, 오류, 앱 또는 브라우저 정보, 기기 정보, 대략적인 접속 환경, 동의 상태. 단, 분석 정보는 선택 동의가 있는 경우에만 활성화하며 이름, 이메일, 전화번호, 정확한 좌표, 메시지 본문 등 직접 식별 정보는 분석 이벤트로 전송하지 않는 것을 원칙으로 합니다.
 
-    2. 수집 목적
-    - 회원 식별 및 인증
-    - 친구 기능 제공
-    - 서비스 운영 및 고객 문의 대응
+2. 이용 목적
+- 회원 가입, 로그인, 본인 확인, 계정 상태 관리
+- 친구 요청, 수락, 차단, 별칭 관리 등 친구 기능 제공
+- 위치 기반 도착 및 출발 판정, 알림 생성, 알림함 제공
+- FCM 푸시 또는 문자 알림 발송, 발송 실패 재시도, 중복 발송 방지
+- 보안, 장애 대응, 부정 이용 방지, 고객 문의 처리
+- 선택 동의가 있는 경우 서비스 이용 통계, 기능 개선, A/B 테스트, 마케팅 성과 측정
 
-    3. 보유 및 이용 기간
-    - 회원 탈퇴 시 지체 없이 파기합니다.
-    - 관계 법령에 따라 보관이 필요한 경우 해당 기간 동안 보관합니다.
+3. 보유 및 이용 기간
+- 회원 정보는 회원 탈퇴 시 지체 없이 삭제하거나 복구할 수 없도록 익명화합니다. 다만 법령상 보관 의무가 있거나 분쟁 대응을 위해 필요한 경우 해당 목적과 기간에 한해 분리 보관할 수 있습니다.
+- FCM 토큰은 새 토큰 등록, 회원 탈퇴, 앱 삭제 또는 토큰 무효 처리 시 삭제합니다.
+- 일회용 인증 토큰은 만료 후 삭제 대상이 되며, 인증과 보안 목적 범위에서만 사용합니다.
+- 친구 관계, 알림함, 알림 발송 기록, 동의 이력은 서비스 제공, 이용자 권리 확인, 분쟁 대응에 필요한 기간 동안 보관하며 회원 탈퇴 또는 보관 목적 달성 시 삭제하거나 익명화합니다.
+- 위치 관련 정보는 위치 기반 기능 제공 목적 달성 후 지체 없이 삭제하거나, 알림함 표시 및 분쟁 대응에 필요한 최소 범위에서만 보관합니다.
 
-    4. 개인정보 제공
-    서비스는 이용자의 동의 없이 개인정보를 제3자에게 제공하지 않습니다.
+4. 제3자 제공
+- Imhere는 회원의 사전 동의 없이 개인정보를 제3자에게 제공하지 않습니다. 다만 법령에 근거가 있거나 수사기관 등 적법한 요청이 있는 경우 예외적으로 제공할 수 있습니다.
 
-    5. 이용자의 권리
-    이용자는 언제든지 개인정보 열람, 정정, 삭제 및 처리 정지를 요청할 수 있습니다.',
+5. 처리 위탁 및 외부 서비스 이용
+- 소셜 로그인 제공자: Kakao, Google, Apple. 로그인 인증 및 계정 식별을 위해 이메일, 닉네임, 제공자 식별값 등 필요한 정보를 처리합니다.
+- 푸시 알림: Google Firebase Cloud Messaging. FCM 토큰, 알림 제목, 본문, 화면 이동용 부가 데이터를 푸시 발송 목적으로 처리합니다.
+- 문자 알림: Solapi 등 문자 발송 사업자. 문자 알림 발송이 필요한 경우 전화번호와 메시지 내용을 처리할 수 있습니다.
+- 지도 및 위치 보조 기능: Naver Maps 등 지도 API 제공자. 주소 검색, 지도 표시, 위치 보조 기능 제공에 필요한 요청 정보를 처리할 수 있습니다.
+- 선택 분석 도구: Google Analytics 4, Microsoft Clarity 등. 선택 동의가 있는 경우 서비스 이용 이벤트, 브라우저 및 기기 정보, 대략적인 접속 환경을 처리할 수 있습니다.
+- 외부 서비스 제공자의 명칭, 처리 항목, 보유 기간은 서비스 운영 환경에 따라 변경될 수 있으며, 중요한 변경이 있는 경우 공지하거나 동의를 다시 받을 수 있습니다.
+
+6. 이용자의 권리
+- 회원은 개인정보 열람, 정정, 삭제, 처리 정지, 동의 철회, 회원 탈퇴를 요청할 수 있습니다.
+- 선택 동의는 철회해도 기본 서비스 이용에 제한이 없습니다. 다만 해당 선택 기능, 마케팅 수신, 분석 처리 또는 맞춤형 개선 기능은 중단될 수 있습니다.
+- 위치 권한 또는 위치정보 이용 동의를 철회하면 위치 기반 알림 기능 이용이 제한될 수 있습니다.',
         '2026-06-29 00:00:00',
         b'1',
         NOW(6),
@@ -270,26 +285,39 @@ VALUES (1,
        (1,
         'LOCATION',
         '위치정보 이용약관',
-        '서비스는 위치정보의 보호 및 이용 등에 관한 법률에 따라 개인위치정보를 처리합니다.
+        'Imhere는 위치정보의 보호 및 이용 등에 관한 법률 등 관련 법령에 따라 개인위치정보를 처리합니다.
 
-    1. 위치정보 이용 목적
-    - 도착·출발 알림 제공
-    - 친구 간 위치 기반 기능 제공
-    - 위치 기반 서비스 품질 개선
+1. 이용 목적
+- 도착 및 출발 판정, 위치 기반 알림 생성
+- 친구 관계에 기반한 위치 알림 제공
+- 사용자가 설정한 위치 기반 기능의 정상 동작 확인
+- 위치 기반 서비스의 오류 대응 및 품질 개선
 
-    2. 수집하는 위치정보
-    - 모바일 기기에서 제공하는 GPS 또는 네트워크 기반 위치정보
+2. 수집 및 이용하는 위치정보
+- 모바일 기기에서 제공하는 GPS, 네트워크, 운영체제 위치 서비스 기반 위치정보
+- 도착 및 출발 판정 결과, 위치 기반 알림 생성 시각, 알림 처리 상태
+- 위치 권한 상태, 위치 기능 활성화 여부 등 기능 제공에 필요한 설정 정보
 
-    3. 보유 기간
-    - 실시간 위치정보는 서비스 제공 목적 달성 후 지체 없이 파기합니다.
-    - 법령에 따라 보관이 필요한 경우 해당 기간 동안 보관합니다.
+3. 처리 원칙
+- 위치정보는 사용자가 위치 권한을 허용하고 위치 기반 기능을 사용하는 경우에만 처리합니다.
+- 친구에게 제공되는 알림은 관계 상태와 사용자가 설정한 범위 안에서만 생성됩니다.
+- 위치정보는 긴급 구조, 실시간 감시, 안전 보장을 목적으로 제공되지 않습니다.
 
-    4. 이용자의 권리
-    - 이용자는 언제든지 위치정보 제공 동의를 철회할 수 있습니다.
-    - 이용자는 위치정보 이용 내역을 열람할 수 있습니다.
+4. 보유 및 이용 기간
+- 실시간 위치정보는 위치 기반 기능 제공 목적 달성 후 지체 없이 삭제하거나, 알림함 표시 및 장애 대응에 필요한 최소 정보만 보관합니다.
+- 위치 기반 알림 기록은 알림함 제공, 발송 확인, 분쟁 대응에 필요한 기간 동안 보관할 수 있습니다.
+- 회원 탈퇴, 위치 동의 철회 또는 위치 기능 삭제 시 관련 위치정보는 지체 없이 삭제하거나 복구할 수 없도록 익명화합니다.
+- 법령상 보관 의무가 있는 경우 해당 기간 동안 분리 보관할 수 있습니다.
 
-    5. 동의 거부
-    위치정보 제공에 동의하지 않을 수 있으며, 이 경우 위치 기반 기능의 이용이 제한될 수 있습니다.',
+5. 제3자 제공 및 위탁
+- Imhere는 회원의 동의 없이 개인위치정보를 제3자에게 제공하지 않습니다.
+- 지도 표시, 주소 검색, 위치 보조 기능 제공을 위해 지도 API 제공자에게 필요한 요청 정보가 전송될 수 있습니다.
+- 푸시 또는 문자 알림 발송 과정에서 위치 기반 이벤트 결과가 알림 제목, 본문 또는 부가 데이터로 전송될 수 있습니다.
+
+6. 이용자의 권리
+- 회원은 언제든지 위치정보 이용 동의를 철회하거나 기기 설정에서 위치 권한을 변경할 수 있습니다.
+- 회원은 위치정보 이용 및 제공 사실 확인자료의 열람, 고지, 정정 또는 삭제를 요청할 수 있습니다.
+- 위치 동의를 철회하면 위치 기반 도착 및 출발 알림, 친구 위치 알림 등 관련 기능 이용이 제한될 수 있습니다.',
         '2026-06-29 00:00:00',
         b'1',
         NOW(6),
@@ -298,25 +326,43 @@ VALUES (1,
         'system'),
        (1,
         'MARKETING',
-        '마케팅 정보 수신 동의',
-        '서비스는 신규 기능, 이벤트, 혜택 및 프로모션 정보를 제공하기 위하여 광고성 정보를 발송할 수 있습니다.
+        '마케팅 및 서비스 분석 활용 동의',
+        '이 동의는 선택 사항입니다. 동의하지 않아도 기본 서비스 이용에는 제한이 없습니다.
 
-    1. 수신 방법
-    - 푸시 알림
-    - 이메일
+1. 이용 목적
+- 신규 기능, 이벤트, 혜택, 공지성 프로모션 안내
+- 서비스 이용 통계 작성, 기능 개선, 오류 흐름 분석
+- 웹 및 앱 화면의 사용성 개선, A/B 테스트, 마케팅 성과 측정
+- 회원 관심사에 맞춘 안내와 서비스 품질 개선
 
-    2. 동의 여부
-    - 본 동의는 선택 사항입니다.
-    - 동의하지 않아도 서비스 이용에는 제한이 없습니다.
+2. 처리 항목
+- 계정 및 수신 정보: 이메일 주소, 닉네임, 푸시 토큰, 기기 종류, 수신 동의 상태
+- 서비스 이용 정보: 화면 이름, 버튼 클릭, 기능 사용 여부, 오류 이벤트, 접속 환경, 앱 또는 브라우저 정보, 유입 경로
+- 캠페인 정보: 이벤트 참여 여부, 알림 수신 및 반응 여부, 혜택 제공 이력
+- 분석 이벤트에는 이름, 이메일, 전화번호, 정확한 좌표, 친구 식별 정보, 메시지 본문 등 직접 식별 정보 또는 민감한 내용을 포함하지 않는 것을 원칙으로 합니다.
 
-    3. 동의 철회
-    - 이용자는 언제든지 설정 화면 또는 고객 문의를 통해 수신 동의를 철회할 수 있습니다.
+3. 수신 및 활용 방법
+- 푸시 알림, 이메일, 앱 내 알림 또는 서비스 화면을 통해 안내할 수 있습니다.
+- 선택 동의가 있는 경우 Google Analytics 4, Microsoft Clarity 등 분석 도구가 활성화될 수 있습니다.
+- 광고 개인화, 외부 광고 식별자 연계, 제3자 광고 네트워크 제공은 별도 동의 또는 법령상 근거가 있는 경우에만 수행합니다.
 
-    4. 광고성 정보 발송
-    - 서비스는 정보통신망법 등 관련 법령을 준수하여 광고성 정보를 발송합니다.',
+4. 보유 및 이용 기간
+- 동의 철회 또는 회원 탈퇴 시 마케팅 수신과 선택 분석 처리를 중단하고 관련 개인정보를 삭제하거나 익명화합니다.
+- 이미 발송된 이력, 동의 및 철회 이력, 분쟁 대응에 필요한 기록은 관련 법령과 내부 보관 기준에 따라 필요한 기간 동안 보관할 수 있습니다.
+
+5. 동의 철회
+- 회원은 언제든지 설정 화면 또는 고객 문의를 통해 마케팅 수신 및 서비스 분석 활용 동의를 철회할 수 있습니다.
+- 동의 철회 후에도 필수 공지, 보안 알림, 서비스 이용에 필요한 거래성 알림은 발송될 수 있습니다.',
         '2026-06-29 00:00:00',
         b'0',
         NOW(6),
         NOW(6),
         'system',
-        'system');
+        'system')
+ON DUPLICATE KEY UPDATE
+    title          = VALUES(title),
+    content        = VALUES(content),
+    effective_date = VALUES(effective_date),
+    is_required    = VALUES(is_required),
+    updated_at     = NOW(6),
+    updated_by     = VALUES(updated_by);

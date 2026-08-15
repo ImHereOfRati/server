@@ -3,6 +3,8 @@ package com.kdongsu5509.notifications.adapter.`in`.event
 import com.kdongsu5509.friends.event.FriendRequestAccepted
 import com.kdongsu5509.friends.event.FriendRequestSent
 import com.kdongsu5509.notifications.application.service.NotificationDeliveryService
+import com.kdongsu5509.notifications.application.port.out.FcmTokenPersistencePort
+import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.event.NotificationDeliveryFailed
@@ -10,6 +12,7 @@ import com.kdongsu5509.notifications.event.NotificationEvent
 import com.kdongsu5509.support.external.AlertChannel
 import com.kdongsu5509.support.external.AlertMessage
 import com.kdongsu5509.support.external.ErrorAlertPort
+import com.kdongsu5509.shared.event.UserWithdrawnEvent
 import org.springframework.modulith.events.ApplicationModuleListener
 import org.springframework.stereotype.Component
 
@@ -17,6 +20,8 @@ import org.springframework.stereotype.Component
 class NotificationEventListener(
     private val deliveryService: NotificationDeliveryService,
     private val errorAlertPort: ErrorAlertPort,
+    private val fcmTokenPersistencePort: FcmTokenPersistencePort,
+    private val notificationPersistencePort: NotificationPersistencePort,
 ) {
     @ApplicationModuleListener
     fun handle(event: NotificationEvent) =
@@ -42,6 +47,12 @@ class NotificationEventListener(
     @ApplicationModuleListener
     fun handle(origin: FriendRequestAccepted) =
         deliveryService.deliver(convertToNotificationEvent(origin))
+
+    @ApplicationModuleListener
+    fun handle(event: UserWithdrawnEvent) {
+        fcmTokenPersistencePort.deleteByOwnerId(event.userId)
+        notificationPersistencePort.deleteByTargetIdentifier(event.userId.toString())
+    }
 
     private fun convertToNotificationEvent(origin: FriendRequestSent): NotificationEvent = NotificationEvent(
         eventId = origin.eventId,

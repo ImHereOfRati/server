@@ -25,4 +25,7 @@ interface SpringDataNotificationRepository : JpaRepository<NotificationJpaEntity
         updatedAt: LocalDateTime,
         pageable: Pageable,
     ): List<NotificationJpaEntity>
+
+    fun deleteByTargetIdentifier(targetIdentifier: String): Long
+
 }

@@ -8,6 +8,8 @@ import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.event.UserForceLogoutEvent
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.UserRepository
+import com.kdongsu5509.shared.event.DomainEventPublisher
+import com.kdongsu5509.shared.event.UserWithdrawnEvent
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName
@@ -31,6 +33,10 @@ class UserLifecycleServiceTest {
 
     @Mock
     lateinit var eventPublisher: ApplicationEventPublisher
+
+    @Mock
+    lateinit var domainEventPublisher: DomainEventPublisher
+
 
     @InjectMocks
     lateinit var userLifecycleService: UserLifecycleService
@@ -111,6 +117,7 @@ class UserLifecycleServiceTest {
 
         assertThat(result.status).isEqualTo(UserStatus.WITHDRAWN)
         verify(userRepository).update(any())
+        verify(domainEventPublisher).publish(any<UserWithdrawnEvent>())
         verify(eventPublisher).publishEvent(UserForceLogoutEvent(email))
     }
 
@@ -123,6 +130,7 @@ class UserLifecycleServiceTest {
 
         assertThat(result.status).isEqualTo(UserStatus.WITHDRAWN)
         verify(userRepository).update(any())
+        verify(domainEventPublisher).publish(any<UserWithdrawnEvent>())
         verify(eventPublisher).publishEvent(UserForceLogoutEvent(email))
     }
 

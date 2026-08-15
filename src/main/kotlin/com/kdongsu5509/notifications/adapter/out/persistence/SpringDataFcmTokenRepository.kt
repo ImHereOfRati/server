@@ -7,4 +7,5 @@ import java.util.UUID
 @Repository
 interface SpringDataFcmTokenRepository : JpaRepository<FcmTokenJpaEntity, Long> {
     fun findByOwnerId(ownerId: UUID): FcmTokenJpaEntity?
+    fun deleteByOwnerId(ownerId: UUID): Long
 }

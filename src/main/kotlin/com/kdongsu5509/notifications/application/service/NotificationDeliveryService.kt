@@ -174,6 +174,13 @@ class NotificationDeliveryService(
                 contextData = mapOf("receiverId" to receiverId),
             )
 
+        if (token.fcmToken.isBlank()) {
+            token.id?.let(fcmTokenPersistencePort::deleteById)
+            NotificationException.FCM_TOKEN_EMPTY.throwIt(
+                contextData = mapOf("receiverId" to receiverId),
+            )
+        }
+
         try {
             firebasePort.send(token.fcmToken, token.deviceType, notification.toRendered())
         } catch (exception: UnregisteredTokenException) {

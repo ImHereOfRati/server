@@ -22,6 +22,10 @@ class FcmTokenPersistenceAdapter(
             ?.let { fcmTokenMapper.toDomain(it) }
     }
 
+    override fun deleteByOwnerId(ownerId: UUID) {
+        springDataFcmTokenRepository.deleteByOwnerId(ownerId)
+    }
+
     override fun deleteById(fcmTokenId: Long) {
         springDataFcmTokenRepository.deleteById(fcmTokenId)
     }

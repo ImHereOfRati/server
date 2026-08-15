@@ -3,6 +3,8 @@ package com.kdongsu5509.notifications.adapter.`in`.event
 import com.kdongsu5509.friends.event.FriendRequestAccepted
 import com.kdongsu5509.friends.event.FriendRequestSent
 import com.kdongsu5509.notifications.application.service.NotificationDeliveryService
+import com.kdongsu5509.notifications.application.port.out.FcmTokenPersistencePort
+import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
 import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.event.NotificationDeliveryFailed
 import com.kdongsu5509.notifications.event.NotificationEvent
@@ -27,11 +29,22 @@ class NotificationEventListenerTest {
     @Mock
     private lateinit var errorAlertPort: ErrorAlertPort
 
+    @Mock
+    private lateinit var fcmTokenPersistencePort: FcmTokenPersistencePort
+
+    @Mock
+    private lateinit var notificationPersistencePort: NotificationPersistencePort
+
     private lateinit var listener: NotificationEventListener
 
     @BeforeEach
     fun setUp() {
-        listener = NotificationEventListener(deliveryService, errorAlertPort)
+        listener = NotificationEventListener(
+            deliveryService,
+            errorAlertPort,
+            fcmTokenPersistencePort,
+            notificationPersistencePort,
+        )
     }
 
     @Test

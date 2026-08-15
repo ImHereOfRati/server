@@ -17,7 +17,8 @@ data class FcmToken(
         validateRequiredFields()
     }
 
-    fun update(newToken: String): FcmToken = copy(fcmToken = newToken)
+    fun update(newToken: String, newDeviceType: DeviceType? = null): FcmToken =
+        copy(fcmToken = newToken, deviceType = newDeviceType ?: deviceType)
 
     private fun validateRequiredFields() {
         if (fcmToken.isBlank()) {

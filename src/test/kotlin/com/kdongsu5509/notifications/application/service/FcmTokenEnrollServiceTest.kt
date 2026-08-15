@@ -57,13 +57,13 @@ class FcmTokenEnrollServiceTest {
         // given
         val ownerId = UUID.randomUUID()
         val newFcmToken = "updated-fcm-token"
-        val deviceType = DeviceType.AOS
+        val deviceType = DeviceType.IOS
 
         val existingToken = FcmToken(
             id = 1L,
             ownerId = ownerId,
             fcmToken = "old-fcm-token",
-            deviceType = deviceType
+            deviceType = DeviceType.AOS
         )
 
         `when`(fcmTokenPersistencePort.findByOwnerId(ownerId)).thenReturn(existingToken)

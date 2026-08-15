@@ -1,6 +1,8 @@
 package com.kdongsu5509.user.service
 
 import com.kdongsu5509.support.exception.throwIt
+import com.kdongsu5509.shared.event.DomainEventPublisher
+import com.kdongsu5509.shared.event.UserWithdrawnEvent
 import com.kdongsu5509.user.api.UserActivationContract
 import com.kdongsu5509.user.api.UserResult
 import com.kdongsu5509.user.domain.UserStatus
@@ -16,6 +18,7 @@ import java.util.*
 class UserLifecycleService(
     private val userRepository: UserRepository,
     private val eventPublisher: ApplicationEventPublisher,
+    private val domainEventPublisher: DomainEventPublisher,
 ) : UserActivationContract {
 
     @Transactional
@@ -47,6 +50,7 @@ class UserLifecycleService(
     fun withdraw(userEmail: String): UserResult {
         val withdrawnUser = findByEmail(userEmail).withdraw()
         userRepository.update(withdrawnUser)
+        domainEventPublisher.publish(UserWithdrawnEvent(requireNotNull(withdrawnUser.id)))
         publishForceLogout(userEmail)
         return UserResult.fromDomain(withdrawnUser)
     }

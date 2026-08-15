@@ -76,6 +76,26 @@ class NotificationTemplateTest {
 
             assertThat(rendered.data).doesNotContainKey("path")
         }
+
+        @Test
+        @DisplayName("요청용 body/path와 레거시 발신자 필드는 FCM data에 전달하지 않는다")
+        fun render_strips_request_only_fields() {
+            val rendered = NotificationTemplate.render(
+                NotificationType.ARRIVAL,
+                "길동이",
+                mapOf(
+                    "body" to "클라이언트 본문",
+                    "path" to "/legacy/path",
+                    "senderNickname" to "레거시 이름",
+                    "senderEmail" to "legacy@example.com",
+                    "placeName" to "학교",
+                ),
+            )
+
+            assertThat(rendered.data)
+                .containsOnlyKeys("type", "senderAlias", "placeName")
+                .containsEntry("placeName", "학교")
+        }
     }
 
     @Nested

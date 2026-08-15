@@ -14,5 +14,6 @@ interface NotificationPersistencePort {
     fun findByStatus(status: NotificationStatus, page: Int, size: Int): List<Notification>
     fun findInbox(recipientId: UUID, page: Int, size: Int): List<Notification>
     fun findRecoverable(before: LocalDateTime, limit: Int): List<Notification>
+    fun deleteByTargetIdentifier(targetIdentifier: String)
     fun deleteById(id: Long)
 }

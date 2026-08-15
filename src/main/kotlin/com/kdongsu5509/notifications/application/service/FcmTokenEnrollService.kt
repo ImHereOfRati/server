@@ -17,7 +17,7 @@ class FcmTokenEnrollService(
         val existingToken = fcmTokenPersistencePort.findByOwnerId(ownerId)
 
         if (existingToken != null) {
-            val updatedToken = existingToken.update(fcmToken)
+            val updatedToken = existingToken.update(fcmToken, deviceType)
             fcmTokenPersistencePort.save(updatedToken)
             return
         }

@@ -6,5 +6,6 @@ import java.util.UUID
 interface FcmTokenPersistencePort {
     fun save(fcmToken: FcmToken)
     fun findByOwnerId(ownerId: UUID): FcmToken?
+    fun deleteByOwnerId(ownerId: UUID)
     fun deleteById(fcmTokenId: Long)
 }

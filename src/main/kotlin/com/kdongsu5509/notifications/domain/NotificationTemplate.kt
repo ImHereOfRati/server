@@ -12,13 +12,14 @@ object NotificationTemplate {
         extraData: Map<String, String> = emptyMap(),
     ): RenderedNotification {
         val message = messageOf(type, senderAlias, extraData)
+        val payloadData = payloadDataOf(type, extraData)
         return RenderedNotification(
             type = type,
             senderAlias = senderAlias,
             title = message.title,
             body = message.body,
             channel = PushChannel.of(type),
-            data = extraData + mapOf(
+            data = payloadData + mapOf(
                 "type" to type.name,
                 "senderAlias" to senderAlias,
             ),
@@ -74,6 +75,21 @@ object NotificationTemplate {
     private fun placeName(extraData: Map<String, String>): String =
         extraData[PLACE_NAME_KEY]?.takeIf { it.isNotBlank() }
             ?: throw InvalidInputException("도착/출발 알림에는 장소명($PLACE_NAME_KEY)이 필요합니다.")
+
+    /**
+     * FCM data is a wire contract. Do not forward request-only fields such as
+     * body/path or legacy sender fields to the device.
+     */
+    private fun payloadDataOf(
+        type: NotificationType,
+        extraData: Map<String, String>,
+    ): Map<String, String> = when (type) {
+        NotificationType.LOCATION_TARGET,
+        NotificationType.ARRIVAL,
+        NotificationType.DEPARTURE -> mapOf(PLACE_NAME_KEY to placeName(extraData))
+
+        else -> emptyMap()
+    }
 
     private data class Message(val title: String, val body: String)
 }

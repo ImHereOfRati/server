@@ -49,6 +49,10 @@ class NotificationPersistenceAdapter(
             ),
         ).map(mapper::toDomain)
 
+    override fun deleteByTargetIdentifier(targetIdentifier: String) {
+        repository.deleteByTargetIdentifier(targetIdentifier)
+    }
+
     override fun deleteById(id: Long) = repository.deleteById(id)
 
     private fun pageRequest(page: Int, size: Int): PageRequest =

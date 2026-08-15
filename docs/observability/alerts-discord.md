@@ -11,13 +11,13 @@ Discord는 Grafana Cloud와 다른 역할을 가진다.
 
 현재 코드와 설정 기준으로 webhook은 세 종류다. 각 webhook은 서로 다른 클래스가 읽으며, 발화 조건도 다르다.
 
-| Webhook | 발화 조건 | 보내는 클래스 | application.yaml 키 | prod.env 키 |
+| Webhook | 발화 조건 | 보내는 클래스 | application.yaml 키 | env/external.env 키 |
 |---|---|---|---|---|
 | server error | 응답 status >= 500 | `AccessLogPrinter` | `discord.url.error.server` | `DISCORD_WEBHOOK_ERROR_SERVER` |
 | client error | 4xx 비즈니스 예외 / 403 비정상 접근 | `DiscordUserErrorNotifier` | `discord.url.error.client` | `DISCORD_WEBHOOK_ERROR_CLIENT` |
 | ott | 관리자 OTT 발급 성공 | `ImHereOttSuccessHandler` | `discord.url.ott` | `DISCORD_WEBHOOK_OTT` |
 
-세 키 모두 `application.yaml`의 `discord.url.*`에서 읽고(`application.yaml:150-155`), 운영에서는 `prod.env`로 주입된다.
+세 키 모두 `application.yaml`의 `discord.url.*`에서 읽고(`application.yaml:150-155`), 운영에서는 `env/external.env`로 주입된다.
 
 주의할 점은 server webhook(5xx)과 client webhook(4xx)이 **서로 다른 코드 경로**에서 나간다는 것이다. 5xx는 컨트롤러 advice가 아니라 access 로그 필터 경로(`AccessLogPrinter`)에서 잡고, 4xx는 `@RestControllerAdvice` 핸들러에서 잡는다. 이 둘을 한 핸들러로 합치지 않은 이유는 [코드 경로](#코드-경로)에서 설명한다.
 
@@ -72,7 +72,7 @@ Discord는 Grafana Cloud와 다른 역할을 가진다.
 
 - webhook URL은 사실상 bearer secret처럼 취급해야 한다.
 - URL이 노출되면 별도 인증 없이 해당 채널로 메시지를 보낼 수 있다.
-- 그래서 운영에서는 `prod.env` 또는 배포 비밀 주입 경로에서만 관리한다.
+- 그래서 운영에서는 `env/external.env` 또는 배포 비밀 주입 경로에서만 관리한다.
 
 ## 관련 문서
 

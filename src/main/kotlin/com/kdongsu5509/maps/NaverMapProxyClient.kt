@@ -13,10 +13,10 @@ import java.time.Duration
 @Component
 class NaverMapProxyClient(
     restClientBuilder: RestClient.Builder,
-    @Value("\${NAVER_MAP_CLIENT_ID:}") private val mapClientId: String,
-    @Value("\${NAVER_MAP_CLIENT_SECRET:}") private val mapClientSecret: String,
-    @Value("\${NAVER_SEARCH_CLIENT_ID:}") private val searchClientId: String,
-    @Value("\${NAVER_SEARCH_CLIENT_SECRET:}") private val searchClientSecret: String,
+    @Value("\${naver.map.client-id}") private val mapClientId: String,
+    @Value("\${naver.map.client-secret}") private val mapClientSecret: String,
+    @Value("\${naver.search.client-id}") private val searchClientId: String,
+    @Value("\${naver.search.client-secret}") private val searchClientSecret: String,
 ) {
     private val mapsClient = restClientBuilder.clone()
         .baseUrl(MAPS_BASE_URL)

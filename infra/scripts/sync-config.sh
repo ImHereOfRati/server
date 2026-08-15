@@ -6,8 +6,17 @@ usage() {
   cat <<'EOF'
 Usage: sync-config.sh [--output-dir DIR] [--repo-url URL] [--branch BRANCH]
 
-Copies prod.env and imhereFirebaseKey.json from the private config repo into the
+Copies env/*.env and imhereFirebaseKey.json from the private config repo into the
 given output directory. Defaults to the current GitHub repo contract.
+
+Expected config repo layout (see config-example/ in this repo):
+
+  env/app.env
+  env/web.env
+  env/oidc.env
+  env/external.env
+  env/observability.env
+  imhereFirebaseKey.json
 EOF
 }
 
@@ -61,8 +70,15 @@ trap cleanup EXIT
 
 git clone --depth 1 --branch "$branch" "$repo_url" "$config_dir"
 
-if [[ ! -f "$config_dir/prod.env" ]]; then
-  echo "prod.env not found in config repo" >&2
+# 런타임 env는 관심사별로 쪼개져 env/ 아래에 있다. 파일 이름을 하드코딩하지 않고
+# 있는 것을 전부 가져온다 — config repo에 파일이 하나 늘어도 여기를 고치지 않게.
+shopt -s nullglob
+env_files=("$config_dir"/env/*.env)
+shopt -u nullglob
+
+if [[ ${#env_files[@]} -eq 0 ]]; then
+  echo "No env/*.env files found in config repo." >&2
+  echo "Expected layout is documented in config-example/README.md." >&2
   exit 1
 fi
 
@@ -71,6 +87,11 @@ if [[ ! -f "$config_dir/imhereFirebaseKey.json" ]]; then
   exit 1
 fi
 
-mkdir -p "$output_dir/secrets"
-cp "$config_dir/prod.env" "$output_dir/prod.env"
+mkdir -p "$output_dir/env" "$output_dir/secrets"
+cp "${env_files[@]}" "$output_dir/env/"
 cp "$config_dir/imhereFirebaseKey.json" "$output_dir/secrets/imhereFirebaseKey.json"
+
+echo "Synced ${#env_files[@]} env file(s):"
+for file in "${env_files[@]}"; do
+  echo "  env/$(basename "$file")"
+done

@@ -9,3 +9,14 @@ build
 .env
 *.log
 node_modules
+
+# 시크릿. Dockerfile이 `COPY src src` 하므로 명시적으로 막지 않으면
+# 실제 서비스 계정 개인키가 빌더 레이어에 들어간다.
+src/main/resources/imhereFirebaseKey.json
+**/*.p8
+**/*.pem
+**/*.p12
+**/*.jks
+prod.env
+env/
+secrets/

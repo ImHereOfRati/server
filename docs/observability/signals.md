@@ -32,7 +32,7 @@
 
 - 입력 소스는 Spring Boot actuator Prometheus endpoint입니다.
 - Alloy는 `dsko:4861`에 붙습니다.
-- scrape 경로는 `${MGMT_BASE_PATH}/prometheus`이고, 실제 값은 `prod.env`와 `application.yaml`이 맞춰 줍니다.
+- scrape 경로는 `${MGMT_BASE_PATH}/prometheus`이고, 실제 값은 `env/app.env`와 `application.yaml`이 맞춰 줍니다.
 
 ### 처리
 

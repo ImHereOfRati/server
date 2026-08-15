@@ -149,11 +149,17 @@ allOpen {
 }
 
 openapi3 {
-    setServer("https://ratiko.co.kr")
+    setServer("https://imhere.ratiko.co.kr")
     title = "ImHere API 문서"
     description = "ImHere 통합 API 문서"
     version = "1.0.0"
     format = "yaml"
+}
+
+tasks.configureEach { task ->
+    if (task.name == "openapi3") {
+        task.dependsOn "test"
+    }
 }
 
 tasks.register("copyOasToSwagger", Copy) {

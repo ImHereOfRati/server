@@ -5,23 +5,11 @@ ImHere의 서버 애플리케이션입니다.
 사용자의 도착/출발 알림 요청을 처리하며,
 인증, 문자 발송, 푸시 알림 등의 기능을 제공합니다.
 
-> 홈페이지 : https://ratiko.co.kr
+> 홈페이지 : https://imhere.ratiko.co.kr
 
 > 모바일 레포지토리 : https://github.com/ImHereOfRati/mobile
 
 > 플레이 스토어 : https://play.google.com/store/apps/details?id=com.kdongsu5509.iamhere
-
----
-
-## 기술 스택
-
-## 아키텍처
-
-## 프로젝트 구조
-
-## 실행 방법
-
-## 환경 변수
 
 ---
 
@@ -415,9 +403,10 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 - `infra/nginx/nginx.conf`
 - `infra/alloy/alloy-config.alloy.template`
 - `infra/alloy/alloy-config.alloy`
-- `infra/nginx/website.html`
-- runtime `prod.env` (config repo)
+- runtime `env/*.env` (config repo)
 - `infra/scripts/sync-config.sh`
+- `infra/scripts/remote-provision.sh` / `remote-tls.sh` / `remote-rollout.sh` / `remote-healthcheck.sh`
+- `config-example/` (런타임 env 템플릿, 값은 빈칸)
 - `secrets/`
 
 ---
@@ -427,18 +416,22 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 ### 프로파일
 
 - `application.yaml`
-- 로컬 기본값은 `application-local.yaml`에서 읽는다(`spring.profiles.default=local`).
+- 로컬 기본값은 `application.yaml`의 `${VAR:기본값}`에 직접 들어 있다. 프로파일을
+  지정하지 않아도 그대로 뜬다.
+- 운영은 `SPRING_PROFILES_ACTIVE=prod`로 같은 파일의 prod 문서를 켠다. 그 문서는
+  누출되면 곤란한 변수(`JWT_SECRET`, `MGMT_BASE_PATH` 등)를 기본값 없이 다시
+  선언하므로, 값이 빠지면 운영은 로컬 더미로 뜨지 않고 기동에 실패한다.
 
 ### 런타임 설정
 
-- `prod.env`
-- `application-local.yaml`
+- `env/app.env`, `env/web.env`, `env/oidc.env`, `env/external.env`, `env/observability.env`
+  (관심사별로 쪼개져 있고 컨테이너마다 필요한 것만 주입된다 — `config-example/README.md`)
 - `secrets/imhereFirebaseKey.json`
 
 ### config repo
 
-- `C:\Project\ImHere\config`
-- `prod.env`
+- `ImHereOfRati/config`
+- `env/*.env`
 - `imhereFirebaseKey.json`
 
 ### 운영 변수
@@ -452,13 +445,14 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 ### 운영용 compose 변수 예시
 
 - `CONFIG_REPO_PAT`
-- `prod.env`에 들어가는 DB/Grafana Cloud 값들
+- `env/app.env`의 DB 값, `env/observability.env`의 Grafana Cloud 값들
 
 ### 로컬에서 설정이 들어가는 방식
 
-- `./gradlew bootRun`은 `application.yaml` + `application-local.yaml` 조합으로 뜬다.
+- `./gradlew bootRun`은 `application.yaml`의 기본값만으로 뜬다. 프로파일 인자가 필요 없다.
+  DB만 `localhost:3306/rati`에 떠 있으면 된다.
 - `docker compose --profile local up -d`는 `docker-compose.yml`에 적힌 기본값으로 뜬다.
-- config repo의 `prod.env` / `imhereFirebaseKey.json`은 운영 배포 전용이다.
+- config repo의 `env/*.env` / `imhereFirebaseKey.json`은 운영 배포 전용이다.
 
 ---
 
@@ -519,17 +513,14 @@ docker compose --profile local up -d
 
 상세 설계/운영 문서는 `docs/`에 있다.
 
-| 문서                                                             | 내용                                       |
-|----------------------------------------------------------------|------------------------------------------|
-| [docs/architecture.md](./docs/architecture.md)                 | 전체 시스템 토폴로지, 배포 구조, 외부 의존성               |
-| [docs/domain.md](./docs/domain.md)                             | Auth/Friends/Notifications/Terms 비즈니스 규칙 |
-| [docs/security.md](./docs/security.md)                         | OIDC/JWT/Admin OTT 인증 정책                 |
-| [docs/error-handling.md](./docs/error-handling.md)             | 응답 포맷, 도메인 에러 코드 패턴                      |
-| [docs/api-spec.md](./docs/api-spec.md)                         | 엔드포인트 그룹, 자동생성 API 문서 위치                 |
-| [docs/db-schema.md](docs/infra/db-schema.md)                   | DDL, ERD, 테이블별 참고사항                      |
-| [docs/flows.md](./docs/flows.md)                               | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/재발송)          |
-| [docs/deployment.md](docs/infra/README.md)                     | Docker, CI/CD, AWS, 도메인/DB 호스팅           |
-| [docs/observability/README.md](./docs/observability/README.md) | 로그/메트릭/트레이스 파이프라인, 알림 채널                 |
-| [docs/test-guideline.md](./docs/test-guideline.md)             | 테스트 네이밍/전략/도구                            |
+| 문서                                                             | 내용                                                     |
+|----------------------------------------------------------------|--------------------------------------------------------|
+| [docs/README.md](./docs/README.md)                             | 문서 전체 인덱스                                               |
+| [docs/architecture/](./docs/architecture/README.md)            | 시스템 토폴로지, 모듈 내부 구조, 도메인 비즈니스 규칙                          |
+| [docs/security/](./docs/security/README.md)                    | OIDC/JWT/Admin OTT 인증 정책                                |
+| [docs/conventions/](./docs/conventions/README.md)              | Kotlin 컨벤션, 에러 응답 포맷, 테스트 전략                            |
+| [docs/flows/](./docs/flows/README.md)                          | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/재발송)                          |
+| [docs/infra/](./docs/infra/README.md)                          | Docker, CI/CD, AWS, nginx, 가비아 도메인/DB 호스팅, DB 스키마       |
+| [docs/observability/](./docs/observability/README.md)          | 로그/메트릭/트레이스 파이프라인, 런타임 설정, 알림 채널                        |
 
-모바일 클라이언트 저장소: <https://github.com/kdongsu5509/imhere_mobile>
+모바일 클라이언트 저장소: <https://github.com/ImHereOfRati/mobile>

@@ -109,3 +109,9 @@ ADMIN_ALLOWED_IPS: 127.0.0.1,::1,0:0:0:0:0:0:0:1
 SERVER_NAME: localhost
 CERT_DOMAIN: localhost
 NGINX_ALLOWED_ORIGIN: http://localhost:3000
+KAKAO_CLIENT_ID: test-kakao-client-id
+GOOGLE_CLIENT_ID_WEB: test-google-client-id
+NAVER_MAP_CLIENT_ID: test-naver-map-client-id
+NAVER_MAP_CLIENT_SECRET: test-naver-map-client-secret
+NAVER_SEARCH_CLIENT_ID: test-naver-search-client-id
+NAVER_SEARCH_CLIENT_SECRET: test-naver-search-client-secret

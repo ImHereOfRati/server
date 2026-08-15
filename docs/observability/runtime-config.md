@@ -9,29 +9,55 @@
 - `src/main/resources/application.yaml`
 - `docker-compose.yml`
 - `infra/alloy/alloy-config.alloy.template`
-- `prod.env` (이 레포에 없다. private config repo에 있고, 배포 시 `sync-config` job이 가져온다 — 아래 주입 흐름 참고. 레포에는 `prod.env.example`만 있다.)
+- `env/*.env` (이 레포에 없다. private config repo에 있고, 배포 시 `sync-config` job이 가져온다 — 아래 주입 흐름 참고. 레포에는 값이 빈 템플릿인 `config-example/env/*.env`만 있다.)
 
 역할은 다르다.
 
 - `application.yaml`
   - 앱의 actuator, trace export, logging 기본 동작
 - `docker-compose.yml`
-  - `prod` profile에서 `dsko`, `nginx`, `alloy`를 같은 네트워크에 띄움
+  - `prod` profile에서 `dsko`, `nginx`, `alloy`를 같은 네트워크에 띄우고,
+    컨테이너별로 어떤 env 파일을 넣을지 정한다
 - `alloy-config.alloy.template`
   - Alloy가 어떤 입력을 받아 어떤 Grafana Cloud signal로 보내는지 정의
-- `prod.env`
+- `env/*.env`
   - 운영 배포 시점의 실제 값
+
+### 런타임 env는 한 파일이 아니다
+
+예전에는 `prod.env` 한 파일을 세 컨테이너가 통째로 읽었다. 그래서 alloy
+컨테이너 안에서도 `DB_PASSWORD`가 보였다. 지금은 관심사별로 쪼개고 컨테이너마다
+필요한 것만 넣는다.
+
+| 파일 | 담는 것 | 읽는 컨테이너 |
+| --- | --- | --- |
+| `env/app.env` | 프로파일, DB, JWT, 관리자/보안 | `dsko` |
+| `env/web.env` | 도메인, TLS, CORS | `dsko`, `nginx` |
+| `env/oidc.env` | 소셜 로그인 클라이언트 ID | `dsko` |
+| `env/external.env` | Firebase, NCP/Naver, SOLAPI, Discord | `dsko` |
+| `env/observability.env` | Grafana Cloud 자격증명 | `alloy` |
+
+observability 관점에서 중요한 것은 마지막 줄이다. **Grafana Cloud 자격증명은
+alloy에만 들어가고 앱에는 들어가지 않는다.** 파일이 나뉘어 있어서 이게 설정이
+아니라 구조로 보장된다.
+
+키 목록과 파일 추가 절차는 `config-example/README.md`에 있다.
 
 ## 주입 흐름
 
 운영에서는 다음 순서로 연결된다.
 
-1. `sync-config` job이 private config repo에서 `prod.env`와 `imhereFirebaseKey.json`을 가져온다.
-2. `deploy-app` job이 GitHub runner에서 `prod.env`를 `source`한다.
+1. `sync-config` job이 private config repo에서 `env/*.env` 전량과
+   `imhereFirebaseKey.json`을 가져온다.
+2. `deploy-app` job이 GitHub runner에서 `env/*.env`를 전부 `source`한다.
+   어느 값이 어느 파일에 있는지 몰라도 되게 하려는 것이다.
 3. 그 값으로 `nginx.conf.template`, `alloy-config.alloy.template`를 렌더링한다.
-4. 렌더링된 파일과 `prod.env`를 EC2에 복사한다.
-5. `docker compose --profile prod`가 `env_file: ./prod.env`로 `dsko`, `nginx`, `alloy`에 같은 값을 넣는다.
-6. compose up 뒤 EC2에 복사한 `prod.env`와 렌더링 파일은 삭제한다.
+4. 렌더링된 파일과 `env/` 디렉터리를 EC2에 복사한다. 복사 전에 EC2의 기존
+   `env/*.env`를 지운다 — config repo에서 사라진 파일이 유령으로 남지 않게.
+5. `docker compose --profile prod`가 위 표대로 컨테이너별 `env_file`을 붙인다.
+6. 배포가 끝나면 GitHub runner의 임시 파일(`/tmp/imhere-secrets`,
+   `/tmp/imhere-runtime`)을 지운다. EC2의 `env/`는 컨테이너 재시작에 필요하므로
+   남는다.
 
 ## 앱 설정
 
@@ -41,8 +67,10 @@
   - API 포트 8080과 분리된 내부 관리 포트다.
 - `management.endpoints.web.exposure.include=prometheus,health,info`
   - scrape와 기본 상태 확인에 필요한 것만 연다.
-- `management.endpoints.web.base-path=${MGMT_BASE_PATH}`
-  - 로컬은 `application-local.yaml`, 운영은 `prod.env`에서 값이 들어온다.
+- `management.endpoints.web.base-path=${MGMT_BASE_PATH:/actuator}`
+  - 로컬은 기본값 `/actuator`로 뜨고, 운영은 `env/app.env`의 난독화된 경로가 들어온다.
+  - prod 문서가 이 키를 `${MGMT_BASE_PATH}`(기본값 없음)로 다시 선언한다. 운영에서
+    변수가 빠지면 `/actuator`로 조용히 노출되는 대신 기동이 실패한다.
 
 ### trace export
 
@@ -95,7 +123,9 @@
 
 ## 운영 점검 포인트
 
-- `prod.env`의 `MGMT_BASE_PATH`와 alloy template의 `metrics_path`가 일치하는가
-- `dsko`, `nginx`, `alloy`가 모두 같은 `prod.env`를 읽는가
+- `env/app.env`의 `MGMT_BASE_PATH`와 alloy template의 `metrics_path`가 일치하는가
+- `dsko`, `nginx`, `alloy`가 각각 필요한 env 파일만 받고 있는가
+  (`docker compose --profile prod config`로 확인)
 - prod profile에서 앱 OTLP endpoint가 Alloy로 override 되었는가
 - Grafana Cloud 자격증명이 app이 아니라 Alloy 쪽에만 있는가
+  (`env/observability.env`가 `alloy` 서비스에만 붙어 있는가)

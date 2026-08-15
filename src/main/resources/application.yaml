@@ -2,22 +2,19 @@ server:
   forward-headers-strategy: native
 
 spring:
-  # Default profile for local development. Production activates the separate
-  # document below by injecting SPRING_PROFILES_ACTIVE=prod from prod.env.
-  profiles:
-    default: local
-
   application:
     name: imhere
 
-  # DB_* values come from application-local.yaml in local and prod.env in production.
+  # 모든 ${VAR}에 로컬 기본값을 달아 두었다. 프로파일 없이 `bootRun`만 해도 뜬다.
+  # 운영은 SPRING_PROFILES_ACTIVE=prod로 아래 prod 문서를 켜고, 그 문서가 값이
+  # 반드시 주입돼야 하는 항목을 기본값 없이 다시 선언한다.
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:rati}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:}
     hikari:
-      maximum-pool-size: ${DB_POOL_SIZE}
+      maximum-pool-size: ${DB_POOL_SIZE:10}
       minimum-idle: 1
       idle-timeout: 600000
       connection-timeout: 30000
@@ -45,15 +42,14 @@ spring:
       republish-outstanding-events-on-restart: true
 
 logging:
-  # LOG_FILE comes from prod.env in production.
   file:
-    name: logs/imhere.log
+    name: ${LOG_FILE:logs/imhere.log}
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [${spring.application.name:},%X{traceId:-},%X{spanId:-}] [%thread] %logger{40} - %message%n%exception"
     level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
   logback:
     rollingpolicy:
-      file-name-pattern: "${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz"
+      file-name-pattern: "${LOG_FILE:logs/imhere.log}.%d{yyyy-MM-dd}.%i.gz"
       max-file-size: 100MB
       max-history: 30
       total-size-cap: 3GB
@@ -64,7 +60,6 @@ logging:
     org.springframework: WARN
     org.hibernate: WARN
     com.zaxxer.hikari: WARN
-    io.lettuce: WARN
     com.google.firebase: WARN
     p6spy: WARN
 
@@ -77,8 +72,9 @@ management:
         enabled: true
   endpoints:
     web:
-      # MGMT_BASE_PATH comes from application-local.yaml in local and prod.env in production.
-      base-path: ${MGMT_BASE_PATH}
+      # 운영에서는 난독화된 경로가 주입된다. prod 문서가 기본값 없이 다시 선언하므로
+      # 이 기본값이 운영에 새어 나갈 일은 없다.
+      base-path: ${MGMT_BASE_PATH:/actuator}
       exposure:
         include: "prometheus,health,info"
   endpoint:
@@ -106,9 +102,9 @@ management:
     baggage:
       enabled: true
 
-# JWT_SECRET comes from application-local.yaml in local and prod.env in production.
+# 기본값은 로컬 전용 더미다. HS256이 요구하는 256비트를 넘겨야 해서 길이가 길다.
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:localDevSecretKeyForJwtAuthenticationOnly12345678901234567890}
   access-expiration-minutes: 720
   refresh-expiration-days: 7
   access-header-name: Authorization
@@ -123,7 +119,7 @@ oidc:
       issuers:
         - "https://kauth.kakao.com"
       audiences:
-        - "840e16595771540d4b1056238cbb6b51"
+        - ${KAKAO_CLIENT_ID:}
       cacheKey: "kakaoOidcKeys::kakaoPublicKeySet"
       jwksUri: "https://kauth.kakao.com/.well-known/jwks.json"
     google:
@@ -131,7 +127,7 @@ oidc:
         - "https://accounts.google.com"
         - "accounts.google.com"
       audiences:
-        - "190429362894-488cdf8tegm4c81qrta3pns04ot12c25.apps.googleusercontent.com"
+        - ${GOOGLE_CLIENT_ID_WEB:}
         - ${GOOGLE_CLIENT_ID_IOS:}
         - ${GOOGLE_CLIENT_ID_ANDROID:}
       cacheKey: "googleOidcKeys::googlePublicKeySet"
@@ -146,32 +142,41 @@ oidc:
       cacheKey: "appleOidcKeys::applePublicKeySet"
       jwksUri: "https://appleid.apple.com/auth/keys"
 
-# External integration credentials come from application-local.yaml in local
-# and prod.env in production. FIREBASE_PATH points to the JSON key copied by deploy-app.
+# 외부 연동 자격증명. 로컬 기본값은 실제로 통하지 않는 더미다 — 기동은 되고
+# 해당 기능을 실제로 호출할 때만 실패한다. FIREBASE_PATH는 운영에서 deploy-app이
+# 복사해 둔 JSON 키를 가리킨다.
 solapi:
-  sender: ${SOLAPI_SENDER}
-  apiKey: ${SOLAPI_API_KEY}
-  apiSecret: ${SOLAPI_API_SECRET}
+  sender: ${SOLAPI_SENDER:01012341234}
+  apiKey: ${SOLAPI_API_KEY:local-solapi-key}
+  apiSecret: ${SOLAPI_API_SECRET:local-solapi-secret}
 
 firebase:
-  path: ${FIREBASE_PATH}
+  path: ${FIREBASE_PATH:file:src/test/resources/dummy-firebase-key.json}
+
+# NCP Maps(지오코딩/역지오코딩)와 Naver 검색 API 자격증명.
+naver:
+  map:
+    client-id: ${NAVER_MAP_CLIENT_ID:local-naver-map-client-id}
+    client-secret: ${NAVER_MAP_CLIENT_SECRET:local-naver-map-client-secret}
+  search:
+    client-id: ${NAVER_SEARCH_CLIENT_ID:local-naver-search-client-id}
+    client-secret: ${NAVER_SEARCH_CLIENT_SECRET:local-naver-search-client-secret}
 
 discord:
   url:
     error:
-      server: ${DISCORD_WEBHOOK_ERROR_SERVER}
-      client: ${DISCORD_WEBHOOK_ERROR_CLIENT}
-    ott: ${DISCORD_WEBHOOK_OTT}
+      server: ${DISCORD_WEBHOOK_ERROR_SERVER:http://localhost}
+      client: ${DISCORD_WEBHOOK_ERROR_CLIENT:http://localhost}
+    ott: ${DISCORD_WEBHOOK_OTT:http://localhost}
 
-# SECURITY_* and ADMIN_* come from application-local.yaml in local and prod.env in production.
 security:
-  whitelist: ${SECURITY_WHITELIST}
-  cors-allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  whitelist: ${SECURITY_WHITELIST:/api/auth,/api/auth/refresh,/swagger-ui/**,/docs/**,/admin/ott/request,/admin/ott/verify,/css/**,/js/**,/images/**,/webjars/**,/favicon.ico}
+  cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 admin:
-  id: ${ADMIN_ID}
+  id: ${ADMIN_ID:local-admin}
   nickname: rati
-  allowed-ips: ${ADMIN_ALLOWED_IPS}
+  allowed-ips: ${ADMIN_ALLOWED_IPS:127.0.0.1,::1,0:0:0:0:0:0:0:1}
 
 ---
 
@@ -187,7 +192,51 @@ spring:
       hibernate:
         format_sql: false
 
+# 아래는 기본 문서와 같은 키를 기본값 없이 다시 선언한 것이다. 기본값은 프로파일과
+# 무관하게 적용되므로, 이렇게 덮어쓰지 않으면 env가 하나 빠졌을 때 운영이 로컬 더미로
+# 조용히 뜬다 — JWT 서명키가 리포에 공개된 값이 되거나, 난독화해 둔 actuator 경로가
+# /actuator로 노출되는 식이다. 여기 적힌 키가 하나라도 비면 기동 단계에서 실패한다.
+#
+# DB_*는 일부러 넣지 않았다. 값이 틀리면 Hikari 연결과 ddl-auto=validate가 기동
+# 중에 터지므로 조용히 잘못될 수가 없다.
+jwt:
+  secret: ${JWT_SECRET}
+
+solapi:
+  sender: ${SOLAPI_SENDER}
+  apiKey: ${SOLAPI_API_KEY}
+  apiSecret: ${SOLAPI_API_SECRET}
+
+firebase:
+  path: ${FIREBASE_PATH}
+
+naver:
+  map:
+    client-id: ${NAVER_MAP_CLIENT_ID}
+    client-secret: ${NAVER_MAP_CLIENT_SECRET}
+  search:
+    client-id: ${NAVER_SEARCH_CLIENT_ID}
+    client-secret: ${NAVER_SEARCH_CLIENT_SECRET}
+
+discord:
+  url:
+    error:
+      server: ${DISCORD_WEBHOOK_ERROR_SERVER}
+      client: ${DISCORD_WEBHOOK_ERROR_CLIENT}
+    ott: ${DISCORD_WEBHOOK_OTT}
+
+security:
+  whitelist: ${SECURITY_WHITELIST}
+  cors-allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+admin:
+  id: ${ADMIN_ID}
+  allowed-ips: ${ADMIN_ALLOWED_IPS}
+
 management:
+  endpoints:
+    web:
+      base-path: ${MGMT_BASE_PATH}
   opentelemetry:
     tracing:
       export:

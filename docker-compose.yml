@@ -68,12 +68,22 @@ services:
     container_name: iamhere-server-container
     profiles:
       - prod
-    mem_limit: 1.5g
+    # 세 컨테이너 상한 합이 호스트 가용 메모리를 넘지 않게 잡는다.
+    # t3.small(2 GiB) - 호스트 OS/dockerd(~350 MiB) = 약 1.65 GiB가 쓸 수 있는 몫이고
+    # 1200m + 200m + 64m = 1.43 GiB로 그 안에 들어간다. 상한을 오버서브스크립션하면
+    # JVM이 자기 cgroup 한도까지 자라는 게 정당한데도 호스트 커널이 OOM kill 한다.
+    mem_limit: 1200m
     pull_policy: always
     labels:
       - "imhere_log_scope=external"
+    # 관심사별로 쪼갠 런타임 env. 컨테이너마다 필요한 파일만 붙인다 —
+    # 앱에는 Grafana Cloud 키가, alloy에는 DB 비밀번호가 보이지 않게 하려는 것이다.
+    # 구조와 키 목록은 config-example/ 참고.
     env_file:
-      - ./prod.env
+      - ./env/app.env
+      - ./env/web.env
+      - ./env/oidc.env
+      - ./env/external.env
     environment:
       - TZ=Asia/Seoul
     expose:
@@ -96,8 +106,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # nginx.conf는 CI에서 값이 치환된 상태로 들어온다. 이 env_file은 설정
+    # 렌더링용이 아니라 컨테이너 안에서 도메인 값을 확인하기 위한 것이다.
     env_file:
-      - ./prod.env
+      - ./env/web.env
     environment:
       - TZ=Asia/Seoul
     volumes:
@@ -115,11 +127,11 @@ services:
     container_name: alloy-container
     profiles:
       - prod
-    mem_limit: 256m
+    mem_limit: 200m
     labels:
       - "imhere_log_scope=internal"
     env_file:
-      - ./prod.env
+      - ./env/observability.env
     environment:
       - TZ=Asia/Seoul
     volumes:

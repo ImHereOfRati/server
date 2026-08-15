@@ -105,7 +105,11 @@ bin/
 /_workspace/
 CLAUDE.md
 AGENTS.md
-/prod.env.example
+
+# 실제 값이 든 런타임 env는 config repo에만 둔다. 값이 빈 템플릿은
+# config-example/ 아래에 있고 그쪽은 추적한다.
+/prod.env
+/env/
 
 # nginx/alloy 렌더링 산출물 (CI가 .template에서 생성/삭제함)
 /infra/nginx/nginx.conf

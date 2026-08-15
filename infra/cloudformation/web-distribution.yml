@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  ImHere public entry point (ADR-025). One CloudFront distribution serves the
+  landing page and the React app from S3, and proxies /api/* to the EC2 nginx
+  running the Spring app.
+
+# 이 스택은 main.yaml(imhere-prod-infra)과 일부러 분리돼 있다. EC2 스택은
+# 재생성·인스턴스 타입 변경이 잦은 반면 CloudFront 배포는 만들고 나면 거의
+# 건드리지 않고, 삭제·재생성에 수십 분이 걸린다. 수명주기가 다르다.
+#
+# 캐시 정책 3종은 여기서 만들지 않는다. client/infra/aws/web-cache-policies.yml이
+# 만든 것을 ID로 받아 쓴다(파라미터). 정책은 클라이언트 릴리스 전략의 산물이라
+# 그쪽이 소유자다.
+
+Parameters:
+  AliasDomain:
+    Type: String
+    Default: imhere.ratiko.co.kr
+    Description: Public hostname served by this distribution.
+  WebBucketName:
+    Type: String
+    Default: imhere-web-prod
+    Description: S3 bucket holding the landing page and immutable React releases.
+  ApiOriginDomain:
+    Type: String
+    Default: ratiko.co.kr
+    Description: >-
+      Backend origin hostname. ADR-025 points this at the EC2 nginx apex so the
+      instance's Let's Encrypt certificate and server_name already match and
+      nginx needs no change. CloudFront validates this origin's certificate,
+      which is why the EC2 host still needs a publicly trusted cert.
+  AcmCertificateArn:
+    Type: String
+    Description: >-
+      Viewer certificate. MUST live in us-east-1 - CloudFront reads no other
+      region. This is an AWS hard constraint with no workaround.
+  ApiCachePolicyId:
+    Type: String
+    Description: imhere-api-no-cache-v1 (all TTLs zero).
+  ApiOriginRequestPolicyId:
+    Type: String
+    Description: >-
+      imhere-api-auth-query-v1. Forwards Authorization, cookies and the full
+      query string. ADR-025 calls this out explicitly: get it wrong and API
+      responses get cached or auth headers get stripped.
+  ReleaseCachePolicyId:
+    Type: String
+    Description: imhere-release-immutable-v1 (one year, commit-addressed paths).
+
+Resources:
+  # OAC를 쓰면 버킷을 퍼블릭으로 열지 않고 CloudFront에만 SigV4로 읽기를 허용한다.
+  WebOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: imhere-web-oac
+        Description: Signed access from CloudFront to the private web bucket.
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  WebDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      Tags:
+        - Key: Project
+          Value: imhere
+        - Key: Env
+          Value: prod
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub 'ImHere public entry point (${AliasDomain})'
+        Aliases:
+          - !Ref AliasDomain
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        # 사용자가 한국에 있다. PriceClass_100은 북미/유럽뿐이라 아시아 엣지를
+        # 포함하는 200을 쓴다.
+        PriceClass: PriceClass_200
+
+        ViewerCertificate:
+          AcmCertificateArn: !Ref AcmCertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+
+        Origins:
+          - Id: s3-web
+            # 리전 엔드포인트여야 한다. 글로벌 엔드포인트는 OAC의 SigV4와 맞지 않는다.
+            DomainName: !Sub '${WebBucketName}.s3.${AWS::Region}.amazonaws.com'
+            OriginAccessControlId: !GetAtt WebOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+
+          - Id: api-ec2
+            DomainName: !Ref ApiOriginDomain
+            CustomOriginConfig:
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols:
+                - TLSv1.2
+              OriginReadTimeout: 30
+              OriginKeepaliveTimeout: 5
+
+        DefaultCacheBehavior:
+          TargetOriginId: s3-web
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # Managed-CachingOptimized
+
+        CacheBehaviors:
+          # 커밋 주소가 경로에 박힌 불변 산출물. 1년 캐시.
+          - PathPattern: /app/releases/*
+            TargetOriginId: s3-web
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: !Ref ReleaseCachePolicyId
+
+          # 인증된 API. 절대 캐시하지 않고 Authorization/쿠키/쿼리스트링을 전달한다.
+          - PathPattern: /api/*
+            TargetOriginId: api-ec2
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            CachedMethods: [GET, HEAD]
+            Compress: false
+            CachePolicyId: !Ref ApiCachePolicyId
+            OriginRequestPolicyId: !Ref ApiOriginRequestPolicyId
+
+          # API 문서. 백엔드가 서빙하므로 같은 오리진으로 보낸다.
+          - PathPattern: /swagger-ui/*
+            TargetOriginId: api-ec2
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: !Ref ApiCachePolicyId
+            OriginRequestPolicyId: !Ref ApiOriginRequestPolicyId
+
+          - PathPattern: /docs/*
+            TargetOriginId: api-ec2
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: !Ref ApiCachePolicyId
+            OriginRequestPolicyId: !Ref ApiOriginRequestPolicyId
+
+          # /admin/** 과 actuator 경로는 여기에 없다. 일부러 뺐다.
+          # 앱이 ADMIN_ALLOWED_IPS로 출발지 IP를 검사하는데, CloudFront를 거치면
+          # 원 IP가 X-Forwarded-For 체인 뒤로 밀려 검사가 흐려진다. 관리자 경로는
+          # ratiko.co.kr(EC2 nginx)로 직접 접근한다.
+
+  # 버킷 정책은 배포가 만들어진 뒤에 붙는다. SourceArn으로 이 배포만 허용한다.
+  # 배포는 버킷을 문자열 도메인으로만 참조하므로 순환 의존이 생기지 않는다.
+  WebBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebBucketName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipalReadOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${WebBucketName}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${WebDistribution}'
+
+Outputs:
+  DistributionId:
+    Description: Set the client repo variable WEB_CLOUDFRONT_DISTRIBUTION_ID to this.
+    Value: !Ref WebDistribution
+  DistributionDomainName:
+    Description: Point the Gabia CNAME for the alias host at this value.
+    Value: !GetAtt WebDistribution.DomainName
+  AliasDomain:
+    Description: Public hostname served by this distribution.
+    Value: !Ref AliasDomain

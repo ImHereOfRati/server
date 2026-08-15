@@ -7,14 +7,19 @@ Parameters:
     Description: EC2 SSH key pair name
   AppInstanceType:
     Type: String
-    Default: t3.medium
+    Default: t3.small
     AllowedValues:
       - t3.micro
       - t3.small
       - t3.medium
     Description: >-
-      App EC2 instance type. The single host runs the entire docker-compose stack
-      (app, dsko, nginx, prometheus, grafana, alloy), so t3.medium is the practical floor.
+      App EC2 instance type. The prod compose profile runs three containers on this
+      host: dsko (app), nginx, alloy. prometheus and grafana are local-profile only
+      and never run here. Their mem_limits total 1.43 GiB, which fits t3.small (2 GiB)
+      with room for the host OS. t3.small and t3.medium are identical except for
+      memory (same 2 vCPU, same network), so pick medium only if the app's actual
+      RSS grows past the small budget. Changing this stops and restarts the instance;
+      the instance ID, root volume and EIP association all survive.
   VpcCidr:
     Type: String
     Default: 10.50.0.0/16
@@ -31,6 +36,19 @@ Parameters:
     Type: String
     Default: imhere/dsko
     Description: ECR repository name for the app image
+  CreateOidcProvider:
+    Type: String
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: >-
+      Create the GitHub Actions IAM OIDC provider in this account. An account can
+      hold only one provider per URL, so set this to "false" when deploying into an
+      account that already has token.actions.githubusercontent.com registered.
+
+Conditions:
+  ShouldCreateOidcProvider: !Equals [ !Ref CreateOidcProvider, "true" ]
 
 Resources:
   AppVpc:
@@ -133,7 +151,10 @@ Resources:
             -o /usr/local/lib/docker/cli-plugins/docker-compose
           chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
           docker compose version
+          # UserData는 root로 돌기 때문에 소유권을 넘기지 않으면 배포 계정이
+          # 이 디렉터리 안에 아무것도 만들지 못한다.
           mkdir -p /opt/imhere /home/ec2-user/imhere
+          chown -R ec2-user:ec2-user /opt/imhere /home/ec2-user/imhere
 
   AppElasticIp:
     Type: AWS::EC2::EIP
@@ -146,6 +167,22 @@ Resources:
       AllocationId: !GetAtt AppElasticIp.AllocationId
       InstanceId: !Ref AppInstance
 
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: ShouldCreateOidcProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      # GitHub의 OIDC 서명 인증서 지문. AWS는 well-known IdP에 대해 지문 검증을 하지
+      # 않지만, 지문을 명시해도 무해하고 구형 리전/파티션 호환에 안전하다.
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+        - 1c58a3a8518e8759bf075b76b750d4f2df264fcd
+      Tags:
+        - Key: Name
+          Value: imhere-github-actions-oidc
+
   GitHubActionsDeployRole:
     Type: AWS::IAM::Role
     Properties:
@@ -156,7 +193,12 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
             Principal:
-              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+              # provider를 이 스택이 만들면 그 리소스를 참조해 생성 순서를 강제하고,
+              # 이미 계정에 있으면 결정적인 ARN 형식을 그대로 쓴다(값은 동일하다).
+              Federated: !If
+                - ShouldCreateOidcProvider
+                - !Ref GitHubOidcProvider
+                - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
@@ -232,6 +274,10 @@ Outputs:
   GitHubActionsRoleArn:
     Description: GitHub Actions deploy role ARN
     Value: !GetAtt GitHubActionsDeployRole.Arn
+  GitHubOidcProviderArn:
+    Condition: ShouldCreateOidcProvider
+    Description: GitHub Actions IAM OIDC provider ARN created by this stack
+    Value: !Ref GitHubOidcProvider
   EcrRepositoryName:
     Description: ECR repository name
     Value: !Ref EcrRepositoryName

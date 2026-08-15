@@ -36,6 +36,11 @@ jobs:
       - name: Grant execute permission for Gradle wrapper
         run: chmod +x ./gradlew
 
+      - name: Test deployment scripts
+        run: |
+          bash -n infra/scripts/*.sh infra/scripts/tests/*.sh
+          bash infra/scripts/tests/remote-tls-test.sh
+
       - name: Run tests
         run: ./gradlew test
         env:

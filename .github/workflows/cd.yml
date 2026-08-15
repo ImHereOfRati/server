@@ -53,7 +53,7 @@ jobs:
       - name: Build JAR
         run: |
           chmod +x ./gradlew
-          ./gradlew bootJar -x test
+          ./gradlew bootJar
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v7
@@ -255,23 +255,11 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           echo "StrictHostKeyChecking no" >> ~/.ssh/config
 
-      - name: Prepare EC2 runtime directory
+      - name: Provision EC2 host
         run: |
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
-            "set -e; \
-            if ! command -v docker >/dev/null 2>&1; then sudo dnf install -y docker; fi; \
-            if ! command -v certbot >/dev/null 2>&1; then sudo dnf install -y certbot; fi; \
-            if ! sudo docker compose version >/dev/null 2>&1; then \
-              sudo mkdir -p /usr/local/lib/docker/cli-plugins; \
-              sudo curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
-                -o /usr/local/lib/docker/cli-plugins/docker-compose; \
-              sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose; \
-            fi; \
-            sudo systemctl enable --now docker; \
-            sudo docker --version; \
-            sudo docker compose version; \
-            certbot --version; \
-            mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx/certbot ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets"
+            "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' bash -s" \
+            < infra/scripts/remote-provision.sh
 
       - name: Derive ECR registry
         run: |
@@ -287,13 +275,17 @@ jobs:
       - name: Render and copy runtime files to EC2
         run: |
           set -e
+          # 템플릿 렌더링에 필요한 값(SERVER_NAME 등)이 어느 파일에 있는지 몰라도
+          # 되도록 env/*.env를 전부 읽는다.
           set -a
-          . /tmp/imhere-secrets/prod.env
+          for env_file in /tmp/imhere-secrets/env/*.env; do
+            . "$env_file"
+          done
           set +a
 
           RUNTIME_DIR=/tmp/imhere-runtime
-          mkdir -p "$RUNTIME_DIR/infra/nginx" "$RUNTIME_DIR/infra/alloy"
-          cp /tmp/imhere-secrets/prod.env "$RUNTIME_DIR/prod.env"
+          mkdir -p "$RUNTIME_DIR/infra/nginx" "$RUNTIME_DIR/infra/alloy" "$RUNTIME_DIR/env"
+          cp /tmp/imhere-secrets/env/*.env "$RUNTIME_DIR/env/"
           python3 - <<'PY'
           from pathlib import Path
           import os
@@ -317,176 +309,57 @@ jobs:
               output.write_text(text, encoding='utf-8')
           PY
 
+          # 지난 배포에서 남은 env/*.env와 Firebase 키를 먼저 지운다. config repo에서
+          # 파일이 사라진 경우 EC2에 유령 파일이 남아 계속 주입되는 걸 막는다.
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
-            "mkdir -p ${EC2_DEPLOY_PATH}/infra/nginx/certbot ${EC2_DEPLOY_PATH}/infra/alloy ${EC2_DEPLOY_PATH}/secrets && \
-            rm -rf ${EC2_DEPLOY_PATH}/secrets/imhereFirebaseKey.json"
+            "rm -f ${EC2_DEPLOY_PATH}/env/*.env ${EC2_DEPLOY_PATH}/secrets/imhereFirebaseKey.json"
 
-          scp -i ~/.ssh/deploy_key docker-compose.yml /tmp/imhere-runtime/prod.env "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/"
+          scp -i ~/.ssh/deploy_key docker-compose.yml "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/"
+          scp -i ~/.ssh/deploy_key /tmp/imhere-runtime/env/*.env "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/env/"
           scp -i ~/.ssh/deploy_key /tmp/imhere-runtime/infra/nginx/nginx.conf "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/nginx/nginx.conf"
-          scp -i ~/.ssh/deploy_key infra/nginx/website.html "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/nginx/website.html"
           scp -i ~/.ssh/deploy_key /tmp/imhere-runtime/infra/alloy/alloy-config.alloy "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/alloy/alloy-config.alloy"
           scp -i ~/.ssh/deploy_key /tmp/imhere-secrets/secrets/imhereFirebaseKey.json "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/secrets/"
 
-      - name: Get ECR Login Password
+      - name: Copy remote deploy scripts to EC2
         run: |
-          echo "ECR_PASSWORD=$(aws ecr get-login-password --region ${{ env.AWS_REGION }})" >> "$GITHUB_ENV"
+          scp -i ~/.ssh/deploy_key \
+            infra/scripts/remote-tls.sh \
+            infra/scripts/remote-rollout.sh \
+            infra/scripts/remote-healthcheck.sh \
+            "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/scripts/"
 
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ needs.resolve-infra.outputs.ec2_host }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          envs: ECR_REGISTRY,ECR_REPOSITORY,AWS_REGION,EC2_DEPLOY_PATH,ECR_PASSWORD
-          script: |
-            set -e
-            echo "$ECR_PASSWORD" | sudo docker login --username AWS --password-stdin "$ECR_REGISTRY"
+      # TLS는 컨테이너 기동을 사이에 두고 두 번 나뉜다.
+      # bootstrap: nginx가 참조할 인증서 파일을 보장한다 (없으면 nginx -t부터 실패).
+      # issue:     HTTP-01 webroot 검증이라 nginx가 떠서 챌린지를 서빙한 뒤여야 한다.
+      - name: Ensure bootstrap TLS certificate
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
+            "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' bash ${EC2_DEPLOY_PATH}/infra/scripts/remote-tls.sh bootstrap"
 
-            cd "$EC2_DEPLOY_PATH"
-            set -a
-            . ./prod.env
-            set +a
+      - name: Roll out containers
+        run: |
+          # ECR 비밀번호는 stdin으로만 흘린다. GITHUB_ENV나 커맨드라인에 실으면
+          # 러너 환경파일과 EC2의 /proc 양쪽에 평문으로 남는다.
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
+              "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' ECR_REGISTRY='${ECR_REGISTRY}' ECR_REPOSITORY='${ECR_REPOSITORY}' bash ${EC2_DEPLOY_PATH}/infra/scripts/remote-rollout.sh"
 
-            CERT_ALT_DOMAIN="www.$CERT_DOMAIN"
+      - name: Issue or renew Let's Encrypt certificate
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
+            "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' bash ${EC2_DEPLOY_PATH}/infra/scripts/remote-tls.sh issue"
 
-            CERT_LIVE_DIR=/etc/letsencrypt/live/"$CERT_DOMAIN"
-            CERT_RENEWAL_CONF=/etc/letsencrypt/renewal/"$CERT_DOMAIN".conf
+      - name: Verify app health
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
+            "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' bash ${EC2_DEPLOY_PATH}/infra/scripts/remote-healthcheck.sh"
 
-            has_live_cert() {
-              sudo test -f "$CERT_LIVE_DIR/fullchain.pem" && sudo test -f "$CERT_LIVE_DIR/privkey.pem"
-            }
-
-            has_renewal_conf() {
-              sudo test -s "$CERT_RENEWAL_CONF"
-            }
-
-            cert_issuer() {
-              sudo openssl x509 -in "$CERT_LIVE_DIR/fullchain.pem" -noout -issuer 2>/dev/null || true
-            }
-
-            is_letsencrypt_cert() {
-              cert_issuer | grep -q "Let's Encrypt"
-            }
-
-            is_bootstrap_cert() {
-              cert_issuer | grep -q "CN=$CERT_DOMAIN"
-            }
-
-            generate_bootstrap_cert() {
-              # bootstrap self-signed는 certbot lineage가 아니다. 과거 renewal/archive가
-              # 남아 있으면 certbot renew가 이 self-signed를 정식 cert로 착각해 desync
-              # (fullchain does not match cert + chain) 된다. 항상 lineage 먼저 비운다.
-              sudo mkdir -p "$CERT_LIVE_DIR"
-              sudo sh -c "printf '%s\n' \
-                '[req]' \
-                'distinguished_name = req_distinguished_name' \
-                'x509_extensions = v3_req' \
-                'prompt = no' \
-                '' \
-                '[req_distinguished_name]' \
-                'CN = $CERT_DOMAIN' \
-                '' \
-                '[v3_req]' \
-                'subjectAltName = @alt_names' \
-                '' \
-                '[alt_names]' \
-                'DNS.1 = $CERT_DOMAIN' \
-                'DNS.2 = $CERT_ALT_DOMAIN' \
-                > /tmp/imhere-cert.cnf"
-              sudo openssl req -x509 -nodes -newkey rsa:2048 -days 30 \
-                -keyout "$CERT_LIVE_DIR"/privkey.pem \
-                -out "$CERT_LIVE_DIR"/fullchain.pem \
-                -config /tmp/imhere-cert.cnf \
-                -extensions v3_req
-              sudo rm -f /tmp/imhere-cert.cnf
-            }
-
-            # lineage_is_valid: renewal conf가 있고 certbot이 정상 lineage로 인정할 때만 true.
-            # test -f 만으로는 fullchain desync(does not match)를 못 잡아 과거 장애가 반복됐다.
-            lineage_is_valid() {
-              has_renewal_conf || return 1
-              CERT_STATUS=$(sudo certbot certificates --cert-name "$CERT_DOMAIN" 2>&1) || return 1
-              if echo "$CERT_STATUS" | grep -qE "does not match|INVALID|No certificates found"; then
-                return 1
-              fi
-              return 0
-            }
-
-            if [ ! -f /etc/letsencrypt/options-ssl-nginx.conf ]; then
-              sudo curl -fsSL \
-                https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf \
-                -o /etc/letsencrypt/options-ssl-nginx.conf
-            fi
-            if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
-              sudo curl -fsSL \
-                https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem \
-                -o /etc/letsencrypt/ssl-dhparams.pem
-            fi
-            if ! has_live_cert && ! has_renewal_conf; then
-              generate_bootstrap_cert
-            fi
-
-            sudo env ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
-              docker compose -f docker-compose.yml --profile prod config >/dev/null
-            sudo docker run --rm \
-              --add-host iamhere-server-container:127.0.0.1 \
-              -v "$PWD/infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" \
-              -v /etc/letsencrypt:/etc/letsencrypt:ro \
-              nginx:alpine nginx -t
-
-            sudo env ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
-              docker compose -f docker-compose.yml --profile prod pull
-
-            sudo env ECR_REGISTRY="$ECR_REGISTRY" ECR_REPOSITORY="$ECR_REPOSITORY" \
-              docker compose -f docker-compose.yml --profile prod up -d
-
-            issue_certificate() {
-              sudo certbot certonly --webroot \
-                -w "$EC2_DEPLOY_PATH/infra/nginx/certbot" \
-                --non-interactive \
-                --agree-tos \
-                --register-unsafely-without-email \
-                --keep-until-expiring \
-                --cert-name "$CERT_DOMAIN" \
-                -d "$CERT_DOMAIN" \
-                -d "$CERT_ALT_DOMAIN"
-            }
-
-            if lineage_is_valid; then
-              if sudo certbot renew --quiet --webroot -w "$EC2_DEPLOY_PATH/infra/nginx/certbot"; then
-                echo "Validated existing Let's Encrypt lineage for $CERT_DOMAIN."
-              else
-                echo "Renew failed on an existing Let's Encrypt lineage. Keeping current certificate and failing deploy."
-                exit 1
-              fi
-            elif has_renewal_conf; then
-              echo "Existing Let's Encrypt lineage is corrupted. Refusing automatic cleanup to avoid replacing production TLS with self-signed."
-              exit 1
-            elif has_live_cert && is_letsencrypt_cert; then
-              echo "Let's Encrypt certificate exists without renewal metadata. Refusing automatic mutation."
-              exit 1
-            elif has_live_cert && is_bootstrap_cert; then
-              echo "Bootstrap certificate detected. Attempting first Let's Encrypt issuance."
-              if issue_certificate; then
-                echo "Issued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
-              else
-                echo "Let's Encrypt issuance failed during bootstrap. Keeping bootstrap certificate and failing deploy."
-                exit 1
-              fi
-            else
-              echo "No existing certificate found. Bootstrapping HTTPS and attempting first Let's Encrypt issuance."
-              generate_bootstrap_cert
-              if issue_certificate; then
-                echo "Issued Let's Encrypt certificate for $CERT_DOMAIN and $CERT_ALT_DOMAIN."
-              else
-                echo "Let's Encrypt issuance failed on first bootstrap. Keeping bootstrap certificate and failing deploy."
-                exit 1
-              fi
-            fi
-
-            sudo docker exec nginx-container nginx -s reload
-
-            sudo docker image prune -f
+      # 헬스체크를 통과한 뒤에만 정리한다. 앞에서 prune 하면 직전 :latest가
+      # dangling으로 지워져 수동 롤백 대상 이미지가 사라진다.
+      - name: Prune dangling images
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
+            "sudo docker image prune -f"
 
       - name: Remove runner IP from EC2 security group
         if: always()

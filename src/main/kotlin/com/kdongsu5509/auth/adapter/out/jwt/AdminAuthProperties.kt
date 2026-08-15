@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @ConfigurationProperties(prefix = "admin.mobile")
-data class AdminMobileAuthProperties(
+data class AdminAuthProperties(
     var passwordHash: String = "",
     var totpSecret: String = "",
     var challengeExpirationSeconds: Long = 300,

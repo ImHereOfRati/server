@@ -65,6 +65,29 @@ class SecurityConfig(
     }.let { configuration -> UrlBasedCorsConfigurationSource().apply { registerCorsConfiguration("/api/**", configuration) } }
 
     @Bean @Order(1)
+    fun adminWebFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http.securityMatcher("/admin", "/admin/**")
+        http {
+            formLogin { disable() }
+            httpBasic { disable() }
+            sessionManagement { sessionCreationPolicy = SessionCreationPolicy.IF_REQUIRED }
+            authorizeHttpRequests {
+                authorize("/admin/login", permitAll)
+                authorize("/admin/login/**", permitAll)
+                authorize("/admin/assets/**", permitAll)
+                authorize(anyRequest, hasRole(UserRole.ADMIN.name))
+            }
+            exceptionHandling {
+                authenticationEntryPoint = { request, response, _ ->
+                    response.sendRedirect("/admin/login?next=${request.requestURI}")
+                }
+                accessDeniedHandler = { _, response, _ -> response.sendError(HttpStatus.FORBIDDEN.value()) }
+            }
+        }
+        return http.build()
+    }
+
+    @Bean @Order(2)
     fun adminApiFilterChain(http: HttpSecurity): SecurityFilterChain {
         http.securityMatcher("/api/admin/**")
         http {
@@ -86,7 +109,7 @@ class SecurityConfig(
         return http.build()
     }
 
-    @Bean @Order(2)
+    @Bean @Order(3)
     fun apiFilterChain(http: HttpSecurity): SecurityFilterChain {
         http {
             csrf { disable() }

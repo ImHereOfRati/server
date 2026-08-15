@@ -9,6 +9,10 @@ on:
     types:
       - completed
 
+concurrency:
+  group: imhere-production-deploy
+  cancel-in-progress: false
+
 jobs:
   build-jar:
     name: Build JAR
@@ -384,6 +388,12 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
             "sudo docker image prune -f"
+
+      - name: Remove runtime env files after successful deployment
+        if: ${{ success() }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
+            "find '${EC2_DEPLOY_PATH}/env' -maxdepth 1 -type f -name '*.env' -delete"
 
       - name: Remove runner IP from EC2 security group
         if: always()

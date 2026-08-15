@@ -2,13 +2,13 @@ package com.kdongsu5509.auth.application.service
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.kdongsu5509.auth.adapter.out.jwt.AdminMobileAuthProperties
+import com.kdongsu5509.auth.adapter.out.jwt.AdminAuthProperties
 import com.kdongsu5509.auth.adapter.out.jwt.ImHereJjwtIssuerAdapter
 import com.kdongsu5509.auth.adapter.out.jwt.ImHereJjwtParserAdapter
 import com.kdongsu5509.auth.adapter.out.jwt.ImHereJwtProperties
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
-import com.kdongsu5509.auth.adapter.`in`.web.dto.AdminMobileChallengeResponse
-import com.kdongsu5509.auth.adapter.`in`.web.dto.AdminMobileTokenResponse
+import com.kdongsu5509.auth.adapter.`in`.web.dto.AdminChallengeResponse
+import com.kdongsu5509.auth.adapter.`in`.web.dto.AdminTokenResponse
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.shared.cache.CachePort
 import com.kdongsu5509.support.exception.throwIt
@@ -24,12 +24,13 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 @Service
-class AdminMobileAuthService(
-    private val properties: AdminMobileAuthProperties,
+class AdminAuthService(
+    private val properties: AdminAuthProperties,
     private val issuer: ImHereJjwtIssuerAdapter,
     private val parser: ImHereJjwtParserAdapter,
     private val jwtProperties: ImHereJwtProperties,
     private val cache: CachePort,
+    private val loginAttemptService: AdminLoginAttemptService,
     @Value("\${admin.id}") private val adminId: String,
     @Value("\${admin.nickname:rati}") private val nickname: String,
 ) {
@@ -39,34 +40,26 @@ class AdminMobileAuthService(
         .maximumSize(10_000)
         .expireAfterWrite(Duration.ofSeconds(properties.challengeExpirationSeconds))
         .build()
-    private val loginFailures: Cache<String, Int> = Caffeine.newBuilder()
-        .maximumSize(10_000)
-        .expireAfterWrite(Duration.ofMinutes(5))
-        .build()
-
-    fun begin(admin: String, password: String, clientIp: String = "unknown"): AdminMobileChallengeResponse {
-        val loginFailureKey = "admin-login:${admin.trim()}:$clientIp"
-        if ((loginFailures.getIfPresent(loginFailureKey) ?: 0) >= MAX_LOGIN_FAILURES) {
-            reject("Too many login attempts")
-        }
+    fun begin(admin: String, password: String, clientIp: String = "unknown"): AdminChallengeResponse {
+        loginAttemptService.ensureNotBlocked(admin, clientIp)
 
         if (admin != adminId || properties.passwordHash.isBlank() || !passwordEncoder.matches(password, properties.passwordHash)) {
-            val attempts = loginFailures.asMap().merge(loginFailureKey, 1) { current, _ -> current + 1 } ?: 1
-            if (attempts >= MAX_LOGIN_FAILURES) {
+            loginAttemptService.recordFailure(admin, clientIp)
+            if (admin == adminId) {
                 log.warn("Admin login rate limit reached for adminId={} from clientIp={}", admin, clientIp)
             }
             reject("Invalid administrator credentials")
         }
-        loginFailures.invalidate(loginFailureKey)
+        loginAttemptService.recordSuccess(admin, clientIp)
         val challenge = UUID.randomUUID().toString()
         challenges.put(
             challenge,
             ChallengeState(Instant.now().plusSeconds(properties.challengeExpirationSeconds), 0)
         )
-        return AdminMobileChallengeResponse(challenge, properties.challengeExpirationSeconds)
+        return AdminChallengeResponse(challenge, properties.challengeExpirationSeconds)
     }
 
-    fun verify(challenge: String, code: String): AdminMobileTokenResponse {
+    fun verify(challenge: String, code: String): AdminTokenResponse {
         val state = challenges.getIfPresent(challenge)
         if (state == null || state.expiresAt.isBefore(Instant.now())) {
             reject("Invalid MFA code")
@@ -87,10 +80,10 @@ class AdminMobileAuthService(
         val refreshClaims = claims.copy(tokenId = UUID.randomUUID().toString())
         val refresh = issuer.createRefreshToken(refreshClaims)
         cache.save(refreshKey(refreshClaims.tokenId!!), refreshClaims.tokenId, Duration.ofDays(properties.refreshExpirationDays))
-        return AdminMobileTokenResponse(access, refresh, jwtProperties.adminExpirationMinutes * 60)
+        return AdminTokenResponse(access, refresh, jwtProperties.adminExpirationMinutes * 60)
     }
 
-    fun refresh(refreshToken: String): AdminMobileTokenResponse {
+    fun refresh(refreshToken: String): AdminTokenResponse {
         val claims = try { parser.parseRefreshToken(refreshToken) } catch (_: Exception) { reject("Invalid refresh token") }
         val tokenId = claims.tokenId ?: reject("Invalid refresh token")
         val current = cache.find(refreshKey(tokenId), String::class.java)
@@ -100,11 +93,8 @@ class AdminMobileAuthService(
         if (!cache.replace(refreshKey(tokenId), tokenId, nextClaims.tokenId!!, Duration.ofDays(properties.refreshExpirationDays))) {
             reject("Refresh token reuse detected")
         }
-        return AdminMobileTokenResponse(issuer.createAdminAccessToken(nextClaims), nextRefresh, jwtProperties.adminExpirationMinutes * 60)
+        return AdminTokenResponse(issuer.createAdminAccessToken(nextClaims), nextRefresh, jwtProperties.adminExpirationMinutes * 60)
     }
-
-    fun session(): com.kdongsu5509.auth.adapter.`in`.web.dto.AdminMobileSessionResponse =
-        com.kdongsu5509.auth.adapter.`in`.web.dto.AdminMobileSessionResponse(adminId, nickname, "ADMIN")
 
     private fun claims() = JwtTokenClaims(
         uid = UUID.nameUUIDFromBytes("imhere-admin:$adminId".toByteArray()),
@@ -122,7 +112,6 @@ class AdminMobileAuthService(
     )
 
     private companion object {
-        const val MAX_LOGIN_FAILURES = 5
         const val MAX_MFA_FAILURES = 5
     }
 

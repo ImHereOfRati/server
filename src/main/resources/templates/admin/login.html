@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ImHere 관리자 로그인</title><link rel="stylesheet" href="/admin/assets/admin.css">
+</head>
+<body class="login-page">
+<main class="login-card">
+  <div class="eyebrow">IMHERE · SRE CONSOLE</div>
+  <h1 th:text="${mfaRequired ? '인증 코드 입력' : '관리자 로그인'}">관리자 로그인</h1>
+  <p class="muted" th:text="${mfaRequired ? '등록된 인증 앱의 6자리 코드를 입력하세요.' : '운영 관리자 계정으로 로그인하세요.'}">운영 관리자 계정으로 로그인하세요.</p>
+  <div th:if="${error}" class="feedback error" role="alert" th:text="${error}"></div>
+  <form th:if="${!mfaRequired}" method="post" action="/admin/login" class="stack">
+    <label>관리자 ID<input name="adminId" autocomplete="username" required></label>
+    <label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label>
+    <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+    <button class="primary-button" type="submit">계속</button>
+  </form>
+  <form th:if="${mfaRequired}" method="post" action="/admin/login/mfa" class="stack">
+    <label>TOTP 코드<input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+    <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+    <button class="primary-button" type="submit">로그인</button>
+    <a class="secondary-link" href="/admin/login">처음부터 다시</a>
+  </form>
+</main>
+</body>
+</html>

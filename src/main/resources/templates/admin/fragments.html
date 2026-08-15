@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header(active)" class="admin-header">
+  <a class="brand" href="/admin">ImHere <span>SRE</span></a>
+  <nav aria-label="관리자 메뉴">
+    <a th:classappend="${active == 'users' ? ' active' : ''}" href="/admin/users">사용자</a>
+    <a th:classappend="${active == 'relations' ? ' active' : ''}" href="/admin/relations/requests">관계</a>
+    <a th:classappend="${active == 'terms' ? ' active' : ''}" href="/admin/terms">약관</a>
+    <a th:classappend="${active == 'notifications' ? ' active' : ''}" href="/admin/failed-notifications">실패 알림</a>
+  </nav>
+  <form method="post" action="/admin/logout">
+    <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+    <button class="text-button" type="submit">로그아웃</button>
+  </form>
+</header>
+<footer th:fragment="footer" class="admin-footer">ImHere 운영 콘솔 · Grafana Cloud에서 상세 지표 확인</footer>
+</body>
+</html>

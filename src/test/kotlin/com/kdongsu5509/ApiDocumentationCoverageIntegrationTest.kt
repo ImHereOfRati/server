@@ -3,7 +3,6 @@ package com.kdongsu5509
 import com.common.testsupport.WebIntegrationTestSupport
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
 import com.epages.restdocs.apispec.ResourceSnippetParameters
-import org.springframework.http.MediaType
 import org.junit.jupiter.api.Test
 import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler
 import org.springframework.test.web.servlet.ResultActions
@@ -43,28 +42,6 @@ class ApiDocumentationCoverageIntegrationTest : WebIntegrationTestSupport() {
     documented("admin-failed-notification-delete", delete("/api/admin/failed-notifications/{id}", id))
     documented("admin-failed-notification-redelivery", post("/api/admin/failed-notifications/redelivery-jobs"))
         documented("admin-failed-notification-redelivery-detail", post("/api/admin/failed-notifications/{id}/redelivery-jobs", id))
-        documented(
-            "admin-mobile-auth-login",
-            post("/api/admin/mobile/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"),
-            status().isBadRequest
-        )
-        documented(
-            "admin-mobile-auth-mfa-verify",
-            post("/api/admin/mobile/auth/mfa/verify")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"),
-            status().isBadRequest
-        )
-        documented(
-            "admin-mobile-auth-refresh",
-            post("/api/admin/mobile/auth/refresh")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"),
-            status().isBadRequest
-        )
-        documented("admin-mobile-auth-me", get("/api/admin/mobile/auth/me"))
     documented("admin-friend-requests", get("/api/admin/friend-requests"))
     documented("admin-friendships", get("/api/admin/friendships"))
     documented("admin-friend-restrictions", get("/api/admin/friend-restrictions"))

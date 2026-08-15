@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>운영 대시보드</title><link rel="stylesheet" href="/admin/assets/admin.css"></head>
+<body>
+<header th:replace="~{admin/fragments :: header('dashboard')}"></header>
+<main class="admin-main">
+  <section class="page-heading"><div><div class="eyebrow">SRE CONSOLE</div><h1>운영 대시보드</h1><p class="muted">관리자 작업과 서비스 상태를 한 곳에서 확인합니다.</p></div><span class="status-pill ok">관리자 인증됨</span></section>
+  <section class="status-card"><div><span class="status-dot" th:classappend="${health.status.code == 'UP' ? '' : ' bad'}"></span><strong th:text="${health.status.code == 'UP' ? '서비스 정상' : '서비스 점검 필요'}">서비스 상태</strong><p class="muted">마지막 확인 <span th:text="${checkedAt}"></span> · health <span th:text="${health.status.code}">UP</span></p></div><span class="secondary-button">상세 지표: Grafana Cloud</span></section>
+  <section class="card-grid">
+    <a class="nav-card" href="/admin/users"><strong>사용자 관리</strong><span>사용자 상태, 차단, 강제 로그아웃</span></a>
+    <a class="nav-card" href="/admin/relations/requests"><strong>관계 관리</strong><span>친구 요청·관계·제한 목록</span></a>
+    <a class="nav-card" href="/admin/terms"><strong>약관 관리</strong><span>약관 버전과 적용일 관리</span></a>
+    <a class="nav-card" href="/admin/failed-notifications"><strong>실패 알림</strong><span>재발송과 실패 기록 처리</span></a>
+  </section>
+  <p class="caption">Actuator health/info 요약은 배포 상태 확인에만 사용하며, 상세 지표와 알림은 Grafana Cloud에서 관리합니다.</p>
+</main>
+<footer th:replace="~{admin/fragments :: footer}"></footer>
+</body></html>

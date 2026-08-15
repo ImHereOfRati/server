@@ -32,9 +32,6 @@ security:
   whitelist:
     - "/api/auth"
     - "/api/auth/refresh"
-    - "/api/admin/mobile/auth/login"
-    - "/api/admin/mobile/auth/mfa/verify"
-    - "/api/admin/mobile/auth/refresh"
     - "/swagger-ui/**"
     - "/v3/api-docs/**"
   cors-allowed-origins:
@@ -105,7 +102,7 @@ SOLAPI_SENDER: "01012341234"
 SOLAPI_API_KEY: test-key
 SOLAPI_API_SECRET: test-secret
 FIREBASE_PATH: file:src/test/resources/dummy-firebase-key.json
-SECURITY_WHITELIST: /api/auth,/api/auth/refresh,/api/admin/mobile/auth/login,/api/admin/mobile/auth/mfa/verify,/api/admin/mobile/auth/refresh,/swagger-ui/**,/docs/**
+SECURITY_WHITELIST: /api/auth,/api/auth/refresh,/swagger-ui/**,/docs/**
 CORS_ALLOWED_ORIGINS: http://localhost:3000
 ADMIN_ID: test-admin
 SERVER_NAME: localhost

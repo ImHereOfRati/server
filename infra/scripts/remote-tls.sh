@@ -20,12 +20,31 @@ MODE="${1:-}"
 
 : "${EC2_DEPLOY_PATH:?EC2_DEPLOY_PATH is required}"
 
-set -a
-for env_file in "${EC2_DEPLOY_PATH}"/env/*.env; do
-  # shellcheck disable=SC1090
-  . "$env_file"
-done
-set +a
+case "$EC2_DEPLOY_PATH" in
+  "~") EC2_DEPLOY_PATH="$HOME" ;;
+  "~/"*) EC2_DEPLOY_PATH="$HOME/${EC2_DEPLOY_PATH#~/}" ;;
+esac
+
+read_dotenv_value() {
+  local key="$1"
+  local file="$2"
+
+  awk -v key="$key" '
+    index($0, key "=") == 1 {
+      value = substr($0, length(key) + 2)
+      sub(/\r$/, "", value)
+      print value
+      exit
+    }
+  ' "$file"
+}
+
+WEB_ENV="${EC2_DEPLOY_PATH}/env/web.env"
+if [ ! -f "$WEB_ENV" ]; then
+  echo "Missing dotenv file: $WEB_ENV" >&2
+  exit 1
+fi
+CERT_DOMAIN="$(read_dotenv_value CERT_DOMAIN "$WEB_ENV")"
 
 : "${CERT_DOMAIN:?CERT_DOMAIN must be set in env/web.env}"
 

@@ -18,7 +18,16 @@ set -euo pipefail
 : "${ECR_REGISTRY:?ECR_REGISTRY is required}"
 : "${ECR_REPOSITORY:?ECR_REPOSITORY is required}"
 
-cd "$EC2_DEPLOY_PATH"
+# Environment variables do not expand `~` themselves. Resolve it before
+# changing directory; otherwise `EC2_DEPLOY_PATH=~/imhere` is treated as a
+# literal directory name by bash.
+case "$EC2_DEPLOY_PATH" in
+  "~") EC2_DEPLOY_PATH="$HOME" ;;
+  "~/"*) EC2_DEPLOY_PATH="$HOME/${EC2_DEPLOY_PATH#~/}" ;;
+esac
+
+cd -- "$EC2_DEPLOY_PATH"
+EC2_DEPLOY_PATH="$PWD"
 
 sudo docker login --username AWS --password-stdin "$ECR_REGISTRY"
 

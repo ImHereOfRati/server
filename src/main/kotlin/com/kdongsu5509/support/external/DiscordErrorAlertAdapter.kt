@@ -11,7 +11,6 @@ class DiscordErrorAlertAdapter(
     private val discordApiClient: DiscordApiClient,
     @param:Value("\${discord.url.error.client:}") private val clientErrorWebhookUrl: String,
     @param:Value("\${discord.url.error.server:}") private val serverErrorWebhookUrl: String,
-    @param:Value("\${discord.url.ott:}") private val ottWebhookUrl: String,
 ) : ErrorAlertPort {
 
     private val logger = LoggerFactory.getLogger(DiscordErrorAlertAdapter::class.java)
@@ -35,6 +34,5 @@ class DiscordErrorAlertAdapter(
     private fun webhookOf(channel: AlertChannel): String = when (channel) {
         AlertChannel.CLIENT_ERROR -> clientErrorWebhookUrl
         AlertChannel.SERVER_ERROR -> serverErrorWebhookUrl
-        AlertChannel.ADMIN_OTT -> ottWebhookUrl
     }
 }

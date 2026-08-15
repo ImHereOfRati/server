@@ -112,6 +112,25 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("기존 계정의 OAuth 제공자나 subject가 다르면 로그인시키지 않는다")
+    fun auth_rejects_mismatched_oidc_identity() {
+        givenVerifiedOidcUser()
+        given(userLookupContract.findByEmailOrNull(TEST_EMAIL)).willReturn(
+            userResult(UserStatus.ACTIVE).copy(
+                oauthProvider = OAuth2Provider.GOOGLE,
+                oidcSubject = "different-sub"
+            )
+        )
+
+        val exception = assertThrows<ImHereBaseException> {
+            authService.auth(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN, TEST_NONCE)
+        }
+
+        assertThat(exception.errorCode).isEqualTo(AuthException.OIDC_FORMAT_INVALID)
+        then(tokenProviderPort).shouldHaveNoInteractions()
+    }
+
+    @Test
     @DisplayName("정지된 계정이면 토큰을 발급하지 않는다")
     fun auth_fail_blocked_user() {
         // given

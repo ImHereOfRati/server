@@ -13,7 +13,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
+import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -67,7 +67,7 @@ class UserReadControllerIntegrationTest : WebIntegrationTestSupport() {
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "users-read-me-success",
                     snippets = arrayOf(
-                        relaxedResponseFields(
+                        responseFields(
                             fieldWithPath("imhereResponseCode").description("응답 코드"),
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data.id").description("사용자 ID (UUID)"),

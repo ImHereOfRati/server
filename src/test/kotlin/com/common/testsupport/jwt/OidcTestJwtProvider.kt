@@ -13,7 +13,9 @@ object OidcTestJwtProvider {
     const val HEADER_KID = "test-kid"
 
     const val PAYLOAD_ISS = "https://kauth.kakao.com"
-    const val PAYLOAD_AUD = "bf284f33bfeba9bc59575706d0eb0e9c" // 테스트용 AUD
+    const val PAYLOAD_AUD = "test-kakao-client-id"
+    const val GOOGLE_PAYLOAD_ISS = "https://accounts.google.com"
+    const val GOOGLE_PAYLOAD_AUD = "test-google-client-id"
     const val PAYLOAD_SUB = "사용자회원번호"
     const val PAYLOAD_EMAIL = "ds.ko@kakao.com"
     const val PAYLOAD_EXP_SECONDS = 3600L
@@ -25,7 +27,12 @@ object OidcTestJwtProvider {
     val testPublicKey = keyPair.public
     val testPrivateKey = keyPair.private
 
-    fun buildIdToken(email: String = PAYLOAD_EMAIL): String {
+    fun buildIdToken(
+        email: String = PAYLOAD_EMAIL,
+        issuer: String = PAYLOAD_ISS,
+        audience: String = PAYLOAD_AUD,
+        nonce: String = UUID.randomUUID().toString()
+    ): String {
         val now = Instant.now()
         val issuedAt = Date.from(now)
         val expiration = Date.from(now.plusSeconds(PAYLOAD_EXP_SECONDS))
@@ -36,15 +43,21 @@ object OidcTestJwtProvider {
             .add("kid", HEADER_KID)
             .add("alg", HEADER_ALG)
             .and()
-            .issuer(PAYLOAD_ISS)
-            .audience().add(PAYLOAD_AUD).and()
+            .issuer(issuer)
+            .audience().add(audience).and()
             .subject(PAYLOAD_SUB)
             .issuedAt(issuedAt)
             .expiration(expiration)
             .claim("auth_time", issuedAt)
-            .claim("nonce", UUID.randomUUID().toString())
+            .claim("nonce", nonce)
             .claim("email", email)
             .signWith(testPrivateKey, Jwts.SIG.RS256)
             .compact()
     }
+
+    fun buildGoogleIdToken(email: String = "google@example.com"): String = buildIdToken(
+        email = email,
+        issuer = GOOGLE_PAYLOAD_ISS,
+        audience = GOOGLE_PAYLOAD_AUD
+    )
 }

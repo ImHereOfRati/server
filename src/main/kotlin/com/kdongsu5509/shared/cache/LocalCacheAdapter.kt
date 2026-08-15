@@ -38,6 +38,24 @@ class LocalCacheAdapter(
         cache.invalidate(key)
     }
 
+    @Synchronized
+    override fun replace(key: String, expected: Any, replacement: Any, duration: Duration): Boolean {
+        val entry = cache.getIfPresent(key) ?: return false
+        if (entry.isExpired(clock.millis())) {
+            cache.invalidate(key)
+            return false
+        }
+        if (entry.serializedValue != jsonMapper.writeValueAsString(expected)) return false
+        cache.put(
+            key,
+            CacheEntry(
+                serializedValue = jsonMapper.writeValueAsString(replacement),
+                expiresAtMillis = clock.millis() + duration.toMillis()
+            )
+        )
+        return true
+    }
+
     private data class CacheEntry(
         val serializedValue: String,
         val expiresAtMillis: Long

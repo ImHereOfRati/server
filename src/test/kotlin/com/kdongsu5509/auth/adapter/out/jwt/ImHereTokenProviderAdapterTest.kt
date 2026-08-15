@@ -5,6 +5,7 @@ import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.ImHereTokenIssuerPort
 import com.kdongsu5509.auth.application.port.out.ImHereTokenParserPort
 import com.kdongsu5509.auth.application.service.dto.JwtTokenClaims
+import com.kdongsu5509.shared.cache.CachePort
 import com.kdongsu5509.support.exception.type.UnauthorizedException
 import com.kdongsu5509.user.api.UserLookupContract
 import com.kdongsu5509.user.api.UserResult
@@ -23,6 +24,7 @@ import org.mockito.BDDMockito.then
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import java.time.LocalDateTime
 import java.util.*
 
@@ -33,6 +35,7 @@ class ImHereTokenProviderAdapterTest {
         const val USER_EMAIL = "test@example.com"
         const val ACCESS_TOKEN = "access-token"
         const val REFRESH_TOKEN = "refresh-token"
+        const val ROTATED_REFRESH_TOKEN = "rotated-refresh-token"
         const val REFRESH_EXP_DAYS = 7L
         const val REDIS_KEY = "refresh:$USER_EMAIL"
 
@@ -48,18 +51,22 @@ class ImHereTokenProviderAdapterTest {
     @Mock
     private lateinit var userLookupContract: UserLookupContract
 
+    @Mock
+    private lateinit var cachePort: CachePort
+
     private lateinit var tokenProvider: ImHereTokenProviderAdapter
     private lateinit var jwtTokenClaims: JwtTokenClaims
+    private lateinit var jwtProperties: ImHereJwtProperties
 
     @BeforeEach
     fun setUp() {
-        val properties = ImHereJwtProperties(
+        jwtProperties = ImHereJwtProperties(
             secret = "test-secret-key-at-least-32-characters-long",
             accessExpirationMinutes = 60,
             refreshExpirationDays = REFRESH_EXP_DAYS
         )
 
-        tokenProvider = ImHereTokenProviderAdapter(tokenIssuer, tokenParser, userLookupContract)
+        tokenProvider = ImHereTokenProviderAdapter(tokenIssuer, tokenParser, userLookupContract, cachePort, jwtProperties)
 
         jwtTokenClaims = JwtTokenClaims(
             uid = TEST_UUID,
@@ -67,7 +74,8 @@ class ImHereTokenProviderAdapterTest {
             nickname = "테스트",
             role = "USER",
             status = "ACTIVE",
-            expiration = LocalDateTime.now().plusDays(7)
+            expiration = LocalDateTime.now().plusDays(7),
+            tokenId = "refresh-token-id"
         )
     }
 
@@ -75,8 +83,9 @@ class ImHereTokenProviderAdapterTest {
     @DisplayName("JWT 인증 토큰을 성공적으로 발급한다")
     fun issue_success() {
         // given
-        given(tokenIssuer.createAccessToken(jwtTokenClaims)).willReturn(ACCESS_TOKEN)
-        given(tokenIssuer.createRefreshToken(jwtTokenClaims)).willReturn(REFRESH_TOKEN)
+        given(tokenIssuer.createAccessToken(any())).willReturn(ACCESS_TOKEN)
+        given(tokenIssuer.createRefreshToken(any())).willReturn(REFRESH_TOKEN)
+        given(tokenParser.parseRefreshToken(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
 
         // when
         val result = tokenProvider.issue(jwtTokenClaims)
@@ -84,6 +93,11 @@ class ImHereTokenProviderAdapterTest {
         // then
         assertThat(result.accessToken).isEqualTo(ACCESS_TOKEN)
         assertThat(result.refreshToken).isEqualTo(REFRESH_TOKEN)
+        then(cachePort).should().save(
+            eq(REDIS_KEY),
+            eq("refresh-token-id"),
+            eq(java.time.Duration.ofDays(REFRESH_EXP_DAYS))
+        )
     }
 
     @Test
@@ -91,20 +105,31 @@ class ImHereTokenProviderAdapterTest {
     fun reissue_validRefreshToken_success() {
         // given
         val currentUser = createUserResult(refreshTokenVersion = 0)
-        val currentClaims = JwtTokenClaims.fromUser(currentUser)
+        val rotatedClaims = JwtTokenClaims.fromUser(currentUser).copy(tokenId = "rotated-token-id")
         given(tokenParser.parseRefreshToken(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
         given(userLookupContract.findByEmailOrNull(USER_EMAIL)).willReturn(currentUser)
-        given(tokenIssuer.createAccessToken(currentClaims)).willReturn(ACCESS_TOKEN)
-        given(tokenIssuer.createRefreshToken(currentClaims)).willReturn(REFRESH_TOKEN)
+        given(cachePort.find(REDIS_KEY, String::class.java)).willReturn("refresh-token-id")
+        given(tokenIssuer.createAccessToken(any())).willReturn(ACCESS_TOKEN)
+        given(tokenIssuer.createRefreshToken(any())).willReturn(ROTATED_REFRESH_TOKEN)
+        given(tokenParser.parseRefreshToken(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
+        given(tokenParser.parseRefreshToken(ROTATED_REFRESH_TOKEN)).willReturn(rotatedClaims)
+        given(cachePort.replace(REDIS_KEY, "refresh-token-id", "rotated-token-id", java.time.Duration.ofDays(REFRESH_EXP_DAYS)))
+            .willReturn(true)
 
         // when
         val result = tokenProvider.reissueByRefreshToken(REFRESH_TOKEN)
 
         // then
         assertThat(result.accessToken).isEqualTo(ACCESS_TOKEN)
-        assertThat(result.refreshToken).isEqualTo(REFRESH_TOKEN)
+        assertThat(result.refreshToken).isEqualTo(ROTATED_REFRESH_TOKEN)
 
         then(tokenParser).should().parseRefreshToken(REFRESH_TOKEN)
+        then(cachePort).should().replace(
+            eq(REDIS_KEY),
+            eq("refresh-token-id"),
+            eq("rotated-token-id"),
+            eq(java.time.Duration.ofDays(REFRESH_EXP_DAYS))
+        )
     }
 
     @Test
@@ -155,6 +180,7 @@ class ImHereTokenProviderAdapterTest {
         given(userLookupContract.findByEmailOrNull(USER_EMAIL)).willReturn(createUserResult(refreshTokenVersion = 0))
         given(tokenIssuer.createAccessToken(any())).willReturn(ACCESS_TOKEN)
         given(tokenIssuer.createRefreshToken(any())).willReturn(REFRESH_TOKEN)
+        given(tokenParser.parseRefreshToken(REFRESH_TOKEN)).willReturn(jwtTokenClaims)
 
         // when
         val result = tokenProvider.reissueByEmail(USER_EMAIL)

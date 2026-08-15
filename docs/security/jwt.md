@@ -9,7 +9,7 @@ ImHere 서버는 일반 사용자 인증과 관리자 접근을 분리하기 위
 | 결정 | 내용 | 근거 |
 |---|---|---|
 | Access/Refresh 분리 | 일반 사용자는 Access + Refresh Token 조합으로 인증 | `ImHereTokenProviderAdapter.kt:22` |
-| Refresh Token DB 미저장 | `refresh:{email}` 키로 앱 메모리 캐시에만 유지 | `ImHereTokenProviderAdapter.kt:50` |
+| Refresh Token DB 미저장 | `refresh:{email}` 키에 현재 refresh token의 `jti`를 앱 메모리 캐시에만 유지 | `ImHereTokenProviderAdapter.kt` |
 | Admin 화면은 세션 기반 | `/admin/**`는 OTT 로그인 후 Session으로 접근 | `SecurityConfig.kt:141` |
 | Admin API는 별도 체인 | `/api/admin/**`는 일반 API 체인과 분리 | `SecurityConfig.kt:101` |
 
@@ -50,11 +50,12 @@ ImHere 서버는 일반 사용자 인증과 관리자 접근을 분리하기 위
 1. 클라이언트가 `/api/auth/refresh`로 Refresh Token을 보냅니다.
 2. 서버가 서명과 만료를 검증합니다.
 3. Token claims에서 email을 꺼냅니다.
-4. 캐시의 `refresh:{email}` 값과 비교합니다.
-5. 일치하면 새 Access/Refresh Token을 발급하고 캐시 값을 교체합니다.
+4. 캐시의 `refresh:{email}`에 저장된 `jti`와 토큰의 `jti`를 비교합니다.
+5. 일치하면 새 Access/Refresh Token을 발급하고 캐시 값을 원자적으로 교체합니다.
 6. 불일치하면 즉시 `IMHERE_INVALID_TOKEN`으로 실패합니다.
 
-이 방식은 탈취된 이전 Refresh Token이 재사용되는 것을 막기 위한 rotate 전략입니다.
+이 방식은 탈취된 이전 Refresh Token의 재사용을 막는 `jti` rotate 전략입니다. 동시 요청 중
+하나만 기존 `jti` 교체에 성공하며, 나머지는 401로 거절됩니다.
 
 ---
 
@@ -122,5 +123,5 @@ Content-Type: application/json
 ## 관련 문서
 
 * OIDC 검증 구조: [oauth.md](oauth.md)
-* 관리자 OTT 로그인: [admin-ott.md](admin-ott.md)
+* 관리자 계정 인증: [admin-account.md](admin-account.md)
 * 토큰 재발급 시퀀스: [../flows/token-refresh.md](../flows/token-refresh.md)

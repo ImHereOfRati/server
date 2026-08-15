@@ -9,7 +9,7 @@
 - `src/main/resources/application.yaml`
 - `docker-compose.yml`
 - `infra/alloy/alloy-config.alloy.template`
-- `env/*.env` (이 레포에 없다. private config repo에 있고, 배포 시 `sync-config` job이 가져온다 — 아래 주입 흐름 참고. 레포에는 값이 빈 템플릿인 `config-example/env/*.env`만 있다.)
+- `env/*.env` (이 레포에 없다. private config repo에 있고, 배포 시 `sync-config` job이 가져온다 — 아래 주입 흐름 참고.)
 
 역할은 다르다.
 
@@ -41,7 +41,7 @@ observability 관점에서 중요한 것은 마지막 줄이다. **Grafana Cloud
 alloy에만 들어가고 앱에는 들어가지 않는다.** 파일이 나뉘어 있어서 이게 설정이
 아니라 구조로 보장된다.
 
-키 목록과 파일 추가 절차는 `config-example/README.md`에 있다.
+키 목록과 파일 추가 절차는 private config repo의 `env/` 구조와 `sync-config.sh`를 따른다.
 
 ## 주입 흐름
 

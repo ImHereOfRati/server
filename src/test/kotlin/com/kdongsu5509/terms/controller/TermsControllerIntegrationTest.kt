@@ -81,14 +81,14 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "terms-create-success",
                     snippets = arrayOf(
-                        relaxedRequestFields(
+                        requestFields(
                             fieldWithPath("type").description("약관 타입 (SERVICE, PRIVACY, LOCATION)"),
                             fieldWithPath("title").description("약관 제목"),
                             fieldWithPath("content").description("약관 내용"),
                             fieldWithPath("effectiveDate").description("시행 일시 (ISO 8601)"),
                             fieldWithPath("isRequired").description("필수 동의 여부")
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                             fieldWithPath("imhereResponseCode").description("응답 코드"),
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data.id").description("생성된 약관 ID"),
@@ -166,7 +166,7 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "terms-read-active-success",
                     snippets = arrayOf(
-                        relaxedResponseFields(
+                        responseFields(
                             fieldWithPath("imhereResponseCode").description("응답 코드"),
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data[].id").description("약관 ID"),

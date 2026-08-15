@@ -110,6 +110,10 @@ touch "$MOCK_STATE/bootstrap" "$MOCK_STATE/invalid-canonical-conf" "$MOCK_STATE/
 cp "$SCRIPT_DIR/remote-tls-test.sh" "$TEST_TMP/bin/sudo"
 chmod +x "$TEST_TMP/bin/sudo"
 printf 'CERT_DOMAIN=example.com\n' > "$TEST_TMP/deploy/env/web.env"
+# Values in unrelated env files may contain shell positional syntax. The
+# deploy scripts must parse only the variables they need, not source every
+# dotenv file under env/ with `set -u` enabled.
+printf 'SECURITY_WHITELIST=/api/public/$2\n' > "$TEST_TMP/deploy/env/app.env"
 
 PATH="$TEST_TMP/bin:$PATH" \
   EC2_DEPLOY_PATH="$TEST_TMP/deploy" \

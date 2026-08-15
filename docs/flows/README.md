@@ -24,7 +24,7 @@ ImHere 기능을 **어디서 시작해서 어디로 끝나는지** 기준으로 
 | 1 | [oidc-login.md](oidc-login.md) | 기존 사용자 로그인 |
 | 2 | [oidc-signup-activation.md](oidc-signup-activation.md) | 신규 가입, PENDING -> ACTIVE |
 | 3 | [token-refresh.md](token-refresh.md) | Refresh Token 재발급 |
-| 4 | [admin-ott.md](admin-ott.md) | 관리자 OTT 로그인 |
+| 4 | [../security/admin-account.md](../security/admin-account.md) | 관리자 계정 로그인 |
 
 ### 친구
 

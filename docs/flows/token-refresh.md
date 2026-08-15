@@ -8,7 +8,7 @@ refresh token 회전과 `JwtAuthenticationFilter` 기반 요청 인증 흐름을
 
 | 판단 | 내용 | 근거 |
 |---|---|---|
-| refresh token 은 캐시와 함께 검증 | 토큰 자체가 유효해도 `refresh:{email}` 값과 일치해야 통과한다 | 탈취 토큰 재사용을 줄이기 위한 설계다 |
+| refresh token 은 캐시와 함께 검증 | 토큰 자체가 유효해도 `jti`가 `refresh:{email}` 값과 일치해야 통과한다 | 탈취 토큰 재사용을 막는다 |
 | refresh 시 access/refresh 를 모두 재발급 | refresh 성공 시 둘 다 회전시킨다 | 단일 refresh token 장기 사용을 막는다 |
 | 보호 API 인증은 필터에서 끝낸다 | 컨트롤러 진입 전에 JWT 검증과 `SecurityContext` 세팅을 마친다 | 비즈니스 레이어가 인증 세부사항을 알지 않게 한다 |
 
@@ -24,12 +24,12 @@ sequenceDiagram
 
     App->>Server: POST /api/auth/refresh
     Server->>Server: refresh token validate + parse
-    Server->>Cache: refresh:{email} 조회
+        Server->>Cache: refresh:{email}의 jti 조회
     alt 캐시 없음 또는 값 불일치
         Server-->>App: IMHERE_INVALID_TOKEN
     else 일치
         Server->>Server: 신규 access + refresh 발급
-        Server->>Cache: refresh:{email} 교체
+        Server->>Cache: 기존 jti를 새 jti로 원자적 교체
         Server-->>App: 신규 토큰 반환
     end
 ```
@@ -63,8 +63,9 @@ sequenceDiagram
 ## 구현 포인트
 
 1. 서버는 사용자당 하나의 refresh token 만 유효하다고 가정한다.
-2. 캐시 값이 사라졌거나 덮어써졌다면 토큰 서명이 맞아도 실패 처리한다.
-3. 필터 단계에서 인증이 끝나므로 컨트롤러는 인증 객체가 이미 있다고 전제한다.
+2. 캐시 값이 사라졌거나 jti가 다르면 토큰 서명이 맞아도 실패 처리한다.
+3. 정상 재발급 성공 후 기존 refresh token은 즉시 폐기된다.
+4. 필터 단계에서 인증이 끝나므로 컨트롤러는 인증 객체가 이미 있다고 전제한다.
 
 ---
 

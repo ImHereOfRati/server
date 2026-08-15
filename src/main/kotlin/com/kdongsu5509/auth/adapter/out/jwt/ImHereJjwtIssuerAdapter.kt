@@ -37,7 +37,11 @@ class ImHereJjwtIssuerAdapter(
 
     private fun create(category: String, claims: JwtTokenClaims, expiredTime: LocalDateTime): String {
         return Jwts.builder()
-            .id(UUID.randomUUID().toString())
+            .id(if (category == JwtClaimKeys.REFRESH_TOKEN) {
+                claims.tokenId ?: UUID.randomUUID().toString()
+            } else {
+                UUID.randomUUID().toString()
+            })
             .claim(JwtClaimKeys.CLAIM_CATEGORY, category)
             .claim(JwtClaimKeys.CLAIM_USER_ID, claims.uid.toString())
             .claim(JwtClaimKeys.CLAIM_EMAIL, claims.email)

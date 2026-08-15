@@ -10,7 +10,7 @@ ImHere 서버는 Spring OAuth2 Client 전체 플로우를 사용하지 않고, K
 |---|---|---|
 | Provider 3개 고정 | Kakao, Google, Apple만 지원 | `application.yaml` `oidc.providers` |
 | ID Token 직접 검증 | 모바일 앱이 받은 토큰을 서버에서 검증만 수행 | `OIDCVerifyService.kt:23` |
-| 공개키는 캐시 사용 | JWKS를 매 요청마다 다시 받지 않음 | `application.yaml:131`, `application.yaml:136` |
+| 공개키는 캐시 사용 | 설정된 `jwksUri`를 provider별 캐시에 저장하고 매 요청마다 다시 받지 않음 | `OidcPublicKeyClient.kt` |
 
 ---
 

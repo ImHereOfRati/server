@@ -78,7 +78,7 @@ services:
       - "imhere_log_scope=external"
     # 관심사별로 쪼갠 런타임 env. 컨테이너마다 필요한 파일만 붙인다 —
     # 앱에는 Grafana Cloud 키가, alloy에는 DB 비밀번호가 보이지 않게 하려는 것이다.
-    # 구조와 키 목록은 config-example/ 참고.
+    # 구조와 키 목록은 private config repo의 env/ 파일을 참고.
     env_file:
       - ./env/app.env
       - ./env/web.env

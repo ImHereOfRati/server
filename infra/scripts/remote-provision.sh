@@ -13,6 +13,13 @@ set -euo pipefail
 
 : "${EC2_DEPLOY_PATH:?EC2_DEPLOY_PATH is required}"
 
+# Environment variables do not expand `~` themselves. Normalize it before
+# creating directories so the provision and deploy steps use the same path.
+case "$EC2_DEPLOY_PATH" in
+  "~") EC2_DEPLOY_PATH="$HOME" ;;
+  "~/"*) EC2_DEPLOY_PATH="$HOME/${EC2_DEPLOY_PATH#~/}" ;;
+esac
+
 if ! command -v docker >/dev/null 2>&1; then
   sudo dnf install -y docker
 fi

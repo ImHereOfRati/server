@@ -297,7 +297,7 @@ certbot(호스트에서 실행)이 토큰 파일을 쓰면, 같은 디렉터리�
 
 `sync-config` Job이 이 repo를 clone해 `env/` 아래 `.env` 파일을 전부 가져오고, `deploy-app` Job이 그것들을 모두 `source`해 `nginx.conf.template` / `alloy-config.alloy.template`를 렌더링한 뒤 앱 EC2로 전송합니다. **이 repo는 ImHere Server와 분리된 별도 저장소**이므로, 값을 바꿀 때는 그 repo를 수정해야 합니다.
 
-값이 빈 템플릿은 이 저장소의 `config-example/env/*.env`에 있습니다. 키 목록과 "새 변수를 추가할 때" 절차는 `config-example/README.md`를 보세요.
+키 목록과 "새 변수를 추가할 때" 절차는 private config repo의 `env/` 구조와 `sync-config.sh`를 따릅니다.
 
 #### 왜 한 파일이 아닌가
 
@@ -359,4 +359,4 @@ aws cloudformation deploy \
 * AWS 인프라(VPC/EC2/SG/EIP/ECR/IAM)는 `aws.md`를 참고합니다.
 * 가비아 DNS/MySQL은 `gabia.md`를 참고합니다.
 * Docker 이미지/Compose/Nginx 구성은 `docker.md`를 참고합니다.
-* 런타임 env 파일의 전체 키 목록과 추가 절차는 저장소 루트의 `config-example/README.md`를 참고합니다.
+* 런타임 env 파일의 전체 키 목록과 추가 절차는 private config repo의 `env/` 구조와 `sync-config.sh`를 참고합니다.

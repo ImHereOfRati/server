@@ -60,6 +60,15 @@ class LocalCacheAdapterTest {
         assertThat(adapter.find("testKey", DummyDto::class.java)).isNull()
     }
 
+    @Test
+    fun replace_only_succeeds_for_the_current_value() {
+        adapter.save("refresh:test", "old-jti", Duration.ofMinutes(5))
+
+        assertThat(adapter.replace("refresh:test", "wrong-jti", "new-jti", Duration.ofMinutes(5))).isFalse()
+        assertThat(adapter.replace("refresh:test", "old-jti", "new-jti", Duration.ofMinutes(5))).isTrue()
+        assertThat(adapter.find("refresh:test", String::class.java)).isEqualTo("new-jti")
+    }
+
     private class MutableClock(
         private var currentInstant: Instant,
         private val zoneId: ZoneId

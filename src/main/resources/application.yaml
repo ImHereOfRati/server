@@ -108,7 +108,7 @@ jwt:
   access-expiration-minutes: 720
   refresh-expiration-days: 7
   access-header-name: Authorization
-  admin-expiration-minutes: 60
+  admin-expiration-minutes: ${JWT_ADMIN_EXPIRATION_MINUTES:15}
 
 # issuers/audiences는 목록이다. Google은 iss를 스킴 포함/미포함 두 형태로 발급하고,
 # Google·Apple은 iOS/Android/Web마다 client ID(aud)가 갈리기 때문이다.
@@ -167,16 +167,19 @@ discord:
     error:
       server: ${DISCORD_WEBHOOK_ERROR_SERVER:http://localhost}
       client: ${DISCORD_WEBHOOK_ERROR_CLIENT:http://localhost}
-    ott: ${DISCORD_WEBHOOK_OTT:http://localhost}
 
 security:
-  whitelist: ${SECURITY_WHITELIST:/api/auth,/api/auth/refresh,/swagger-ui/**,/docs/**,/admin/ott/request,/admin/ott/verify,/css/**,/js/**,/images/**,/webjars/**,/favicon.ico}
+  whitelist: ${SECURITY_WHITELIST:/api/auth,/api/auth/refresh,/swagger-ui/**,/docs/**}
   cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 admin:
   id: ${ADMIN_ID:local-admin}
   nickname: rati
-  allowed-ips: ${ADMIN_ALLOWED_IPS:127.0.0.1,::1,0:0:0:0:0:0:0:1}
+  mobile:
+    password-hash: ${ADMIN_MOBILE_PASSWORD_HASH:}
+    totp-secret: ${ADMIN_MOBILE_TOTP_SECRET:}
+    challenge-expiration-seconds: ${ADMIN_MOBILE_CHALLENGE_EXPIRATION_SECONDS:300}
+    refresh-expiration-days: ${ADMIN_MOBILE_REFRESH_EXPIRATION_DAYS:7}
 
 ---
 
@@ -223,7 +226,6 @@ discord:
     error:
       server: ${DISCORD_WEBHOOK_ERROR_SERVER}
       client: ${DISCORD_WEBHOOK_ERROR_CLIENT}
-    ott: ${DISCORD_WEBHOOK_OTT}
 
 security:
   whitelist: ${SECURITY_WHITELIST}
@@ -231,7 +233,6 @@ security:
 
 admin:
   id: ${ADMIN_ID}
-  allowed-ips: ${ADMIN_ALLOWED_IPS}
 
 management:
   endpoints:

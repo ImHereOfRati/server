@@ -53,6 +53,7 @@ jobs:
       - name: Build JAR
         run: |
           chmod +x ./gradlew
+          ./gradlew test
           ./gradlew bootJar
 
       - name: Upload JAR artifact
@@ -254,6 +255,29 @@ jobs:
           printf '%s\n' "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           echo "StrictHostKeyChecking no" >> ~/.ssh/config
+
+      - name: Resolve remote deploy path
+        run: |
+          REMOTE_DEPLOY_PATH=$(ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
+            "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' bash -s" <<'REMOTE'
+          set -eu
+          case "$EC2_DEPLOY_PATH" in
+            "~") EC2_DEPLOY_PATH="$HOME" ;;
+            "~/"*) EC2_DEPLOY_PATH="$HOME/${EC2_DEPLOY_PATH#~/}" ;;
+          esac
+          printf '%s' "$EC2_DEPLOY_PATH"
+          REMOTE
+          )
+
+          case "$REMOTE_DEPLOY_PATH" in
+            /*) ;;
+            *)
+              echo "EC2_DEPLOY_PATH must resolve to an absolute path: $REMOTE_DEPLOY_PATH" >&2
+              exit 1
+              ;;
+          esac
+
+          echo "EC2_DEPLOY_PATH=$REMOTE_DEPLOY_PATH" >> "$GITHUB_ENV"
 
       - name: Provision EC2 host
         run: |

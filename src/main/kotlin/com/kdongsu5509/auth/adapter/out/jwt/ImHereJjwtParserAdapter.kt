@@ -26,6 +26,14 @@ class ImHereJjwtParserAdapter(
         return toJwtTokenClaims(claims)
     }
 
+    override fun parseAccessToken(token: String): JwtTokenClaims {
+        val claims = parseValidatedClaims(token)
+        if (claims[JwtClaimKeys.CLAIM_CATEGORY] != JwtClaimKeys.ACCESS_TOKEN) {
+            AuthException.IMHERE_INVALID_TOKEN.throwIt()
+        }
+        return toJwtTokenClaims(claims)
+    }
+
     override fun parseRefreshToken(token: String): JwtTokenClaims {
         val claims = parseValidatedClaims(token)
 
@@ -44,7 +52,8 @@ class ImHereJjwtParserAdapter(
             role = RoleAuthority.fromAuthority(claims[JwtClaimKeys.CLAIM_ROLE] as String),
             status = claims[JwtClaimKeys.CLAIM_STATUS] as String,
             expiration = LocalDateTime.ofInstant(claims.expiration.toInstant(), zoneID),
-            refreshTokenVersion = (claims[JwtClaimKeys.CLAIM_REFRESH_TOKEN_VERSION] as? Number)?.toLong() ?: 0L
+            refreshTokenVersion = (claims[JwtClaimKeys.CLAIM_REFRESH_TOKEN_VERSION] as? Number)?.toLong() ?: 0L,
+            tokenId = claims.id
         )
     }
 

@@ -17,12 +17,31 @@ set -euo pipefail
 
 : "${EC2_DEPLOY_PATH:?EC2_DEPLOY_PATH is required}"
 
-set -a
-for env_file in "${EC2_DEPLOY_PATH}"/env/*.env; do
-  # shellcheck disable=SC1090
-  . "$env_file"
-done
-set +a
+case "$EC2_DEPLOY_PATH" in
+  "~") EC2_DEPLOY_PATH="$HOME" ;;
+  "~/"*) EC2_DEPLOY_PATH="$HOME/${EC2_DEPLOY_PATH#~/}" ;;
+esac
+
+read_dotenv_value() {
+  local key="$1"
+  local file="$2"
+
+  awk -v key="$key" '
+    index($0, key "=") == 1 {
+      value = substr($0, length(key) + 2)
+      sub(/\r$/, "", value)
+      print value
+      exit
+    }
+  ' "$file"
+}
+
+APP_ENV="${EC2_DEPLOY_PATH}/env/app.env"
+if [ ! -f "$APP_ENV" ]; then
+  echo "Missing dotenv file: $APP_ENV" >&2
+  exit 1
+fi
+MGMT_BASE_PATH="$(read_dotenv_value MGMT_BASE_PATH "$APP_ENV")"
 
 : "${MGMT_BASE_PATH:?MGMT_BASE_PATH must be set in env/app.env}"
 

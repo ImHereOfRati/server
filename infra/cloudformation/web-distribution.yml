@@ -59,6 +59,33 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
+  # React Router owns navigation below /app.  S3 REST origins do not provide
+  # an index-document fallback for nested object keys, so direct visits such
+  # as /app/friend would otherwise become S3 AccessDenied responses.
+  AppSpaRewriteFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: imhere-app-spa-rewrite
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Rewrite browser app routes to the React entry document.
+        Runtime: cloudfront-js-2.0
+      FunctionCode: |
+        function handler(event) {
+          var request = event.request;
+          var uri = request.uri;
+          if (
+            uri === '/app' ||
+            uri === '/app/' ||
+            (uri.indexOf('/app/') === 0 &&
+              uri.indexOf('/app/assets/') !== 0 &&
+              uri.indexOf('/app/releases/') !== 0)
+          ) {
+            request.uri = '/app/index.html';
+          }
+          return request;
+        }
+
   WebDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -109,6 +136,9 @@ Resources:
           CachedMethods: [GET, HEAD]
           Compress: true
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # Managed-CachingOptimized
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt AppSpaRewriteFunction.FunctionARN
 
         CacheBehaviors:
           # 커밋 주소가 경로에 박힌 불변 산출물. 1년 캐시.

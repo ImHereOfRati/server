@@ -31,6 +31,12 @@ class AuthService(
         val user = userLookupContract.findByEmailOrNull(userInformation.email)
             ?: registerNewUser(userInformation, provider)
 
+        if (user.oauthProvider != provider ||
+            (user.oidcSubject != null && user.oidcSubject != userInformation.sub)
+        ) {
+            AuthException.OIDC_FORMAT_INVALID.throwIt()
+        }
+
         validateLoginable(user.status)
         return tokenProviderPort.issue(JwtTokenClaims.fromUser(user))
     }

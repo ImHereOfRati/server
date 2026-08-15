@@ -66,6 +66,27 @@ class RefreshControllerIntegrationTest : WebIntegrationTestSupport() {
     }
 
     @Test
+    @DisplayName("리프레시 성공 후 이전 토큰은 다시 사용할 수 없다")
+    fun refreshRejectsReusedTokenAfterRotation() {
+        val email = "refresh-rotation@example.com"
+        val savedUser = userRepository.save(User(email, "Refresh Rotation", OAuth2Provider.KAKAO).activate())
+        val initialToken = tokenProviderPort.issue(JwtTokenClaims.fromUser(UserResult.fromDomain(savedUser)))
+        val request = jsonMapper.writeValueAsString(TokenRefreshRequest(initialToken.refreshToken))
+
+        mockMvc.perform(
+            post("/api/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(request)
+        ).andExpect(status().isOk)
+
+        mockMvc.perform(
+            post("/api/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(request)
+        ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
     @DisplayName("유효하지 않은 리프레시 토큰으로 재발급 시 401 Unauthorized와 에러를 반환하며 문서화한다")
     fun refreshFailWhenTokenInvalid() {
         val request = TokenRefreshRequest(refreshToken = "invalid-refresh-token")

@@ -86,6 +86,15 @@ class ImHereJjwtParserAdapterTest {
     }
 
     @Test
+    fun parseAccessToken_rejects_refresh_token() {
+        val refreshToken = TestJwtBuilder.buildImHereRefreshToken("test@example.com", "testUser")
+
+        assertThrows<UnauthorizedException> {
+            imHereJjwtParserAdapter.parseAccessToken(refreshToken)
+        }
+    }
+
+    @Test
     @DisplayName("유효한 토큰인 경우 validate 결과가 true를 반환한다")
     fun validate_success() {
         // given

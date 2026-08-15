@@ -21,7 +21,7 @@ ImHereServer 문서를 **어떤 축으로 읽어야 하는지** 정리한 인덱
 | 순서 | 문서 | 범위 |
 |---|---|---|
 | 1 | [architecture/README.md](architecture/README.md) | 구조, 도메인, 내부 아키텍처 |
-| 2 | [security/README.md](security/README.md) | OIDC, JWT, Admin OTT |
+| 2 | [security/README.md](security/README.md) | OIDC, JWT, 관리자 계정 인증 |
 | 3 | [flows/README.md](flows/README.md) | 인증/회원, 친구, 알림, 앱 실전 흐름 |
 | 4 | [conventions/README.md](conventions/README.md) | 에러 처리, Kotlin 구현 관례, 테스트 |
 | 5 | [infra/README.md](infra/README.md) | AWS, Docker, nginx, CI/CD, DB 스키마 |

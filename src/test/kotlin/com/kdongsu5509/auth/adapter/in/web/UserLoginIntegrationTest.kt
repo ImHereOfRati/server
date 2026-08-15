@@ -51,23 +51,4 @@ class UserLoginIntegrationTest : WebIntegrationTestSupport() {
             .andExpect(status().isOk)
     }
 
-    @Test
-    @DisplayName("관리자는 관리자 페이지에 접근할 수 있다")
-    fun adminCanAccessAdminPages() {
-        mockMvc.perform(
-            get("/admin")
-                .with(user(adminDetails))
-        )
-            .andExpect(status().isOk)
-    }
-
-    @Test
-    @DisplayName("일반 사용자는 관리자 페이지에 접근할 수 없다")
-    fun normalUserCannotAccessAdminPages() {
-        mockMvc.perform(
-            get("/admin")
-                .with(user(userDetails))
-        )
-            .andExpect(status().isForbidden)
-    }
 }

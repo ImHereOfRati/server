@@ -86,7 +86,7 @@ class JwtAuthenticationFilterTest {
 
         val claims = JwtTokenClaims(UUID.randomUUID(), "test@test.com", "Tester", "ROLE_USER", "ACTIVE")
         whenever(tokenParser.validate("validToken")).thenReturn(true)
-        whenever(tokenParser.parse("validToken")).thenReturn(claims)
+        whenever(tokenParser.parseAccessToken("validToken")).thenReturn(claims)
 
         filter.doFilter(request, response, filterChain)
 
@@ -105,7 +105,7 @@ class JwtAuthenticationFilterTest {
 
         val claims = JwtTokenClaims(UUID.randomUUID(), "test@test.com", "Tester", "ROLE_USER", "DISABLED")
         whenever(tokenParser.validate("validToken")).thenReturn(true)
-        whenever(tokenParser.parse("validToken")).thenReturn(claims)
+        whenever(tokenParser.parseAccessToken("validToken")).thenReturn(claims)
 
         filter.doFilter(request, response, filterChain)
 
@@ -152,7 +152,7 @@ class JwtAuthenticationFilterTest {
         val response = MockHttpServletResponse()
 
         whenever(tokenParser.validate("validToken")).thenReturn(true)
-        whenever(tokenParser.parse("validToken")).thenThrow(IllegalStateException("claims broken"))
+        whenever(tokenParser.parseAccessToken("validToken")).thenThrow(IllegalStateException("claims broken"))
 
         filter.doFilter(request, response, filterChain)
 
@@ -169,7 +169,7 @@ class JwtAuthenticationFilterTest {
         val response = MockHttpServletResponse()
 
         whenever(tokenParser.validate("validToken")).thenReturn(true)
-        whenever(tokenParser.parse("validToken")).thenThrow(ImHereBaseException(AuthException.IMHERE_EXPIRED_TOKEN))
+        whenever(tokenParser.parseAccessToken("validToken")).thenThrow(ImHereBaseException(AuthException.IMHERE_EXPIRED_TOKEN))
 
         filter.doFilter(request, response, filterChain)
 

@@ -90,7 +90,7 @@ class JwtAuthenticationFilter(
     }
 
     private fun createAuthentication(jwt: String, request: HttpServletRequest): UsernamePasswordAuthenticationToken {
-        val claims = tokenParser.parse(jwt)
+        val claims = tokenParser.parseAccessToken(jwt)
         val userDetails = ImHereUserDetails(
             userId = claims.uid,
             email = claims.email,

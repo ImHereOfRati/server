@@ -9,5 +9,4 @@ enum class AlertChannel {
 
     SERVER_ERROR,
 
-    ADMIN_OTT,
 }

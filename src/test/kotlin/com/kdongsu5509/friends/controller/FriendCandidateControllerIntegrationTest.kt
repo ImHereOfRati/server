@@ -15,7 +15,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields
+import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
@@ -57,7 +57,7 @@ class FriendCandidateControllerIntegrationTest : WebIntegrationTestSupport() {
                             parameterWithName("page").description("페이지 번호 (0부터 시작)").optional(),
                             parameterWithName("size").description("페이지 크기").optional()
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                             fieldWithPath("imhereResponseCode").description("응답 코드"),
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data.content[].id").description("사용자 ID"),

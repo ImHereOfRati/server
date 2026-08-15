@@ -42,7 +42,7 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
         nonce: String
     ) {
         verifyIssuer(payload.iss, allowedIssuers)
-        verifyAudience(payload.aud, allowedAudiences)
+        verifyAudience(payload.audiences, allowedAudiences)
         verifyNonce(payload.nonce, nonce)
     }
 
@@ -68,8 +68,8 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
         }
     }
 
-    private fun verifyAudience(actualAudience: String, allowedAudiences: Collection<String>) {
-        if (allowedAudiences.isEmpty() || actualAudience !in allowedAudiences) {
+    private fun verifyAudience(actualAudiences: Collection<String>, allowedAudiences: Collection<String>) {
+        if (actualAudiences.isEmpty() || allowedAudiences.none { it in actualAudiences }) {
             AuthException.OIDC_FORMAT_INVALID.throwIt()
         }
     }

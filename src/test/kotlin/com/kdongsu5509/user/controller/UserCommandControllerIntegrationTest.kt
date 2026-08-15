@@ -73,10 +73,10 @@ class UserCommandControllerIntegrationTest : WebIntegrationTestSupport() {
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "users-update-me-success",
                     snippets = arrayOf(
-                        relaxedRequestFields(
+                        requestFields(
                             fieldWithPath("nickname").description("변경할 닉네임 (최대 5자)").optional()
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                             fieldWithPath("imhereResponseCode").description("응답 코드"),
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data.id").description("사용자 ID (UUID)"),

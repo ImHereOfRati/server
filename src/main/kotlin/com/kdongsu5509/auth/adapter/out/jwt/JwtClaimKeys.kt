@@ -2,6 +2,7 @@ package com.kdongsu5509.auth.adapter.out.jwt
 
 object JwtClaimKeys {
     const val CLAIM_CATEGORY = "category"
+    const val CLAIM_TOKEN_ID = "jti"
     const val ACCESS_TOKEN = "access"
     const val REFRESH_TOKEN = "refresh"
     const val CLAIM_USER_ID = "uid"

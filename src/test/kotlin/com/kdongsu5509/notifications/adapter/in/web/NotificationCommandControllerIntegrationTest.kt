@@ -69,14 +69,14 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "notifications-send-success",
                     snippets = arrayOf(
-                        relaxedRequestFields(
+                        requestFields(
                             fieldWithPath("notificationMethod").description("발송 방식"),
                             fieldWithPath("targetIds").description("대상 식별자 목록"),
                             fieldWithPath("type").description("알림 타입"),
                             fieldWithPath("isClientAllowedType").ignored(),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                             fieldWithPath("imhereResponseCode").description("응답 코드"),
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data").description("없음").optional()
@@ -112,14 +112,14 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "notifications-send-multiple-success",
                     snippets = arrayOf(
-                        relaxedRequestFields(
+                        requestFields(
                             fieldWithPath("notificationMethod").description("발송 방식"),
                             fieldWithPath("targetIds").description("대상 식별자 목록"),
                             fieldWithPath("type").description("알림 타입"),
                             fieldWithPath("isClientAllowedType").ignored(),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                             fieldWithPath("imhereResponseCode").description("응답 코드"),
                             fieldWithPath("message").description("응답 메시지"),
                             fieldWithPath("data").description("없음").optional()
@@ -165,14 +165,14 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "notifications-send-fail-blank-target-id",
                     snippets = arrayOf(
-                        relaxedRequestFields(
+                        requestFields(
                             fieldWithPath("notificationMethod").description("발송 방식"),
                             fieldWithPath("targetIds").description("대상 식별자 목록"),
                             fieldWithPath("type").description("알림 타입"),
                             fieldWithPath("isClientAllowedType").ignored(),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                             fieldWithPath("imhereResponseCode").description("에러 코드"),
                             fieldWithPath("message").description("에러 메시지"),
                             fieldWithPath("data").description("없음").optional()
@@ -199,14 +199,14 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "notifications-send-fail-empty-target-ids",
                     snippets = arrayOf(
-                        relaxedRequestFields(
+                        requestFields(
                             fieldWithPath("notificationMethod").description("발송 방식"),
                             fieldWithPath("targetIds").description("대상 식별자 목록"),
                             fieldWithPath("type").description("알림 타입"),
                             fieldWithPath("isClientAllowedType").ignored(),
                             subsectionWithPath("extraData").description("추가 데이터").optional()
                         ),
-                        relaxedResponseFields(
+                        responseFields(
                             fieldWithPath("imhereResponseCode").description("에러 코드"),
                             fieldWithPath("message").description("에러 메시지"),
                             fieldWithPath("data").description("없음").optional()
@@ -234,7 +234,7 @@ class NotificationCommandControllerIntegrationTest : WebIntegrationTestSupport()
                 MockMvcRestDocumentationWrapper.document(
                     identifier = "notifications-send-fail-missing-notification-method",
                     snippets = arrayOf(
-                        relaxedRequestFields(
+                        requestFields(
                             fieldWithPath("notificationMethod").description("발송 방식").type(JsonFieldType.STRING)
                                 .optional(),
                             fieldWithPath("targetIds").description("대상 식별자 목록"),

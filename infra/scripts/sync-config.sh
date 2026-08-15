@@ -7,9 +7,9 @@ usage() {
 Usage: sync-config.sh [--output-dir DIR] [--repo-url URL] [--branch BRANCH]
 
 Copies env/*.env and imhereFirebaseKey.json from the private config repo into the
-given output directory. Defaults to the current GitHub repo contract.
+given output directory.
 
-Expected config repo layout (see config-example/ in this repo):
+Expected config repo layout:
 
   env/app.env
   env/web.env
@@ -78,7 +78,7 @@ shopt -u nullglob
 
 if [[ ${#env_files[@]} -eq 0 ]]; then
   echo "No env/*.env files found in config repo." >&2
-  echo "Expected layout is documented in config-example/README.md." >&2
+  echo "Expected layout is env/*.env plus imhereFirebaseKey.json in the config repo." >&2
   exit 1
 fi
 

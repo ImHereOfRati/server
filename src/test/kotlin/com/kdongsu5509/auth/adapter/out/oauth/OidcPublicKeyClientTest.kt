@@ -4,12 +4,10 @@ import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKeyResponse
 import com.kdongsu5509.shared.cache.CachePort
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.whenever
 import org.springframework.web.client.RestClient
@@ -18,63 +16,42 @@ import java.time.Duration
 @ExtendWith(MockitoExtension::class)
 class OidcPublicKeyClientTest {
 
-    @Mock
-    private lateinit var oidcPublicKeyApiClient: OidcPublicKeyApiClient
-
-    @Mock
-    private lateinit var restClientBuilder: RestClient.Builder
-
-    @Mock
-    private lateinit var cachePort: CachePort
+    @Mock private lateinit var restClientBuilder: RestClient.Builder
+    @Mock private lateinit var restClient: RestClient
+    @Mock private lateinit var request: RestClient.RequestHeadersUriSpec<*>
+    @Mock private lateinit var response: RestClient.ResponseSpec
+    @Mock private lateinit var cachePort: CachePort
 
     private lateinit var client: OidcPublicKeyClient
 
     @BeforeEach
     fun setUp() {
-        client = OidcPublicKeyClient(oidcPublicKeyApiClient, restClientBuilder, cachePort)
+        client = OidcPublicKeyClient(restClientBuilder, cachePort)
     }
 
     @Test
-    @DisplayName("fetch 호출 시 캐시에 값이 없으면 ApiClient를 통해 OIDCPublicKeyResponse를 가져와 캐싱한다")
-    fun fetchWhenCacheEmpty() {
-        val mockResponse = OIDCPublicKeyResponse(keys = emptyList())
-        val key = "kakaoOidcKeys::kakaoPublicKeySet"
+    fun fetch_uses_configured_jwks_uri_for_any_provider() {
+        val key = "provider-jwks"
+        val uri = "https://example.com/.well-known/jwks.json"
+        val result = OIDCPublicKeyResponse(keys = emptyList())
         whenever(cachePort.find(key, OIDCPublicKeyResponse::class.java)).thenReturn(null)
-        whenever(oidcPublicKeyApiClient.fetchKakaoPublicKey()).thenReturn(mockResponse)
+        whenever(restClientBuilder.build()).thenReturn(restClient)
+        whenever(restClient.get()).thenReturn(request)
+        whenever(request.uri(uri)).thenReturn(request)
+        whenever(request.retrieve()).thenReturn(response)
+        whenever(response.body(OIDCPublicKeyResponse::class.java)).thenReturn(result)
 
-        val result = client.fetch(key, "https://kauth.kakao.com/.well-known/jwks.json")
-
-        assertThat(result).isSameAs(mockResponse)
-        verify(cachePort).find(key, OIDCPublicKeyResponse::class.java)
-        verify(oidcPublicKeyApiClient).fetchKakaoPublicKey()
-        verify(cachePort).save(key, mockResponse, Duration.ofDays(8))
+        assertThat(client.fetch(key, uri)).isSameAs(result)
+        verify(request).uri(uri)
+        verify(cachePort).save(key, result, Duration.ofDays(8))
     }
 
     @Test
-    @DisplayName("fetch 호출 시 캐시에 값이 있으면 ApiClient를 호출하지 않고 캐시 값을 반환한다")
-    fun fetchWhenCachePresent() {
-        val mockResponse = OIDCPublicKeyResponse(keys = emptyList())
-        val key = "kakaoOidcKeys::kakaoPublicKeySet"
-        whenever(cachePort.find(key, OIDCPublicKeyResponse::class.java)).thenReturn(mockResponse)
+    fun fetch_returns_cached_value_without_remote_call() {
+        val key = "provider-jwks"
+        val result = OIDCPublicKeyResponse(keys = emptyList())
+        whenever(cachePort.find(key, OIDCPublicKeyResponse::class.java)).thenReturn(result)
 
-        val result = client.fetch(key, "https://kauth.kakao.com/.well-known/jwks.json")
-
-        assertThat(result).isSameAs(mockResponse)
-        verify(cachePort).find(key, OIDCPublicKeyResponse::class.java)
-        verifyNoInteractions(oidcPublicKeyApiClient)
-    }
-
-    @Test
-    @DisplayName("refresh 호출 시 ApiClient를 통해 새로운 OIDCPublicKeyResponse를 가져와 캐싱한다")
-    fun refresh() {
-        val mockResponse = OIDCPublicKeyResponse(keys = emptyList())
-        val key = "kakaoOidcKeys::kakaoPublicKeySet"
-        whenever(oidcPublicKeyApiClient.fetchKakaoPublicKey()).thenReturn(mockResponse)
-
-        val result = client.refresh(key, "https://kauth.kakao.com/.well-known/jwks.json")
-
-        assertThat(result).isSameAs(mockResponse)
-        verify(oidcPublicKeyApiClient).fetchKakaoPublicKey()
-        verify(cachePort).save(key, mockResponse, Duration.ofDays(8))
+        assertThat(client.fetch(key, "https://example.com/keys")).isSameAs(result)
     }
 }

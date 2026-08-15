@@ -4,6 +4,7 @@ import com.common.testsupport.TestJwtBuilder
 import com.common.testsupport.jwt.OidcTestJwtProvider
 import com.kdongsu5509.auth.application.service.dto.OIDCDecodePayload
 import com.kdongsu5509.support.exception.type.UnauthorizedException
+import io.jsonwebtoken.Jwts
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -103,6 +104,37 @@ class JjwtOIDCTokenVerifyAdapterTest {
             listOf("https://appleid.apple.com"),
             listOf("web-service-id", "ios-bundle-id"),
             "test-nonce"
+        )
+    }
+
+    @Test
+    @DisplayName("Google ID 토큰의 서명과 issuer/audience를 검증한다")
+    fun verifyGoogleIdToken() {
+        val token = OidcTestJwtProvider.buildGoogleIdToken()
+        val publicKey = OidcTestJwtProvider.keyPair.public as java.security.interfaces.RSAPublicKey
+        val nonce = Jwts.parser().verifyWith(publicKey).build().parseSignedClaims(token).payload["nonce"] as String
+
+        val result = jjwtOIDCTokenVerifyAdapter.verifySignature(
+            token,
+            java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey.modulus.toByteArray().dropWhile { it == 0.toByte() }.toByteArray()),
+            java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey.publicExponent.toByteArray().dropWhile { it == 0.toByte() }.toByteArray())
+        )
+
+        assertThat(result.payload.issuer).isEqualTo(OidcTestJwtProvider.GOOGLE_PAYLOAD_ISS)
+        assertThat(result.payload.audience).contains(OidcTestJwtProvider.GOOGLE_PAYLOAD_AUD)
+        jjwtOIDCTokenVerifyAdapter.verifyPayLoad(
+            OIDCDecodePayload(
+                iss = result.payload.issuer,
+                aud = result.payload.audience.first(),
+                audiences = result.payload.audience,
+                sub = result.payload.subject,
+                nonce = nonce,
+                email = result.payload["email"] as String,
+                nickname = null
+            ),
+            listOf(OidcTestJwtProvider.GOOGLE_PAYLOAD_ISS, "accounts.google.com"),
+            listOf(OidcTestJwtProvider.GOOGLE_PAYLOAD_AUD),
+            nonce
         )
     }
 

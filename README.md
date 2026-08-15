@@ -406,7 +406,6 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 - runtime `env/*.env` (config repo)
 - `infra/scripts/sync-config.sh`
 - `infra/scripts/remote-provision.sh` / `remote-tls.sh` / `remote-rollout.sh` / `remote-healthcheck.sh`
-- `config-example/` (런타임 env 템플릿, 값은 빈칸)
 - `secrets/`
 
 ---
@@ -425,7 +424,7 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 ### 런타임 설정
 
 - `env/app.env`, `env/web.env`, `env/oidc.env`, `env/external.env`, `env/observability.env`
-  (관심사별로 쪼개져 있고 컨테이너마다 필요한 것만 주입된다 — `config-example/README.md`)
+  (관심사별로 쪼개져 있고 컨테이너마다 필요한 것만 주입된다 — private config repo의 `env/`)
 - `secrets/imhereFirebaseKey.json`
 
 ### config repo
@@ -517,7 +516,7 @@ docker compose --profile local up -d
 |----------------------------------------------------------------|--------------------------------------------------------|
 | [docs/README.md](./docs/README.md)                             | 문서 전체 인덱스                                               |
 | [docs/architecture/](./docs/architecture/README.md)            | 시스템 토폴로지, 모듈 내부 구조, 도메인 비즈니스 규칙                          |
-| [docs/security/](./docs/security/README.md)                    | OIDC/JWT/Admin OTT 인증 정책                                |
+| [docs/security/](./docs/security/README.md)                    | OIDC/JWT/관리자 계정 인증 정책                              |
 | [docs/conventions/](./docs/conventions/README.md)              | Kotlin 컨벤션, 에러 응답 포맷, 테스트 전략                            |
 | [docs/flows/](./docs/flows/README.md)                          | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/재발송)                          |
 | [docs/infra/](./docs/infra/README.md)                          | Docker, CI/CD, AWS, nginx, 가비아 도메인/DB 호스팅, DB 스키마       |

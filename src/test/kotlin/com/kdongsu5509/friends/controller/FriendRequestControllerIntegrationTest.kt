@@ -1,6 +1,8 @@
 package com.kdongsu5509.friends.controller
 
 import com.common.testsupport.WebIntegrationTestSupport
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
+import com.epages.restdocs.apispec.ResourceSnippetParameters
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.domain.FriendRelationStatus
 import com.kdongsu5509.friends.repository.jpa.FriendRelationJpaEntity
@@ -23,6 +25,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.LocalDateTime
 
 class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
+
+    private fun documentation(identifier: String) =
+        MockMvcRestDocumentationWrapper.document(
+            identifier,
+            ResourceSnippetParameters.builder().description("친구 요청 성공·실패 케이스")
+        )
 
     @Autowired
     private lateinit var userRepository: SpringDataUserRepository
@@ -48,6 +56,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(csrf())
         ).andExpect(status().isOk)
             .andExpect(jsonPath("$.data.friendRequestId").exists())
+            .andDo(documentation("friend-request-create-success"))
 
         // then: 방향은 initiatedUserId가 들고 있다.
         val saved = relations().single()
@@ -73,6 +82,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(csrf())
         ).andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-000"))
+            .andDo(documentation("friend-request-create-self"))
 
         assertThat(relations()).isEmpty()
     }
@@ -94,6 +104,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(csrf())
         ).andExpect(status().isConflict)
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-501"))
+            .andDo(documentation("friend-request-create-conflict"))
 
         assertThat(relations()).hasSize(1)
     }
@@ -134,6 +145,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(csrf())
         ).andExpect(status().isUnprocessableEntity)
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-700"))
+            .andDo(documentation("friend-request-create-blocked"))
     }
 
     @Test
@@ -193,6 +205,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
             .andExpect(jsonPath("$.data.friend.email").value(sender.email))
             // 별칭은 상대 닉네임으로 채워진다. 내 칸에는 상대 닉네임이 들어간다.
             .andExpect(jsonPath("$.data.friendAlias").value(sender.nickname))
+            .andDo(documentation("friend-request-accept-success"))
 
         // then: 관계는 새로 생기지 않고 같은 행의 상태만 바뀐다.
         val accepted = relations().single()
@@ -239,6 +252,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
             .andExpect(jsonPath("$.data.restrictor.email").value(me.email))
             .andExpect(jsonPath("$.data.restricted.email").value(sender.email))
             .andExpect(jsonPath("$.data.type").value("REJECTED"))
+            .andDo(documentation("friend-request-reject-success"))
 
         val rejected = relations().single()
         assertThat(rejected.status).isEqualTo(FriendRelationStatus.REJECTED)

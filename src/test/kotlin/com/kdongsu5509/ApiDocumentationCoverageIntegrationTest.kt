@@ -91,6 +91,6 @@ class ApiDocumentationCoverageIntegrationTest : WebIntegrationTestSupport() {
         MockMvcRestDocumentationWrapper.document(
             identifier,
             ResourceSnippetParameters.builder()
-                .description("API route and authentication contract")
+                .description("API 경로, 인증 요구사항, 정상 처리와 실패 처리 계약")
         )
 }

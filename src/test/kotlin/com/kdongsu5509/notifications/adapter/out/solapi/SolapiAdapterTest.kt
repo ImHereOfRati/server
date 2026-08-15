@@ -56,6 +56,36 @@ class SolapiAdapterTest {
     }
 
     @Test
+    fun send_providerFailureResponse_isReturnedAsFailure() {
+        val sms = SMS("TestSender", "01011112222", "[ImHere]\nTestLocation")
+        val sendMethod = DefaultMessageService::class.java.methods.find {
+            it.name == "send" && it.parameterTypes.size == 2 && it.parameterTypes[0] == Message::class.java
+        }!!
+        val detailClass = Class.forName(
+            "com.solapi.sdk.message.dto.response.MultipleDetailMessageSentResponse\$MessageList"
+        )
+        val detail = mock(detailClass, withSettings().defaultAnswer { invocation ->
+            when (invocation.method.name) {
+                "getStatusCode", "statusCode", "getStatusCode\$solapi_messaging" -> "4004"
+                "getStatusMessage", "statusMessage", "getStatusMessage\$solapi_messaging" -> "Invalid recipient"
+                else -> null
+            }
+        })
+        val providerResponse = mock(sendMethod.returnType, withSettings().defaultAnswer { invocation ->
+            when (invocation.method.name) {
+                "getMessageList", "messageList", "getMessageList\$solapi_messaging" -> listOf(detail)
+                else -> null
+            }
+        })
+        Mockito.doReturn(providerResponse).`when`(solapiService).send(any<Message>(), isNull())
+
+        val result = adapter.send(sms)
+
+        assertThat(result.status).isEqualTo(MessageSendResult.FAIL_STATUS)
+        assertThat(result.message).contains("4004", "Invalid recipient")
+    }
+
+    @Test
     @DisplayName("단일 문자 발송 실패 시 fail 응답을 반환한다")
     fun send_fail() {
         val sms = SMS("TestSender", "01011112222", "[ImHere]\nTestLocation 도착")

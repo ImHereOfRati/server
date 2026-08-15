@@ -1,6 +1,8 @@
 package com.kdongsu5509.friends.controller
 
 import com.common.testsupport.WebIntegrationTestSupport
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
+import com.epages.restdocs.apispec.ResourceSnippetParameters
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.domain.FriendRelation
 import com.kdongsu5509.friends.domain.FriendRelationStatus
@@ -29,6 +31,12 @@ import java.util.*
 
 class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
 
+    private fun documentation(identifier: String) =
+        MockMvcRestDocumentationWrapper.document(
+            identifier,
+            ResourceSnippetParameters.builder().description("친구 차단 성공·실패 케이스")
+        )
+
     @Autowired
     private lateinit var userRepository: SpringDataUserRepository
 
@@ -50,6 +58,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isOk)
+            .andDo(documentation("friend-restriction-create-success"))
             .andExpect(jsonPath("$.data.type").value("BLOCKED"))
             .andExpect(jsonPath("$.data.restrictor.email").value(me.email))
             .andExpect(jsonPath("$.data.restricted.email").value(target.email))
@@ -103,6 +112,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isBadRequest)
+            .andDo(documentation("friend-restriction-create-bad-request"))
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-007"))
 
         assertThat(relations()).isEmpty()
@@ -143,6 +153,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
         // when & then
         mockMvc.perform(get("/api/friends/restrictions").with(user(principalOf(me))))
             .andExpect(status().isOk)
+            .andDo(documentation("friend-restrictions-read-success"))
             .andExpect(jsonPath("$.data.content.length()").value(2))
             .andExpect(jsonPath("$.data.content[*].restrictor.email").value(containsInAnyOrder(me.email, me.email)))
             .andExpect(
@@ -215,6 +226,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isForbidden)
+            .andDo(documentation("friend-restriction-delete-forbidden"))
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-200"))
 
         assertThat(relations()).hasSize(1)
@@ -234,6 +246,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isBadRequest)
+            .andDo(documentation("friend-restriction-delete-bad-request"))
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-008"))
 
         assertThat(relations()).hasSize(1)

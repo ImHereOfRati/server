@@ -1,6 +1,8 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.common.testsupport.WebIntegrationTestSupport
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
+import com.epages.restdocs.apispec.ResourceSnippetParameters
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
 import com.kdongsu5509.notifications.domain.Notification
@@ -45,6 +47,7 @@ class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
             .andExpect(jsonPath("$.data[0].id").value(sentFcm.id))
             .andExpect(jsonPath("$.data[0].senderAlias").value("sender"))
             .andExpect(jsonPath("$.data[0].type").value(NotificationType.FRIEND_REQUEST_RECEIVED.name))
+            .andDo(documentation("notifications-read-success"))
     }
 
     @Test
@@ -62,6 +65,7 @@ class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(csrf())
                 .with(user(userDetails))
         ).andExpect(status().isNoContent)
+            .andDo(documentation("notifications-read-mark-success"))
 
         assertThat(persistencePort.findById(requireNotNull(sent.id))!!.isRead).isTrue()
     }
@@ -76,5 +80,11 @@ class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
                 senderAlias = "sender",
             ),
             bodyOverride = if (method == NotificationMethod.SMS) "문자 본문" else null,
+        )
+
+    private fun documentation(identifier: String) =
+        MockMvcRestDocumentationWrapper.document(
+            identifier,
+            ResourceSnippetParameters.builder().description("알림 성공 케이스")
         )
 }

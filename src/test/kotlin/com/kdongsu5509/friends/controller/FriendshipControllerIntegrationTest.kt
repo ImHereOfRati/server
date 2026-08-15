@@ -1,6 +1,8 @@
 package com.kdongsu5509.friends.controller
 
 import com.common.testsupport.WebIntegrationTestSupport
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
+import com.epages.restdocs.apispec.ResourceSnippetParameters
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.domain.FriendRelationStatus
 import com.kdongsu5509.friends.repository.jpa.FriendRelationJpaEntity
@@ -23,6 +25,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
 
+    private fun documentation(identifier: String) =
+        MockMvcRestDocumentationWrapper.document(
+            identifier,
+            ResourceSnippetParameters.builder().description("친구 관계 성공·실패 케이스")
+        )
+
     @Autowired
     private lateinit var userRepository: SpringDataUserRepository
 
@@ -43,6 +51,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         mockMvc.perform(get("/api/friendships").with(user(principalOf(me))))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.content.length()").value(1))
+            .andDo(documentation("friendships-read-success"))
             .andExpect(jsonPath("$.data.content[0].owner.email").value(me.email))
             .andExpect(jsonPath("$.data.content[0].friend.email").value(friend.email))
             .andExpect(jsonPath("$.data.content[0].friendAlias").value("친구"))
@@ -111,6 +120,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         mockMvc.perform(get("/api/friendships/${relation.id}").with(user(principalOf(me))))
             .andExpect(status().isForbidden)
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-200"))
+            .andDo(documentation("friendship-detail-forbidden"))
     }
 
     @Test
@@ -156,6 +166,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(csrf())
         ).andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-001"))
+            .andDo(documentation("friendship-alias-bad-request"))
 
         assertThat(aliasOf(reload(relation), me)).isEqualTo("내별칭")
     }
@@ -196,6 +207,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isNoContent)
+            .andDo(documentation("friendship-delete-success"))
 
         relationRepository.flush()
         assertThat(relationRepository.findAll()).isEmpty()

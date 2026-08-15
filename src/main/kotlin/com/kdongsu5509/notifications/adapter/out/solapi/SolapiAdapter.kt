@@ -28,7 +28,7 @@ class SolapiAdapter(
                 null
             )
             log.info("단일 문자 발송 성공: {}", response)
-            MessageSendResult.success()
+            responseResult(response)
         } catch (e: Exception) {
             handleException("단일 발송", e)
         }
@@ -68,6 +68,40 @@ class SolapiAdapter(
         text = sms.body
     )
 
+    /** Solapi may report provider failures in a normal response. */
+    private fun responseResult(response: Any): MessageSendResult {
+        val detail = responseObject(response, "getMessageList", "messageList", "getMessageList\$solapi_messaging")
+            ?.let { (it as? Iterable<*>)?.firstOrNull() }
+        val source = detail ?: response
+        val statusCode = responseValue(source, "getStatusCode", "statusCode", "getStatusCode\$solapi_messaging")
+        if (statusCode == null || statusCode in SUCCESS_STATUS_CODES) {
+            return MessageSendResult.success()
+        }
+
+        val statusMessage = responseValue(source, "getStatusMessage", "statusMessage", "getStatusMessage\$solapi_messaging")
+        return MessageSendResult.fail("[${statusCode}] ${statusMessage ?: "Solapi 메시지 발송 실패"}")
+    }
+
+    private fun responseObject(response: Any, vararg methodNames: String): Any? {
+        for (methodName in methodNames) {
+            val value = response.javaClass.methods
+                .firstOrNull { it.parameterCount == 0 && it.name == methodName }
+                ?.let { runCatching { it.invoke(response) }.getOrNull() }
+            if (value != null) return value
+        }
+        return null
+    }
+
+    private fun responseValue(response: Any, vararg methodNames: String): String? {
+        for (methodName in methodNames) {
+            val value = response.javaClass.methods
+                .firstOrNull { it.parameterCount == 0 && it.name == methodName }
+                ?.let { runCatching { it.invoke(response)?.toString() }.getOrNull() }
+            if (value != null) return value
+        }
+        return null
+    }
+
     private fun handleException(type: String, e: Exception): MessageSendResult {
         val errorMessage = when (e) {
             is SolapiBadRequestException -> "잘못된 요청: ${e.message}"
@@ -77,5 +111,9 @@ class SolapiAdapter(
         }
         log.error("{} 실패 - {}", type, errorMessage, e)
         return MessageSendResult.fail(errorMessage)
+    }
+
+    private companion object {
+        val SUCCESS_STATUS_CODES = setOf("200", "2000", "4000")
     }
 }

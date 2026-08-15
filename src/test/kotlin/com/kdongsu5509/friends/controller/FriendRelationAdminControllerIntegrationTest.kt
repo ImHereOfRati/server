@@ -1,6 +1,8 @@
 package com.kdongsu5509.friends.controller
 
 import com.common.testsupport.WebIntegrationTestSupport
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
+import com.epages.restdocs.apispec.ResourceSnippetParameters
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.domain.FriendRelation
 import com.kdongsu5509.friends.domain.FriendRelationStatus
@@ -28,6 +30,12 @@ import java.time.LocalDateTime
 
 class FriendRelationAdminControllerIntegrationTest : WebIntegrationTestSupport() {
 
+    private fun documentation(identifier: String) =
+        MockMvcRestDocumentationWrapper.document(
+            identifier,
+            ResourceSnippetParameters.builder().description("관리자 친구 관계 성공·실패 케이스")
+        )
+
     @Autowired
     private lateinit var userRepository: SpringDataUserRepository
 
@@ -50,6 +58,7 @@ class FriendRelationAdminControllerIntegrationTest : WebIntegrationTestSupport()
         // when & then
         mockMvc.perform(get("/api/admin/friend-requests").with(user(admin)))
             .andExpect(status().isOk)
+            .andDo(documentation("admin-friend-requests-success"))
             .andExpect(jsonPath("$.data.content.length()").value(1))
             .andExpect(jsonPath("$.data.content[0].requester.email").value(fixture.requester.email))
             .andExpect(jsonPath("$.data.content[0].receiver.email").value(fixture.receiver.email))
@@ -123,6 +132,7 @@ class FriendRelationAdminControllerIntegrationTest : WebIntegrationTestSupport()
         // when & then
         mockMvc.perform(get("/api/admin/friend-requests").with(user(principalOf(normal))))
             .andExpect(status().isForbidden)
+            .andDo(documentation("admin-friend-requests-forbidden"))
     }
 
     @Test

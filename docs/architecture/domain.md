@@ -1,6 +1,6 @@
 # 도메인 명세
 
-기준 커밋: `5f205036` (main) + 미커밋 정리 작업
+기준 커밋: `b9c864ff` (현재 main)
 
 이 문서는 `user`, `terms`, `agreement`, `friends`, `notifications` 모듈의 도메인 규칙을 다룬다. `maps`는 이 문서의 범위가 아니다.
 
@@ -9,7 +9,7 @@
 # User
 
 - `ImHere`의 사용자
-    - `Google` 또는 `Kakao`에서 정보를 제공받는 방식으로 회원가입할 수 있다.
+    - `Google`, `Kakao` 또는 `Apple`에서 정보를 제공받는 방식으로 회원가입할 수 있다.
     - 회원가입 직후에는 `PENDING` 상태가 된다.
     - 현재 필수 약관에 모두 동의해야 서비스를 이용할 수 있다.
 
@@ -51,15 +51,17 @@
 - `WITHDRAWN`은 최종 상태이며 이후 다른 상태로 변경할 수 없다.
 - 이메일 중복 판정은 `User`가 아니라 무상태 정책 객체인 `EmailRegistrationPolicy`가 담당한다.
 - 사용자를 차단하거나 탈퇴시키면 `UserForceLogoutEvent`를 발행한다. 차단 해제는 발행하지 않는다.
+- 탈퇴 시에는 `UserWithdrawnEvent`도 발행한다. 이 이벤트는 탈퇴한 사용자의 종속 데이터를 정리하기 위한 이벤트다.
+    - notifications 모듈은 이벤트를 받아 해당 사용자의 FCM 토큰과 알림을 삭제한다.
 - 관리자는 사용자 상태를 변경하지 않고 강제 로그아웃 이벤트만 요청할 수도 있다.
 - `UserForceLogoutEvent`는 `@ApplicationModuleListener`를 통해 원본 트랜잭션 커밋 후 비동기로 처리한다.
 - user 모듈의 `UserForceLogoutEventListener`가 이벤트를 처리하고 refresh token version을 증가시켜 기존 refresh token을 무효화한다.
     - 대상 사용자를 찾지 못하면 아무 것도 하지 않고 종료한다.
 - 재발급 시 토큰에 실린 `refreshTokenVersion`과 사용자의 현재 버전이 일치해야 한다. 판정은 `RefreshTokenVersionPolicy`가 한다.
-- Event Publication Registry가 비동기 이벤트의 처리 상태를 기록한다.
-    - `spring.modulith.events.completion-mode: delete` — 성공한 이벤트 발행 기록은 삭제한다.
-    - `spring.modulith.events.republish-outstanding-events-on-restart: true` — 미완료 이벤트는 애플리케이션 재시작 시 다시 발행한다.
-- 현재 Registry를 경유하는 이벤트는 `UserForceLogoutEvent` 하나뿐이다.
+- Event Publication Registry가 `@ApplicationModuleListener`로 처리되는 비동기 이벤트의 처리 상태를 기록한다.
+    - 현재 대상에는 `UserForceLogoutEvent`, `UserWithdrawnEvent`, `NotificationEvent`,
+      `NotificationDeliveryFailed`, `FriendRequestSent`, `FriendRequestAccepted`가 있다.
+    - 성공한 이벤트 기록의 삭제와 미완료 이벤트의 재발행 여부는 실행 환경의 Spring Modulith 이벤트 설정으로 결정한다.
 - 사용자 조회, 등록, 프로필 변경, 상태 전이 책임은 다음과 같이 분리한다.
     - `UserQueryService`: ID 조회, 이메일 nullable 조회, ID 다건 조회, 전체 사용자 Slice 조회, 키워드 검색
     - `UserRegistrationService`: 신규 등록과 이메일 중복 판정
@@ -430,7 +432,7 @@ request() → PENDING ── markSent() ──> SENT ── markAsRead() ──>
 
 | 클래스 | 맡는 일 |
 |-------|--------|
-| `NotificationDeliveryService` | 접수 → 발송자 호칭 결정 → 외부 채널 발송 → 결과 기록·통지까지 발송 경로 전부 |
+| `NotificationDeliveryService` | 이벤트 접수 후 알림 예약 → 발송자 호칭 결정 → 외부 채널 발송 → 결과 기록·통지 |
 | `NotificationService` | 이미 저장된 알림의 조회·읽음·재발송·폐기, 그리고 발송 요청 접수(`NotificationUseCase` 구현) |
 | `FcmTokenEnrollService` | 기기 토큰 등록 |
 
@@ -454,8 +456,9 @@ agreement     ──> user    (UserActivationContract)
 auth          ──> user    (UserLookupContract, UserRegistrationContract, user::domain)
 friends       ──> user    (UserLookupContract, UserResult, user::domain)
 friends       ──> shared  (DomainEventPublisher)
+user          ──> shared  (DomainEventPublisher, UserWithdrawnEvent)
 notifications ──> friends (friends::event, 단방향)
-notifications ──> shared  (DomainEventPublisher)
+notifications ──> shared  (DomainEventPublisher, UserWithdrawnEvent)
 ```
 
 - terms는 어떤 도메인 모듈도 알지 못한다.

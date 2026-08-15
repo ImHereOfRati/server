@@ -1,6 +1,8 @@
 package com.kdongsu5509.notifications.adapter.`in`.web
 
 import com.common.testsupport.WebIntegrationTestSupport
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
+import com.epages.restdocs.apispec.ResourceSnippetParameters
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.notifications.adapter.out.persistence.SpringDataFcmTokenRepository
 import com.kdongsu5509.notifications.adapter.out.persistence.SpringDataNotificationRepository
@@ -23,6 +25,12 @@ import org.springframework.transaction.annotation.Transactional
 
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class FailedNotificationAdminControllerIntegrationTest : WebIntegrationTestSupport() {
+
+    private fun documentation(identifier: String) =
+        MockMvcRestDocumentationWrapper.document(
+            identifier,
+            ResourceSnippetParameters.builder().description("실패 알림 관리자 성공·실패 케이스")
+        )
     @Autowired
     private lateinit var persistencePort: NotificationPersistencePort
 
@@ -51,6 +59,7 @@ class FailedNotificationAdminControllerIntegrationTest : WebIntegrationTestSuppo
 
         mockMvc.perform(get("/api/admin/failed-notifications").with(user(admin)))
             .andExpect(status().isOk)
+            .andDo(documentation("admin-failed-notifications-success"))
             .andExpect(jsonPath("$.data[0].id").value(dead.id))
             .andExpect(jsonPath("$.data[0].status").value("DEAD"))
     }
@@ -125,6 +134,7 @@ class FailedNotificationAdminControllerIntegrationTest : WebIntegrationTestSuppo
                 .with(csrf())
                 .with(user(admin))
         ).andExpect(status().isBadRequest)
+            .andDo(documentation("admin-failed-notification-redelivery-bad-request"))
     }
 
     @Test
@@ -132,6 +142,7 @@ class FailedNotificationAdminControllerIntegrationTest : WebIntegrationTestSuppo
     fun reject_non_admin() {
         mockMvc.perform(get("/api/admin/failed-notifications").with(user(user)))
             .andExpect(status().isForbidden)
+            .andDo(documentation("admin-failed-notifications-forbidden"))
     }
 
     @Test

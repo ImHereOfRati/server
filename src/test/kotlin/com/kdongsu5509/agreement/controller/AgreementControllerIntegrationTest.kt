@@ -1,6 +1,8 @@
 package com.kdongsu5509.agreement.controller
 
 import com.common.testsupport.WebIntegrationTestSupport
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper
+import com.epages.restdocs.apispec.ResourceSnippetParameters
 import com.kdongsu5509.agreement.domain.AgreementStatus
 import com.kdongsu5509.agreement.repository.jpa.AgreementJpaEntity
 import com.kdongsu5509.agreement.repository.jpa.SpringDataAgreementRepository
@@ -29,6 +31,12 @@ import java.time.LocalDateTime
 import java.util.*
 
 class AgreementControllerIntegrationTest : WebIntegrationTestSupport() {
+
+    private fun documentation(identifier: String) =
+        MockMvcRestDocumentationWrapper.document(
+            identifier,
+            ResourceSnippetParameters.builder().description("약관 동의 성공·실패 케이스")
+        )
     @Autowired
     private lateinit var userRepository: SpringDataUserRepository
 
@@ -56,6 +64,7 @@ class AgreementControllerIntegrationTest : WebIntegrationTestSupport() {
             get("/api/agreements")
                 .with(user(userDetails(savedUser.id!!)))
         ).andExpect(status().isOk)
+            .andDo(documentation("agreements-read-success"))
             .andExpect(jsonPath("$.data.length()").value(1))
             .andExpect(jsonPath("$.data[0].termId").value(optionalTerm.id))
             .andExpect(jsonPath("$.data[0].action").value("CONSENT"))
@@ -73,6 +82,7 @@ class AgreementControllerIntegrationTest : WebIntegrationTestSupport() {
             get("/api/agreements")
                 .with(user(userDetails(pendingUser.id!!, PENDING)))
         ).andExpect(status().isForbidden)
+            .andDo(documentation("agreements-read-forbidden"))
     }
 
     @Test
@@ -90,6 +100,7 @@ class AgreementControllerIntegrationTest : WebIntegrationTestSupport() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(consentBody(requiredTerm.id, true))
         ).andExpect(status().isNoContent)
+            .andDo(documentation("agreements-create-success"))
     }
 
     @Test
@@ -184,6 +195,7 @@ class AgreementControllerIntegrationTest : WebIntegrationTestSupport() {
                 .with(csrf())
                 .with(user(userDetails(savedUser.id!!)))
         ).andExpect(status().`is`(422))
+            .andDo(documentation("agreements-renew-unprocessable"))
             .andExpect(jsonPath("$.imhereResponseCode").value("AGREEMENT-701"))
 
         assertThat(agreementRepository.findAll()).isEmpty()
@@ -217,6 +229,7 @@ class AgreementControllerIntegrationTest : WebIntegrationTestSupport() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(consentBody(optionalTerm.id, true))
         ).andExpect(status().isNoContent)
+            .andDo(documentation("agreements-delete-success"))
 
         // when
         mockMvc.perform(

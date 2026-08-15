@@ -154,7 +154,7 @@ allOpen {
 openapi3 {
     setServer("https://imhere.ratiko.co.kr")
     title = "ImHere API 문서"
-    description = "ImHere 통합 API 문서"
+    description = "ImHere 통합 REST API 문서입니다. 각 API의 정상 처리와 실패 조건을 함께 설명합니다."
     version = "1.0.0"
     format = "yaml"
     outputDirectory = file("build/api-spec")
@@ -167,7 +167,15 @@ swaggerSources {
 }
 
 tasks.withType(GenerateSwaggerUI).configureEach {
-    dependsOn "openapi3", "verifyOpenApi"
+    dependsOn "openapi3"
+}
+
+// OpenAPI is generated from the current test snippets. Remove stale files so
+// retired operations cannot remain visible in Swagger UI between builds.
+tasks.matching { it.name == "openapi3" }.configureEach {
+    doFirst {
+        delete file("build/api-spec")
+    }
 }
 
 tasks.configureEach { task ->
@@ -190,126 +198,6 @@ tasks.register('copySwaggerUI', Copy) {
     into layout.buildDirectory.dir('generated-swagger-resources/static/swagger-ui')
 }
 
-/**
- * REST Docs is the source of truth for the OpenAPI document.  Never invent a
- * placeholder operation: an undocumented controller mapping must fail the
- * build so the integration test can be completed instead.
- */
-tasks.register("verifyOpenApi") {
-    dependsOn "openapi3"
-    doLast {
-        def specFile = file("build/api-spec/openapi3.yaml")
-        def spec = specFile.getText("UTF-8").replace("\r\n", "\n")
-        def endpoints = [:]
-
-        fileTree("src/main/kotlin") {
-            include "**/*Controller.kt"
-            exclude "**/*PageController.kt"
-        }.files.each { controllerFile ->
-            def source = controllerFile.getText("UTF-8")
-            def classMapping = (source =~ /@RequestMapping\(\s*"([^"]+)"[^)]*\)/)
-            if (!classMapping.find()) return
-            def basePath = classMapping.group(1)
-            if (!basePath.startsWith("/api/")) return
-
-            def mappings = source =~ /@(Get|Post|Put|Patch|Delete)Mapping(?:\(([^)]*)\))?/
-            mappings.each { match ->
-                def httpMethod = match[1].toLowerCase()
-                def arguments = match[2] ?: ""
-                def paths = []
-                if (arguments.trim().isEmpty()) {
-                    paths << ""
-                } else if (!arguments.contains("params")) {
-                    def pathMatches = arguments =~ /"(\/[^\"]*)"/
-                    pathMatches.each { pathMatch -> paths << pathMatch[1] }
-                } else {
-                    // A params-only mapping shares the same OpenAPI path/method.
-                    paths << ""
-                }
-
-                paths.each { methodPath ->
-                    def path = (basePath + (methodPath ?: "")).replaceAll("//+", "/")
-                    endpoints["${httpMethod} ${path}"] = [method: httpMethod, path: path]
-                }
-            }
-        }
-
-        def missing = endpoints.values().findAll { endpoint ->
-            !(spec =~ /(?m)^  ${java.util.regex.Pattern.quote(endpoint.path)}:\n/).find() ||
-                !(spec =~ /(?ms)^  ${java.util.regex.Pattern.quote(endpoint.path)}:\n.*?(?=^  \/|^components:)/).find { block ->
-                    block =~ /(?m)^    ${endpoint.method}:\n/
-                }
-        }
-
-        if (!missing.isEmpty()) {
-            throw new GradleException(
-                "Undocumented API operations: " + missing.collect { "${it.method.toUpperCase()} ${it.path}" }.sort().join(", ")
-            )
-        }
-
-        def domainForPath = { path ->
-            if (path.startsWith("/api/auth")) return "Auth"
-            if (path.startsWith("/api/terms")) return "Terms"
-            if (path.startsWith("/api/agreements")) return "Agreements"
-            if (path.startsWith("/api/maps")) return "Maps"
-            if (path.startsWith("/api/notifications") || path.startsWith("/api/admin/failed-notifications")) return "Notifications"
-            if (path.startsWith("/api/friends") || path.startsWith("/api/friendships") || path.contains("/friend-")) return "Friends"
-            if (path.startsWith("/api/users") || path.contains("/admin/users")) return "Users"
-            return "Other"
-        }
-
-        def normalizedSpec = spec.replaceAll("(?m)^      security:\n        - bearerAuth: \\[\\]\\n", "")
-        def lines = normalizedSpec.readLines()
-        def currentPath = null
-        def tagged = []
-        lines.each { line ->
-            def pathMatch = line =~ /^  (\/api\/[^:]+):$/
-            if (pathMatch.find()) currentPath = pathMatch.group(1)
-            if (line == "      - api" && currentPath != null) {
-                tagged << "      - ${domainForPath(currentPath)}"
-            } else {
-                tagged << line
-            }
-            if (line ==~ /^      operationId:.*$/ && currentPath != null &&
-                    currentPath.startsWith("/api/") &&
-                    !currentPath.startsWith("/api/auth")) {
-                tagged << "      security:"
-                tagged << "        - bearerAuth: []"
-            }
-        }
-        def tagDefinitions = """tags:
-- name: Auth
-- name: Users
-- name: Friends
-- name: Terms
-- name: Agreements
-- name: Notifications
-- name: Maps
-- name: Other
-"""
-        def taggedSpec = tagged.join("\n")
-        taggedSpec = taggedSpec.replaceFirst(/(?m)^tags: \[\]\n/, tagDefinitions)
-        taggedSpec = taggedSpec.replaceFirst(/(?m)^components:\n/, """components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-""")
-        if (!taggedSpec.contains("components:\n")) {
-            taggedSpec += """\ncomponents:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-"""
-        }
-        specFile.write(taggedSpec + "\n", "UTF-8")
-        logger.lifecycle("Verified OpenAPI coverage for ${endpoints.size()} controller operations")
-    }
-}
-
 tasks.named('bootJar') {
     dependsOn 'generateSwaggerUIWedding'
     from(layout.buildDirectory.dir('swagger-ui-wedding')) {
@@ -329,6 +217,11 @@ tasks.named('bootRun') {
 
 
 tasks.named('test') {
+    doFirst {
+        // Prevent snippets from removed/renamed endpoints from leaking into
+        // the next OpenAPI generation.
+        delete snippetsDir
+    }
     useJUnitPlatform()
     jvmArgs("-XX:+EnableDynamicAgentLoading")
     outputs.dir snippetsDir

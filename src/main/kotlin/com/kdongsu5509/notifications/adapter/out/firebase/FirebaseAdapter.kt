@@ -7,6 +7,7 @@ import com.kdongsu5509.notifications.domain.DeviceType
 import com.kdongsu5509.notifications.domain.PushChannel
 import com.kdongsu5509.notifications.domain.RenderedNotification
 import com.kdongsu5509.notifications.exception.NotificationException
+import com.kdongsu5509.notifications.exception.RetryableFcmException
 import com.kdongsu5509.notifications.exception.UnregisteredTokenException
 import com.kdongsu5509.support.exception.throwIt
 import org.slf4j.LoggerFactory
@@ -131,5 +132,3 @@ class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : Fireba
         const val INTERRUPTION_LEVEL_KEY = "interruption-level"
     }
 }
-
-class RetryableFcmException(message: String, cause: Throwable) : RuntimeException(message, cause)

@@ -14,21 +14,15 @@ import org.springframework.web.bind.annotation.*
 class NotificationCommandController(
     private val notificationUseCase: NotificationUseCase,
 ) {
-
-    companion object {
-        const val SUCCESS_MSG = "알림이 발송 큐에 등록되었습니다."
-    }
-
     @ResponseStatus(ACCEPTED)
     @PostMapping
     fun send(
         @AuthenticationPrincipal user: ImHereUserDetails,
         @Validated @RequestBody request: NotificationRequest
     ): ApiResponse<String> {
-        notificationUseCase.request(
-            request.toCommand(user.nickname, user.requiredUserId)
-        )
+        val notificationCommand = request.toCommand(user.nickname, user.requiredUserId)
+        notificationUseCase.requestDelivery(notificationCommand)
 
-        return ApiResponse.success(SUCCESS_MSG)
+        return ApiResponse.success("알림이 발송 큐에 등록되었습니다.")
     }
 }

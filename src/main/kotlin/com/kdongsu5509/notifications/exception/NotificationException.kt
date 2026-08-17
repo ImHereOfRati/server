@@ -2,7 +2,6 @@ package com.kdongsu5509.notifications.exception
 
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseErrorCode
-import com.kdongsu5509.support.exception.ImHereBaseException
 
 enum class NotificationException(
     category: CommonErrorCode,
@@ -30,16 +29,8 @@ enum class NotificationException(
     FCM_INVALID_ARGUMENT(CommonErrorCode.INTERNAL_SERVER_ERROR, "FCM-900", "FCM 메시지 구성이 올바르지 않습니다."),
     FCM_AUTH_ERROR(CommonErrorCode.INTERNAL_SERVER_ERROR, "FCM-901", "FCM 인증 서버와의 통신 중 오류가 발생했습니다."),
     FCM_UNKNOWN_ERROR(CommonErrorCode.INTERNAL_SERVER_ERROR, "FCM-902", "알 수 없는 FCM 오류가 발생했습니다."),
+    FCM_RETRYABLE_ERROR(CommonErrorCode.INFRA_FAILURE, "FCM-903", "FCM 서버의 일시적 오류로 재시도가 필요합니다."),
     SMS_SEND_FAILED(CommonErrorCode.INTERNAL_SERVER_ERROR, "SMS-900", "SMS 전송 중 외부 서비스 오류가 발생했습니다.");
 
     override val httpStatus = category.httpStatus
 }
-
-class UnregisteredTokenException(
-    message: String = "등록 해제된 FCM 토큰입니다.",
-    cause: Throwable? = null,
-) : ImHereBaseException(
-    errorCode = NotificationException.FCM_TOKEN_UNREGISTERED,
-    overrideMessage = message,
-    cause = cause,
-)

@@ -12,6 +12,7 @@ import com.solapi.sdk.message.model.Message
 import com.solapi.sdk.message.service.DefaultMessageService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.lang.reflect.Method
 
 @Component
 class SolapiAdapter(
@@ -86,7 +87,7 @@ class SolapiAdapter(
         for (methodName in methodNames) {
             val value = response.javaClass.methods
                 .firstOrNull { it.parameterCount == 0 && it.name == methodName }
-                ?.let { runCatching { it.invoke(response) }.getOrNull() }
+                ?.let { invokeOrNull(it, response) }
             if (value != null) return value
         }
         return null
@@ -96,11 +97,21 @@ class SolapiAdapter(
         for (methodName in methodNames) {
             val value = response.javaClass.methods
                 .firstOrNull { it.parameterCount == 0 && it.name == methodName }
-                ?.let { runCatching { it.invoke(response)?.toString() }.getOrNull() }
+                ?.let { invokeOrNull(it, response)?.toString() }
             if (value != null) return value
         }
         return null
     }
+
+    // Solapi 응답 타입이 버전에 따라 달라, 존재할 법한 게터를 차례로 호출해 본다.
+    // 접근 불가/호출 실패는 다음 후보로 넘어가면 되므로 여기서 삼킨다.
+    private fun invokeOrNull(method: Method, response: Any): Any? =
+        try {
+            method.invoke(response)
+        } catch (error: Exception) {
+            log.debug("Solapi 응답 게터 호출 실패 - method={}", method.name, error)
+            null
+        }
 
     private fun handleException(type: String, e: Exception): MessageSendResult {
         val errorMessage = when (e) {

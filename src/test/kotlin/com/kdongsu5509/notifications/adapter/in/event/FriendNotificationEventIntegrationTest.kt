@@ -120,7 +120,7 @@ class FriendNotificationEventIntegrationTest : PersistenceTestSupport() {
         saveToken(receiverId)
         saveToken(senderId)
 
-        notificationUseCase.request(
+        notificationUseCase.requestDelivery(
             NotificationCommand(
                 senderNickname = "보낸이",
                 senderId = senderId,

@@ -10,29 +10,24 @@ import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.shared.event.DomainEventPublisher
 import com.kdongsu5509.support.exception.throwIt
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
+import java.util.*
 
 @Service
+@Transactional(readOnly = true)
 class NotificationService(
     private val persistencePort: NotificationPersistencePort,
-    private val deliveryService: NotificationDeliveryService,
+    private val deliveryFacade: NotificationDeliveryFacade,
     private val eventPublisher: DomainEventPublisher,
 ) : NotificationUseCase {
 
-    // --- 발송 요청 -----------------------------------------------------------
-
-    // 발송 이벤트를 받는 쪽은 @ApplicationModuleListener(= @TransactionalEventListener)라,
-    // 활성 트랜잭션의 커밋 시점에만 깨어난다. 트랜잭션 없이 발행하면 이벤트는 조용히 버려지고
-    // event_publication에도 남지 않아 재발행 대상조차 되지 않는다. 그래서 여기서 경계를 연다.
     @Transactional
-    override fun request(command: NotificationCommand) {
-        NotificationEvent.from(command).forEach(eventPublisher::publish)
+    override fun requestDelivery(command: NotificationCommand) {
+        NotificationEvent.from(command)
+            .forEach(eventPublisher::publish)
     }
 
-    // --- 수신자 -------------------------------------------------------------
-
-    @Transactional(readOnly = true)
     override fun findByRecipientId(recipientId: UUID, page: Int, size: Int): List<Notification> =
         persistencePort.findInbox(recipientId, page, size)
 
@@ -45,22 +40,25 @@ class NotificationService(
         persistencePort.save(notification.markAsRead())
     }
 
-    // --- 운영자 -------------------------------------------------------------
+    // --- 관리자 -------------------------------------------------------------
 
-    @Transactional(readOnly = true)
     override fun findAll(status: NotificationStatus, page: Int, size: Int): List<Notification> =
         persistencePort.findByStatus(status, page, size)
 
-    @Transactional(readOnly = true)
+
     override fun findById(id: Long): Notification =
         persistencePort.findById(id)
             ?: NotificationException.NOTIFICATION_NOT_FOUND.throwIt(contextData = mapOf("id" to id))
 
+    // 재발송은 외부 채널 호출을 포함하므로 트랜잭션을 걸치지 않는다. 클래스 레벨의 readOnly를
+    // 그대로 물려받으면 되살리기가 읽기 전용 트랜잭션 안에서 일어난다.
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     override fun redeliver(id: Long) {
-        val revived = retry(id)
-        deliveryService.redeliver(requireNotNull(revived.id))
+        val revived = persistencePort.save(findById(id).retry())
+        deliveryFacade.redeliver(requireNotNull(revived.id))
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     override fun redeliverAll(count: Int?): Int {
         val requested = count?.coerceAtLeast(1)
         val targetIds = mutableListOf<Long>()
@@ -82,13 +80,9 @@ class NotificationService(
 
     @Transactional
     override fun discard(id: Long) {
-        // 되살릴 수 있는 상태인지로 폐기 가능 여부를 가른다. 되살린 값 자체는 버린다.
         findById(id).retry()
         persistencePort.deleteById(id)
     }
-
-    @Transactional
-    fun retry(id: Long): Notification = persistencePort.save(findById(id).retry())
 
     private companion object {
         const val BATCH_SIZE = 100

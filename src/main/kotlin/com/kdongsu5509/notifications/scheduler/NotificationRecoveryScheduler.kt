@@ -1,7 +1,7 @@
 package com.kdongsu5509.notifications.scheduler
 
 import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
-import com.kdongsu5509.notifications.application.service.NotificationDeliveryService
+import com.kdongsu5509.notifications.application.service.NotificationDeliveryFacade
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 @Component
 class NotificationRecoveryScheduler(
     private val persistencePort: NotificationPersistencePort,
-    private val deliveryService: NotificationDeliveryService,
+    private val deliveryFacade: NotificationDeliveryFacade,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -18,8 +18,11 @@ class NotificationRecoveryScheduler(
     fun recoverStalledNotifications() {
         val threshold = LocalDateTime.now().minusMinutes(5)
         persistencePort.findRecoverable(threshold, 100).forEach { notification ->
-            runCatching { deliveryService.redeliver(requireNotNull(notification.id)) }
-                .onFailure { log.error("방치 알림 회수 실패 - notificationId={}", notification.id, it) }
+            try {
+                deliveryFacade.redeliver(requireNotNull(notification.id))
+            } catch (error: Exception) {
+                log.error("방치 알림 회수 실패 - notificationId={}", notification.id, error)
+            }
         }
     }
 }

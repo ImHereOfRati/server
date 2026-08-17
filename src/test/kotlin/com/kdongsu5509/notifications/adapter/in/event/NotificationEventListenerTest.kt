@@ -2,7 +2,7 @@ package com.kdongsu5509.notifications.adapter.`in`.event
 
 import com.kdongsu5509.friends.event.FriendRequestAccepted
 import com.kdongsu5509.friends.event.FriendRequestSent
-import com.kdongsu5509.notifications.application.service.NotificationDeliveryService
+import com.kdongsu5509.notifications.application.service.NotificationDeliveryFacade
 import com.kdongsu5509.notifications.application.port.out.FcmTokenPersistencePort
 import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
 import com.kdongsu5509.notifications.domain.NotificationType
@@ -24,7 +24,7 @@ import java.util.*
 @ExtendWith(MockitoExtension::class)
 class NotificationEventListenerTest {
     @Mock
-    private lateinit var deliveryService: NotificationDeliveryService
+    private lateinit var deliveryFacade: NotificationDeliveryFacade
 
     @Mock
     private lateinit var errorAlertPort: ErrorAlertPort
@@ -40,7 +40,7 @@ class NotificationEventListenerTest {
     @BeforeEach
     fun setUp() {
         listener = NotificationEventListener(
-            deliveryService,
+            deliveryFacade,
             errorAlertPort,
             fcmTokenPersistencePort,
             notificationPersistencePort,
@@ -60,7 +60,7 @@ class NotificationEventListenerTest {
         listener.handle(event)
 
         val request = argumentCaptor<NotificationEvent>()
-        verify(deliveryService).deliver(request.capture())
+        verify(deliveryFacade).deliver(request.capture())
         assertThat(request.firstValue.eventId).isEqualTo(event.eventId)
         assertThat(request.firstValue.targetIdentifier).isEqualTo(event.receiverId.toString())
         assertThat(request.firstValue.type).isEqualTo(NotificationType.FRIEND_REQUEST_RECEIVED)
@@ -79,7 +79,7 @@ class NotificationEventListenerTest {
         listener.handle(event)
 
         val request = argumentCaptor<NotificationEvent>()
-        verify(deliveryService).deliver(request.capture())
+        verify(deliveryFacade).deliver(request.capture())
         assertThat(request.firstValue.senderId).isEqualTo(event.accepterId)
         assertThat(request.firstValue.targetIdentifier).isEqualTo(event.requesterId.toString())
         assertThat(request.firstValue.type).isEqualTo(NotificationType.FRIEND_REQUEST_ACCEPTED)

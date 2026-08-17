@@ -42,7 +42,12 @@ class TargetIdValidator : ConstraintValidator<ValidTargetId, Any> {
     }
 
     private fun isUuid(value: String): Boolean =
-        runCatching { UUID.fromString(value) }.isSuccess
+        try {
+            UUID.fromString(value)
+            true
+        } catch (_: IllegalArgumentException) {
+            false
+        }
 
     private fun buildErrorMessage(context: ConstraintValidatorContext, type: NotificationMethod) {
         context.disableDefaultConstraintViolation()

@@ -9,6 +9,7 @@ import com.kdongsu5509.notifications.domain.NotificationTemplate
 import com.kdongsu5509.notifications.domain.NotificationType
 import com.kdongsu5509.notifications.domain.RenderedNotification
 import com.kdongsu5509.notifications.exception.NotificationException
+import com.kdongsu5509.notifications.exception.RetryableFcmException
 import com.kdongsu5509.notifications.exception.UnregisteredTokenException
 import com.kdongsu5509.support.exception.type.InternalServerException
 import org.assertj.core.api.Assertions.assertThat

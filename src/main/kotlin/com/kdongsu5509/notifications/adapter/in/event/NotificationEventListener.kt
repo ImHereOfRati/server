@@ -2,7 +2,7 @@ package com.kdongsu5509.notifications.adapter.`in`.event
 
 import com.kdongsu5509.friends.event.FriendRequestAccepted
 import com.kdongsu5509.friends.event.FriendRequestSent
-import com.kdongsu5509.notifications.application.service.NotificationDeliveryService
+import com.kdongsu5509.notifications.application.service.NotificationDeliveryFacade
 import com.kdongsu5509.notifications.application.port.out.FcmTokenPersistencePort
 import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
 import com.kdongsu5509.notifications.domain.NotificationMethod
@@ -18,14 +18,14 @@ import org.springframework.stereotype.Component
 
 @Component
 class NotificationEventListener(
-    private val deliveryService: NotificationDeliveryService,
+    private val deliveryFacade: NotificationDeliveryFacade,
     private val errorAlertPort: ErrorAlertPort,
     private val fcmTokenPersistencePort: FcmTokenPersistencePort,
     private val notificationPersistencePort: NotificationPersistencePort,
 ) {
     @ApplicationModuleListener
     fun handle(event: NotificationEvent) =
-        deliveryService.deliver(event)
+        deliveryFacade.deliver(event)
 
     @ApplicationModuleListener
     fun handle(event: NotificationDeliveryFailed) =
@@ -42,11 +42,11 @@ class NotificationEventListener(
 
     @ApplicationModuleListener
     fun handle(origin: FriendRequestSent) =
-        deliveryService.deliver(convertToNotificationEvent(origin))
+        deliveryFacade.deliver(convertToNotificationEvent(origin))
 
     @ApplicationModuleListener
     fun handle(origin: FriendRequestAccepted) =
-        deliveryService.deliver(convertToNotificationEvent(origin))
+        deliveryFacade.deliver(convertToNotificationEvent(origin))
 
     @ApplicationModuleListener
     fun handle(event: UserWithdrawnEvent) {

@@ -6,4 +6,5 @@ import com.kdongsu5509.notifications.domain.SMS
 interface ExternalMessagePort {
     fun send(sms: SMS): MessageSendResult
     fun sendMultiple(multiSMS: List<SMS>): List<MessageSendResult>
+    fun findStatus(providerMessageId: String): MessageSendResult?
 }

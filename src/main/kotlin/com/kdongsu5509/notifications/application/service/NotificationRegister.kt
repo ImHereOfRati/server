@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import com.kdongsu5509.notifications.domain.MessageSendResult
 
 @Component
 class NotificationRegister(
@@ -47,12 +48,31 @@ class NotificationRegister(
             ?: NotificationException.NOTIFICATION_NOT_FOUND.throwIt(contextData = mapOf("id" to id))
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    fun markAsSent(id: Long): Notification =
-        notificationPersistencePort.save(getByIdOrThrow(id).markSent(LocalDateTime.now()))
+    fun claimForDelivery(id: Long): Notification? = notificationPersistencePort.claimForDelivery(id)
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun markAsSent(id: Long, result: MessageSendResult? = null): Notification =
+        notificationPersistencePort.save(
+            getByIdOrThrow(id).markSent(
+                LocalDateTime.now(),
+                result?.providerMessageId,
+                result?.status,
+            )
+        )
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun markUnknown(id: Long, result: MessageSendResult): Notification =
+        notificationPersistencePort.save(
+            getByIdOrThrow(id).markUnknown(result.message, result.providerMessageId)
+        )
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun markFailed(id: Long, reason: String): Notification =
         notificationPersistencePort.save(getByIdOrThrow(id).markFailed(reason))
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun markDead(id: Long, reason: String): Notification =
+        notificationPersistencePort.save(getByIdOrThrow(id).markDead(reason))
 
     private fun resolveSenderAlias(event: NotificationEvent): String {
         if (event.type == FRIEND_REQUEST_RECEIVED || event.type == FRIEND_REQUEST_ACCEPTED) {

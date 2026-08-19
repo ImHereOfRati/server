@@ -22,6 +22,8 @@ class Notification internal constructor(
     val sentAt: LocalDateTime? = null,
     val isRead: Boolean = false,
     val createdAt: LocalDateTime? = null,
+    val providerMessageId: String? = null,
+    val providerStatus: String? = null,
 ) {
     companion object {
         const val MAX_ATTEMPTS = 3
@@ -72,9 +74,12 @@ class Notification internal constructor(
             sentAt: LocalDateTime?,
             isRead: Boolean,
             createdAt: LocalDateTime?,
+            providerMessageId: String? = null,
+            providerStatus: String? = null,
         ): Notification = Notification(
             id, dedupeKey, targetIdentifier, method, senderAlias, type,
             title, body, extraData, status, attempts, lastError, sentAt, isRead, createdAt,
+            providerMessageId, providerStatus,
         )
 
         private fun requireNotBlank(vararg fields: Pair<String, String>) {
@@ -103,14 +108,26 @@ class Notification internal constructor(
             data = extraData,
         )
 
-    fun markSent(now: LocalDateTime): Notification {
+    fun markSent(now: LocalDateTime, providerMessageId: String? = this.providerMessageId, providerStatus: String? = this.providerStatus): Notification {
         if (status == NotificationStatus.SENT) return this
-        requireDeliverable()
-        return replaced(status = NotificationStatus.SENT, sentAt = now, lastError = null)
+        requireDeliveryAttempt()
+        return replaced(status = NotificationStatus.SENT, sentAt = now, lastError = null, providerMessageId = providerMessageId, providerStatus = providerStatus)
+    }
+
+    fun markProcessing(): Notification =
+        if (!isDeliverable) this else replaced(status = NotificationStatus.PROCESSING, lastError = null)
+
+    fun markUnknown(reason: String, providerMessageId: String? = this.providerMessageId): Notification {
+        requireDeliveryAttempt()
+        return replaced(
+            status = NotificationStatus.UNKNOWN,
+            lastError = reason.take(LAST_ERROR_MAX_LENGTH),
+            providerMessageId = providerMessageId,
+        )
     }
 
     fun markFailed(reason: String): Notification {
-        requireDeliverable()
+        requireDeliveryAttempt()
         val nextAttempts = attempts + 1
         val nextStatus =
             if (nextAttempts >= MAX_ATTEMPTS) NotificationStatus.DEAD else NotificationStatus.FAILED
@@ -140,12 +157,31 @@ class Notification internal constructor(
         }
     }
 
+    fun markDead(reason: String): Notification {
+        requireDeliveryAttempt()
+        return replaced(
+            status = NotificationStatus.DEAD,
+            attempts = MAX_ATTEMPTS,
+            lastError = reason.take(LAST_ERROR_MAX_LENGTH),
+        )
+    }
+
+    private fun requireDeliveryAttempt() {
+        if (status != NotificationStatus.PROCESSING && status != NotificationStatus.UNKNOWN && !isDeliverable) {
+            NotificationException.NOTIFICATION_NOT_DELIVERABLE.throwIt(
+                contextData = mapOf("status" to status.name)
+            )
+        }
+    }
+
     private fun replaced(
         status: NotificationStatus = this.status,
         attempts: Int = this.attempts,
         lastError: String? = this.lastError,
         sentAt: LocalDateTime? = this.sentAt,
         isRead: Boolean = this.isRead,
+        providerMessageId: String? = this.providerMessageId,
+        providerStatus: String? = this.providerStatus,
     ): Notification = Notification(
         id = id,
         deduplicationKey = deduplicationKey,
@@ -162,6 +198,8 @@ class Notification internal constructor(
         sentAt = sentAt,
         isRead = isRead,
         createdAt = createdAt,
+        providerMessageId = providerMessageId,
+        providerStatus = providerStatus,
     )
 
     override fun equals(other: Any?): Boolean {

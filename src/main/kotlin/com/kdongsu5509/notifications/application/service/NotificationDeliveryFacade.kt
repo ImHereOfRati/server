@@ -2,6 +2,8 @@ package com.kdongsu5509.notifications.application.service
 
 import com.kdongsu5509.notifications.domain.Notification
 import com.kdongsu5509.notifications.domain.NotificationStatus
+import com.kdongsu5509.notifications.domain.NotificationMethod
+import com.kdongsu5509.notifications.domain.Notification.Companion.MAX_ATTEMPTS
 import com.kdongsu5509.notifications.event.NotificationEvent
 import com.kdongsu5509.notifications.exception.RetryableFcmException
 import org.springframework.dao.DataIntegrityViolationException
@@ -24,7 +26,8 @@ class NotificationDeliveryFacade(
     )
     fun deliver(event: NotificationEvent) {
         val notification = resolveDeliveryTarget(event) ?: return
-        sendAndRecordOutcome(notification, requesterId = event.senderId)
+        val claimed = notificationRegister.claimForDelivery(requireNotNull(notification.id)) ?: return
+        sendAndRecordOutcome(claimed, requesterId = event.senderId)
     }
 
     @Retryable(
@@ -34,8 +37,8 @@ class NotificationDeliveryFacade(
     )
     fun redeliver(notificationId: Long) {
         val notification = notificationRegister.getByIdOrThrow(notificationId)
-        if (!notification.isDeliverable) return
-        sendAndRecordOutcome(notification, requesterId = null)
+        val claimed = notificationRegister.claimForDelivery(notificationId) ?: return
+        sendAndRecordOutcome(claimed, requesterId = null)
     }
 
     @Recover
@@ -80,9 +83,29 @@ class NotificationDeliveryFacade(
         val id = requireNotNull(notification.id) { "저장되지 않은 알림은 발송할 수 없습니다." }
 
         try {
-            notificationChannelSender.sendViaExternalMethod(notification)
-            notificationRegister.markAsSent(id)
-            deliveryResultNotifier.notifyDeliverySucceeded(notification, requesterId)
+            if (notification.method == NotificationMethod.SMS && notification.attempts >= MAX_ATTEMPTS - 1) {
+                val dead = notificationRegister.markDead(id, "SMS retry limit reached; provider call skipped")
+                deliveryResultNotifier.notifyDeliveryFailed(
+                    dead,
+                    requesterId,
+                    IllegalStateException("SMS 최종 실패: 재발송하지 않고 Discord로 알립니다."),
+                )
+                return
+            }
+            val result = notificationChannelSender.sendViaExternalMethod(notification)
+            when {
+                result == null || result.isSuccess -> {
+                    notificationRegister.markAsSent(id, result)
+                    deliveryResultNotifier.notifyDeliverySucceeded(notification, requesterId)
+                }
+                result.certainty == com.kdongsu5509.notifications.domain.DeliveryCertainty.UNKNOWN -> {
+                    notificationRegister.markUnknown(id, result)
+                }
+                else -> {
+                    val failed = notificationRegister.markFailed(id, result.message)
+                    deliveryResultNotifier.notifyDeliveryFailed(failed, requesterId, RuntimeException(result.message))
+                }
+            }
         } catch (error: Exception) {
             val failed = notificationRegister.markFailed(id, error.message ?: error.javaClass.simpleName)
             if (error !is RetryableFcmException) {

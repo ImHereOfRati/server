@@ -17,6 +17,7 @@ import jakarta.persistence.*
             columnList = "target_identifier, method, status, created_at"
         ),
         Index(name = "idx_notification_status", columnList = "status, created_at"),
+        Index(name = "idx_notification_provider_message_id", columnList = "provider_message_id"),
     ]
 )
 class NotificationJpaEntity(
@@ -62,6 +63,12 @@ class NotificationJpaEntity(
 
     @Column(nullable = true)
     var sentAt: java.time.LocalDateTime? = null,
+
+    @Column(nullable = true, length = 80)
+    var providerMessageId: String? = null,
+
+    @Column(nullable = true, length = 30)
+    var providerStatus: String? = null,
 
     @Column(nullable = false)
     var isRead: Boolean = false,

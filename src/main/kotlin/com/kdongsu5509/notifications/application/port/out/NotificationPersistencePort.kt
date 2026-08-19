@@ -8,6 +8,8 @@ import java.util.UUID
 interface NotificationPersistencePort {
     fun save(notification: Notification): Notification
     fun findById(id: Long): Notification?
+    fun claimForDelivery(id: Long): Notification?
+    fun recoverStalled(before: LocalDateTime): Int
 
     fun findByDedupeKey(dedupeKey: String): Notification?
 

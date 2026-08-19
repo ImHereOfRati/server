@@ -7,6 +7,7 @@ import com.kdongsu5509.notifications.domain.NotificationStatus
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -21,6 +22,23 @@ class NotificationPersistenceAdapter(
 
     override fun findById(id: Long): Notification? =
         repository.findById(id).orElse(null)?.let { mapper.toDomain(it) }
+
+    @Transactional
+    override fun claimForDelivery(id: Long): Notification? {
+        val claimed = repository.claimForDelivery(
+            id,
+            NotificationStatus.PROCESSING,
+            listOf(NotificationStatus.PENDING, NotificationStatus.FAILED),
+        )
+        return if (claimed == 1) findById(id) else null
+    }
+
+    @Transactional
+    override fun recoverStalled(before: LocalDateTime): Int = repository.recoverStalled(
+        NotificationStatus.PENDING,
+        NotificationStatus.PROCESSING,
+        before,
+    )
 
     override fun findByDedupeKey(dedupeKey: String): Notification? =
         repository.findByDedupeKey(dedupeKey)?.let { mapper.toDomain(it) }

@@ -137,10 +137,12 @@ CREATE TABLE notification
     title             VARCHAR(255)                                NOT NULL,
     body              VARCHAR(500)                                NOT NULL,
     extra_data        VARCHAR(2000)                               NOT NULL,
-    status            ENUM ('PENDING', 'SENT', 'FAILED', 'DEAD')  NOT NULL,
+    status            ENUM ('PENDING', 'PROCESSING', 'SENT', 'FAILED', 'UNKNOWN', 'DEAD') NOT NULL,
     attempts          INT                                         NOT NULL DEFAULT 0,
     last_error        VARCHAR(500)                                NULL,
     sent_at           DATETIME(6)                                 NULL,
+    provider_message_id VARCHAR(80)                               NULL,
+    provider_status   VARCHAR(30)                                  NULL,
     is_read           BIT(1)                                      NOT NULL DEFAULT b'0',
     created_at        DATETIME(6)                                 NOT NULL,
     updated_at        DATETIME(6)                                 NOT NULL,
@@ -148,6 +150,7 @@ CREATE TABLE notification
     UNIQUE KEY uk_notification_dedupe_key (dedupe_key),
     KEY idx_notification_inbox (target_identifier, method, status, created_at),
     KEY idx_notification_status (status, created_at)
+    ,KEY idx_notification_provider_message_id (provider_message_id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;

@@ -70,8 +70,11 @@ class NotificationDeliveryFacadeTest @Autowired constructor(
     @BeforeEach
     fun setUp() {
         reset(registrar, channelSender, resultNotifier)
-        whenever(registrar.markAsSent(any())).thenReturn(notification(NotificationStatus.SENT))
+        whenever(registrar.markAsSent(any(), anyOrNull())).thenReturn(notification(NotificationStatus.SENT))
         whenever(registrar.markFailed(any(), any())).thenReturn(notification(NotificationStatus.FAILED))
+        whenever(registrar.markUnknown(any(), any())).thenReturn(notification(NotificationStatus.UNKNOWN))
+        whenever(registrar.register(any())).thenReturn(notification(NotificationStatus.PENDING))
+        whenever(registrar.claimForDelivery(any())).thenReturn(notification(NotificationStatus.PROCESSING))
     }
 
     // --- 멱등성 ---------------------------------------------------------------
@@ -89,7 +92,7 @@ class NotificationDeliveryFacadeTest @Autowired constructor(
 
     @Test
     @DisplayName("최종 실패한 이벤트는 다시 접수하지 않고 그대로 재발송한다")
-    fun failed_event_is_redelivered_without_new_reservation() {
+    fun failed_event_is_skipped_and_left_for_recovery() {
         whenever(registrar.findByDedupeKey(dedupeKey)).thenReturn(notification(NotificationStatus.FAILED))
 
         facade.deliver(request)
@@ -115,7 +118,7 @@ class NotificationDeliveryFacadeTest @Autowired constructor(
     @Test
     @DisplayName("발송에 성공하면 SENT로 기록하고 성공 통지를 한다")
     fun success_marks_sent_then_notifies() {
-        whenever(registrar.findByDedupeKey(dedupeKey)).thenReturn(notification(NotificationStatus.FAILED))
+        whenever(registrar.findByDedupeKey(dedupeKey)).thenReturn(null)
 
         facade.deliver(request)
 
@@ -130,7 +133,7 @@ class NotificationDeliveryFacadeTest @Autowired constructor(
     @Test
     @DisplayName("재시도 대상이 아닌 실패는 FAILED로 기록하고 즉시 실패 통지 후 예외를 전파한다")
     fun non_retryable_failure_notifies_immediately() {
-        whenever(registrar.findByDedupeKey(dedupeKey)).thenReturn(notification(NotificationStatus.FAILED))
+        whenever(registrar.findByDedupeKey(dedupeKey)).thenReturn(null)
         whenever(channelSender.sendViaExternalMethod(any())).thenThrow(IllegalStateException("토큰 없음"))
 
         // 재시도 대상이 아닌 예외는 감싸지 않고 원래 타입 그대로 올라와야 한다.
@@ -146,7 +149,7 @@ class NotificationDeliveryFacadeTest @Autowired constructor(
     @Test
     @DisplayName("재시도 대상 실패는 소진되기 전까지 통지하지 않고, 소진 후 한 번만 통지한다")
     fun retryable_failure_notifies_once_after_retries_are_exhausted() {
-        whenever(registrar.findByDedupeKey(dedupeKey)).thenReturn(notification(NotificationStatus.FAILED))
+        whenever(registrar.findByDedupeKey(dedupeKey)).thenReturn(null, notification(NotificationStatus.FAILED))
         whenever(channelSender.sendViaExternalMethod(any())).thenThrow(RetryableFcmException("일시적 오류"))
 
         facade.deliver(request)

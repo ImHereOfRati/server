@@ -4,6 +4,7 @@ import com.kdongsu5509.notifications.application.port.out.ExternalMessagePort
 import com.kdongsu5509.notifications.application.port.out.FcmTokenPersistencePort
 import com.kdongsu5509.notifications.application.port.out.FirebasePort
 import com.kdongsu5509.notifications.domain.FcmToken
+import com.kdongsu5509.notifications.domain.MessageSendResult
 import com.kdongsu5509.notifications.domain.Notification
 import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.SMS
@@ -26,12 +27,12 @@ class NotificationChannelSender(
     private val fcmTokenPersistencePort: FcmTokenPersistencePort,
     private val externalMessagePort: ExternalMessagePort,
 ) {
-    fun sendViaExternalMethod(notification: Notification) = when (notification.method) {
+    fun sendViaExternalMethod(notification: Notification): MessageSendResult? = when (notification.method) {
         NotificationMethod.FCM -> sendFcm(notification)
         NotificationMethod.SMS -> sendSms(notification)
     }
 
-    private fun sendFcm(notification: Notification) {
+    private fun sendFcm(notification: Notification): MessageSendResult? {
         val receiverId = notification.targetIdentifier.toUuidOrNull()
             ?: throw InvalidInputException(
                 "FCM 알림의 수신자는 사용자 식별자여야 합니다.",
@@ -52,9 +53,10 @@ class NotificationChannelSender(
         } catch (exception: UnregisteredTokenException) {
             deleteTokenAndRethrowException(token, exception)
         }
+        return null
     }
 
-    private fun sendSms(notification: Notification) {
+    private fun sendSms(notification: Notification): MessageSendResult {
         val newSms = SMS(
             senderNickname = notification.senderAlias,
             receiverNumber = notification.targetIdentifier,
@@ -62,15 +64,7 @@ class NotificationChannelSender(
         )
         val result = externalMessagePort.send(newSms)
 
-        if (!result.isSuccess) {
-            NotificationException.SMS_SEND_FAILED.throwIt(
-                contextData = mapOf(
-                    "receiverNumber" to notification.targetIdentifier,
-                    "status" to result.status,
-                    "message" to result.message,
-                )
-            )
-        }
+        return result
     }
 
     private fun deleteTokenAndRethrowException(

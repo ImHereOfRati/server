@@ -24,6 +24,8 @@ class NotificationMapper {
             sentAt = entity.sentAt,
             isRead = entity.isRead,
             createdAt = entity.createdAt,
+            providerMessageId = entity.providerMessageId,
+            providerStatus = entity.providerStatus,
         )
 
     fun toEntity(domain: Notification): NotificationJpaEntity =
@@ -42,6 +44,8 @@ class NotificationMapper {
             lastError = domain.lastError,
             sentAt = domain.sentAt,
             isRead = domain.isRead,
+            providerMessageId = domain.providerMessageId,
+            providerStatus = domain.providerStatus,
         ).apply {
             domain.createdAt?.let { createdAt = it }
         }

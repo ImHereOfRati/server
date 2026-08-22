@@ -169,7 +169,7 @@ discord:
       client: ${DISCORD_WEBHOOK_ERROR_CLIENT:http://localhost}
 
 security:
-  whitelist: ${SECURITY_WHITELIST:/api/auth,/api/auth/refresh,/swagger-ui/**,/docs/**}
+  whitelist: ${SECURITY_WHITELIST:/api/auth,/api/auth/refresh,/api/terms,/swagger-ui/**,/docs/**}
   cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 admin:

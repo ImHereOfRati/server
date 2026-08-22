@@ -1,6 +1,5 @@
 package com.kdongsu5509.terms.controller
 
-import com.kdongsu5509.auth.security.shared.AllowPendingUser
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.terms.controller.dto.TermResponse
@@ -16,7 +15,6 @@ class TermsController(
     private val termService: TermService,
 ) {
     @GetMapping(params = ["isActive"])
-    @AllowPendingUser
     fun readAllByActive(@RequestParam isActive: Boolean): List<TermResponse> {
         if (!isActive) {
             CommonErrorCode.UNPROCESSABLE_ENTITY.throwIt(

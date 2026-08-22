@@ -51,12 +51,6 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
         status = "ACTIVE"
     )
 
-    private fun errorResponseFields() = responseFields(
-        fieldWithPath("imhereResponseCode").description("에러 코드"),
-        fieldWithPath("message").description("에러 메시지"),
-        fieldWithPath("data").description("없음").optional()
-    )
-
     @Test
     @DisplayName("약관을 성공적으로 생성한다")
     fun createTermSuccess() {
@@ -158,6 +152,56 @@ class TermsControllerIntegrationTest : WebIntegrationTestSupport() {
                 .param("isActive", "true")
                 .with(csrf())
                 .with(user(normalUser))
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.length()").value(1))
+            .andExpect(jsonPath("$.data[0].title").value("활성 약관"))
+            .andDo(
+                MockMvcRestDocumentationWrapper.document(
+                    identifier = "terms-read-active-success",
+                    snippets = arrayOf(
+                        responseFields(
+                            fieldWithPath("imhereResponseCode").description("응답 코드"),
+                            fieldWithPath("message").description("응답 메시지"),
+                            fieldWithPath("data[].id").description("약관 ID"),
+                            fieldWithPath("data[].version").description("약관 버전"),
+                            fieldWithPath("data[].type").description("약관 타입"),
+                            fieldWithPath("data[].title").description("약관 제목"),
+                            fieldWithPath("data[].content").description("약관 내용"),
+                            fieldWithPath("data[].effectiveDate").description("시행 일시"),
+                            fieldWithPath("data[].isRequired").description("필수 여부")
+                        )
+                    )
+                )
+            )
+    }
+
+    @Test
+    @DisplayName("활성화된 약관은 누구나 조회 가능하다")
+    fun readActiveTermsSuccess_withoutUser() {
+        val request1 = TermCreateRequest(
+            type = TermTypes.SERVICE,
+            title = "활성 약관",
+            content = "내용",
+            effectiveDate = LocalDateTime.now().minusDays(1), // 이미 시행됨 -> 활성화 상태
+            isRequired = true
+        )
+        val request2 = TermCreateRequest(
+            type = TermTypes.PRIVACY,
+            title = "미시행 약관",
+            content = "내용",
+            effectiveDate = LocalDateTime.now().plusDays(10), // 미래 시행 -> 비활성화 상태
+            isRequired = true
+        )
+
+        requestToAdminTermsPathWithPostMethod(request1)
+        requestToAdminTermsPathWithPostMethod(request2)
+
+        // when & then
+        mockMvc.perform(
+            get("/api/terms")
+                .param("isActive", "true")
+                .with(csrf())
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.length()").value(1))

@@ -30,12 +30,9 @@ class AuthService(
         val userInformation = oidcVerifyPort.verify(provider, idToken, nonce)
         val oidcSubject = userInformation.sub ?: AuthException.OIDC_FORMAT_INVALID.throwIt()
         val user = userLookupContract.findByOidcIdentityOrNull(provider, oidcSubject)
-            ?: userLookupContract.findByEmailOrNull(userInformation.email)
             ?: registerNewUser(userInformation, provider)
 
-        if (user.oauthProvider != provider ||
-            (user.oidcSubject != null && user.oidcSubject != userInformation.sub)
-        ) {
+        if (user.oauthProvider != provider || user.oidcSubject != oidcSubject) {
             AuthException.OIDC_FORMAT_INVALID.throwIt()
         }
 

@@ -78,7 +78,7 @@ class AuthServiceTest {
     fun auth_registers_new_user() {
         // given
         givenVerifiedOidcUser()
-        given(userLookupContract.findByEmailOrNull(TEST_EMAIL)).willReturn(null)
+        given(userLookupContract.findByOidcIdentityOrNull(TEST_OAUTH_PROVIDER, TEST_SUB)).willReturn(null)
         given(userRegistrationContract.register(TEST_REGISTER_COMMAND)).willReturn(userResult(UserStatus.PENDING))
         givenIssuedToken()
 
@@ -99,7 +99,7 @@ class AuthServiceTest {
     fun auth_logs_in_existing_user() {
         // given
         givenVerifiedOidcUser()
-        given(userLookupContract.findByEmailOrNull(TEST_EMAIL)).willReturn(userResult(UserStatus.ACTIVE))
+        given(userLookupContract.findByOidcIdentityOrNull(TEST_OAUTH_PROVIDER, TEST_SUB)).willReturn(userResult(UserStatus.ACTIVE))
         givenIssuedToken()
 
         // when
@@ -112,10 +112,24 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("OIDC subject로 조회되지 않으면 이메일로 기존 사용자를 찾지 않고 신규 가입 흐름을 사용한다")
+    fun auth_does_not_fallback_to_email() {
+        givenVerifiedOidcUser()
+        given(userLookupContract.findByOidcIdentityOrNull(TEST_OAUTH_PROVIDER, TEST_SUB)).willReturn(null)
+        given(userRegistrationContract.register(TEST_REGISTER_COMMAND)).willReturn(userResult(UserStatus.PENDING))
+        givenIssuedToken()
+
+        authService.auth(TEST_OAUTH_PROVIDER, TEST_ID_TOKEN, TEST_NONCE)
+
+        then(userLookupContract).should().findByOidcIdentityOrNull(TEST_OAUTH_PROVIDER, TEST_SUB)
+        then(userLookupContract).shouldHaveNoMoreInteractions()
+    }
+
+    @Test
     @DisplayName("기존 계정의 OAuth 제공자나 subject가 다르면 로그인시키지 않는다")
     fun auth_rejects_mismatched_oidc_identity() {
         givenVerifiedOidcUser()
-        given(userLookupContract.findByEmailOrNull(TEST_EMAIL)).willReturn(
+        given(userLookupContract.findByOidcIdentityOrNull(TEST_OAUTH_PROVIDER, TEST_SUB)).willReturn(
             userResult(UserStatus.ACTIVE).copy(
                 oauthProvider = OAuth2Provider.GOOGLE,
                 oidcSubject = "different-sub"
@@ -135,7 +149,7 @@ class AuthServiceTest {
     fun auth_fail_blocked_user() {
         // given
         givenVerifiedOidcUser()
-        given(userLookupContract.findByEmailOrNull(TEST_EMAIL)).willReturn(userResult(UserStatus.BLOCKED))
+        given(userLookupContract.findByOidcIdentityOrNull(TEST_OAUTH_PROVIDER, TEST_SUB)).willReturn(userResult(UserStatus.BLOCKED))
 
         // when & then
         val exception = assertThrows<ImHereBaseException> {
@@ -152,7 +166,7 @@ class AuthServiceTest {
     fun auth_fail_withdrawn_user() {
         // given
         givenVerifiedOidcUser()
-        given(userLookupContract.findByEmailOrNull(TEST_EMAIL)).willReturn(userResult(UserStatus.WITHDRAWN))
+        given(userLookupContract.findByOidcIdentityOrNull(TEST_OAUTH_PROVIDER, TEST_SUB)).willReturn(userResult(UserStatus.WITHDRAWN))
 
         // when & then
         val exception = assertThrows<ImHereBaseException> {
@@ -187,7 +201,7 @@ class AuthServiceTest {
     fun auth_fail_user_save() {
         // given
         givenVerifiedOidcUser()
-        given(userLookupContract.findByEmailOrNull(TEST_EMAIL)).willReturn(null)
+        given(userLookupContract.findByOidcIdentityOrNull(TEST_OAUTH_PROVIDER, TEST_SUB)).willReturn(null)
         given(userRegistrationContract.register(TEST_REGISTER_COMMAND))
             .willThrow(RuntimeException("Persistence Failed"))
 
@@ -205,7 +219,7 @@ class AuthServiceTest {
     fun auth_fail_token_issue() {
         // given
         givenVerifiedOidcUser()
-        given(userLookupContract.findByEmailOrNull(TEST_EMAIL)).willReturn(userResult(UserStatus.ACTIVE))
+        given(userLookupContract.findByOidcIdentityOrNull(TEST_OAUTH_PROVIDER, TEST_SUB)).willReturn(userResult(UserStatus.ACTIVE))
         given(tokenProviderPort.issue(any())).willThrow(RuntimeException("Token Issue Failed"))
 
         // when & then

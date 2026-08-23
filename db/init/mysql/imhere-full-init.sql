@@ -17,7 +17,6 @@ DROP TABLE IF EXISTS friend_restrictions;
 DROP TABLE IF EXISTS friend_request;
 DROP TABLE IF EXISTS notification;
 DROP TABLE IF EXISTS fcm_token;
-DROP TABLE IF EXISTS one_time_tokens;
 DROP TABLE IF EXISTS event_publication;
 DROP TABLE IF EXISTS terms;
 DROP TABLE IF EXISTS users;
@@ -38,6 +37,7 @@ CREATE TABLE users
     updated_at            DATETIME(6)                                        NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_users_email (email),
+    UNIQUE KEY uk_users_provider_oidc_subject (provider, oidc_subject),
     KEY idx_users_nickname (nickname)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
@@ -151,19 +151,6 @@ CREATE TABLE notification
     KEY idx_notification_inbox (target_identifier, method, status, created_at),
     KEY idx_notification_status (status, created_at)
     ,KEY idx_notification_provider_message_id (provider_message_id)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
-
-CREATE TABLE one_time_tokens
-(
-    token_value VARCHAR(255) NOT NULL,
-    username    VARCHAR(255) NOT NULL,
-    issued_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at  TIMESTAMP    NOT NULL,
-    PRIMARY KEY (token_value),
-    KEY idx_one_time_tokens_expires_at (expires_at),
-    KEY idx_one_time_tokens_username (username)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;

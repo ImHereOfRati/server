@@ -12,6 +12,12 @@ import java.util.*
 @Entity
 @Table(
     name = "users",
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_users_provider_oidc_subject",
+            columnNames = ["provider", "oidc_subject"]
+        )
+    ],
     indexes = [
         Index(
             name = "idx_users_nickname",

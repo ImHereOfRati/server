@@ -2,6 +2,7 @@ package com.kdongsu5509.user.repository
 
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.domain.User
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.domain.UserStatus
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.jpa.SpringDataUserRepository
@@ -29,6 +30,11 @@ class UserRepository(
 
     fun findByEmail(email: String): User? {
         val queryResult = springDataUserRepository.findByEmail(email)
+        return queryResult?.let { userMapper.toDomain(it) }
+    }
+
+    fun findByOidcIdentity(provider: OAuth2Provider, oidcSubject: String): User? {
+        val queryResult = springDataUserRepository.findByProviderAndOidcSubject(provider, oidcSubject)
         return queryResult?.let { userMapper.toDomain(it) }
     }
 

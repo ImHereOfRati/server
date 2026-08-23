@@ -41,7 +41,7 @@ class AuthControllerIntegrationTest : WebIntegrationTestSupport() {
     fun authCreatesNewUserAndDocument() {
         // given
         given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
-            OIDCUserInfo(email = "newuser@example.com", nickname = "New User")
+            OIDCUserInfo(email = "newuser@example.com", nickname = "New User", sub = "new-user-subject")
         )
 
         // when & then
@@ -75,10 +75,10 @@ class AuthControllerIntegrationTest : WebIntegrationTestSupport() {
     fun authLogsInExistingUserAndDocument() {
         // given
         val email = "existing@example.com"
-        userRepository.save(User(email, "Existing User", OAuth2Provider.KAKAO).activate())
+        userRepository.save(User(email, "Existing User", OAuth2Provider.KAKAO, oidcSubject = "existing-user-subject").activate())
 
         given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
-            OIDCUserInfo(email = email, nickname = "Existing User")
+            OIDCUserInfo(email = email, nickname = "Existing User", sub = "existing-user-subject")
         )
 
         // when & then
@@ -107,10 +107,10 @@ class AuthControllerIntegrationTest : WebIntegrationTestSupport() {
     fun authSucceedsWhenUserPending() {
         // given
         val email = "pending@example.com"
-        userRepository.save(User(email, "Pending User", OAuth2Provider.KAKAO))
+        userRepository.save(User(email, "Pending User", OAuth2Provider.KAKAO, oidcSubject = "pending-user-subject"))
 
         given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
-            OIDCUserInfo(email = email, nickname = "Pending User")
+            OIDCUserInfo(email = email, nickname = "Pending User", sub = "pending-user-subject")
         )
 
         // when & then
@@ -189,10 +189,10 @@ class AuthControllerIntegrationTest : WebIntegrationTestSupport() {
     fun authFailWhenUserBlocked() {
         // given
         val email = "blocked@example.com"
-        userRepository.save(User(email, "Blocked User", OAuth2Provider.KAKAO).activate().block())
+        userRepository.save(User(email, "Blocked User", OAuth2Provider.KAKAO, oidcSubject = "blocked-user-subject").activate().block())
 
         given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
-            OIDCUserInfo(email = email, nickname = "Blocked User")
+            OIDCUserInfo(email = email, nickname = "Blocked User", sub = "blocked-user-subject")
         )
 
         // when & then
@@ -211,10 +211,10 @@ class AuthControllerIntegrationTest : WebIntegrationTestSupport() {
     fun authFailWhenUserWithdrawn() {
         // given
         val email = "withdrawn@example.com"
-        userRepository.save(User(email, "Withdrawn User", OAuth2Provider.KAKAO).activate().withdraw())
+        userRepository.save(User(email, "Withdrawn User", OAuth2Provider.KAKAO, oidcSubject = "withdrawn-user-subject").activate().withdraw())
 
         given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
-            OIDCUserInfo(email = email, nickname = "Withdrawn User")
+            OIDCUserInfo(email = email, nickname = "Withdrawn User", sub = "withdrawn-user-subject")
         )
 
         // when & then
@@ -233,10 +233,10 @@ class AuthControllerIntegrationTest : WebIntegrationTestSupport() {
     fun authIgnoresAdminIpAllowlist() {
         // given
         val email = "public-login@example.com"
-        userRepository.save(User(email, "Public Login User", OAuth2Provider.KAKAO).activate())
+        userRepository.save(User(email, "Public Login User", OAuth2Provider.KAKAO, oidcSubject = "public-login-subject").activate())
 
         given(oidcVerifyPort.verify(any(), any(), any())).willReturn(
-            OIDCUserInfo(email = email, nickname = "Public Login User")
+            OIDCUserInfo(email = email, nickname = "Public Login User", sub = "public-login-subject")
         )
 
         // when & then

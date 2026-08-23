@@ -3,6 +3,7 @@ package com.kdongsu5509.user.service
 import com.kdongsu5509.support.exception.throwIt
 import com.kdongsu5509.user.api.UserLookupContract
 import com.kdongsu5509.user.api.UserResult
+import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.user.exception.UserException
 import com.kdongsu5509.user.repository.UserRepository
 import org.springframework.data.domain.Pageable
@@ -24,6 +25,9 @@ class UserQueryService(
 
     override fun findByEmailOrNull(email: String): UserResult? =
         userRepository.findByEmail(email)?.let(UserResult::fromDomain)
+
+    override fun findByOidcIdentityOrNull(provider: OAuth2Provider, oidcSubject: String): UserResult? =
+        userRepository.findByOidcIdentity(provider, oidcSubject)?.let(UserResult::fromDomain)
 
     override fun findAllByIds(ids: Collection<UUID>): List<UserResult> =
         if (ids.isEmpty()) emptyList()

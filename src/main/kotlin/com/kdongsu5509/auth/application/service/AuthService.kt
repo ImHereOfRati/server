@@ -28,7 +28,9 @@ class AuthService(
     @Transactional
     override fun auth(provider: OAuth2Provider, idToken: String, nonce: String): ImHereJwtToken {
         val userInformation = oidcVerifyPort.verify(provider, idToken, nonce)
-        val user = userLookupContract.findByEmailOrNull(userInformation.email)
+        val oidcSubject = userInformation.sub ?: AuthException.OIDC_FORMAT_INVALID.throwIt()
+        val user = userLookupContract.findByOidcIdentityOrNull(provider, oidcSubject)
+            ?: userLookupContract.findByEmailOrNull(userInformation.email)
             ?: registerNewUser(userInformation, provider)
 
         if (user.oauthProvider != provider ||

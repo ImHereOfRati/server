@@ -31,7 +31,7 @@ class OIDCVerifyService(
             iss = jws.payload.issuer ?: "",
             aud = jws.payload.audience?.firstOrNull() ?: "",
             audiences = jws.payload.audience ?: emptySet(),
-            sub = jws.payload.subject ?: "",
+            sub = jws.payload.subject,
             nonce = jws.payload["nonce"] as? String,
             email = jws.payload["email"] as? String,
             nickname = jws.payload["nickname"] as? String,

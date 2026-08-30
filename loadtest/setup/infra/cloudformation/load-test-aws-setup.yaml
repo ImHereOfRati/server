@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ImHere 격리형 부하 테스트 애플리케이션, MySQL 모의 서버 및 관측성 서버 구성
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+  AppInstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [ t3.small ]
+  DbInstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [ t3.small ]
+  ObservabilityInstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [ t3.small ]
+  LoadGeneratorCidr:
+    Type: String
+    Description: 외부에서 실행되는 k6 부하 발생기의 공인 CIDR
+  ObservabilityAdminCidr:
+    Type: String
+    Description: Grafana(포트 3000) 접근을 허용할 관리자 공인 CIDR
+  VpcCidr:
+    Type: String
+    Default: 10.51.0.0/16
+  PublicSubnetCidr:
+    Type: String
+    Default: 10.51.1.0/24
+
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [ { Key: Name, Value: imhere-loadtest-vpc } ]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref PublicSubnetCidr
+      MapPublicIpOnLaunch: true
+      Tags: [ { Key: Name, Value: imhere-loadtest-public } ]
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: { VpcId: !Ref Vpc }
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  RouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref RouteTable
+
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Load-test application HTTPS and database client access
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: !Ref ObservabilityAdminCidr }
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: !Ref LoadGeneratorCidr }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: !Ref LoadGeneratorCidr }
+      SecurityGroupEgress: [ { IpProtocol: -1, CidrIp: 0.0.0.0/0 } ]
+
+  DbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: MySQL load-test database access from application host
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: !Ref ObservabilityAdminCidr }
+        - { IpProtocol: tcp, FromPort: 3306, ToPort: 3306, SourceSecurityGroupId: !Ref AppSecurityGroup }
+      SecurityGroupEgress: [ { IpProtocol: -1, CidrIp: 0.0.0.0/0 } ]
+
+  ObservabilitySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Load-test Grafana Prometheus Loki and Tempo access
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: !Ref ObservabilityAdminCidr }
+        - { IpProtocol: tcp, FromPort: 3000, ToPort: 3000, CidrIp: !Ref ObservabilityAdminCidr }
+        - { IpProtocol: tcp, FromPort: 9090, ToPort: 9090, SourceSecurityGroupId: !Ref AppSecurityGroup }
+        - { IpProtocol: tcp, FromPort: 3100, ToPort: 3100, SourceSecurityGroupId: !Ref AppSecurityGroup }
+        - { IpProtocol: tcp, FromPort: 4317, ToPort: 4318, SourceSecurityGroupId: !Ref AppSecurityGroup }
+      SecurityGroupEgress: [ { IpProtocol: -1, CidrIp: 0.0.0.0/0 } ]
+
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref AppInstanceType
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      KeyName: !Ref KeyName
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds: [ !Ref AppSecurityGroup ]
+      Tags: [ { Key: Name, Value: imhere-loadtest-app } ]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          dnf install -y docker openssl
+          systemctl enable --now docker
+          mkdir -p /usr/local/lib/docker/cli-plugins /opt/imhere/infra/nginx/certbot /opt/imhere/secrets
+          curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+          chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+          mkdir -p /etc/letsencrypt/live/loadtest
+          openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+            -keyout /etc/letsencrypt/live/loadtest/privkey.pem \
+            -out /etc/letsencrypt/live/loadtest/fullchain.pem \
+            -subj '/CN=loadtest'
+          chown -R ec2-user:ec2-user /opt/imhere
+
+  DbInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref DbInstanceType
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      KeyName: !Ref KeyName
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds: [ !Ref DbSecurityGroup ]
+      Tags: [ { Key: Name, Value: imhere-loadtest-mysql } ]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          # MySQL 설치 및 실행은 loadtest/setup/infra/database/setup-mysql.sh에서 수행한다.
+          mkdir -p /opt/mysql/setup
+          chown -R ec2-user:ec2-user /opt/mysql
+
+  ObservabilityInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref ObservabilityInstanceType
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      KeyName: !Ref KeyName
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds: [ !Ref ObservabilitySecurityGroup ]
+      Tags: [ { Key: Name, Value: imhere-loadtest-observability } ]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          dnf install -y docker
+          systemctl enable --now docker
+          mkdir -p /usr/local/lib/docker/cli-plugins /opt/imhere-observability
+          curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+          chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+          chown -R ec2-user:ec2-user /opt/imhere-observability
+
+Outputs:
+  AppInstanceId: { Value: !Ref AppInstance }
+  AppPublicIp: { Value: !GetAtt AppInstance.PublicIp }
+  DbPrivateIp: { Value: !GetAtt DbInstance.PrivateIp }
+  DbPublicIp: { Value: !GetAtt DbInstance.PublicIp }
+  ObservabilityInstanceId: { Value: !Ref ObservabilityInstance }
+  ObservabilityPublicIp: { Value: !GetAtt ObservabilityInstance.PublicIp }
+  ObservabilityPrivateIp: { Value: !GetAtt ObservabilityInstance.PrivateIp }

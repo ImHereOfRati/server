@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: ImHere load-test dashboards
+    orgId: 1
+    folder: ImHere
+    type: file
+    disableDeletion: true
+    editable: false
+    options:
+      path: /var/lib/grafana/dashboards
+      updateIntervalSeconds: 30

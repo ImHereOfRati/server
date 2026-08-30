@@ -1,0 +1,59 @@
+// Load-test only: all telemetry stays inside the load-test VPC.
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+  rule {
+    source_labels = ["__meta_docker_container_label_imhere_log_scope"]
+    regex = "external"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex = "/?(.*)"
+    target_label = "container"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_log_stream"]
+    target_label = "stream"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label = "service"
+  }
+}
+
+loki.source.docker "default" {
+  host = "unix:///var/run/docker.sock"
+  targets = discovery.relabel.containers.output
+  forward_to = [loki.write.loadtest.receiver]
+  labels = { job = "imhere-server" }
+}
+
+loki.write "loadtest" {
+  endpoint { url = sys.env("GRAFANA_CLOUD_LOKI_ENDPOINT") }
+}
+
+prometheus.scrape "imhere" {
+  targets = [{ __address__ = "iamhere-server-container:4861", job = "imhere-loadtest" }]
+  scrape_interval = "15s"
+  metrics_path = "/actuator/prometheus"
+  forward_to = [prometheus.remote_write.loadtest.receiver]
+}
+
+prometheus.remote_write "loadtest" {
+  endpoint { url = sys.env("GRAFANA_CLOUD_PROM_ENDPOINT") }
+}
+
+otelcol.receiver.otlp "otlp_receiver" {
+  grpc { endpoint = "0.0.0.0:4317" }
+  http { endpoint = "0.0.0.0:4318" }
+  output { traces = [otelcol.exporter.otlphttp.loadtest.input] }
+}
+
+otelcol.exporter.otlphttp "loadtest" {
+  client { endpoint = sys.env("GRAFANA_CLOUD_TEMPO_ENDPOINT") }
+}

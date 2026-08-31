@@ -17,22 +17,27 @@ const rateLimitCount = new Counter('only_one_rate_limit_count');
 const serverErrorCount = new Counter('only_one_server_error_count');
 const networkErrorCount = new Counter('only_one_network_error_count');
 const requestDuration = new Trend('only_one_request_duration', true);
-const stageDuration = __ENV.STAGE_DURATION || '1m';
+const plan = (__ENV.TEST_PLAN || 'precision').toLowerCase();
+const stageDuration = __ENV.STAGE_DURATION || '3m';
+const defaultStages = [
+  { target: 200, duration: stageDuration },
+  { target: 300, duration: stageDuration },
+  { target: 400, duration: stageDuration },
+];
+const stages = plan === 'single'
+  ? [{ target: Number(__ENV.TARGET_RPS || 100), duration: stageDuration }]
+  : defaultStages;
 
 export const options = {
   insecureSkipTLSVerify: (__ENV.INSECURE_TLS || 'true') === 'true',
   scenarios: {
     one_user: {
       executor: 'ramping-arrival-rate',
-      startRate: 200,
+      startRate: stages[0].target,
       timeUnit: '1s',
       preAllocatedVUs: Number(__ENV.PREALLOCATED_VUS || 300),
       maxVUs: Number(__ENV.MAX_VUS || 1000),
-      stages: [
-        { target: 200, duration: stageDuration },
-        { target: 300, duration: stageDuration },
-        { target: 400, duration: stageDuration },
-      ],
+      stages,
     },
   },
   // 429 is expected after a per-user limiter is installed. Report statuses

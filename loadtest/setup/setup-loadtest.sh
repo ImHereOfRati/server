@@ -18,6 +18,7 @@ STATE_FILE="${STATE_FILE:-${SCRIPT_DIR}/.loadtest-state}"
 
 CFN_TEMPLATE="${REPO_ROOT}/loadtest/setup/infra/cloudformation/load-test-aws-setup.yaml"
 MYSQL_SCRIPT="${REPO_ROOT}/loadtest/setup/infra/database/setup-mysql.sh"
+MYSQL_SCHEMA_SCRIPT="${REPO_ROOT}/db/init/mysql/imhere-full-init.sql"
 TEST_ENV_DIR="${REPO_ROOT}/loadtest/setup/test-env"
 INFRA_DIR="${REPO_ROOT}/loadtest/setup/infra"
 TEMP_ENV_DIR=""
@@ -33,6 +34,7 @@ require_commands() {
 }
 
 validate_files() {
+  [[ -f "${MYSQL_SCHEMA_SCRIPT}" ]] || { echo "MySQL 스키마 파일이 없습니다: ${MYSQL_SCHEMA_SCRIPT}" >&2; exit 1; }
   [[ -f "${CFN_TEMPLATE}" ]] || { echo "CloudFormation 템플릿이 없습니다: ${CFN_TEMPLATE}" >&2; exit 1; }
   [[ -f "${MYSQL_SCRIPT}" ]] || { echo "MySQL 설정 스크립트가 없습니다: ${MYSQL_SCRIPT}" >&2; exit 1; }
   [[ -d "${TEST_ENV_DIR}" ]] || { echo "테스트 환경 디렉터리가 없습니다: ${TEST_ENV_DIR}" >&2; exit 1; }
@@ -150,6 +152,15 @@ configure_mysql() {
     'sudo install -m 0755 /tmp/setup-mysql.sh /opt/mysql/setup-mysql.sh'
   ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
     "sudo env MYSQL_ROOT_PASSWORD='${MYSQL_ROOT_PASSWORD}' /opt/mysql/setup-mysql.sh"
+  initialize_mysql_schema
+}
+
+initialize_mysql_schema() {
+  echo 'MySQL 스키마를 초기화합니다.'
+  scp "${SSH_OPTIONS[@]}" "${MYSQL_SCHEMA_SCRIPT}" \
+    "${EC2_USER}@${DB_PUBLIC_IP}:/tmp/imhere-full-init.sql"
+  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
+    "sudo env MYSQL_PWD='${MYSQL_ROOT_PASSWORD}' mysql --protocol=socket -uroot rati < /tmp/imhere-full-init.sql"
 }
 
 prepare_runtime_env() {
@@ -190,6 +201,8 @@ deploy_application() {
 
   scp -r "${SSH_OPTIONS[@]}" "${INFRA_DIR}/monitoring" \
     "${EC2_USER}@${OBSERVABILITY_PUBLIC_IP}:${REMOTE_OBSERVABILITY_ROOT}/"
+  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${OBSERVABILITY_PUBLIC_IP}" \
+    "sudo chmod -R a+rX '${REMOTE_OBSERVABILITY_ROOT}/monitoring'"
   ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${OBSERVABILITY_PUBLIC_IP}" \
     "sudo sh -c \"cd '${REMOTE_OBSERVABILITY_ROOT}/monitoring' && export GRAFANA_ADMIN_PASSWORD='${GRAFANA_ADMIN_PASSWORD:-imhere-test-grafana-password}' GRAFANA_ROOT_URL='http://${OBSERVABILITY_PUBLIC_IP}:3000' && docker compose up -d\""
 }

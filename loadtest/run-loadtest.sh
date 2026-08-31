@@ -63,6 +63,54 @@ require_file() {
   }
 }
 
+install_k6() {
+  if command -v k6 >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if [[ -x "/c/PROGRA~1/k6/k6.exe" ]]; then
+    K6_PATH="/c/PROGRA~1/k6/k6.exe"
+    return 0
+  fi
+
+  echo "k6가 없어 자동 설치합니다."
+
+  if command -v winget >/dev/null 2>&1; then
+    winget install \
+      --id GrafanaLabs.k6 \
+      --exact \
+      --silent \
+      --accept-package-agreements \
+      --accept-source-agreements
+  elif command -v choco >/dev/null 2>&1; then
+    choco install k6 --yes
+  elif command -v brew >/dev/null 2>&1; then
+    brew install k6
+  elif command -v apt-get >/dev/null 2>&1; then
+    sudo gpg -k >/dev/null 2>&1 || true
+    sudo apt-get update
+    sudo apt-get install -y k6
+  else
+    echo "k6를 자동 설치할 수 있는 패키지 관리자를 찾지 못했습니다." >&2
+    return 1
+  fi
+
+  hash -r
+
+  if ! command -v k6 >/dev/null 2>&1; then
+    if [[ -x "/c/PROGRA~1/k6/k6.exe" ]]; then
+      K6_PATH="/c/PROGRA~1/k6/k6.exe"
+    elif [[ -x "/c/Program Files/k6/k6.exe" ]]; then
+      K6_PATH="/c/Program Files/k6/k6.exe"
+    fi
+  fi
+
+  [[ -x "${K6_PATH}" ]] || command -v "${K6_PATH}" >/dev/null 2>&1 || {
+    echo "k6 설치 후 실행 파일을 찾지 못했습니다." >&2
+    return 1
+  }
+}
+
 select_test() {
   local -a test_paths=()
   local index=1
@@ -100,6 +148,7 @@ trap cleanup EXIT
 require_command aws
 require_command node
 require_command curl
+install_k6
 require_file "${SETUP_SCRIPT}"
 require_file "${TEARDOWN_SCRIPT}"
 require_file "${INIT_DIR}/generate-test-data.mjs"
@@ -138,7 +187,6 @@ TARGET_RPS="${input_rps:-${TARGET_RPS}}"
 read -r -p "Stage duration (${STAGE_DURATION}): " input_duration
 STAGE_DURATION="${input_duration:-${STAGE_DURATION}}"
 
-require_command "${K6_PATH}"
 mkdir -p "${RESULT_DIR}"
 
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"

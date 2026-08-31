@@ -93,7 +93,7 @@ prometheus.scrape "imhere" {
   }]
 
   scrape_interval = "15s"
-  metrics_path    = "${MGMT_BASE_PATH}/prometheus"
+  metrics_path    = "/actuator/prometheus"
   forward_to      = [prometheus.remote_write.loadtest.receiver]
 }
 

@@ -1,0 +1,66 @@
+services:
+  prometheus:
+    image: ${PROMETHEUS_IMAGE:-prom/prometheus:v3.5.0}
+    container_name: imhere-loadtest-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}
+      - --web.enable-remote-write-receiver
+    ports:
+      - "0.0.0.0:9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,Z
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+
+  loki:
+    image: ${LOKI_IMAGE:-grafana/loki:3.5.1}
+    container_name: imhere-loadtest-loki
+    command: -config.file=/etc/loki/loki-config.yml
+    ports:
+      - "0.0.0.0:3100:3100"
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml:ro,Z
+      - loki_data:/loki
+    restart: unless-stopped
+
+  tempo:
+    image: ${TEMPO_IMAGE:-grafana/tempo:2.8.2}
+    container_name: imhere-loadtest-tempo
+    command: -config.file=/etc/tempo/tempo.yml
+    ports:
+      - "127.0.0.1:3200:3200"
+      - "0.0.0.0:4317:4317"
+      - "0.0.0.0:4318:4318"
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro,Z
+      - tempo_data:/var/tempo
+    restart: unless-stopped
+
+  grafana:
+    image: ${GRAFANA_IMAGE:-grafana/grafana:12.1.1}
+    container_name: imhere-loadtest-grafana
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    ports:
+      - "0.0.0.0:3000:3000"
+    environment:
+      TZ: Asia/Seoul
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro,Z
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro,Z
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  loki_data:
+  tempo_data:
+  grafana_data:

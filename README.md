@@ -1,11 +1,16 @@
 # ImHere Server
 
-ImHere의 서버 애플리케이션입니다.
+친구 관계 이벤트를 기반으로 알림을 전달하는 ImHere의 서버 애플리케이션입니다.
 
-사용자의 도착/출발 알림 요청을 처리하며,
-인증, 문자 발송, 푸시 알림 등의 기능을 제공합니다.
+Flutter 클라이언트에서 전달한 서비스 이벤트를 인증하고, 친구 관계와 수신 권한을 확인한 뒤 FCM·SMS 알림과 발송 결과를 관리합니다. 서버가 사용자의 위치를 직접 추적하거나 도착 여부를 계산하는 구조는 아닙니다.
 
-> 홈페이지 : https://imhere.ratiko.co.kr
+## 개발 동기
+
+서울에서 거제로 이동할 때 가족에게 연락해야 했지만 이동 중 연락을 놓친 경험을 계기로, 친구·가족 간 상태 공유와 알림 전달 흐름을 서버 관점에서 구현했습니다. 현재 서버의 핵심은 위치 계산이 아니라 사용자 신원, 관계 상태, 알림 전달 상태를 일관되게 관리하는 것입니다.
+
+> 랜딩 페이지 : https://imhere.ratiko.co.kr
+
+> API 문서 : https://imhere.ratiko.co.kr/swagger-ui/index.html
 
 > 모바일 레포지토리 : https://github.com/ImHereOfRati/mobile
 
@@ -17,12 +22,16 @@ ImHere의 서버 애플리케이션입니다.
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"/>
   <img src="https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot"/>
   <img src="https://img.shields.io/badge/Spring%20Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security"/>
+  <img src="https://img.shields.io/badge/Thymeleaf-005F0F?style=for-the-badge&logo=thymeleaf&logoColor=white" alt="Thymeleaf"/>
+  <img src="https://img.shields.io/badge/Jackson-000000?style=for-the-badge&logo=jackson&logoColor=white" alt="Jackson"/>
   <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white" alt="Gradle"/>
 </p>
 <p>
   <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"/>
+  <img src="https://img.shields.io/badge/JPA-59666C?style=for-the-badge&logo=hibernate&logoColor=white" alt="JPA"/>
+  <img src="https://img.shields.io/badge/QueryDSL-4479A1?style=for-the-badge&logoColor=white" alt="QueryDSL"/>
   <img src="https://img.shields.io/badge/Caffeine-FF9F1C?style=for-the-badge&logo=coffeescript&logoColor=white" alt="Caffeine"/>
-  <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT"/>
+  <img src="https://img.shields.io/badge/JJWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JJWT"/>
 </p>
 <p>
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
@@ -32,17 +41,23 @@ ImHere의 서버 애플리케이션입니다.
 </p>
 <p>
   <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"/>
+  <img src="https://img.shields.io/badge/Spring%20Retry-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Retry"/>
+  <img src="https://img.shields.io/badge/OpenTelemetry-000000?style=for-the-badge&logo=opentelemetry&logoColor=white" alt="OpenTelemetry"/>
+  <img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white" alt="Prometheus"/>
   <img src="https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white" alt="Grafana"/>
   <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger/OpenAPI"/>
   <img src="https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white" alt="JUnit5"/>
+  <img src="https://img.shields.io/badge/Mockito-78A641?style=for-the-badge&logoColor=white" alt="Mockito"/>
+  <img src="https://img.shields.io/badge/H2-09476B?style=for-the-badge&logoColor=white" alt="H2"/>
+  <img src="https://img.shields.io/badge/JaCoCo-1B365D?style=for-the-badge&logoColor=white" alt="JaCoCo"/>
 </p>
 
 ---
 
 ## 개요
 
-- 위치 기반 도착/이탈 알림 처리
-- Kakao/Google/Apple OIDC 로그인
+- 클라이언트 이벤트를 기반으로 한 친구 관계·알림 처리
+- Kakao/Google OIDC 로그인
 - JWT 발급 및 Refresh Token 재발급
 - 사용자, 친구, 약관, 알림, 기록, 운영 도메인 분리
 - Spring Modulith 이벤트 기반 비동기 알림 처리
@@ -56,21 +71,23 @@ ImHere의 서버 애플리케이션입니다.
 
 | 분류            | 기술                                                 |
 |---------------|----------------------------------------------------|
-| Language      | Kotlin                                             |
-| Runtime       | Java                                               |
-| Framework     | Spring Boot                                        |
+| Language      | Kotlin 2.3.21                                      |
+| Runtime       | JDK 25                                             |
+| Build         | Gradle Wrapper 9.3.1                              |
+| Framework     | Spring Boot 4.1.0                                  |
 | Architecture  | Hybrid MVC + Hexagonal                             |
-| DB            | MySQL, Spring Data JPA, QueryDSL                   |
+| Web           | Spring MVC, Thymeleaf, Jackson, Validation       |
+| DB            | MySQL, Spring Data JPA, QueryDSL, P6Spy           |
 | Cache         | Caffeine                                           |
-| Events        | Spring Modulith Application Events                 |
-| Auth          | Kakao/Google/Apple OIDC, JWT, Spring Security      |
+| Events        | Spring Modulith, Spring Retry                     |
+| Auth          | Kakao/Google OIDC, JJWT, Spring Security           |
 | Admin Auth    | Spring Security OTT                                |
 | Push          | Firebase Admin SDK (FCM)                           |
 | SMS           | Solapi SDK                                         |
 | Alerting      | Discord Webhook                                    |
-| API Docs      | Spring REST Docs, OpenAPI 3                        |
-| Observability | Micrometer, Prometheus, Grafana Alloy, Loki, Tempo |
-| Test          | JUnit 5, Mockito, AssertJ, MockMvc                  |
+| API Docs      | Spring REST Docs, OpenAPI 3, Swagger UI            |
+| Observability | Actuator, Micrometer, Prometheus, OpenTelemetry    |
+| Test          | JUnit 5, Mockito, AssertJ, MockMvc, H2             |
 | Coverage      | JaCoCo                                             |
 | Infra         | AWS EC2, ECR, Docker                               |
 
@@ -82,7 +99,6 @@ ImHere의 서버 애플리케이션입니다.
 
 - Kakao OIDC 로그인
 - Google OIDC 로그인
-- Apple OIDC 로그인
 - JWT 발급/재발급
 - Caffeine 기반 공개키 캐시
 - 어드민 OTT 로그인
@@ -222,13 +238,11 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 
 ### OIDC
 
-- Kakao, Google, Apple 모두 `nonce`를 사용한다.
+- Kakao와 Google ID Token의 `nonce`를 사용한다.
 - 로그인 및 회원가입 요청에서 `nonce`를 토큰의 `nonce` 클레임과 대조한다.
 - 허용 `iss`와 `aud`는 provider마다 목록으로 설정한다. Google은 `iss`를 스킴 포함/미포함 두 형태로
-  발급하고, Google과 Apple은 플랫폼마다 client ID(`aud`)가 갈리기 때문이다.
-- Apple ID Token에는 표시 이름이 없어 닉네임은 이메일 앞부분을 쓴다. 이메일 자체가 없으면
-  `users.email`이 필수라 로그인을 거절한다.
-- 자세한 내용은 [docs/security/oauth.md](docs/security/oauth.md)에 있다.
+  발급하고, Google은 플랫폼마다 client ID(`aud`)가 갈릴 수 있다.
+- 자세한 내용은 [docs/security.md](docs/security.md)에 있다.
 
 ### JWT
 
@@ -394,18 +408,18 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 
 ### Compose 파일
 
-- `docker-compose.yml`: 단일 원본, `local` / `prod` profile로 분기
+- `docker-compose.yml`: `dsko`와 운영 Nginx·Alloy 정의
+- `docker-compose.local.yml`: 로컬 `dsko`·Prometheus·Grafana 설정
 
 ### 배포 관련 파일
 
 - `Dockerfile.release`
 - `infra/nginx/nginx.conf.template`
 - `infra/nginx/nginx.conf`
-- `infra/alloy/alloy-config.alloy.template`
 - `infra/alloy/alloy-config.alloy`
 - runtime `env/*.env` (config repo)
-- `infra/scripts/sync-config.sh`
-- `infra/scripts/remote-provision.sh` / `remote-tls.sh` / `remote-rollout.sh` / `remote-healthcheck.sh`
+- `infra/scripts/pull-config.sh`
+- `infra/scripts/setting-ec2` / `infra/scripts/deploy-imhere.sh` / `infra/scripts/deploy-sub-tasks/` / `infra/scripts/deploy-sub-tasks/tls-sub-tasks/`
 - `secrets/`
 
 ---
@@ -423,7 +437,7 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 
 ### 런타임 설정
 
-- `env/app.env`, `env/web.env`, `env/oidc.env`, `env/external.env`, `env/observability.env`
+- `env/server.env`, `env/nginx.env`, `env/alloy.env`
   (관심사별로 쪼개져 있고 컨테이너마다 필요한 것만 주입된다 — private config repo의 `env/`)
 - `secrets/imhereFirebaseKey.json`
 
@@ -444,13 +458,13 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 ### 운영용 compose 변수 예시
 
 - `CONFIG_REPO_PAT`
-- `env/app.env`의 DB 값, `env/observability.env`의 Grafana Cloud 값들
+- `env/server.env`의 DB 값, `env/alloy.env`의 Grafana Cloud 값들
 
 ### 로컬에서 설정이 들어가는 방식
 
 - `./gradlew bootRun`은 `application.yaml`의 기본값만으로 뜬다. 프로파일 인자가 필요 없다.
   DB만 `localhost:3306/rati`에 떠 있으면 된다.
-- `docker compose --profile local up -d`는 `docker-compose.yml`에 적힌 기본값으로 뜬다.
+- 로컬은 `docker compose -f docker-compose.yml -f docker-compose.local.yml up -d`로 `dsko`를 실행한다.
 - config repo의 `env/*.env` / `imhereFirebaseKey.json`은 운영 배포 전용이다.
 
 ---
@@ -466,7 +480,7 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init
 ### 로컬 인프라
 
 ```bash
-docker compose --profile local up -d
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
 ```
 
 ### 애플리케이션 실행
@@ -489,7 +503,7 @@ docker compose --profile local up -d
 
 - Unit Test: 도메인, 독립 서비스
 - Slice Test: Controller, Repository
-- Integration Test: 실제 DB와 Modulith 이벤트 경계를 포함한 E2E
+- Integration Test: 여러 계층과 Modulith 이벤트 경계를 연결한 핵심 흐름
 
 ### 규칙
 
@@ -514,12 +528,12 @@ docker compose --profile local up -d
 
 | 문서                                                             | 내용                                                     |
 |----------------------------------------------------------------|--------------------------------------------------------|
-| [docs/README.md](./docs/README.md)                             | 문서 전체 인덱스                                               |
-| [docs/architecture/](./docs/architecture/README.md)            | 시스템 토폴로지, 모듈 내부 구조, 도메인 비즈니스 규칙                          |
-| [docs/security/](./docs/security/README.md)                    | OIDC/JWT/관리자 계정 인증 정책                              |
+| [docs/domain.md](./docs/domain.md)                             | 도메인 용어, 상태 전이, 불변식                                  |
+| [docs/database.md](./docs/database.md)                         | MySQL 설정, DDL, ERD, 제약조건                                  |
+| [docs/security.md](./docs/security.md)                         | OIDC, JWT, 계정 상태, 관리자 API, CORS                         |
+| [docs/messaging.md](./docs/messaging.md)                       | Event Publication, 알림 Retry·Recovery, 중복·실패 처리          |
+| [docs/test-strategy.md](./docs/test-strategy.md)               | 계층별 테스트 기준과 검증 공백                                  |
 | [docs/conventions/](./docs/conventions/README.md)              | Kotlin 컨벤션, 에러 응답 포맷, 테스트 전략                            |
-| [docs/flows/](./docs/flows/README.md)                          | 주요 시퀀스 다이어그램(로그인/가입/친구/알림/재발송)                          |
-| [docs/infra/](./docs/infra/README.md)                          | Docker, CI/CD, AWS, nginx, 가비아 도메인/DB 호스팅, DB 스키마       |
-| [docs/observability/](./docs/observability/README.md)          | 로그/메트릭/트레이스 파이프라인, 런타임 설정, 알림 채널                        |
+| [docs/imhere-deployment-and-operation-final.md](./docs/imhere-deployment-and-operation-final.md) | 배포·운영·인프라·관측성·장애 대응 |
 
 모바일 클라이언트 저장소: <https://github.com/ImHereOfRati/mobile>

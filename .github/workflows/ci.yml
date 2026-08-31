@@ -36,8 +36,11 @@ jobs:
 
       - name: Test deployment scripts
         run: |
-          bash -n infra/scripts/*.sh infra/scripts/tests/*.sh
-          bash infra/scripts/tests/remote-tls-test.sh
+          bash -n \
+            infra/scripts/*.sh \
+            infra/scripts/setting-ec2 \
+            infra/scripts/deploy-sub-tasks/*.sh \
+            infra/scripts/deploy-sub-tasks/tls-sub-tasks/*.sh
 
       - name: Run tests
         run: ./gradlew test

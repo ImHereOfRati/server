@@ -13,9 +13,11 @@ import com.solapi.sdk.message.model.Message
 import com.solapi.sdk.message.service.DefaultMessageService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import org.springframework.context.annotation.Profile
 import java.lang.reflect.Method
 
 @Component
+@Profile("!loadtest")
 class SolapiAdapter(
     private val externalSMSProperties: ExternalSMSProperties,
     private val solapiService: DefaultMessageService,

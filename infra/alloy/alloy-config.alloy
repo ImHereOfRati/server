@@ -1,0 +1,177 @@
+// Grafana Alloy 설정
+// 목적 : Alloy가 무엇을 수집해서 어디로 보낼 지를 정의한다.
+// 참고 : 민감한 값(엔드포인트, 사용자명, API 키)은 환경변수로 주입해야 한다.
+
+// ---------------------------------------------------------
+// Alloy 동작 순서
+// 0. Docker 데몬에서 현재 실행 중인 컨테이너 목록과 메타데이터를 읽어 온다.
+// 1. Docker 소켓을 통해 현재 실행 중인 컨테이너와 메타데이터를 조회한다.
+// 2. Docker 컨테이너 라벨이 imhere_log_scope=external인 컨테이너만 수집 대상으로 포함한다.
+// 3. 컨테이너 이름, stdout/stderr 스트림, Docker Compose 서비스 이름을 Loki 라벨로 추가한다.
+// 4. 수집 대상 컨테이너의 Docker stdout/stderr 로그를 읽고 job=imhere-server 라벨을 붙인다.
+// 5. 수집한 로그를 Loki writer로 전달하고 Grafana Cloud Loki endpoint로 전송한다.
+// 6. 애플리케이션 컨테이너의 Actuator Prometheus 메트릭을 15초마다 수집해 Grafana Cloud Prometheus로 전송한다.
+// 7. 애플리케이션의 OTLP 트레이스를 gRPC/HTTP로 수신해 Grafana Cloud Tempo로 전송한다.
+// ---------------------------------------------------------
+
+
+// 1. Docker 소켓을 통해 현재 실행 중인 컨테이너와 메타데이터를 조회한다.
+discovery.docker "containers" {
+	host = "unix:///var/run/docker.sock"
+}
+
+// Docker 메타데이터를 필터링하고 Loki에서 사용할 라벨로 변환한다.
+discovery.relabel "containers" {
+	targets = discovery.docker.containers.targets
+
+    // 2. Docker 컨테이너 라벨이 imhere_log_scope=external인 컨테이너만 수집 대상으로 포함한다.
+    // 컨테이너 로그 수집 대상 태그로 파악한다.
+	rule {
+		source_labels = ["__meta_docker_container_label_imhere_log_scope"]
+		regex         = "external"
+		action        = "keep"
+	}
+
+    // 3. Docker 컨테이너 이름으로 container 라벨을 변경한다.
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/?(.*)"
+		target_label  = "container"
+	}
+
+    // stdout과 stderr를 stream 라벨로 구분한다.
+	rule {
+		source_labels = ["__meta_docker_container_log_stream"]
+		target_label  = "stream"
+	}
+
+    // Docker Compose 서비스 이름으로 service 라벨을 변경한다.
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		target_label  = "service"
+	}
+}
+
+// 4. 수집 대상 컨테이너의 Docker stdout/stderr 로그를 읽고 job=imhere-server 라벨을 붙인다.
+loki.source.docker "default" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = discovery.relabel.containers.output
+	forward_to = [loki.process.docker_logs.receiver]
+
+	labels = {
+		"job" = "imhere-server",
+	}
+}
+
+// 5. 수집한 로그를 Loki writer로 전달하고 Grafana Cloud Loki endpoint로 전송한다.
+loki.write "grafana_cloud" {
+	endpoint {
+		url = sys.env("GRAFANA_CLOUD_LOKI_ENDPOINT")
+
+		basic_auth {
+			username = sys.env("GRAFANA_CLOUD_LOKI_USER")
+			password = sys.env("GRAFANA_CLOUD_LOKI_API_KEY")
+		}
+	}
+}
+
+
+// 6. 애플리케이션 컨테이너의 Spring Boot Actuator Prometheus 메트릭을 15초마다 수집
+// nginx JSON 로그를 파싱해 OpenTelemetry 의미 체계에 맞는 구조화 메타데이터로 저장한다.
+// 앱의 기존 텍스트 로그는 원문 그대로 Loki로 전달한다.
+loki.process "docker_logs" {
+	forward_to = [loki.write.grafana_cloud.receiver]
+
+	stage.match {
+		selector = "{service=\"nginx\"}"
+
+		stage.json {
+			expressions = {
+				timestamp                  = "timestamp",
+				client_address             = "\"client.address\"",
+				http_request_method        = "\"http.request.method\"",
+				url_path                  = "\"url.path\"",
+				url_query                 = "\"url.query\"",
+				http_response_status_code = "\"http.response.status_code\"",
+				http_response_body_size   = "\"http.response.body.size\"",
+				http_request_duration     = "\"http.request.duration\"",
+				http_request_protocol     = "\"http.request.protocol\"",
+				user_agent_original       = "\"user_agent.original\"",
+				http_request_referer      = "\"http.request.header.referer\"",
+				server_address            = "\"server.address\"",
+			}
+		}
+
+		stage.timestamp {
+			source = "timestamp"
+			format = "RFC3339"
+		}
+
+		stage.structured_metadata {
+			values = {
+				"client.address"               = "client_address",
+				"http.request.method"         = "http_request_method",
+				"url.path"                    = "url_path",
+				"url.query"                   = "url_query",
+				"http.response.status_code"   = "http_response_status_code",
+				"http.response.body.size"     = "http_response_body_size",
+				"http.request.duration"       = "http_request_duration",
+				"http.request.protocol"       = "http_request_protocol",
+				"user_agent.original"         = "user_agent_original",
+				"http.request.header.referer" = "http_request_referer",
+				"server.address"              = "server_address",
+			}
+		}
+	}
+}
+
+prometheus.scrape "imhere" {
+	targets = [{
+		__address__ = "iamhere-server-container:4861",
+	}]
+	scrape_interval = "15s"
+	metrics_path = "${MGMT_BASE_PATH}/prometheus"
+	forward_to    = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+// 수집한 Prometheus 메트릭을 Grafana Cloud Prometheus로 전송한다.
+prometheus.remote_write "grafana_cloud" {
+	endpoint {
+		url = sys.env("GRAFANA_CLOUD_PROM_ENDPOINT")
+
+		basic_auth {
+			username = sys.env("GRAFANA_CLOUD_PROM_USER")
+			password = sys.env("GRAFANA_CLOUD_PROM_API_KEY")
+		}
+	}
+}
+
+
+// 7. 애플리케이션이 전송하는 OTLP 트레이스를 gRPC와 HTTP로 모두 수신한다.
+// gRPC는 4317, HTTP는 4318 포트에서 수신한다.
+otelcol.receiver.otlp "otlp_receiver" {
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		traces = [otelcol.exporter.otlphttp.grafanacloud.input]
+	}
+}
+
+// 수신한 트레이스를 Grafana Cloud Tempo의 OTLP HTTP endpoint로 전달한다.
+otelcol.exporter.otlphttp "grafanacloud" {
+	client {
+		endpoint = sys.env("GRAFANA_CLOUD_TEMPO_ENDPOINT")
+		auth     = otelcol.auth.basic.grafanacloud.handler
+	}
+}
+
+// Tempo 전송에 사용할 Basic Auth 자격증명을 환경변수에서 읽는다.
+otelcol.auth.basic "grafanacloud" {
+	username = sys.env("GRAFANA_CLOUD_TEMPO_USER")
+	password = sys.env("GRAFANA_CLOUD_TEMPO_API_KEY")
+}

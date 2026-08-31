@@ -9,20 +9,20 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: "25"
           distribution: "corretto"
 
       - name: Cache Gradle packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches
@@ -36,8 +36,7 @@ jobs:
 
       - name: Test deployment scripts
         run: |
-          bash -n infra/scripts/*.sh infra/scripts/tests/*.sh
-          bash infra/scripts/tests/remote-tls-test.sh
+          bash -n infra/scripts/*.sh infra/scripts/setting-ec2 infra/scripts/deploy-sub-tasks/*.sh infra/scripts/deploy-sub-tasks/tls-sub-tasks/*.sh
 
       - name: Run tests
         run: ./gradlew test

@@ -12,8 +12,10 @@ import com.kdongsu5509.notifications.exception.UnregisteredTokenException
 import com.kdongsu5509.support.exception.throwIt
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import org.springframework.context.annotation.Profile
 
 @Component
+@Profile("!loadtest")
 class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : FirebasePort {
     private val log = LoggerFactory.getLogger(this::class.java)
 

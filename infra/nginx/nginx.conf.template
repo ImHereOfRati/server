@@ -11,6 +11,11 @@ http {
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
 
+    geo $nginx_ip_blocked {
+        default 0;
+        ${NGINX_BLOCKED_IP_RULES}
+    }
+
     log_format main escape=json
                     '{'
                     '"timestamp":"$time_iso8601",'
@@ -46,6 +51,8 @@ http {
         listen 80;
         server_name ${SERVER_NAME} www.${SERVER_NAME};
 
+        if ($nginx_ip_blocked) { return 403; }
+
         location ^~ /.well-known/acme-challenge/ {
             root /var/www/certbot;
         }
@@ -59,6 +66,8 @@ http {
         listen 443 ssl;
         server_name www.${SERVER_NAME};
 
+        if ($nginx_ip_blocked) { return 403; }
+
         ssl_certificate /etc/letsencrypt/live/${CERT_DOMAIN}/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/${CERT_DOMAIN}/privkey.pem;
         include /etc/letsencrypt/options-ssl-nginx.conf;
@@ -70,6 +79,8 @@ http {
     server {
         listen 443 ssl;
         server_name ${SERVER_NAME};
+
+        if ($nginx_ip_blocked) { return 403; }
 
         ssl_certificate /etc/letsencrypt/live/${CERT_DOMAIN}/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/${CERT_DOMAIN}/privkey.pem;

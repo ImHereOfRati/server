@@ -3,7 +3,8 @@ name: IMHERE_GITHUB_ACTION_CI
 on:
   pull_request:
     branches:
-      - main
+      - "**"
+      - "!main"
 
 jobs:
   test:

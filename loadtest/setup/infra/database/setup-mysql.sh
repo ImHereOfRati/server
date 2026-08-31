@@ -10,6 +10,19 @@ MYSQL_REPO_RPM_URL="${MYSQL_REPO_RPM_URL:-https://dev.mysql.com/get/mysql80-comm
 MYSQL_REPO_KEY_URL="${MYSQL_REPO_KEY_URL:-https://repo.mysql.com/RPM-GPG-KEY-mysql-2025}"
 MYSQL_CONFIG_FILE="/etc/my.cnf.d/imhere-loadtest.cnf"
 
+validate_mysql_password() {
+  local password="$1"
+
+  [[ "${#password}" -ge 8 \
+    && "${password}" =~ [A-Z] \
+    && "${password}" =~ [a-z] \
+    && "${password}" =~ [0-9] \
+    && "${password}" =~ [^[:alnum:]] ]] || {
+    echo "MySQL root 비밀번호는 8자 이상이며 대문자·소문자·숫자·특수문자를 포함해야 합니다." >&2
+    exit 1
+  }
+}
+
 require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
     echo "root 권한으로 실행하거나 sudo를 사용해야 합니다." >&2
@@ -98,6 +111,7 @@ print_summary() {
 
 main() {
   require_root
+  validate_mysql_password "${MYSQL_ROOT_PASSWORD}"
   install_mysql_repository
   install_mysql_packages
   write_mysql_config

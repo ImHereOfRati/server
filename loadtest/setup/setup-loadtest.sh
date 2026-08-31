@@ -73,10 +73,7 @@ resolve_runtime_settings() {
     read -r -s -p 'MySQL root password: ' MYSQL_ROOT_PASSWORD
     printf '\n' >&2
   fi
-  [[ "${#MYSQL_ROOT_PASSWORD}" -ge 8 ]] || {
-    echo "MySQL root 비밀번호는 8자 이상이어야 합니다." >&2
-    exit 1
-  }
+  validate_mysql_password "${MYSQL_ROOT_PASSWORD}"
 
   if [[ -z "${ECR_REPOSITORY:-}" ]]; then
     ECR_REPOSITORY="$(aws cloudformation describe-stacks \
@@ -88,6 +85,19 @@ resolve_runtime_settings() {
   ECR_REPOSITORY="${ECR_REPOSITORY:?ECR 저장소를 확인할 수 없습니다.}"
   AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}"
   ECR_REGISTRY="${ECR_REGISTRY:-${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com}"
+}
+
+validate_mysql_password() {
+  local password="$1"
+
+  [[ "${#password}" -ge 8 \
+    && "${password}" =~ [A-Z] \
+    && "${password}" =~ [a-z] \
+    && "${password}" =~ [0-9] \
+    && "${password}" =~ [^[:alnum:]] ]] || {
+    echo "MySQL root 비밀번호는 8자 이상이며 대문자·소문자·숫자·특수문자를 포함해야 합니다." >&2
+    exit 1
+  }
 }
 
 deploy_stack() {

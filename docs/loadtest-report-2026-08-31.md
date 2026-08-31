@@ -68,3 +68,30 @@ fixture 주입 수정 후 애플리케이션 upstream 5xx는 0건으로 감소�
 
 테스트 종료 후 CloudFormation 스택과 테스트 키 페어는 자동 삭제됐다.
 
+## 이슈 #128 반영 후 재검증
+
+이슈에서 지적한 타임아웃 충돌을 줄이기 위해 HikariCP `connection-timeout` 기본값을 30초에서 5초로 변경했다. Nginx의 `proxy_read_timeout`은 30초를 유지해 DB 커넥션 고갈 시 애플리케이션이 먼저 실패하도록 순서를 보장했다.
+
+또한 다음 관측 항목을 추가했다.
+
+- HikariCP pending 및 timeout 초당 발생량을 Prometheus recording rule과 Grafana 대시보드에서 확인
+- Nginx access log에 최종 상태 코드와 함께 upstream 상태, 연결 시간, 응답 시간을 기록
+- k6에서 503 gateway 오류와 500·502·504 등 upstream 서버 오류를 별도 집계
+
+동일 조건으로 재실행한 결과는 다음과 같다.
+
+| 항목 | 결과 |
+|---|---:|
+| 실행 조건 | `single / 100 RPS / 10s` |
+| HTTP 요청 | 999 |
+| 실제 HTTP 처리율 | 99.78 req/s |
+| p50 / p95 | 9.84 ms / 32.15 ms |
+| 429 응답 | 869 (86.80/s) |
+| 503 응답 | 20 (2.00/s) |
+| 애플리케이션 upstream 5xx | 0 |
+| 네트워크 오류 | 0 |
+| check 통과 | 999/999 |
+| 결과 JSON | `loadtest/k6/generated/results/user-me-single-20260831-225408.json` |
+
+이번 실행에서 남은 503은 애플리케이션 500이나 Nginx 504가 아니라 Nginx의 동시 연결 제한 응답으로 분리됐다. 애플리케이션 upstream 5xx 및 네트워크 오류는 0건이므로 이슈의 핵심 완료 기준인 원인 구분은 충족했다. 테스트 종료 후 AWS 부하테스트 스택과 키 페어도 자동 삭제됐다.
+

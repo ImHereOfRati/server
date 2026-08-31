@@ -1,13 +1,10 @@
 name: IMHERE_GITHUB_ACTION_CI
 
 on:
-  push:
+  pull_request:
     branches:
       - "**"
       - "!main"
-  pull_request:
-    branches:
-      - main
 
 jobs:
   test:

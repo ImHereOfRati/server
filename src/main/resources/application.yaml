@@ -63,6 +63,12 @@ logging:
     com.google.firebase: WARN
     p6spy: WARN
 
+loadtest:
+  provider:
+    delay-ms: ${LOADTEST_PROVIDER_DELAY_MS:0}
+    failure-rate: ${LOADTEST_PROVIDER_FAILURE_RATE:0.0}
+    failure-mode: ${LOADTEST_PROVIDER_FAILURE_MODE:RETRYABLE}
+
 management:
   server:
     port: 4861
@@ -70,6 +76,11 @@ management:
     metrics:
       export:
         enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        spring.security.http.secured.requests: true
   endpoints:
     web:
       # 운영에서는 난독화된 경로가 주입된다. prod 문서가 기본값 없이 다시 선언하므로

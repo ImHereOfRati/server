@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ResourceLoader
 import java.io.InputStream
 
-@Profile("!test")
+@Profile("!test & !loadtest")
 @Configuration
 @EnableConfigurationProperties(FcmProperties::class)
 class FirebaseConfig(

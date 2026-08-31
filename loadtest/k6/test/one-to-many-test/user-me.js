@@ -15,6 +15,8 @@ if (!actor) throw new Error(`No fixture user at ACTOR_INDEX=${actorIndex}`);
 const responseCount = new Counter('only_one_response_count');
 const rateLimitCount = new Counter('only_one_rate_limit_count');
 const serverErrorCount = new Counter('only_one_server_error_count');
+const gatewayUnavailableCount = new Counter('only_one_gateway_unavailable_count');
+const upstreamServerErrorCount = new Counter('only_one_upstream_server_error_count');
 const networkErrorCount = new Counter('only_one_network_error_count');
 const requestDuration = new Trend('only_one_request_duration', true);
 const plan = (__ENV.TEST_PLAN || 'precision').toLowerCase();
@@ -58,7 +60,11 @@ export default function () {
   responseCount.add(1, { status: String(status) });
   requestDuration.add(response.timings.duration);
   if (status === 429) rateLimitCount.add(1);
-  if (status >= 500) serverErrorCount.add(1);
+  if (status >= 500) {
+    serverErrorCount.add(1);
+    if (status === 503) gatewayUnavailableCount.add(1);
+    else upstreamServerErrorCount.add(1);
+  }
   if (status === 0) networkErrorCount.add(1);
 
   check(response, { 'only-one request completed': (r) => r.status !== 0 });

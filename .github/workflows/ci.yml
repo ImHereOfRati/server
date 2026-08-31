@@ -1,9 +1,6 @@
 name: IMHERE_GITHUB_ACTION_CI
 
 on:
-  push:
-    branches:
-      - "**"
   pull_request:
     branches:
       - main

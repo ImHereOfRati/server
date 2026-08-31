@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+require_environment() {
+  : "${EC2_DEPLOY_PATH:?EC2_DEPLOY_PATH 환경변수가 필요합니다.}"
+}
+
+normalize_deploy_path() {
+  case "$EC2_DEPLOY_PATH" in
+    "~") EC2_DEPLOY_PATH="$HOME" ;;
+    "~/"*) EC2_DEPLOY_PATH="$HOME/${EC2_DEPLOY_PATH#~/}" ;;
+  esac
+}
+
+install_docker() {
+  if ! command -v docker >/dev/null 2>&1; then
+    sudo dnf install -y docker
+  fi
+}
+
+install_certbot() {
+  if ! command -v certbot >/dev/null 2>&1; then
+    sudo dnf install -y certbot
+  fi
+}
+
+install_docker_compose_plugin() {
+  if sudo docker compose version >/dev/null 2>&1; then
+    return 0
+  fi
+
+  sudo mkdir -p /usr/local/lib/docker/cli-plugins
+  sudo curl -fsSL \
+    https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+    -o /usr/local/lib/docker/cli-plugins/docker-compose
+  sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+}
+
+enable_docker_service() {
+  sudo systemctl enable --now docker
+}
+
+verify_dependencies() {
+  sudo docker --version
+  sudo docker compose version
+  certbot --version
+}
+
+create_deploy_directories() {
+  sudo mkdir -p \
+    "${EC2_DEPLOY_PATH}/infra/nginx/certbot" \
+    "${EC2_DEPLOY_PATH}/infra/alloy" \
+    "${EC2_DEPLOY_PATH}/infra/scripts" \
+    "${EC2_DEPLOY_PATH}/infra/scripts/deploy-sub-tasks/tls-sub-tasks" \
+    "${EC2_DEPLOY_PATH}/env" \
+    "${EC2_DEPLOY_PATH}/secrets"
+}
+
+set_deploy_directory_owner() {
+  sudo chown -R "$(id -u):$(id -g)" "$EC2_DEPLOY_PATH"
+}
+
+main() {
+  require_environment
+  normalize_deploy_path
+  install_docker
+  install_certbot
+  install_docker_compose_plugin
+  enable_docker_service
+  verify_dependencies
+  create_deploy_directories
+  set_deploy_directory_owner
+
+  echo "EC2 인스턴스 준비가 완료되었습니다. 배포 루트: ${EC2_DEPLOY_PATH}"
+}
+
+main "$@"

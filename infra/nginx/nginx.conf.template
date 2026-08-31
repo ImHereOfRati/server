@@ -11,14 +11,24 @@ http {
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
 
-    # 접근 로그는 요청-응답 흐름과 클라이언트 정보를 추적할 때만 쓴다.
-    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
-                    '$status $body_bytes_sent "$http_referer" '
-                    '"$http_user_agent" "$http_x_forwarded_for"';
+    log_format main escape=json
+                    '{'
+                    '"timestamp":"$time_iso8601",'
+                    '"client.address":"$remote_addr",'
+                    '"http.request.method":"$request_method",'
+                    '"url.path":"$uri",'
+                    '"url.query":"$args",'
+                    '"http.response.status_code":$status,'
+                    '"http.response.body.size":$body_bytes_sent,'
+                    '"http.request.duration":$request_time,'
+                    '"http.request.protocol":"$server_protocol",'
+                    '"user_agent.original":"$http_user_agent",'
+                    '"http.request.header.referer":"$http_referer",'
+                    '"server.address":"$host"'
+                    '}';
 
     access_log /var/log/nginx/access.log main;
 
-    # 기본 성능 설정. 정적 파일 전달과 keep-alive를 무리 없이 처리하도록 둔다.
     sendfile on;
     tcp_nopush on;
     tcp_nodelay on;
@@ -26,15 +36,12 @@ http {
     types_hash_max_size 2048;
     server_tokens off;
 
-    # 응답 압축은 켜 두되, 구형 브라우저 전용 예외만 제외한다.
     gzip on;
     gzip_disable "msie6";
 
-    # TLS는 1.2 이상만 허용한다. 1.0/1.1은 호환성보다 보안을 우선해 제거한다.
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
 
-    # 운영용 서버 블록. 80은 HTTPS 리다이렉트, 443은 실제 트래픽을 처리한다.
     server {
         listen 80;
         server_name ${SERVER_NAME} www.${SERVER_NAME};
@@ -52,7 +59,6 @@ http {
         listen 443 ssl;
         server_name www.${SERVER_NAME};
 
-        # www 도메인은 인증서 검증만 통과한 뒤 루트 도메인으로 정규화한다.
         ssl_certificate /etc/letsencrypt/live/${CERT_DOMAIN}/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/${CERT_DOMAIN}/privkey.pem;
         include /etc/letsencrypt/options-ssl-nginx.conf;
@@ -65,7 +71,6 @@ http {
         listen 443 ssl;
         server_name ${SERVER_NAME};
 
-        # 인증서는 호스트의 /etc/letsencrypt 에서 마운트해 사용한다.
         ssl_certificate /etc/letsencrypt/live/${CERT_DOMAIN}/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/${CERT_DOMAIN}/privkey.pem;
         include /etc/letsencrypt/options-ssl-nginx.conf;
@@ -76,7 +81,6 @@ http {
             return 301 https://imhere.ratiko.co.kr$request_uri;
         }
 
-        # 운영 API / 관리자 / swagger / actuator 는 Spring Boot 로 넘긴다.
         location ^~ /api/ {
             # CORS는 프런트 도메인 1개만 허용한다.
             # 자격 증명을 쓰므로 Origin 을 고정하고, 캐시가 엇갈리지 않게 Vary 를 남긴다.
@@ -87,7 +91,6 @@ http {
             add_header 'Access-Control-Allow-Credentials' 'true' always;
 
             if ($request_method = 'OPTIONS') {
-                # 프리플라이트는 백엔드로 넘기지 않고 Nginx에서 즉시 종료한다.
                 add_header 'Access-Control-Allow-Origin' '${NGINX_ALLOWED_ORIGIN}';
                 add_header 'Vary' 'Origin';
                 add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, PATCH, OPTIONS';
@@ -98,9 +101,6 @@ http {
                 return 204;
             }
 
-            # 실제 API 요청은 Docker 네트워크 내부의 Spring Boot 컨테이너로 보낸다.
-            # 서비스명 dsko 대신 container_name을 쓴다 — compose 서비스명 alias가
-            # 네트워크 재생성 후 등록되지 않는 경우가 있어, 항상 보장되는 컨테이너 이름으로 고정한다.
             proxy_pass http://iamhere-server-container:8080;
             
             # Spring 이 중복 CORS 헤더를 내려도 최종 응답은 Nginx 기준으로 정리한다.

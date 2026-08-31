@@ -13,6 +13,3 @@ groups:
 
       - record: imhere:hikaricp_pending
         expr: max(hikaricp_connections_pending)
-
-      - record: imhere:hikaricp_timeout_per_second
-        expr: sum(rate(hikaricp_connections_timeout_total[30s]))

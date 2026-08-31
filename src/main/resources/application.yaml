@@ -17,8 +17,7 @@ spring:
       maximum-pool-size: ${DB_POOL_SIZE:10}
       minimum-idle: 1
       idle-timeout: 600000
-      # DB 커넥션 고갈 시 Nginx의 proxy_read_timeout(30s)보다 먼저 앱이 실패하도록 한다.
-      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:5000}
+      connection-timeout: 30000
       max-lifetime: 110000
       keepalive-time: 30000
       connection-test-query: "SELECT 1"

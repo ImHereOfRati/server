@@ -154,18 +154,16 @@ require_file "${TEARDOWN_SCRIPT}"
 require_file "${INIT_DIR}/generate-test-data.mjs"
 require_file "${INIT_DIR}/issue-jwt.mjs"
 
-echo "[1/5] Generating k6 test data and JWTs"
+echo "[1/5] Creating AWS load-test environment"
+"${SETUP_SCRIPT}"
+
+echo "[2/5] Generating k6 test data and JWTs"
 node "${INIT_DIR}/generate-test-data.mjs" "${GENERATED_DIR}"
 node "${INIT_DIR}/issue-jwt.mjs" \
   "${GENERATED_DIR}/fixture.json" \
   "${FIXTURE_PATH}"
 
 require_file "${FIXTURE_PATH}"
-require_file "${GENERATED_DIR}/seed.sql"
-
-echo "[2/5] Creating AWS load-test environment"
-LOADTEST_SEED_PATH="${GENERATED_DIR}/seed.sql" \
-  "${SETUP_SCRIPT}"
 
 if [[ -z "${BASE_URL}" ]]; then
   APP_PUBLIC_IP="$(aws cloudformation describe-stacks \

@@ -19,7 +19,6 @@ STATE_FILE="${STATE_FILE:-${SCRIPT_DIR}/.loadtest-state}"
 CFN_TEMPLATE="${REPO_ROOT}/loadtest/setup/infra/cloudformation/load-test-aws-setup.yaml"
 MYSQL_SCRIPT="${REPO_ROOT}/loadtest/setup/infra/database/setup-mysql.sh"
 MYSQL_SCHEMA_SCRIPT="${REPO_ROOT}/db/init/mysql/imhere-full-init.sql"
-MYSQL_SEED_SCRIPT="${LOADTEST_SEED_PATH:-${REPO_ROOT}/loadtest/k6/generated/seed.sql}"
 TEST_ENV_DIR="${REPO_ROOT}/loadtest/setup/test-env"
 INFRA_DIR="${REPO_ROOT}/loadtest/setup/infra"
 TEMP_ENV_DIR=""
@@ -149,9 +148,6 @@ configure_mysql() {
   echo '[2/3] MySQL을 설정합니다.'
   wait_for_ssh "${DB_PUBLIC_IP}"
   scp "${SSH_OPTIONS[@]}" "${MYSQL_SCRIPT}" "${EC2_USER}@${DB_PUBLIC_IP}:/tmp/setup-mysql.sh"
-  # Normalize CRLF from Windows checkouts before Linux executes the shebang.
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
-    "sudo sed -i 's/\\r$//' /tmp/setup-mysql.sh"
   ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
     'sudo install -m 0755 /tmp/setup-mysql.sh /opt/mysql/setup-mysql.sh'
   ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
@@ -165,16 +161,6 @@ initialize_mysql_schema() {
     "${EC2_USER}@${DB_PUBLIC_IP}:/tmp/imhere-full-init.sql"
   ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
     "sudo env MYSQL_PWD='${MYSQL_ROOT_PASSWORD}' mysql --protocol=socket -uroot rati < /tmp/imhere-full-init.sql"
-
-  [[ -f "${MYSQL_SEED_SCRIPT}" ]] || {
-    echo "load-test seed SQL not found: ${MYSQL_SEED_SCRIPT}" >&2
-    exit 1
-  }
-  echo '부하테스트 fixture 데이터를 MySQL에 주입합니다.'
-  scp "${SSH_OPTIONS[@]}" "${MYSQL_SEED_SCRIPT}" \
-    "${EC2_USER}@${DB_PUBLIC_IP}:/tmp/loadtest-seed.sql"
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
-    "sudo env MYSQL_PWD='${MYSQL_ROOT_PASSWORD}' mysql --protocol=socket -uroot rati < /tmp/loadtest-seed.sql"
 }
 
 prepare_runtime_env() {

@@ -335,12 +335,6 @@ jobs:
           import os
 
           runtime_dir = Path('/tmp/imhere-runtime')
-          nginx_env = Path('/tmp/imhere-secrets/env/nginx.env')
-          if nginx_env.exists():
-              for line in nginx_env.read_text(encoding='utf-8').splitlines():
-                  if line.startswith('NGINX_BLOCKED_IP_RULES='):
-                      os.environ['NGINX_BLOCKED_IP_RULES'] = line.split('=', 1)[1]
-
           templates = {
               'infra/nginx/nginx.conf.template': 'infra/nginx/nginx.conf',
               'infra/alloy/alloy-config.alloy': 'infra/alloy/alloy-config.alloy',
@@ -348,10 +342,6 @@ jobs:
 
           for source, target in templates.items():
               text = Path(source).read_text(encoding='utf-8')
-              text = text.replace(
-                  '${NGINX_BLOCKED_IP_RULES}',
-                  os.environ.get('NGINX_BLOCKED_IP_RULES', ''),
-              )
               for key in ('SERVER_NAME', 'CERT_DOMAIN', 'NGINX_ALLOWED_ORIGIN', 'MGMT_BASE_PATH'):
                   value = os.environ.get(key)
                   if not value:

@@ -10,7 +10,7 @@ const [
     outputPath = fileURLToPath(new URL('tokens.json', generatedDir)),
 ] = process.argv.slice(2);
 
-const appEnvPath = fileURLToPath(new URL('../../setup/test-env/app.env', import.meta.url));
+const appEnvPath = fileURLToPath(new URL('../../setup/test-env/server.env', import.meta.url));
 
 const readEnvValue = async (path, key) => {
     const content = await readFile(path, 'utf8');

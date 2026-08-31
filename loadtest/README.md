@@ -161,7 +161,7 @@ node loadtest/k6/init/issue-jwt.mjs
 | `loadtest/k6/generated/fixture.json` | 사용자와 관계 fixture |
 | `loadtest/k6/generated/tokens.json` | `JWT_SECRET`로 서명한 테스트용 access token |
 
-통합 실행 스크립트는 이 두 Node.js 스크립트를 자동으로 실행한다. JWT는 애플리케이션 설정의 `loadtest/setup/test-env/app.env`에 있는 `JWT_SECRET`과 같은 키로 서명된다.
+통합 실행 스크립트는 이 두 Node.js 스크립트를 자동으로 실행한다. JWT는 애플리케이션 설정의 `loadtest/setup/test-env/server.env`에 있는 `JWT_SECRET`과 같은 키로 서명된다.
 
 애플리케이션 스키마와 테스트 데이터를 직접 적재해야 하는 경우에는 DB 접속 정보에 맞춰 다음 순서로 실행한다.
 

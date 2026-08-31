@@ -42,14 +42,21 @@
     {
       "type": "timeseries",
       "title": "HikariCP Pending",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 16},
       "targets": [{"expr": "imhere:hikaricp_pending", "legendFormat": "pending", "refId": "A"}],
       "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
     },
     {
+      "type": "timeseries",
+      "title": "HikariCP Timeouts",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 16},
+      "targets": [{"expr": "imhere:hikaricp_timeout_per_second", "legendFormat": "timeouts/s", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "reqps", "color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": 0}, {"color": "red", "value": 1}]}}, "overrides": []}
+    },
+    {
       "type": "logs",
       "title": "Application Errors",
-      "gridPos": {"h": 10, "w": 12, "x": 12, "y": 16},
+      "gridPos": {"h": 10, "w": 8, "x": 16, "y": 16},
       "targets": [{"datasource": {"type": "loki", "uid": "loadtest-loki"}, "expr": "{service=\"dsko\"} |~ \"(?i)error|warn\"", "refId": "A"}],
       "options": {"showTime": true, "showLabels": false, "wrapLines": true, "sortOrder": "Descending"}
     },

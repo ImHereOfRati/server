@@ -1,59 +1,124 @@
-// Load-test only: all telemetry stays inside the load-test VPC.
-
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
 }
 
 discovery.relabel "containers" {
   targets = discovery.docker.containers.targets
+
   rule {
     source_labels = ["__meta_docker_container_label_imhere_log_scope"]
-    regex = "external"
-    action = "keep"
+    regex         = "external"
+    action        = "keep"
   }
+
   rule {
     source_labels = ["__meta_docker_container_name"]
-    regex = "/?(.*)"
-    target_label = "container"
+    regex         = "/?(.*)"
+    target_label  = "container"
   }
+
   rule {
     source_labels = ["__meta_docker_container_log_stream"]
-    target_label = "stream"
+    target_label  = "stream"
   }
+
   rule {
     source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
-    target_label = "service"
+    target_label  = "service"
   }
 }
 
 loki.source.docker "default" {
-  host = "unix:///var/run/docker.sock"
-  targets = discovery.relabel.containers.output
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.containers.output
+  forward_to = [loki.process.docker_logs.receiver]
+  labels     = { job = "imhere-server" }
+}
+
+loki.process "docker_logs" {
   forward_to = [loki.write.loadtest.receiver]
-  labels = { job = "imhere-server" }
+
+  stage.match {
+    selector = "{service=\"nginx\"}"
+
+    stage.json {
+      expressions = {
+        timestamp                  = "timestamp",
+        client_address             = "\"client.address\"",
+        http_request_method        = "\"http.request.method\"",
+        url_path                  = "\"url.path\"",
+        url_query                 = "\"url.query\"",
+        http_response_status_code = "\"http.response.status_code\"",
+        http_response_body_size   = "\"http.response.body.size\"",
+        http_request_duration     = "\"http.request.duration\"",
+        http_request_protocol     = "\"http.request.protocol\"",
+        user_agent_original       = "\"user_agent.original\"",
+        http_request_referer      = "\"http.request.header.referer\"",
+        server_address            = "\"server.address\"",
+      }
+    }
+
+    stage.timestamp {
+      source = "timestamp"
+      format = "RFC3339"
+    }
+
+    stage.structured_metadata {
+      values = {
+        "client.address"               = "client_address",
+        "http.request.method"         = "http_request_method",
+        "url.path"                    = "url_path",
+        "url.query"                   = "url_query",
+        "http.response.status_code"   = "http_response_status_code",
+        "http.response.body.size"     = "http_response_body_size",
+        "http.request.duration"       = "http_request_duration",
+        "http.request.protocol"       = "http_request_protocol",
+        "user_agent.original"         = "user_agent_original",
+        "http.request.header.referer" = "http_request_referer",
+        "server.address"             = "server_address",
+      }
+    }
+  }
 }
 
 loki.write "loadtest" {
-  endpoint { url = sys.env("GRAFANA_CLOUD_LOKI_ENDPOINT") }
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_LOKI_ENDPOINT")
+  }
 }
 
 prometheus.scrape "imhere" {
-  targets = [{ __address__ = "iamhere-server-container:4861", job = "imhere-loadtest" }]
+  targets = [{
+    __address__ = "iamhere-server-container:4861",
+  }]
+
   scrape_interval = "15s"
-  metrics_path = "/actuator/prometheus"
-  forward_to = [prometheus.remote_write.loadtest.receiver]
+  metrics_path    = "/actuator/prometheus"
+  forward_to      = [prometheus.remote_write.loadtest.receiver]
 }
 
 prometheus.remote_write "loadtest" {
-  endpoint { url = sys.env("GRAFANA_CLOUD_PROM_ENDPOINT") }
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_PROM_ENDPOINT")
+  }
 }
 
 otelcol.receiver.otlp "otlp_receiver" {
-  grpc { endpoint = "0.0.0.0:4317" }
-  http { endpoint = "0.0.0.0:4318" }
-  output { traces = [otelcol.exporter.otlphttp.loadtest.input] }
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces = [otelcol.exporter.otlphttp.loadtest.input]
+  }
 }
 
 otelcol.exporter.otlphttp "loadtest" {
-  client { endpoint = sys.env("GRAFANA_CLOUD_TEMPO_ENDPOINT") }
+  client {
+    endpoint = sys.env("GRAFANA_CLOUD_TEMPO_ENDPOINT")
+  }
 }

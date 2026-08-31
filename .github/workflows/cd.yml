@@ -204,9 +204,9 @@ jobs:
 
       - name: Prepare runtime files from config repo
         run: |
-          chmod +x ./infra/scripts/sync-config.sh
+          chmod +x ./infra/scripts/pull-config.sh
           CONFIG_REPO_PAT="$CONFIG_REPO_PAT" \
-            ./infra/scripts/sync-config.sh --output-dir /tmp/imhere-secrets
+            ./infra/scripts/pull-config.sh --output-dir /tmp/imhere-secrets
         env:
           CONFIG_REPO_PAT: ${{ secrets.CONFIG_REPO_PAT }}
 
@@ -303,7 +303,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
             "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' bash -s" \
-            < infra/scripts/remote-provision.sh
+            < infra/scripts/setting-ec2
 
       - name: Derive ECR registry
         run: |
@@ -337,7 +337,7 @@ jobs:
           runtime_dir = Path('/tmp/imhere-runtime')
           templates = {
               'infra/nginx/nginx.conf.template': 'infra/nginx/nginx.conf',
-              'infra/alloy/alloy-config.alloy.template': 'infra/alloy/alloy-config.alloy',
+              'infra/alloy/alloy-config.alloy': 'infra/alloy/alloy-config.alloy',
           }
 
           for source, target in templates.items():
@@ -356,7 +356,9 @@ jobs:
           ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
             "rm -f ${EC2_DEPLOY_PATH}/env/*.env ${EC2_DEPLOY_PATH}/secrets/imhereFirebaseKey.json"
 
-          scp -i ~/.ssh/deploy_key docker-compose.yml "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/"
+          scp -i ~/.ssh/deploy_key \
+            docker-compose.yml \
+            "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/"
           scp -i ~/.ssh/deploy_key /tmp/imhere-runtime/env/*.env "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/env/"
           scp -i ~/.ssh/deploy_key /tmp/imhere-runtime/infra/nginx/nginx.conf "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/nginx/nginx.conf"
           scp -i ~/.ssh/deploy_key /tmp/imhere-runtime/infra/alloy/alloy-config.alloy "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/alloy/alloy-config.alloy"
@@ -365,34 +367,20 @@ jobs:
       - name: Copy remote deploy scripts to EC2
         run: |
           scp -i ~/.ssh/deploy_key \
-            infra/scripts/remote-tls.sh \
-            infra/scripts/remote-rollout.sh \
-            infra/scripts/remote-healthcheck.sh \
+            infra/scripts/deploy-imhere.sh \
+            "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/scripts/"
+          scp -r -i ~/.ssh/deploy_key \
+            infra/scripts/deploy-sub-tasks \
             "${{ secrets.EC2_USER }}@${EC2_HOST}:${EC2_DEPLOY_PATH}/infra/scripts/"
 
       # TLS는 컨테이너 기동을 사이에 두고 두 번 나뉜다.
       # bootstrap: nginx가 참조할 인증서 파일을 보장한다 (없으면 nginx -t부터 실패).
       # issue:     HTTP-01 webroot 검증이라 nginx가 떠서 챌린지를 서빙한 뒤여야 한다.
-      - name: Ensure bootstrap TLS certificate
-        run: |
-          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
-            "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' bash ${EC2_DEPLOY_PATH}/infra/scripts/remote-tls.sh bootstrap"
-
-      - name: Roll out containers
+      - name: Deploy ImHere
         run: |
           aws ecr get-login-password --region "$AWS_REGION" \
             | ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
-              "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' ECR_REGISTRY='${ECR_REGISTRY}' ECR_REPOSITORY='${ECR_REPOSITORY}' bash ${EC2_DEPLOY_PATH}/infra/scripts/remote-rollout.sh"
-
-      - name: Issue or renew Let's Encrypt certificate
-        run: |
-          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
-            "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' bash ${EC2_DEPLOY_PATH}/infra/scripts/remote-tls.sh issue"
-
-      - name: Verify app health
-        run: |
-          ssh -i ~/.ssh/deploy_key "${{ secrets.EC2_USER }}@${EC2_HOST}" \
-            "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' bash ${EC2_DEPLOY_PATH}/infra/scripts/remote-healthcheck.sh"
+              "EC2_DEPLOY_PATH='${EC2_DEPLOY_PATH}' ECR_REGISTRY='${ECR_REGISTRY}' ECR_REPOSITORY='${ECR_REPOSITORY}' bash ${EC2_DEPLOY_PATH}/infra/scripts/deploy-imhere.sh"
 
       - name: Docker image Prune
         run: |

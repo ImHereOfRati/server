@@ -11,6 +11,7 @@ import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import com.kdongsu5509.support.logger.logger
 
 @Service
 @Transactional(readOnly = true)
@@ -19,8 +20,10 @@ class OIDCVerifyService(
     private val publicKeyLoadPort: PublicKeyLoadPort,
     private val providerConfigPort: OidcProviderConfigPort,
 ) : OIDCVerifyPort {
+    private val log = logger()
 
     override fun verify(provider: OAuth2Provider, idToken: String, nonce: String): OIDCUserInfo {
+        log.debug("OIDC 검증 시작: provider={}", provider)
         val providerProperties = providerConfigPort.get(provider)
         val kid = oidcIdTokenVerifyPort.getKid(idToken)
         val publicKey = publicKeyLoadPort.findByKeyId(provider, kid)

@@ -9,6 +9,7 @@ data class NotificationResponse(
     val title: String,
     val body: String,
     val type: String,
+    val status: String,
     val isRead: Boolean,
     val createdAt: LocalDateTime?
 ) {
@@ -19,6 +20,7 @@ data class NotificationResponse(
             title = domain.title,
             body = domain.body,
             type = domain.type.name,
+            status = domain.status.name,
             isRead = domain.isRead,
             createdAt = domain.createdAt
         )

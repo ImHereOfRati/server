@@ -10,19 +10,20 @@ import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.notifications.exception.RetryableFcmException
 import com.kdongsu5509.notifications.exception.UnregisteredTokenException
 import com.kdongsu5509.support.exception.throwIt
-import org.slf4j.LoggerFactory
+import com.kdongsu5509.support.logger.logger
 import org.springframework.stereotype.Component
 import org.springframework.context.annotation.Profile
 
 @Component
 @Profile("!loadtest")
 class FirebaseAdapter(private val firebaseMessaging: FirebaseMessaging) : FirebasePort {
-    private val log = LoggerFactory.getLogger(this::class.java)
+    private val log = logger()
 
     override fun send(fcmToken: String, deviceType: DeviceType, rendered: RenderedNotification) {
         if (fcmToken.isBlank()) return log.warn("FCM 토큰 공백으로 전송 중단")
         try {
-            firebaseMessaging.send(createFcmMessage(fcmToken, deviceType, rendered))
+            val messageId = firebaseMessaging.send(createFcmMessage(fcmToken, deviceType, rendered))
+            log.debug("FCM 발송 성공: messageId={}", messageId)
         } catch (ex: FirebaseMessagingException) {
             processFcmException(ex)
         }

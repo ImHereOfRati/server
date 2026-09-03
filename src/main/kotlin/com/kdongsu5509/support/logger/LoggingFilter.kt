@@ -27,7 +27,7 @@ class LoggingFilter(
         val cachingRequest = ContentCachingRequestWrapper(request, 65536)
         val cachingResponse = ContentCachingResponseWrapper(response)
 
-        val traceId = UUID.randomUUID().toString()
+        val traceId = MDC.get("traceId") ?: UUID.randomUUID().toString()
         val requestAt = LocalDateTime.now()
 
         MDC.put("traceId", traceId)

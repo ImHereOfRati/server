@@ -47,6 +47,7 @@ class NotificationReadControllerIntegrationTest : WebIntegrationTestSupport() {
             .andExpect(jsonPath("$.data[0].id").value(sentFcm.id))
             .andExpect(jsonPath("$.data[0].senderAlias").value("sender"))
             .andExpect(jsonPath("$.data[0].type").value(NotificationType.FRIEND_REQUEST_RECEIVED.name))
+            .andExpect(jsonPath("$.data[0].status").value("SENT"))
             .andDo(documentation("notifications-read-success"))
     }
 

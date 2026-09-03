@@ -55,7 +55,7 @@ logging:
       max-history: 30
       total-size-cap: 3GB
   level:
-    org.springframework.security: TRACE
+    org.springframework.security: INFO
     root: INFO
     com.kdongsu5509: INFO
     org.springframework: WARN
@@ -110,7 +110,7 @@ management:
           transport: http
   tracing:
     sampling:
-      probability: 0.1
+      probability: 1.0
     baggage:
       enabled: true
 
@@ -259,6 +259,8 @@ management:
           endpoint: http://alloy-container:4318/v1/traces
 
 logging:
+  file:
+    name: ""
   structured:
     format:
       console: ecs

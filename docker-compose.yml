@@ -32,7 +32,8 @@ services:
       - "80:80"
       - "443:443"
     env_file:
-      - ./env/nginx.env
+      - path: ./env/nginx.env
+        required: false
     environment:
       - TZ=Asia/Seoul
     volumes:
@@ -50,17 +51,19 @@ services:
     container_name: alloy-container
     profiles:
       - prod
-    mem_limit: 200m
+    mem_limit: 300m
     labels:
       - "imhere_log_scope=internal"
     env_file:
-      - ./env/alloy.env
+      - path: ./env/alloy.env
+        required: false
     environment:
       - TZ=Asia/Seoul
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./infra/alloy/alloy-config.alloy:/etc/alloy/config.alloy:ro
-    command: run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345
+      - alloy_data:/var/lib/alloy/data
+    command: run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data
     networks:
       - app-network
     restart: unless-stopped
@@ -68,6 +71,7 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
+  alloy_data:
 
 networks:
   app-network:

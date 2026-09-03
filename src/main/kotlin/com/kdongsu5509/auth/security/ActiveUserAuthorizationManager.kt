@@ -1,6 +1,7 @@
 package com.kdongsu5509.auth.security
 
 import com.kdongsu5509.auth.security.shared.AllowPendingUser
+import com.kdongsu5509.support.logger.logger
 import org.aopalliance.intercept.MethodInvocation
 import org.springframework.aop.support.AopUtils
 import org.springframework.core.annotation.AnnotatedElementUtils
@@ -16,6 +17,7 @@ import java.util.function.Supplier
 class ActiveUserAuthorizationManager(
     permitAllPaths: List<String>,
 ) : AuthorizationManager<MethodInvocation> {
+    private val log = logger()
 
     private val permitAllMatchers = permitAllPaths.map(PathPatternRequestMatcher::pathPattern)
 
@@ -32,6 +34,9 @@ class ActiveUserAuthorizationManager(
         val isAllowed = currentAuthentication.isAuthenticated &&
                 (UserStatusAuthority.ACTIVE in authorities || "ROLE_ADMIN" in authorities)
 
+        if (!isAllowed) {
+            log.debug("활성 사용자 권한 거부: authorities={}, method={}", authorities, invocation.method.name)
+        }
         return AuthorizationDecision(isAllowed)
     }
 

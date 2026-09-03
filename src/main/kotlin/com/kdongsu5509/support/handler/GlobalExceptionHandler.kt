@@ -5,9 +5,10 @@ import com.kdongsu5509.shared.response.toFailResponse
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.external.UserErrorAlertNotifier
+import com.kdongsu5509.support.logger.logger
+import com.kdongsu5509.support.logger.SensitiveMasker
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
-import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -26,7 +27,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 class GlobalExceptionHandler(
     private val userErrorAlertNotifier: UserErrorAlertNotifier
 ) {
-    private val log = LoggerFactory.getLogger(this::class.java)
+    private val log = logger()
 
     @ExceptionHandler(ImHereBaseException::class)
     fun handleBaseException(
@@ -34,7 +35,7 @@ class GlobalExceptionHandler(
         request: HttpServletRequest
     ): ResponseEntity<ApiResponse<Map<String, Any?>>> {
         val errorCode = e.errorCode
-        log.warn("[{}] {} (context: {})", errorCode.imhereErrorCode, e.message, e.contextData)
+        log.warn("[{}] {} (context: {})", errorCode.imhereErrorCode, e.message, maskedContext(e.contextData))
 
         userErrorAlertNotifier.notifyUserError(
             request,
@@ -56,7 +57,7 @@ class GlobalExceptionHandler(
         e: MethodArgumentNotValidException
     ): ResponseEntity<ApiResponse<Map<String, Any?>>> {
         val message = e.bindingResult.fieldErrors.joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
-        log.warn("Validation failed: {}", message)
+        log.warn("입력값 검증 실패: {}", message)
 
         return null.toFailResponse(
             status = CommonErrorCode.INVALID_INPUT.httpStatus,
@@ -74,7 +75,7 @@ class GlobalExceptionHandler(
     fun handleBadRequestExceptions(
         ex: Exception
     ): ResponseEntity<ApiResponse<Map<String, Any?>>> {
-        log.warn("Bad request: {} - {}", ex.javaClass.simpleName, ex.message)
+        log.warn("잘못된 요청: {} - {}", ex.javaClass.simpleName, ex.message)
 
         return null.toFailResponse(
             status = CommonErrorCode.INVALID_INPUT.httpStatus,
@@ -93,6 +94,8 @@ class GlobalExceptionHandler(
             return handleBaseException(rootCause, request)
         }
 
+        log.warn("잘못된 HTTP 메시지: {}", e.message)
+
         return null.toFailResponse(
             status = CommonErrorCode.INVALID_HTTP_MESSAGE.httpStatus,
             imhereErrorCode = CommonErrorCode.INVALID_HTTP_MESSAGE.imhereErrorCode,
@@ -104,6 +107,7 @@ class GlobalExceptionHandler(
 
     @ExceptionHandler(NoResourceFoundException::class)
     fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ApiResponse<Unit>> {
+        log.warn("리소스를 찾을 수 없음: {}", e.resourcePath)
         return null.toFailResponse(
             status = HttpStatus.NOT_FOUND,
             imhereErrorCode = CommonErrorCode.NOT_FOUND.imhereErrorCode,
@@ -115,6 +119,7 @@ class GlobalExceptionHandler(
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
     fun handleHttpRequestMethodNotSupportedException(e: HttpRequestMethodNotSupportedException): ResponseEntity<ApiResponse<Unit>> {
+        log.warn("지원하지 않는 HTTP 메서드: {}", e.method)
         return null.toFailResponse(
             status = CommonErrorCode.METHOD_NOT_ALLOWED.httpStatus,
             imhereErrorCode = CommonErrorCode.METHOD_NOT_ALLOWED.imhereErrorCode,
@@ -127,6 +132,7 @@ class GlobalExceptionHandler(
     // --- 409 Conflict ---
     @ExceptionHandler(DataIntegrityViolationException::class)
     fun handleHttpMediaTypeNotSupportedException(e: DataIntegrityViolationException): ResponseEntity<ApiResponse<Unit>> {
+        log.warn("데이터 무결성 위반: {}", e.rootCause?.message ?: e.message)
         return null.toFailResponse(
             status = CommonErrorCode.CONFLICT.httpStatus,
             imhereErrorCode = CommonErrorCode.CONFLICT.imhereErrorCode,
@@ -138,6 +144,7 @@ class GlobalExceptionHandler(
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException::class)
     fun handleHttpMediaTypeNotSupportedException(e: HttpMediaTypeNotSupportedException): ResponseEntity<ApiResponse<Unit>> {
+        log.warn("지원하지 않는 미디어 타입: {}", e.contentType)
         return null.toFailResponse(
             status = CommonErrorCode.UNSUPPORTED_MEDIA_TYPE.httpStatus,
             imhereErrorCode = CommonErrorCode.UNSUPPORTED_MEDIA_TYPE.imhereErrorCode,
@@ -148,7 +155,7 @@ class GlobalExceptionHandler(
     // --- 500 Internal Server Error ---
     @ExceptionHandler(Exception::class)
     fun handleException(e: Exception): ResponseEntity<ApiResponse<Map<String, Any?>>> {
-        log.error("Unexpected error occurred: ", e)
+        log.error("예상하지 못한 오류 발생: ", e)
 
         return null.toFailResponse(
             status = CommonErrorCode.INTERNAL_SERVER_ERROR.httpStatus,
@@ -156,4 +163,15 @@ class GlobalExceptionHandler(
             errorMessage = CommonErrorCode.INTERNAL_SERVER_ERROR.errorMessage
         )
     }
+
+    private fun maskedContext(context: Map<String, Any?>): Map<String, Any?> =
+        context.mapValues { (key, value) ->
+            val stringValue = value as? String
+            when (key.lowercase()) {
+                "email" -> SensitiveMasker.email(stringValue)
+                "phone", "mobile", "receivernumber", "targetidentifier" -> SensitiveMasker.phone(stringValue)
+                "token", "fcmtoken", "idtoken", "accesstoken", "refreshtoken" -> SensitiveMasker.token(stringValue)
+                else -> value
+            }
+        }
 }

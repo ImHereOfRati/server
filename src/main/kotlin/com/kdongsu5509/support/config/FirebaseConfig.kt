@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ResourceLoader
 import java.io.InputStream
+import com.kdongsu5509.support.logger.logger
 
 @Profile("!test & !loadtest")
 @Configuration
@@ -18,6 +19,7 @@ class FirebaseConfig(
     private val fcmProperties: FcmProperties,
     private val resourceLoader: ResourceLoader
 ) {
+    private val log = logger()
     @Bean
     fun firebaseApp(): FirebaseApp {
         val path = fcmProperties.path
@@ -31,6 +33,8 @@ class FirebaseConfig(
         val options = FirebaseOptions.builder()
             .setCredentials(GoogleCredentials.fromStream(serviceAccount))
             .build()
+
+        log.info("Firebase 초기화 완료: 자격증명 경로={}, projectId={}", path, options.projectId)
 
         return FirebaseApp.initializeApp(options)
     }

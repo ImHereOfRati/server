@@ -28,7 +28,7 @@ discovery.relabel "containers" {
     // 컨테이너 로그 수집 대상 태그로 파악한다.
 	rule {
 		source_labels = ["__meta_docker_container_label_imhere_log_scope"]
-		regex         = "external"
+		regex         = "external|internal"
 		action        = "keep"
 	}
 
@@ -67,6 +67,10 @@ loki.source.docker "default" {
 loki.write "grafana_cloud" {
 	endpoint {
 		url = sys.env("GRAFANA_CLOUD_LOKI_ENDPOINT")
+		batch_wait = "1s"
+		batch_size = "1MiB"
+		min_backoff_period = "500ms"
+		max_backoff_period = "5m"
 
 		basic_auth {
 			username = sys.env("GRAFANA_CLOUD_LOKI_USER")
@@ -123,6 +127,62 @@ loki.process "docker_logs" {
 			}
 		}
 	}
+
+	stage.match {
+		selector = "{service=\"dsko\"}"
+
+		stage.multiline {
+			firstline     = "^(\\{|\\d{4}-\\d{2}-\\d{2})"
+			max_lines     = 128
+			max_wait_time = "3s"
+		}
+
+		stage.json {
+			expressions = {
+				at_timestamp = "@timestamp",
+				level        = "\"log.level\"",
+				logger       = "\"log.logger\"",
+				trace_id     = "\"trace.id\"",
+				span_id      = "\"span.id\"",
+				message      = "message",
+				error_type   = "\"error.type\"",
+				error_message = "\"error.message\"",
+				method       = "method",
+				uri          = "uri",
+				status       = "status",
+				duration_ms  = "durationMs",
+				user_id      = "userId",
+			}
+		}
+
+		stage.timestamp {
+			source = "at_timestamp"
+			format = "RFC3339"
+		}
+
+		stage.labels {
+			values = { level = "level" }
+		}
+
+		stage.structured_metadata {
+			values = {
+				"log.logger"  = "logger",
+				"trace.id"    = "trace_id",
+				"span.id"     = "span_id",
+				"error.type"  = "error_type",
+				"error.message" = "error_message",
+				"method"      = "method",
+				"uri"         = "uri",
+				"status"      = "status",
+				"durationMs"  = "duration_ms",
+				"userId"      = "user_id",
+			}
+		}
+	}
+	stage.match {
+		selector = "{service=\"alloy\"}"
+		stage.drop { expression = ".*loki.write.*" }
+	}
 }
 
 prometheus.scrape "imhere" {
@@ -132,6 +192,12 @@ prometheus.scrape "imhere" {
 	scrape_interval = "15s"
 	metrics_path = "${MGMT_BASE_PATH}/prometheus"
 	forward_to    = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+prometheus.scrape "alloy_self" {
+	targets = [{ __address__ = "localhost:12345" }]
+	metrics_path = "/metrics"
+	forward_to = [prometheus.remote_write.grafana_cloud.receiver]
 }
 
 // 수집한 Prometheus 메트릭을 Grafana Cloud Prometheus로 전송한다.
@@ -157,6 +223,22 @@ otelcol.receiver.otlp "otlp_receiver" {
 		endpoint = "0.0.0.0:4318"
 	}
 
+	output {
+		traces = [otelcol.processor.memory_limiter.default.input]
+	}
+}
+
+otelcol.processor.memory_limiter "default" {
+	check_interval = "1s"
+	limit_percentage = 80
+	spike_limit_percentage = 25
+
+	output {
+		traces = [otelcol.processor.batch.default.input]
+	}
+}
+
+otelcol.processor.batch "default" {
 	output {
 		traces = [otelcol.exporter.otlphttp.grafanacloud.input]
 	}

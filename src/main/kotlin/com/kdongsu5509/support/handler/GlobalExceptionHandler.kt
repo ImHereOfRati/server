@@ -2,7 +2,6 @@ package com.kdongsu5509.support.handler
 
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.toFailResponse
-import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.external.UserErrorAlertNotifier
@@ -47,7 +46,7 @@ class GlobalExceptionHandler(
 
         val headers = HttpHeaders()
         (e.contextData["retryAfterSeconds"] as? Number)?.let {
-            if (e.errorCode == NotificationException.SMS_DAILY_RECIPIENT_LIMIT) {
+            if (e.errorCode.imhereErrorCode == "SMS-429") {
                 headers.set("Retry-After", it.toLong().toString())
             }
         }

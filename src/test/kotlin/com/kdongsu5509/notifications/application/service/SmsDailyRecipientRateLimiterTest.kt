@@ -35,6 +35,19 @@ class SmsDailyRecipientRateLimiterTest {
     }
 
     @Test
+    fun `이미 예약된 수신자로 재요청해도 예외 없이 통과하고 한도를 추가로 소모하지 않는다`() {
+        val senderId = UUID.randomUUID()
+
+        limiter.reserve(senderId, listOf("010-0000-0031"))
+        limiter.reserve(senderId, listOf("010-0000-0031"))
+        limiter.reserve(senderId, listOf("010-0000-0031"))
+
+        limiter.reserve(senderId, listOf("010-0000-0032", "010-0000-0033", "010-0000-0034"))
+        assertThatThrownBy { limiter.reserve(senderId, listOf("010-0000-0035")) }
+            .isInstanceOf(ImHereBaseException::class.java)
+    }
+
+    @Test
     fun `한 요청이 남은 한도를 초과하면 일부 수신자도 예약하지 않는다`() {
         val senderId = UUID.randomUUID()
 

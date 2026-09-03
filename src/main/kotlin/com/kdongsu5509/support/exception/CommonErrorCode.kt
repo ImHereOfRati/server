@@ -26,6 +26,7 @@ enum class CommonErrorCode(
 
     // --- 5xx: Conflict (409) ---
     CONFLICT(HttpStatus.CONFLICT, "GLOBAL-500", "이미 존재하는 데이터이거나 상태가 충돌합니다."),
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "GLOBAL-429", "요청 한도를 초과했습니다."),
 
     // --- 6xx: Unsupported Media Type (415) ---
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "GLOBAL-600", "지원하지 않는 미디어 타입입니다."),

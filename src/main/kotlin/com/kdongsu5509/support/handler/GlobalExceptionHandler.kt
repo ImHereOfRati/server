@@ -2,6 +2,7 @@ package com.kdongsu5509.support.handler
 
 import com.kdongsu5509.shared.response.ApiResponse
 import com.kdongsu5509.shared.response.toFailResponse
+import com.kdongsu5509.notifications.exception.NotificationException
 import com.kdongsu5509.support.exception.CommonErrorCode
 import com.kdongsu5509.support.exception.ImHereBaseException
 import com.kdongsu5509.support.external.UserErrorAlertNotifier
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.HttpMediaTypeNotSupportedException
@@ -43,10 +45,18 @@ class GlobalExceptionHandler(
             e.message ?: errorCode.errorMessage
         )
 
+        val headers = HttpHeaders()
+        (e.contextData["retryAfterSeconds"] as? Number)?.let {
+            if (e.errorCode == NotificationException.SMS_DAILY_RECIPIENT_LIMIT) {
+                headers.set("Retry-After", it.toLong().toString())
+            }
+        }
+
         return e.contextData.toFailResponse(
             status = errorCode.httpStatus,
             imhereErrorCode = errorCode.imhereErrorCode,
-            errorMessage = e.message
+            errorMessage = e.message,
+            headers = headers
         )
     }
 

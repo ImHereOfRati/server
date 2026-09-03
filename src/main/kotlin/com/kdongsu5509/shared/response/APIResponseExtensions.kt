@@ -1,6 +1,7 @@
 package com.kdongsu5509.shared.response
 
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 
 fun <T> T?.toOkResponse(): ResponseEntity<ApiResponse<T>> =
@@ -15,9 +16,10 @@ fun <T> T?.toSuccessResponse(status: HttpStatus): ResponseEntity<ApiResponse<T>>
 fun <T> T?.toFailResponse(
     status: HttpStatus,
     imhereErrorCode: String,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    headers: HttpHeaders = HttpHeaders()
 ): ResponseEntity<ApiResponse<T>> {
-    return ResponseEntity.status(status).body(
+    return ResponseEntity.status(status).headers(headers).body(
         ApiResponse.fail(
             imhereErrorCode = imhereErrorCode,
             errorMessage = errorMessage ?: status.reasonPhrase,

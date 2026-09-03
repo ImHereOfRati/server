@@ -4,6 +4,7 @@ import com.kdongsu5509.notifications.application.dto.NotificationCommand
 import com.kdongsu5509.notifications.application.port.`in`.NotificationUseCase
 import com.kdongsu5509.notifications.application.port.out.NotificationPersistencePort
 import com.kdongsu5509.notifications.domain.Notification
+import com.kdongsu5509.notifications.domain.NotificationMethod
 import com.kdongsu5509.notifications.domain.NotificationStatus
 import com.kdongsu5509.notifications.event.NotificationEvent
 import com.kdongsu5509.notifications.exception.NotificationException
@@ -20,10 +21,14 @@ class NotificationService(
     private val persistencePort: NotificationPersistencePort,
     private val deliveryFacade: NotificationDeliveryFacade,
     private val eventPublisher: DomainEventPublisher,
+    private val smsDailyRecipientRateLimiter: SmsDailyRecipientRateLimiter,
 ) : NotificationUseCase {
 
     @Transactional
     override fun requestDelivery(command: NotificationCommand) {
+        if (command.notificationMethod == NotificationMethod.SMS) {
+            smsDailyRecipientRateLimiter.reserve(command.senderId, command.targetIdentifiers)
+        }
         NotificationEvent.from(command)
             .forEach(eventPublisher::publish)
     }

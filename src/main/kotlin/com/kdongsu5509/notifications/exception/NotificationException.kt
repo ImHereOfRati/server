@@ -30,7 +30,8 @@ enum class NotificationException(
     FCM_AUTH_ERROR(CommonErrorCode.INTERNAL_SERVER_ERROR, "FCM-901", "FCM 인증 서버와의 통신 중 오류가 발생했습니다."),
     FCM_UNKNOWN_ERROR(CommonErrorCode.INTERNAL_SERVER_ERROR, "FCM-902", "알 수 없는 FCM 오류가 발생했습니다."),
     FCM_RETRYABLE_ERROR(CommonErrorCode.INFRA_FAILURE, "FCM-903", "FCM 서버의 일시적 오류로 재시도가 필요합니다."),
-    SMS_SEND_FAILED(CommonErrorCode.INTERNAL_SERVER_ERROR, "SMS-900", "SMS 전송 중 외부 서비스 오류가 발생했습니다.");
+    SMS_SEND_FAILED(CommonErrorCode.INTERNAL_SERVER_ERROR, "SMS-900", "SMS 전송 중 외부 서비스 오류가 발생했습니다."),
+    SMS_DAILY_RECIPIENT_LIMIT(CommonErrorCode.TOO_MANY_REQUESTS, "SMS-429", "하루 SMS 발송 한도 4인을 초과했습니다.");
 
     override val httpStatus = category.httpStatus
 }

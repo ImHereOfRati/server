@@ -82,6 +82,28 @@ if (!bucket.tryConsume(newRecipients.size.toLong())) { ... }
 2. distinct 수신자 5명 이상을 순환 지정하는 시나리오를 추가해 "4명까지 성공, 5번째부터 429" 경로를 직접 검증한다.
 3. 다음 실행부터는 애플리케이션 로그(Loki)·Grafana 대시보드를 인프라 삭제 전에 캡처해 429/500 발생 시점을 요청 단위로 대조할 수 있게 한다.
 
+## `tryConsume(0)` 수정 후 재검증 (2026-09-04)
+
+위에서 권장한 수정(`newRecipients.isEmpty()`일 때 `tryConsume` 생략하고 즉시 `Accepted` 반환)을 `SmsDailyRecipientRateLimiter.kt`에 반영하고, 동일 조건(`sms-send.js`, 200→300→400 RPS, 각 15초)으로 재실행했다. 배포 전 `main`에 남아 있던 별개의 모듈 순환 의존(`auth ↔ user`, `AllowPendingUser` 관련) 때문에 CD가 막혀 있었는데, 이 애노테이션을 `support` 모듈로 옮겨 순환을 끊고 CD를 다시 통과시킨 뒤 재실행했다.
+
+| 지표 | 수정 전 (09-03) | 수정 후 (09-04) |
+|---|---:|---:|
+| HTTP 요청 수 | 11,997 | 11,996 |
+| `429` (일일 한도 초과) | 11,517 (96.0%) | 11,516 (96.0%) |
+| 5xx 응답 | 479 (4.0%) | **157 (1.3%)** |
+| 정상 응답(2xx) | 1 (0.01%) | 323 (2.7%) |
+| 네트워크 오류 / EOF | 0건 | 0건 |
+| p90 / p95 응답시간 | 12.39 ms / 17.69 ms | 10.12 ms / 15.46 ms |
+| 결과 JSON | `sms-send-precision-20260903-235404.json` | `sms-send-precision-20260904-003151.json` |
+
+5xx가 479건(4.0%)에서 157건(1.3%)으로 약 3분의 1 수준으로 줄었다 — `tryConsume(0)` 결함 제거가 실제로 효과가 있었음을 확인했다. 다만 0건까지 내려가지는 않았고, 이전엔 사실상 없던 정상 응답(2xx)이 323건 발생했다.
+
+이 두 가지(잔여 5xx 157건, 예상보다 많은 2xx 323건)는 이 리포트에서 다루는 "동일 수신자를 반복 요청하면 최초 1건만 성공하고 나머지는 즉시 no-op 성공한다"는 단순 모델만으로는 설명되지 않는다. 애플리케이션이 다중 인스턴스로 떠 있어 인스턴스별 로컬 Caffeine 캐시가 서로 다른 상태를 가졌거나, 네트워크 재시도로 동일 요청이 중복 전송됐을 가능성 등이 후보다. 인프라를 테스트 직후 삭제해 로그로 확증하지 못했으므로, 다음 실행에서는 인프라 삭제 전에 애플리케이션 로그를 확보해 정확한 원인을 확인해야 한다.
+
 ## 부록: 실행 스크립트 수정
 
 `loadtest/setup/setup-loadtest.sh`의 `ssh` 호출 다수가 `-n` 옵션 없이 로컬 stdin을 그대로 물려받고 있었다. `run-loadtest.sh`의 후속 대화형 프롬프트(테스트 선택·plan·RPS·duration)에 답을 미리 파이프로 넣어도, 이 ssh 호출들이 그 입력을 먼저 소비해버려 `select_test`가 EOF를 만나 스크립트가 조용히 종료되는 문제가 있었다(1차 시도에서 재현). ECR 로그인(`docker login --password-stdin`) 한 곳만 제외하고 모든 `ssh` 호출에 `-n`을 추가해 해결했다.
+
+## 부록: 모듈 순환 의존 수정
+
+수정 반영 재검증을 시도하던 중, main의 CD가 `ModularityTest`(Spring Modulith `ApplicationModules.verify()`)에서 실패하고 있는 것을 발견했다. `user` 모듈의 `UserCommandController`가 `auth.security.shared.AllowPendingUser`를 참조하도록 변경됐는데, `auth` 모듈은 이미 `user`에 광범위하게 의존하고 있어(`OAuth2Provider`, `UserLookupContract` 등) `auth → user → auth` 순환이 생겼다. `AllowPendingUser`는 이미 Named Interface로는 정상 노출돼 있었으므로 노출 방식이 아니라 의존 방향 자체가 문제였다. `auth`·`user` 양쪽에서 의존해도 순환이 생기지 않는 open 모듈 `support`로 `AllowPendingUser`를 옮겨 해결했다(`agreement`의 기존 사용처도 함께 갱신). 이 수정 없이는 어떤 커밋도 CD에서 새 이미지로 빌드되지 않으므로, 본 리포트의 "수정 후 재검증"도 이 수정이 선행돼야 가능했다.

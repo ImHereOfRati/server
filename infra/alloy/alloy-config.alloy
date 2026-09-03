@@ -139,7 +139,7 @@ loki.process "docker_logs" {
 
 		stage.json {
 			expressions = {
-				at_timestamp = "@timestamp",
+				at_timestamp = "\"@timestamp\"",
 				level        = "\"log.level\"",
 				logger       = "\"log.logger\"",
 				trace_id     = "\"trace.id\"",

@@ -88,6 +88,10 @@ private class DailyRecipientBucket {
     @Synchronized
     fun reserve(candidates: Set<String>): ReservationResult {
         val newRecipients = candidates - reservedRecipients
+        if (newRecipients.isEmpty()) {
+            return ReservationResult.Accepted(newlyReservedCount = 0, usedCount = reservedRecipients.size)
+        }
+
         if (!bucket.tryConsume(newRecipients.size.toLong())) {
             return ReservationResult.Rejected(reservedRecipients.size, secondsUntilTomorrow())
         }

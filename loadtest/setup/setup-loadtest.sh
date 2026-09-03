@@ -130,13 +130,16 @@ read_stack_outputs() {
   OBSERVABILITY_PUBLIC_IP="$(stack_output ObservabilityPublicIp)"
   OBSERVABILITY_PRIVATE_IP="$(stack_output ObservabilityPrivateIp)"
   SSH_OPTIONS=(-i "${SSH_KEY_PATH}" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)
+  # -n: detach remote command's stdin from ours so it can't drain input meant for
+  # run-loadtest.sh's later interactive prompts (test selection, plan, RPS, duration).
+  SSH_OPTIONS_NO_STDIN=("${SSH_OPTIONS[@]}" -n)
 }
 
 wait_for_ssh() {
   local host="$1"
   local attempt
   for attempt in $(seq 1 60); do
-    if ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${host}" 'true' >/dev/null 2>&1; then
+    if ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${host}" 'true' >/dev/null 2>&1; then
       return 0
     fi
     sleep 5
@@ -150,11 +153,11 @@ configure_mysql() {
   wait_for_ssh "${DB_PUBLIC_IP}"
   scp "${SSH_OPTIONS[@]}" "${MYSQL_SCRIPT}" "${EC2_USER}@${DB_PUBLIC_IP}:/tmp/setup-mysql.sh"
   # Normalize CRLF from Windows checkouts before Linux executes the shebang.
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
+  ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
     "sudo sed -i 's/\\r$//' /tmp/setup-mysql.sh"
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
+  ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
     'sudo install -m 0755 /tmp/setup-mysql.sh /opt/mysql/setup-mysql.sh'
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
+  ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
     "sudo env MYSQL_ROOT_PASSWORD='${MYSQL_ROOT_PASSWORD}' /opt/mysql/setup-mysql.sh"
   initialize_mysql_schema
 }
@@ -163,7 +166,7 @@ initialize_mysql_schema() {
   echo 'MySQL 스키마를 초기화합니다.'
   scp "${SSH_OPTIONS[@]}" "${MYSQL_SCHEMA_SCRIPT}" \
     "${EC2_USER}@${DB_PUBLIC_IP}:/tmp/imhere-full-init.sql"
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
+  ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
     "sudo env MYSQL_PWD='${MYSQL_ROOT_PASSWORD}' mysql --protocol=socket -uroot rati < /tmp/imhere-full-init.sql"
 
   [[ -f "${MYSQL_SEED_SCRIPT}" ]] || {
@@ -173,7 +176,7 @@ initialize_mysql_schema() {
   echo '부하테스트 fixture 데이터를 MySQL에 주입합니다.'
   scp "${SSH_OPTIONS[@]}" "${MYSQL_SEED_SCRIPT}" \
     "${EC2_USER}@${DB_PUBLIC_IP}:/tmp/loadtest-seed.sql"
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
+  ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${DB_PUBLIC_IP}" \
     "sudo env MYSQL_PWD='${MYSQL_ROOT_PASSWORD}' mysql --protocol=socket -uroot rati < /tmp/loadtest-seed.sql"
 }
 
@@ -194,7 +197,7 @@ deploy_application() {
   wait_for_ssh "${OBSERVABILITY_PUBLIC_IP}"
 
   prepare_runtime_env
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${APP_PUBLIC_IP}" \
+  ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${APP_PUBLIC_IP}" \
     "mkdir -p '${REMOTE_APP_ROOT}/env' '${REMOTE_APP_ROOT}/secrets' '${REMOTE_APP_ROOT}/infra/nginx/certbot' '${REMOTE_APP_ROOT}/loadtest/setup'"
   scp "${SSH_OPTIONS[@]}" "${REPO_ROOT}/docker-compose.yml" \
     "${EC2_USER}@${APP_PUBLIC_IP}:${REMOTE_APP_ROOT}/docker-compose.yml"
@@ -210,14 +213,14 @@ deploy_application() {
   aws ecr get-login-password --region "${AWS_REGION}" \
     | ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${APP_PUBLIC_IP}" \
       "sudo docker login --username AWS --password-stdin '${ECR_REGISTRY}'"
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${APP_PUBLIC_IP}" \
+  ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${APP_PUBLIC_IP}" \
     "cd '${REMOTE_APP_ROOT}' && sudo env ECR_REGISTRY='${ECR_REGISTRY}' ECR_REPOSITORY='${ECR_REPOSITORY}' IMAGE_TAG='${IMAGE_TAG}' docker compose -f docker-compose.yml -f loadtest/setup/infra/docker-compose.loadtest.yml --profile prod up -d"
 
   scp -r "${SSH_OPTIONS[@]}" "${INFRA_DIR}/monitoring" \
     "${EC2_USER}@${OBSERVABILITY_PUBLIC_IP}:${REMOTE_OBSERVABILITY_ROOT}/"
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${OBSERVABILITY_PUBLIC_IP}" \
+  ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${OBSERVABILITY_PUBLIC_IP}" \
     "sudo chmod -R a+rX '${REMOTE_OBSERVABILITY_ROOT}/monitoring'"
-  ssh "${SSH_OPTIONS[@]}" "${EC2_USER}@${OBSERVABILITY_PUBLIC_IP}" \
+  ssh "${SSH_OPTIONS_NO_STDIN[@]}" "${EC2_USER}@${OBSERVABILITY_PUBLIC_IP}" \
     "sudo sh -c \"cd '${REMOTE_OBSERVABILITY_ROOT}/monitoring' && export GRAFANA_ADMIN_PASSWORD='${GRAFANA_ADMIN_PASSWORD:-imhere-test-grafana-password}' GRAFANA_ROOT_URL='http://${OBSERVABILITY_PUBLIC_IP}:3000' && docker compose up -d\""
 }
 

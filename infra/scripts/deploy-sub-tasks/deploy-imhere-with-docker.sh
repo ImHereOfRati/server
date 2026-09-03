@@ -47,6 +47,12 @@ start_services() {
   compose up -d
 }
 
+recreate_alloy() {
+  # alloy-config.alloy는 바인드 마운트 파일이므로 파일 교체만으로는
+  # 실행 중인 Alloy 프로세스가 새 설정을 읽는다고 보장할 수 없다.
+  compose up -d --force-recreate alloy
+}
+
 main() {
   require_environment
   normalize_deploy_path
@@ -55,6 +61,7 @@ main() {
   validate_nginx_config
   pull_images
   start_services
+  recreate_alloy
 
   echo "컨테이너 롤아웃이 완료되었습니다."
 }

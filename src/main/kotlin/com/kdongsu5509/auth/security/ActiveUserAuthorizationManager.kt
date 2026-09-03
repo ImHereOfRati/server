@@ -20,12 +20,15 @@ class ActiveUserAuthorizationManager(
     private val log = logger()
 
     private val permitAllMatchers = permitAllPaths.map(PathPatternRequestMatcher::pathPattern)
+    private val pendingUserAllowedMatchers = listOf(
+        PathPatternRequestMatcher.pathPattern("/api/users/my/withdrawal"),
+    )
 
     override fun authorize(
         authentication: Supplier<out Authentication>,
         invocation: MethodInvocation,
     ): AuthorizationDecision {
-        if (isPendingUserAllowed(invocation) || isPublicRequest()) {
+        if (isPendingUserAllowed(invocation) || isPendingUserWithdrawal() || isPublicRequest()) {
             return AuthorizationDecision(true)
         }
 
@@ -56,5 +59,13 @@ class ActiveUserAuthorizationManager(
             ?: return false
 
         return permitAllMatchers.any { it.matches(request) }
+    }
+
+    private fun isPendingUserWithdrawal(): Boolean {
+        val request = (RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes)
+            ?.request
+            ?: return false
+
+        return pendingUserAllowedMatchers.any { it.matches(request) }
     }
 }

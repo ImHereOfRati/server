@@ -56,7 +56,10 @@ data class User(
 
     fun withdraw(): User {
         validateNotWithdraw()
-        if (this.status != UserStatus.ACTIVE && this.status != UserStatus.BLOCKED) {
+        if (this.status != UserStatus.PENDING &&
+            this.status != UserStatus.ACTIVE &&
+            this.status != UserStatus.BLOCKED
+        ) {
             UserException.ONLY_ACTIVE_OR_BLOCKED_USER_CAN_WITHDRAW.throwIt()
         }
         return copy(status = UserStatus.WITHDRAWN)

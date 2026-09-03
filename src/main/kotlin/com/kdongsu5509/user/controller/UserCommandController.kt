@@ -4,6 +4,7 @@ import com.kdongsu5509.user.controller.dto.CompactUserResponse
 import com.kdongsu5509.user.controller.dto.NicknameUpdateRequest
 import com.kdongsu5509.user.service.UserLifecycleService
 import com.kdongsu5509.user.service.UserProfileService
+import com.kdongsu5509.auth.security.shared.AllowPendingUser
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
@@ -25,6 +26,7 @@ class UserCommandController(
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @AllowPendingUser
     @DeleteMapping("/withdrawal")
     fun withdraw(@AuthenticationPrincipal(expression = "email") userEmail: String) {
         userLifecycleService.withdraw(userEmail)

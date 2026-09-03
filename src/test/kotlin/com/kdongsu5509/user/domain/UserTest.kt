@@ -124,25 +124,14 @@ class UserTest {
 
 
     @ParameterizedTest
-    @EnumSource(value = UserStatus::class, names = ["ACTIVE", "BLOCKED"])
-    @DisplayName("ACTIVE 또는 BLOCKED 상태의 사용자는 탈퇴할 수 있다")
+    @EnumSource(value = UserStatus::class, names = ["PENDING", "ACTIVE", "BLOCKED"])
+    @DisplayName("PENDING, ACTIVE 또는 BLOCKED 상태의 사용자는 탈퇴할 수 있다")
     fun withdraw_success(status: UserStatus) {
         val user = createUserWithSpecificUserStatus(status)
 
         val withdrawnUser = user.withdraw()
 
         assertThat(withdrawnUser.status).isEqualTo(UserStatus.WITHDRAWN)
-    }
-
-    @Test
-    @DisplayName("PENDING 상태의 사용자는 탈퇴할 수 없다")
-    fun withdraw_fail_pending_status() {
-        val user = createUserWithSpecificUserStatus(UserStatus.PENDING)
-
-        assertThatThrownBy { user.withdraw() }
-            .isInstanceOf(ImHereBaseException::class.java)
-            .extracting("errorCode")
-            .isEqualTo(UserException.ONLY_ACTIVE_OR_BLOCKED_USER_CAN_WITHDRAW)
     }
 
     @Test

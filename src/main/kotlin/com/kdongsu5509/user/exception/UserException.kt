@@ -16,7 +16,7 @@ enum class UserException(
     ONLY_ACTIVE_OR_BLOCKED_USER_CAN_WITHDRAW(
         CommonErrorCode.INVALID_INPUT,
         "USER-005",
-        "ACTIVE 또는 BLOCKED 상태인 사용자만 탈퇴할 수 있습니다."
+        "PENDING, ACTIVE 또는 BLOCKED 상태인 사용자만 탈퇴할 수 있습니다."
     ),
 
     // --- 3xx: Resource Absence (404) ---

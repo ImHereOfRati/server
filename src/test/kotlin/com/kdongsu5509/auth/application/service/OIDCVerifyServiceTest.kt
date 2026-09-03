@@ -35,6 +35,7 @@ class OIDCVerifyServiceTest {
         private const val EMAIL = "test@kakao.com"
         private const val NICKNAME = "카카오친구"
         private const val SUB = "kakao-sub"
+        private const val APPLE_SUB = "001234.deadbeef.5678"
 
         private val PUBLIC_KEY = OIDCPublicKey(kid = KID, n = MODULUS, e = EXPONENT)
     }
@@ -136,15 +137,42 @@ class OIDCVerifyServiceTest {
     }
 
     @Test
-    @DisplayName("Apple ID 토큰에 이메일이 없으면 로그인을 거절한다")
-    fun verify_fail_apple_missing_email() {
-        // given: 사용자가 email scope를 주지 않은 경우다. users.email이 필수라 가입시킬 수 없다.
+    @DisplayName("Apple ID 토큰에 이메일이 없으면 sub 기반 대체 주소로 가입을 이어 간다")
+    fun verify_success_apple_missing_email() {
+        // given: 사용자가 email scope를 주지 않으면 Apple은 email 클레임 자체를 넣지 않는다.
+        // users.email이 NOT NULL이라 배달 불가 주소를 만들어 준다.
         givenTokenSignatureVerificationSucceeds(
             OAuth2Provider.APPLE,
             "https://appleid.apple.com",
             "apple-bundle-id"
         )
-        givenClaimsHasEmail(null, NONCE)
+        val mockClaims = givenClaimsHasEmail(null, NONCE)
+        given(mockClaims["nickname"]).willReturn(null)
+        given(mockClaims["name"]).willReturn(null)
+        given(mockClaims.issuer).willReturn("https://appleid.apple.com")
+        given(mockClaims.audience).willReturn(setOf("apple-bundle-id"))
+        given(mockClaims.subject).willReturn(APPLE_SUB)
+
+        // when
+        val result = verifyService.verify(OAuth2Provider.APPLE, ID_TOKEN, NONCE)
+
+        // then: sub가 같으면 재로그인해도 같은 주소가 나와야 한다.
+        assertThat(result.email).isEqualTo("apple_001234.deadbeef.5678@noreply.imhere.invalid")
+        assertThat(result.sub).isEqualTo(APPLE_SUB)
+        assertThat(result.nickname).isEqualTo("user")
+    }
+
+    @Test
+    @DisplayName("Apple ID 토큰에 이메일도 sub도 없으면 로그인을 거절한다")
+    fun verify_fail_apple_missing_email_and_sub() {
+        // given: 대체 주소를 만들 식별자조차 없는 경우다.
+        givenTokenSignatureVerificationSucceeds(
+            OAuth2Provider.APPLE,
+            "https://appleid.apple.com",
+            "apple-bundle-id"
+        )
+        val mockClaims = givenClaimsHasEmail(null, NONCE)
+        given(mockClaims.subject).willReturn(null)
 
         // when & then
         assertUnauthorizedException("ID 토큰에 이메일 정보가 없습니다.") {

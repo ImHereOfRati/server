@@ -17,13 +17,18 @@ class OauthPublicKeyService(
         val providerProperties = providerConfigPort.get(provider)
 
         log.info("OIDC 공개키 강제 갱신 요청: {}", provider)
-        oauthClientPort.refresh(providerProperties.cacheKey, providerProperties.jwksUri)
-        log.info("OIDC 공개키 강제 갱신 완료: {}", provider)
+        val refreshed = oauthClientPort.refresh(providerProperties.cacheKey, providerProperties.jwksUri)
+        if (refreshed == null) {
+            log.warn("OIDC 공개키 강제 갱신 실패: provider={}, jwksUri={}", provider, providerProperties.jwksUri)
+            return
+        }
+        log.info("OIDC 공개키 강제 갱신 완료: provider={}, keyCount={}", provider, refreshed.keys.size)
     }
 
     fun fetchAll() {
         providerConfigPort.configuredProviders().forEach { provider ->
-            fetch(provider)
+            runCatching { fetch(provider) }
+                .onFailure { exception -> log.warn("OIDC 공개키 갱신 중 오류: provider={}", provider, exception) }
         }
     }
 }

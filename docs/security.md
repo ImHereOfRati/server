@@ -16,9 +16,10 @@
     - 지원 Provider
         - `Kakao`
         - `Google`
-    - 지원 예정 Provider
         - `Apple`
-            - `App Store` 배포 과정에서 추가 구현 예정
+            - `aud`가 플랫폼마다 다릅니다. iOS 네이티브 로그인은 앱의 `Bundle ID`, 웹은 `Services ID`가 들어오므로
+              `APPLE_CLIENT_ID`(Bundle ID)와 `APPLE_SERVICE_ID`(Services ID)를 **둘 다** 채워야 합니다.
+            - 값이 비면 `OIDCProperties`가 빈 문자열을 걸러내 허용 `aud` 목록이 비고, Apple 로그인만 `AUTH-101`로 실패합니다.
 - 클라이언트가 `Authorization Code`를 전달하는 방식이 아니라, Provider가 발급한 `ID Token`을 서버에 전달합니다.
 
 ## 전체 인증 흐름
@@ -71,6 +72,28 @@ sequenceDiagram
     - RSA Signature 및 `exp` 검증
     - `iss`, `aud`, `nonce` 검증
     - `sub`, `email` 존재 여부 확인
+
+### Provider별 특이사항
+
+- **`nonce`는 원문과 SHA-256 해시를 모두 허용합니다.** (`OidcNoncePolicy`)
+    - `nonce`는 같은 ID Token을 가로채 다시 쓰는 replay 공격을 막으려고 클라이언트가 만들어 보내는 일회성 난수입니다.
+    - `Kakao`, `Google`은 클라이언트가 준 값을 그대로 ID Token에 담습니다.
+    - `Apple`은 인가 요청에 원문이 아니라 `sha256(rawNonce)`를 싣는 것이 표준 흐름이라, ID Token에는 해시값이 들어옵니다.
+    - 그래서 서버는 `원문 일치` 또는 `SHA-256 hex 일치` 중 하나만 맞으면 통과시킵니다. 둘 다 아니면 `AUTH-109`입니다.
+- **`Apple`은 `email`이 없어도 가입을 이어 갑니다.** (`OidcEmailPolicy`)
+    - `Apple`은 사용자가 email scope를 주지 않으면 ID Token에 `email` 클레임 자체를 넣지 않습니다.
+    - `users.email`이 `NOT NULL` + `UNIQUE`라 값이 반드시 필요하므로, `apple_{sub}@noreply.imhere.invalid` 형태의
+      배달 불가 주소를 만들어 씁니다. `.invalid`는 RFC 2606이 "실제로 존재하지 않는 도메인"으로 예약해 둔 TLD입니다.
+    - `sub`는 Provider 안에서 바뀌지 않는 식별자라, 재로그인해도 같은 주소가 나옵니다.
+    - `email`도 `sub`도 없으면 만들 근거가 없으므로 `AUTH-103`으로 거절합니다.
+    - `Kakao`, `Google`은 `email`을 항상 주므로 누락이면 그대로 거절합니다.
+- **`exp` 검증에 60초의 시계 오차를 허용합니다.** (`JjwtOIDCTokenVerifyAdapter.CLOCK_SKEW_SECONDS`)
+    - `Apple` ID Token의 수명은 10분으로 `Google`(1시간), `Kakao`(12시간)보다 훨씬 짧습니다.
+    - 서버 시계가 조금만 앞서 있어도 `Apple` 로그인만 `AUTH-100`(만료)으로 떨어지기 때문입니다.
+- **JWKS 조회 실패는 `WARN` 로그로 남습니다.** (`OidcPublicKeyClient`)
+    - 조회에 실패하면 호출부에는 "공개키를 못 찾았다"라는 결과만 남아 원인을 알 수 없습니다.
+    - 그래서 실패 원인과 `jwksUri`를 로그로 남기고, 한 Provider의 실패가 다른 Provider의 갱신이나
+      애플리케이션 기동을 막지 않도록 `OauthPublicKeyService.fetchAll()`에서 Provider 단위로 격리합니다.
 
 ```mermaid
 sequenceDiagram

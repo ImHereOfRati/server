@@ -31,11 +31,12 @@ object OidcTestJwtProvider {
         email: String = PAYLOAD_EMAIL,
         issuer: String = PAYLOAD_ISS,
         audience: String = PAYLOAD_AUD,
-        nonce: String = UUID.randomUUID().toString()
+        nonce: String = UUID.randomUUID().toString(),
+        expiresInSeconds: Long = PAYLOAD_EXP_SECONDS
     ): String {
         val now = Instant.now()
         val issuedAt = Date.from(now)
-        val expiration = Date.from(now.plusSeconds(PAYLOAD_EXP_SECONDS))
+        val expiration = Date.from(now.plusSeconds(expiresInSeconds))
 
         return Jwts.builder()
             .header()

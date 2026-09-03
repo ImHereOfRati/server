@@ -3,6 +3,7 @@ package com.kdongsu5509.auth.adapter.out.jwt
 import com.kdongsu5509.auth.AuthException
 import com.kdongsu5509.auth.application.port.out.OIDCIdTokenVerifyPort
 import com.kdongsu5509.auth.application.service.dto.OIDCDecodePayload
+import com.kdongsu5509.auth.domain.OidcNoncePolicy
 import com.kdongsu5509.support.exception.throwIt
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
@@ -22,6 +23,7 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
 
     companion object {
         private val KID_PATTERN = """ "kid"\s*:\s*"([^"]+)" """.trim().toRegex()
+        private const val CLOCK_SKEW_SECONDS = 60L
     }
 
     override fun getKid(token: String): String {
@@ -51,6 +53,7 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
 
         return runCatching {
             Jwts.parser()
+                .clockSkewSeconds(CLOCK_SKEW_SECONDS)
                 .verifyWith(publicKey)
                 .build()
                 .parseSignedClaims(token)
@@ -75,7 +78,7 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
     }
 
     private fun verifyNonce(actualNonce: String?, expectedNonce: String) {
-        if (actualNonce.isNullOrBlank() || actualNonce != expectedNonce) {
+        if (!OidcNoncePolicy.matches(actualNonce, expectedNonce)) {
             AuthException.OIDC_NONCE_INVALID.throwIt()
         }
     }

@@ -11,8 +11,8 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import java.security.MessageDigest
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -74,12 +74,19 @@ class JjwtOIDCTokenVerifyAdapterTest {
     @Test
     @DisplayName("페이로드의 issuer와 audience가 허용 목록에 있으면 검증을 통과한다")
     fun verifyPayLoad_success() {
-        // given: Google은 iss를 스킴 미포함으로도 발급하므로 두 형태를 함께 허용한다.
+        // given: Google은 iss를 스킴x` 미포함으로도 발급하므로 두 형태를 함께 허용한다.
         val issuers = listOf("https://accounts.google.com", "accounts.google.com")
         val audience = "test-app-key"
         val nonce = "test-nonce"
         val payload =
-            OIDCDecodePayload(iss = "accounts.google.com", aud = audience, sub = "sub", nonce = nonce, email = "test@test.com", nickname = "nick")
+            OIDCDecodePayload(
+                iss = "accounts.google.com",
+                aud = audience,
+                sub = "sub",
+                nonce = nonce,
+                email = "test@test.com",
+                nickname = "nick"
+            )
 
         // when & then (예외가 발생하지 않아야 함)
         jjwtOIDCTokenVerifyAdapter.verifyPayLoad(payload, issuers, listOf(audience), nonce)
@@ -116,8 +123,10 @@ class JjwtOIDCTokenVerifyAdapterTest {
 
         val result = jjwtOIDCTokenVerifyAdapter.verifySignature(
             token,
-            java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey.modulus.toByteArray().dropWhile { it == 0.toByte() }.toByteArray()),
-            java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey.publicExponent.toByteArray().dropWhile { it == 0.toByte() }.toByteArray())
+            java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(publicKey.modulus.toByteArray().dropWhile { it == 0.toByte() }.toByteArray()),
+            java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(publicKey.publicExponent.toByteArray().dropWhile { it == 0.toByte() }.toByteArray())
         )
 
         assertThat(result.payload.issuer).isEqualTo(OidcTestJwtProvider.GOOGLE_PAYLOAD_ISS)
@@ -275,4 +284,95 @@ class JjwtOIDCTokenVerifyAdapterTest {
             assertThat(it.message).contains("잘못된 Base64 인코딩 값입니다.")
         }
     }
+
+    @Test
+    @DisplayName("Apple처럼 nonce가 raw 값의 SHA-256 해시로 담겨 와도 검증을 통과한다")
+    fun verifyPayLoad_acceptsSha256HashedNonce() {
+        // given: Apple 표준 흐름은 인가 요청에 sha256(rawNonce)를 싣고, ID 토큰에도 그 해시가 담긴다.
+        val rawNonce = "raw-nonce-from-client"
+        val payload = OIDCDecodePayload(
+            iss = "https://appleid.apple.com",
+            aud = "apple-bundle-id",
+            sub = "sub",
+            nonce = sha256Hex(rawNonce),
+            email = "test@privaterelay.appleid.com",
+            nickname = null
+        )
+
+        // when & then (예외가 발생하지 않아야 함)
+        jjwtOIDCTokenVerifyAdapter.verifyPayLoad(
+            payload,
+            listOf("https://appleid.apple.com"),
+            listOf("apple-bundle-id"),
+            rawNonce
+        )
+    }
+
+    @Test
+    @DisplayName("해시도 원문도 아닌 nonce는 UnauthorizedException을 발생시킨다")
+    fun verifyPayLoad_unrelatedNonce_throwsException() {
+        // given
+        val payload = OIDCDecodePayload(
+            iss = "https://appleid.apple.com",
+            aud = "apple-bundle-id",
+            sub = "sub",
+            nonce = sha256Hex("other-nonce"),
+            email = "test@privaterelay.appleid.com",
+            nickname = null
+        )
+
+        // when & then
+        assertThrows<UnauthorizedException> {
+            jjwtOIDCTokenVerifyAdapter.verifyPayLoad(
+                payload,
+                listOf("https://appleid.apple.com"),
+                listOf("apple-bundle-id"),
+                "raw-nonce-from-client"
+            )
+        }.also {
+            assertThat(it.message).contains("OIDC ID 토큰의 nonce 검증에 실패했습니다.")
+        }
+    }
+
+    @Test
+    @DisplayName("만료 직후 토큰은 시계 오차 허용 범위 안이면 검증을 통과한다")
+    fun verifySignature_withinClockSkew() {
+        // given: Apple ID 토큰은 수명이 10분이라 서버 시계가 조금만 앞서도 만료로 떨어진다.
+        val token = OidcTestJwtProvider.buildIdToken(expiresInSeconds = -30)
+
+        // when
+        val result = jjwtOIDCTokenVerifyAdapter.verifySignature(token, testModulus(), testExponent())
+
+        // then
+        assertThat(result.payload.issuer).isEqualTo(OidcTestJwtProvider.PAYLOAD_ISS)
+    }
+
+    @Test
+    @DisplayName("시계 오차 허용 범위를 넘어 만료된 토큰은 UnauthorizedException을 발생시킨다")
+    fun verifySignature_expiredBeyondClockSkew() {
+        // given
+        val token = OidcTestJwtProvider.buildIdToken(expiresInSeconds = -300)
+
+        // when & then
+        assertThrows<UnauthorizedException> {
+            jjwtOIDCTokenVerifyAdapter.verifySignature(token, testModulus(), testExponent())
+        }.also {
+            assertThat(it.message).contains("OIDC ID 토큰이 만료되었습니다.")
+        }
+    }
+
+    private fun testModulus(): String {
+        val publicKey = OidcTestJwtProvider.keyPair.public as java.security.interfaces.RSAPublicKey
+        return Base64.getUrlEncoder().encodeToString(publicKey.modulus.toByteArray())
+    }
+
+    private fun testExponent(): String {
+        val publicKey = OidcTestJwtProvider.keyPair.public as java.security.interfaces.RSAPublicKey
+        return Base64.getUrlEncoder().encodeToString(publicKey.publicExponent.toByteArray())
+    }
+
+    private fun sha256Hex(value: String): String =
+        MessageDigest.getInstance("SHA-256")
+            .digest(value.toByteArray())
+            .joinToString("") { byte -> "%02x".format(byte) }
 }

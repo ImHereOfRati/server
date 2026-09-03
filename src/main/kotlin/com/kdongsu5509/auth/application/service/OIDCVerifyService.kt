@@ -7,6 +7,7 @@ import com.kdongsu5509.auth.application.port.out.OidcProviderConfigPort
 import com.kdongsu5509.auth.application.port.out.PublicKeyLoadPort
 import com.kdongsu5509.auth.application.service.dto.OIDCDecodePayload
 import com.kdongsu5509.auth.application.service.dto.OIDCUserInfo
+import com.kdongsu5509.auth.domain.OidcEmailPolicy
 import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
 import org.springframework.stereotype.Service
@@ -48,11 +49,21 @@ class OIDCVerifyService(
         )
 
         return OIDCUserInfo(
-            email = payload.email
-                ?: AuthException.OIDC_MISSING_EMAIL.throwIt(customMessage = "ID 토큰에 이메일 정보가 없습니다."),
+            email = resolveEmail(provider, payload),
             nickname = resolveNickname(payload),
             sub = payload.sub
         )
+    }
+
+    private fun resolveEmail(provider: OAuth2Provider, payload: OIDCDecodePayload): String {
+        payload.email?.takeIf { it.isNotBlank() }?.let { return it }
+
+        val subject = payload.sub?.takeIf { it.isNotBlank() }
+        if (subject == null || !OidcEmailPolicy.allowsMissingEmail(provider)) {
+            AuthException.OIDC_MISSING_EMAIL.throwIt(customMessage = "ID 토큰에 이메일 정보가 없습니다.")
+        }
+
+        return OidcEmailPolicy.fallbackEmail(provider, subject)
     }
 
     private fun resolveNickname(payload: OIDCDecodePayload): String {

@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.security.shared
+package com.kdongsu5509.support.security
 
 import org.springframework.security.access.prepost.PreAuthorize
 

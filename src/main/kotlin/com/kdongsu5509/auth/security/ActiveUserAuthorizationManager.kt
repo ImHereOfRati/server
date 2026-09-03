@@ -1,6 +1,6 @@
 package com.kdongsu5509.auth.security
 
-import com.kdongsu5509.auth.security.shared.AllowPendingUser
+import com.kdongsu5509.support.security.AllowPendingUser
 import com.kdongsu5509.support.logger.logger
 import org.aopalliance.intercept.MethodInvocation
 import org.springframework.aop.support.AopUtils

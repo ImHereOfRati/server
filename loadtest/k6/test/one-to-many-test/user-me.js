@@ -32,6 +32,7 @@ const stages = plan === 'single'
 
 export const options = {
   insecureSkipTLSVerify: (__ENV.INSECURE_TLS || 'true') === 'true',
+  summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
   scenarios: {
     one_user: {
       executor: 'ramping-arrival-rate',

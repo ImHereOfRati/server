@@ -1,5 +1,6 @@
-import static org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 import org.hidetake.gradle.swagger.generator.GenerateSwaggerUI
+
+import static org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
 
 buildscript {
     configurations.all {
@@ -171,8 +172,6 @@ tasks.withType(GenerateSwaggerUI).configureEach {
     dependsOn "openapi3"
 }
 
-// OpenAPI is generated from the current test snippets. Remove stale files so
-// retired operations cannot remain visible in Swagger UI between builds.
 tasks.matching { it.name == "openapi3" }.configureEach {
     doFirst {
         delete file("build/api-spec")
@@ -219,8 +218,6 @@ tasks.named('bootRun') {
 
 tasks.named('test') {
     doFirst {
-        // Prevent snippets from removed/renamed endpoints from leaking into
-        // the next OpenAPI generation.
         delete snippetsDir
     }
     useJUnitPlatform()
@@ -262,10 +259,6 @@ jacocoTestReport {
                     "**/*Application*",
                     "**/*BaseEntity*",
                     "**/*BaseTimeEntity*",
-                    // Spring 설정 클래스와 프로퍼티 바인딩 홀더.
-                    // @Bean 메서드는 컨텍스트 기동만으로 "실행"되어 커버리지를 부풀리고,
-                    // 프로퍼티 홀더의 중첩 data class는 equals/hashCode/copy 같은 생성 멤버뿐이라 검증 대상이 아니다.
-                    // 로직을 가진 바깥 클래스(SecurityWhiteList, OIDCProperties)는 그대로 집계한다.
                     "**/*Config.class",
                     '**/*Config$*.class',
                     '**/*Properties$*.class'

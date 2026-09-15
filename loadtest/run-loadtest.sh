@@ -20,6 +20,11 @@ TEST_DIR="${REPO_ROOT}/loadtest/k6/test"
 GENERATED_DIR="${REPO_ROOT}/loadtest/k6/generated"
 FIXTURE_PATH="${GENERATED_DIR}/tokens.json"
 RESULT_DIR="${GENERATED_DIR}/results"
+REPORT_DIR="${REPORT_DIR:-${REPO_ROOT}/docs/loadtest/300-tps/runs}"
+NON_INTERACTIVE="${NON_INTERACTIVE:-false}"
+TEST_FILE="${TEST_FILE:-}"
+SCENARIO="${SCENARIO:-}"
+KEEP_LOADTEST_RESOURCES="${KEEP_LOADTEST_RESOURCES:-false}"
 
 AWS_REGION="${AWS_REGION:-ap-northeast-2}"
 STACK_NAME="${STACK_NAME:-imhere-loadtest}"
@@ -36,7 +41,9 @@ cleanup() {
   echo
   echo "[5/5] Removing load-test resources"
 
-  if [[ -x "${TEARDOWN_SCRIPT}" ]]; then
+  if [[ "${KEEP_LOADTEST_RESOURCES}" == "true" ]]; then
+    echo "KEEP_LOADTEST_RESOURCES=true; AWS load-test resources were retained."
+  elif [[ -x "${TEARDOWN_SCRIPT}" ]]; then
     if ! "${TEARDOWN_SCRIPT}" --yes; then
       echo "teardown failed; inspect AWS resources manually." >&2
       exit_code=1
@@ -143,6 +150,21 @@ select_test() {
   done
 }
 
+resolve_selected_test() {
+  if [[ -n "${TEST_FILE}" ]]; then
+    if [[ -f "${TEST_FILE}" ]]; then
+      SELECTED_TEST="${TEST_FILE}"
+    elif [[ -f "${TEST_DIR}/${TEST_FILE}" ]]; then
+      SELECTED_TEST="${TEST_DIR}/${TEST_FILE}"
+    else
+      echo "test file not found: ${TEST_FILE}" >&2
+      exit 1
+    fi
+  else
+    select_test
+  fi
+}
+
 trap cleanup EXIT
 
 require_command aws
@@ -180,16 +202,19 @@ if [[ -z "${BASE_URL}" ]]; then
   BASE_URL="http://${APP_PUBLIC_IP}"
 fi
 
-select_test
+resolve_selected_test
 
-read -r -p "Test plan [precision/single/breakpoint] (${TEST_PLAN}): " input_plan
-TEST_PLAN="${input_plan:-${TEST_PLAN}}"
-read -r -p "Target RPS (${TARGET_RPS}): " input_rps
-TARGET_RPS="${input_rps:-${TARGET_RPS}}"
-read -r -p "Stage duration (${STAGE_DURATION}): " input_duration
-STAGE_DURATION="${input_duration:-${STAGE_DURATION}}"
+if [[ "${NON_INTERACTIVE}" != "true" ]]; then
+  read -r -p "Test plan [precision/single/breakpoint] (${TEST_PLAN}): " input_plan
+  TEST_PLAN="${input_plan:-${TEST_PLAN}}"
+  read -r -p "Target RPS (${TARGET_RPS}): " input_rps
+  TARGET_RPS="${input_rps:-${TARGET_RPS}}"
+  read -r -p "Stage duration (${STAGE_DURATION}): " input_duration
+  STAGE_DURATION="${input_duration:-${STAGE_DURATION}}"
+fi
 
 mkdir -p "${RESULT_DIR}"
+mkdir -p "${REPORT_DIR}"
 
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 TEST_NAME="$(basename "${SELECTED_TEST}" .js)"
@@ -201,17 +226,38 @@ echo "Test: ${SELECTED_TEST#"${TEST_DIR}/"}"
 echo "Base URL: ${BASE_URL}"
 echo "Plan: ${TEST_PLAN}, target RPS: ${TARGET_RPS}, duration: ${STAGE_DURATION}"
 
+set +e
 "${K6_PATH}" run --quiet \
   --summary-export "${RESULT_PATH}" \
   --tag "test=${TEST_TAG}" \
   -e "BASE_URL=${BASE_URL}" \
   -e "FIXTURE=${FIXTURE_PATH}" \
-  -e "SCENARIO=${TEST_NAME}" \
+  -e "SCENARIO=${SCENARIO:-${TEST_NAME}}" \
   -e "TEST_PLAN=${TEST_PLAN}" \
   -e "TARGET_RPS=${TARGET_RPS}" \
   -e "STAGE_DURATION=${STAGE_DURATION}" \
+  -e "BREAKPOINT_STAGE_DURATION=${BREAKPOINT_STAGE_DURATION:-3m}" \
+  -e "BREAKPOINT_TARGETS=${BREAKPOINT_TARGETS:-}" \
   -e 'INSECURE_TLS=true' \
   "${SELECTED_TEST}"
+K6_EXIT=$?
+set -e
 
-require_file "${RESULT_PATH}"
+REPORT_PATH="${REPORT_DIR}/${TEST_NAME}-${TEST_PLAN}-${TIMESTAMP}.md"
+if [[ -f "${RESULT_PATH}" ]]; then
+  node "${REPO_ROOT}/loadtest/tools/render-k6-report.mjs" \
+    "${RESULT_PATH}" \
+    "${REPORT_PATH}" \
+    "${TEST_NAME}" \
+    "${TEST_PLAN}" \
+    "${TARGET_RPS}" \
+    "${STAGE_DURATION}"
+else
+  printf '# k6 run failed\n\n- Exit status: %s\n- Result export was not created.\n' "${K6_EXIT}" > "${REPORT_PATH}"
+fi
+if [[ "${K6_EXIT}" -ne 0 ]]; then
+  echo "k6 failed with status ${K6_EXIT}; report: ${REPORT_PATH}" >&2
+  exit "${K6_EXIT}"
+fi
 echo "k6 completed successfully: ${RESULT_PATH}"
+echo "Markdown report: ${REPORT_PATH}"

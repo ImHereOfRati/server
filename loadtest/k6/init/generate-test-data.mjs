@@ -9,10 +9,25 @@ import {mkdir, writeFile} from 'node:fs/promises';
 import {randomUUID} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 
-const userCount = 1000;
-const friendshipCount = 500;
-const mutationPairCount = 0;
-const notificationCount = 20000;
+const positiveInt = (name, fallback) => {
+    const value = Number(process.env[name] ?? fallback);
+    if (!Number.isSafeInteger(value) || value < 1) {
+        throw new Error(`${name} must be a positive integer`);
+    }
+    return value;
+};
+const nonNegativeInt = (name, fallback) => {
+    const value = Number(process.env[name] ?? fallback);
+    if (!Number.isSafeInteger(value) || value < 0) {
+        throw new Error(`${name} must be a non-negative integer`);
+    }
+    return value;
+};
+
+const userCount = positiveInt('LOADTEST_USER_COUNT', 1000);
+const friendshipCount = Math.min(positiveInt('LOADTEST_FRIENDSHIP_COUNT', 500), Math.floor(userCount * (userCount - 1) / 2));
+const mutationPairCount = nonNegativeInt('LOADTEST_MUTATION_PAIR_COUNT', 0);
+const notificationCount = positiveInt('LOADTEST_NOTIFICATION_COUNT', 20000);
 const defaultOutputDir = fileURLToPath(new URL('../generated', import.meta.url));
 const outputDir = process.argv[2] ?? defaultOutputDir;
 
@@ -26,9 +41,11 @@ const users = Array.from({length: userCount}, (_, index) => ({
 
 const relations = [];
 const usedPairs = new Set();
-for (let a = 0; a < userCount && relations.length < friendshipCount; a += 1) {
-    for (let b = a + 1; b < userCount && relations.length < friendshipCount; b += 1) {
+for (let distance = 1; distance < userCount && relations.length < friendshipCount; distance += 1) {
+    for (let a = 0; a + distance < userCount && relations.length < friendshipCount; a += 1) {
+        const b = a + distance;
         const key = `${a}:${b}`;
+        if (usedPairs.has(key)) continue;
         usedPairs.add(key);
         relations.push({id: randomUUID(), low: users[a].id, high: users[b].id});
     }

@@ -26,7 +26,8 @@ fixture의 `ACTOR_INDEX`번째 사용자 토큰 하나만 쓰기 때문에, 서�
 ## 실행
 
 ```bash
-./loadtest/run-k6.sh --scenario only-one-sms --base-url 'http://<app-public-ip>'
+NON_INTERACTIVE=true TEST_FILE=one-to-many-test/sms-send.js \
+TEST_PLAN=precision ./loadtest/run-loadtest.sh
 ```
 
 대상 사용자를 바꾸려면 `ACTOR_INDEX`를 준다. fixture 범위(0~999)를 벗어나면 스크립트가 즉시 실패한다.

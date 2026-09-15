@@ -19,6 +19,7 @@ const stageDuration = __ENV.STAGE_DURATION || '10s';
 
 export const options = {
   insecureSkipTLSVerify: (__ENV.INSECURE_TLS || 'true') === 'true',
+  summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
   scenarios: {
     one_user_fcm: {
       executor: 'ramping-arrival-rate',

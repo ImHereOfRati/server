@@ -35,11 +35,13 @@ fixture의 **1,000명이 각자** 요청을 보낸다. 실제 트래픽에 가�
 
 ```bash
 # 100~1000 RPS 정밀 측정
-./loadtest/run-k6.sh --scenario mixed --test-plan precision --base-url 'http://<app-public-ip>'
+NON_INTERACTIVE=true TEST_FILE=many-people-many-request-test/mixed-workload.js \
+TEST_PLAN=precision ./loadtest/run-loadtest.sh
 
 # 단일 구간 재현
-./loadtest/run-k6.sh --scenario fcm --test-plan single --target-rps 100 --stage-duration 3m \
-  --base-url 'http://<app-public-ip>'
+NON_INTERACTIVE=true TEST_FILE=many-people-many-request-test/mixed-workload.js \
+SCENARIO=fcm TEST_PLAN=single TARGET_RPS=100 STAGE_DURATION=3m \
+./loadtest/run-loadtest.sh
 ```
 
 ## 지표 읽는 법

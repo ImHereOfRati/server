@@ -11,6 +11,9 @@ const users = new SharedArray('imhere-loadtest-users', () =>
 const mode = (__ENV.SCENARIO || 'mixed').toLowerCase();
 const plan = (__ENV.TEST_PLAN || 'precision').toLowerCase();
 const isBreakpoint = plan === 'breakpoint';
+const breakpointDuration = __ENV.BREAKPOINT_STAGE_DURATION || '3m';
+const breakpointTargets = (__ENV.BREAKPOINT_TARGETS || '30,60,100,150,225,300,400,600,800,1000')
+  .split(',').map((value) => Number(value.trim())).filter((value) => Number.isFinite(value) && value > 0);
 const responseCounts = new Counter('loadtest_response_count');
 const conflictCount = new Counter('loadtest_conflict_count');
 const serverErrorCount = new Counter('loadtest_server_error_count');
@@ -24,18 +27,7 @@ const stages = plan === 'precision'
       target: 100 + index * 100,
       duration: '3m',
     }))
-  : [
-      { target: 30, duration: '3m' },
-      { target: 60, duration: '3m' },
-      { target: 100, duration: '3m' },
-      { target: 150, duration: '3m' },
-      { target: 225, duration: '3m' },
-      { target: 300, duration: '3m' },
-      { target: 400, duration: '3m' },
-      { target: 600, duration: '3m' },
-      { target: 800, duration: '3m' },
-      { target: 1000, duration: '3m' },
-    ];
+  : breakpointTargets.map((target) => ({ target, duration: breakpointDuration }));
 if (plan === 'single') {
   stages.splice(0, stages.length, {
     target: Number(__ENV.TARGET_RPS || 100),
@@ -45,10 +37,13 @@ if (plan === 'single') {
 
 export const options = {
   insecureSkipTLSVerify: (__ENV.INSECURE_TLS || 'true') === 'true',
+  summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
   scenarios: {
     workload: {
       executor: 'ramping-arrival-rate',
-      startRate: Number(__ENV.START_RPS || (plan === 'precision' ? 100 : 30)),
+      // A single-target run is a steady-state test. Starting at the low
+      // breakpoint rate would make a 10-minute 300 TPS run average 165 TPS.
+      startRate: Number(__ENV.START_RPS || (plan === 'single' ? (__ENV.TARGET_RPS || 100) : (plan === 'precision' ? 100 : 30))),
       timeUnit: '1s',
       preAllocatedVUs: Number(__ENV.PREALLOCATED_VUS || 300),
       maxVUs: Number(__ENV.MAX_VUS || 2000),
@@ -60,7 +55,8 @@ export const options = {
 
 function user(index) { return users[Math.abs(index) % users.length]; }
 function headers(token) { return { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }; }
-function actor() { return user((__VU * 17 + __ITER) % users.length); }
+function actorIndex() { return Math.abs((__VU * 17 + __ITER) % users.length); }
+function actor() { return user(actorIndex()); }
 function get(path, token) { return http.get(`${baseUrl}${path}`, headers(token)); }
 function post(path, body, token) { return http.post(`${baseUrl}${path}`, JSON.stringify(body), headers(token)); }
 function patch(path, body, token) { return http.patch(`${baseUrl}${path}`, JSON.stringify(body), headers(token)); }
@@ -94,7 +90,9 @@ function friendMutation(me) {
 }
 
 function directNotification(me, notificationMethod) {
-  const target = user((__VU + __ITER + 1) % users.length);
+  // Keep the SMS target stable per sender so the application-level daily
+  // recipient limiter does not turn a throughput test into a 429 test.
+  const target = user((actorIndex() + 1) % users.length);
   const body = {
     notificationMethod,
     targetIds: [notificationMethod === 'FCM' ? target.id : target.phone],

@@ -1,40 +1,8 @@
-# ImHere 부하 테스트
+# ImHere 부하 테스트 — 실행 매뉴얼
 
 `loadtest`는 AWS에 임시 부하 테스트 환경을 만들고, k6 시나리오를 실행한 뒤, 테스트가 끝나면 AWS 리소스를 삭제하는 도구 모음이다.
 
-## 실행 구조
-
-```text
-로컬 PC
-  │
-  ├─ run-loadtest.sh
-  │    ├─ AWS CloudFormation 실행
-  │    ├─ MySQL 설치 및 초기화
-  │    ├─ Spring Boot, nginx, Alloy 실행
-  │    ├─ k6 fixture와 JWT 생성
-  │    ├─ 테스트 시나리오 선택 및 실행
-  │    └─ CloudFormation과 EC2 Key Pair 삭제
-  │
-  └────────────── HTTP 요청 ──────────────▶ AWS 부하 테스트 애플리케이션 EC2
-                                             │
-                                             ├─ MySQL EC2
-                                             └─ 모니터링 EC2
-```
-
-부하 테스트 요청은 로컬에서 실행되는 k6가 AWS 애플리케이션 EC2의 Public IP로 보낸다. 따라서 별도의 부하 발생기 EC2는 만들지 않는다.
-
-## AWS 테스트 환경
-
-기본 리전은 `ap-northeast-2`다.
-
-| 구성 | 사양 및 역할 |
-|---|---|
-| 애플리케이션 EC2 | `t3.small`, Spring Boot + nginx + Alloy |
-| 데이터베이스 EC2 | `t3.small`, MySQL Community Server 8.0, 최대 연결 수 30 |
-| 모니터링 EC2 | `t3.small`, Grafana + Prometheus + Loki + Tempo |
-| 네트워크 | VPC `10.51.0.0/16`, Public Subnet `10.51.1.0/24` |
-
-VPC와 Subnet CIDR은 CloudFormation 파라미터의 기본값이다. 부하 발생기 CIDR과 Grafana 관리자 CIDR은 실행 시 현재 공인 IP를 기준으로 자동 지정된다.
+이 문서는 **실행 방법만** 다룬다. 환경을 왜 이렇게 구성했는지, 운영과 무엇이 다른지, 지금까지의 측정 결과와 병목 분석은 [`docs/loadtest.md`](../docs/loadtest.md)에 있다.
 
 ## 사전 요구사항
 
@@ -80,10 +48,12 @@ chmod +x loadtest/run-loadtest.sh
 7. 테스트 선택
 8. 테스트 계획, RPS, 단계별 실행 시간을 입력
 9. k6 실행
-10. 테스트 결과 저장
+10. 테스트 결과 저장 — `loadtest/k6/generated/results/<test-name>-<test-plan>-<timestamp>.json`
 11. CloudFormation 스택, EC2, Key Pair 삭제
 
 테스트 도중 실패하거나 `Ctrl+C`로 중단해도 종료 트랩이 teardown 스크립트를 호출한다. 삭제가 실패한 경우에는 AWS 콘솔에서 `imhere-loadtest` 스택이 남아 있는지 확인해야 한다.
+
+생성 데이터와 실행 결과는 테스트 산출물이므로 저장소에 커밋하지 않는다.
 
 ## 테스트 선택
 
@@ -137,12 +107,20 @@ IMAGE_TAG=latest \
 | `TEST_PLAN` | `precision` | 기본 테스트 계획 |
 | `TARGET_RPS` | `100` | `single` 계획의 목표 RPS |
 | `STAGE_DURATION` | `3m` | 단계별 실행 시간 |
+| `LOADTEST_USER_COUNT` | `1000` | fixture 사용자 수 |
+| `LOADTEST_FRIENDSHIP_COUNT` | `500` | fixture 친구 관계 수 |
+| `LOADTEST_NOTIFICATION_COUNT` | `20000` | fixture 알림 수 |
+| `NON_INTERACTIVE` | `false` | `true`면 테스트 선택·계획 프롬프트를 생략 |
+| `TEST_FILE` | 비어 있음 | 비대화형 k6 스크립트 상대 경로 |
+| `REPORT_DIR` | `docs/loadtest/300-tps/runs` | Markdown 실행 결과 위치 |
 | `K6_PATH` | `k6` | k6 실행 파일 경로 |
 | `LOAD_GENERATOR_CIDR` | 현재 공인 IP `/32` | 애플리케이션 HTTP/HTTPS 허용 CIDR |
 | `OBSERVABILITY_ADMIN_CIDR` | `LOAD_GENERATOR_CIDR` | SSH와 Grafana 접근 허용 CIDR |
 | `MYSQL_ROOT_PASSWORD` | 실행 시 입력 | DB root 비밀번호 |
 
 `MYSQL_ROOT_PASSWORD`는 명령행에 직접 작성하지 않는 것을 권장한다.
+
+VPC와 Subnet CIDR은 CloudFormation 파라미터의 기본값을 사용한다. 부하 발생기 CIDR과 Grafana 관리자 CIDR은 실행 시 현재 공인 IP를 기준으로 자동 지정된다.
 
 ## k6 초기화 파일
 
@@ -161,7 +139,7 @@ node loadtest/k6/init/issue-jwt.mjs
 | `loadtest/k6/generated/fixture.json` | 사용자와 관계 fixture |
 | `loadtest/k6/generated/tokens.json` | `JWT_SECRET`로 서명한 테스트용 access token |
 
-통합 실행 스크립트는 이 두 Node.js 스크립트를 자동으로 실행한다. JWT는 애플리케이션 설정의 `loadtest/setup/test-env/server.env`에 있는 `JWT_SECRET`과 같은 키로 서명된다.
+통합 실행 스크립트는 이 두 Node.js 스크립트를 자동으로 실행한다. JWT는 `loadtest/setup/test-env/server.env`의 `JWT_SECRET`과 같은 키로 서명된다.
 
 애플리케이션 스키마와 테스트 데이터를 직접 적재해야 하는 경우에는 DB 접속 정보에 맞춰 다음 순서로 실행한다.
 
@@ -170,15 +148,17 @@ mysql -h "$DB_HOST" -u root -p "$DB_NAME" < db/init/mysql/imhere-full-init.sql
 mysql -h "$DB_HOST" -u root -p "$DB_NAME" < loadtest/k6/generated/seed.sql
 ```
 
-## 결과 파일
+## 반복 실행기
 
-k6 summary 결과는 다음 위치에 저장된다.
+여러 후보 이미지를 같은 조건으로 연속 실행할 때는 비대화형 실행기를 쓴다.
 
-```text
-loadtest/k6/generated/results/<test-name>-<test-plan>-<timestamp>.json
+```bash
+IMAGE_TAGS=latest,candidate-a,candidate-b \
+  MYSQL_ROOT_PASSWORD='...' \
+  ./loadtest/run-ai-optimization.sh
 ```
 
-생성 데이터와 실행 결과는 테스트 실행 산출물이므로 저장소에 커밋하지 않는다.
+후보마다 독립된 스택을 만들어 실행하고, 결과를 `docs/loadtest/300-tps/runs/<run-id>/`에 쌓는다.
 
 ## 수동 리소스 삭제
 
@@ -188,33 +168,31 @@ loadtest/k6/generated/results/<test-name>-<test-plan>-<timestamp>.json
 ./loadtest/setup/teardown-loadtest.sh --yes
 ```
 
-`--yes`를 생략하면 전체 AWS 리소스를 삭제하기 전에 확인한다.
+`--yes`를 생략하면 전체 AWS 리소스를 삭제하기 전에 확인한다. 테스트 중 생성한 EC2 Key Pair의 private key는 `loadtest/setup/info/keys` 아래에 임시 저장되며, 환경 삭제와 함께 지워진다. 커밋하지 않는다.
+
+> 실행 전후 안전 수칙(스택 삭제 확인, `BASE_URL`·CIDR 지정, credential 취급, `IMAGE_TAG` 고정)은 [`docs/loadtest.md`](../docs/loadtest.md#13-안전-수칙)에 정리돼 있다.
 
 ## 디렉터리 구조
 
 ```text
 loadtest/
 ├── run-loadtest.sh                         # 전체 생성·테스트·삭제 실행
+├── run-ai-optimization.sh                  # 후보 이미지 반복 실행
 ├── k6/
 │   ├── init/
 │   │   ├── generate-test-data.mjs          # fixture와 seed SQL 생성
 │   │   └── issue-jwt.mjs                   # 테스트용 JWT 생성
 │   ├── test/                               # k6 테스트 시나리오
 │   └── generated/                          # 생성 데이터와 결과
+├── tools/
+│   ├── render-k6-report.mjs                # k6 summary → Markdown 보고서
+│   └── collect-sql-report.sh               # DB digest·실행계획 수집
 └── setup/
     ├── setup-loadtest.sh                   # AWS 환경 생성 및 서비스 배포
     ├── teardown-loadtest.sh                # AWS 환경 삭제
     ├── infra/
     │   ├── cloudformation/                 # AWS 인프라 템플릿
-    │   ├── database/                        # MySQL 설치 스크립트
-    │   └── monitoring/                      # Grafana, Loki, Prometheus, Tempo
-    └── test-env/                            # 테스트용 애플리케이션 환경 파일
+    │   ├── database/                       # MySQL 설치 스크립트
+    │   └── monitoring/                     # Grafana, Loki, Prometheus, Tempo
+    └── test-env/                           # 테스트용 애플리케이션 환경 파일
 ```
-
-## 주의사항
-
-- 부하 테스트가 끝나면 반드시 AWS 리소스가 삭제됐는지 확인한다.
-- 테스트 중 생성한 EC2 Key Pair의 private key는 `loadtest/setup/info/keys` 아래에 임시 저장된다.
-- `test-env`의 값은 테스트 전용 가짜 값이지만, 실제 운영용 credential을 넣지 않는다.
-- 테스트 대상 URL과 CIDR을 잘못 지정하면 요청이 차단되거나 의도하지 않은 서버로 부하가 전달될 수 있다.
-- `latest` 태그를 사용할 경우 ECR의 최신 이미지가 pull된다. 특정 배포본을 검증하려면 `IMAGE_TAG`를 명시한다.

@@ -1,0 +1,19 @@
+[
+  {
+    "label": "mixed-165-1",
+    "rate": 165,
+    "mode": "mixed",
+    "startedAt": "2026-09-16T12:12:47.772Z",
+    "loadEnded": "2026-09-16T12:25:18.443Z",
+    "wallSeconds": 750.0619747999999,
+    "successfulRps": 165,
+    "failed": 0,
+    "p95": 45.757509999999904,
+    "p99": 148.5572,
+    "dropped": 0,
+    "recovered": true,
+    "serverGate": true,
+    "httpGate": true,
+    "passed": true
+  }
+]

@@ -16,13 +16,19 @@ const pct = (name, key) => {
   return typeof value === 'number' ? `${value.toFixed(2)} ms` : value;
 };
 const generatedAt = new Date().toISOString();
+const httpCount = metric('http_reqs', 'count');
+const httpRate = metric('http_reqs', 'rate');
+const elapsed = typeof httpCount === 'number' && typeof httpRate === 'number' && httpRate > 0
+  ? `${(httpCount / httpRate).toFixed(2)} s (inferred from count/rate, includes drain)` : 'n/a';
 
 const lines = [
   `# Load test: ${testName} / ${plan}`,
   '',
   `- Generated: ${generatedAt}`,
-  `- Target RPS: ${targetRps}`,
-  `- Stage duration: ${duration}`,
+  `- Requested target RPS argument: ${targetRps}`,
+  `- Requested stage duration argument: ${duration}`,
+  '- For breakpoint/precision, these arguments do not describe the full executed stage schedule.',
+  `- Actual summary interval: ${elapsed}`,
   `- Source summary: ${inputPath}`,
   '',
   '## Result',
@@ -43,6 +49,7 @@ const lines = [
   '| Metric | Count / rate |',
   '|---|---:|',
   `| Measured HTTP requests | ${metric('loadtest_http_request_count', 'count')} / ${metric('loadtest_http_request_count', 'rate')} req/s |`,
+  `| Expected-status successes | ${metric('loadtest_success_count', 'count')} / ${metric('loadtest_success_count', 'rate')} req/s |`,
   `| Server errors | ${metric('loadtest_server_error_count', 'count')} / ${metric('loadtest_server_error_count', 'rate')} req/s |`,
   `| Network errors | ${metric('loadtest_network_error_count', 'count')} / ${metric('loadtest_network_error_count', 'rate')} req/s |`,
   `| Conflicts | ${metric('loadtest_conflict_count', 'count')} / ${metric('loadtest_conflict_count', 'rate')} req/s |`,

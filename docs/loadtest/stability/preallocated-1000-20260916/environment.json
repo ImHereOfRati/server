@@ -1,0 +1,23 @@
+{
+    "stack":  "imhere-loadtest-stability-20260916",
+    "region":  "ap-northeast-2",
+    "imageId":  "sha256:95ff7c8a33bad585843ffa680f36a96cc070be931ef449404bab0beabdf185e7",
+    "repoDigests":  [
+                        "747482682439.dkr.ecr.ap-northeast-2.amazonaws.com/imhere/dsko@sha256:338fad0a125985c9ec105fd146c36fa5c57964b08146e1b9e8a2d2a21dd0276c"
+                    ],
+    "k6":  "k6.exe v2.2.0 (commit/00a9a1b7f5, go1.26.5, windows/amd64)",
+    "git":  "a74879bcee23083a1fca95f2db98d2b5eeb8546e",
+    "createdAt":  "2026-09-16T11:54:31.386Z",
+    "workload":  "mixed: reads 75%, FCM 15%, SMS 10%",
+    "note":  "Working tree harness changes; application image is retained across container restarts",
+    "runtimeSettings":  {
+                            "LOADTEST_PROVIDER_FAILURE_MODE":  "RETRYABLE",
+                            "SPRING_PROFILES_ACTIVE":  "prod,loadtest",
+                            "LOADTEST_PROVIDER_DELAY_MS":  "0",
+                            "DB_CONNECTION_TIMEOUT_MS":  "5000",
+                            "DB_POOL_SIZE":  "30",
+                            "LOADTEST_PROVIDER_FAILURE_RATE":  "0.0"
+                        },
+    "seedSha256":  "dc78318626787135dc18e11d89573bdcf98579f65f98644efcfd76dc37719c0a",
+    "driver":  "win32/x64"
+}

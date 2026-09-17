@@ -1,12 +1,8 @@
 # ImHere Server
 
-친구 관계 이벤트를 기반으로 알림을 전달하는 ImHere의 서버 애플리케이션입니다.
+출발·도착 같은 상태 변화를 친구·가족에게 **자동으로 알려 주는** 서비스의 서버입니다.
 
-Flutter 클라이언트에서 전달한 서비스 이벤트를 인증하고, 친구 관계와 수신 권한을 확인한 뒤 FCM·SMS 알림과 발송 결과를 관리합니다. 서버가 사용자의 위치를 직접 추적하거나 도착 여부를 계산하는 구조는 아닙니다.
-
-## 개발 동기
-
-서울에서 거제로 이동할 때 가족에게 연락해야 했지만 이동 중 연락을 놓친 경험을 계기로, 친구·가족 간 상태 공유와 알림 전달 흐름을 서버 관점에서 구현했습니다. 현재 서버의 핵심은 위치 계산이 아니라 사용자 신원, 관계 상태, 알림 전달 상태를 일관되게 관리하는 것입니다.
+Flutter 앱이 보낸 이벤트를 인증하고, 친구 관계와 수신 권한을 확인한 뒤, FCM 푸시와 SMS로 전달하고 그 결과를 관리합니다.
 
 > 랜딩 페이지 : https://imhere.ratiko.co.kr
 
@@ -21,9 +17,8 @@ Flutter 클라이언트에서 전달한 서비스 이벤트를 인증하고, 친
 <p>
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"/>
   <img src="https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot"/>
+  <img src="https://img.shields.io/badge/Spring%20Modulith-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Modulith"/>
   <img src="https://img.shields.io/badge/Spring%20Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security"/>
-  <img src="https://img.shields.io/badge/Thymeleaf-005F0F?style=for-the-badge&logo=thymeleaf&logoColor=white" alt="Thymeleaf"/>
-  <img src="https://img.shields.io/badge/Jackson-000000?style=for-the-badge&logo=jackson&logoColor=white" alt="Jackson"/>
   <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white" alt="Gradle"/>
 </p>
 <p>
@@ -31,6 +26,7 @@ Flutter 클라이언트에서 전달한 서비스 이벤트를 인증하고, 친
   <img src="https://img.shields.io/badge/JPA-59666C?style=for-the-badge&logo=hibernate&logoColor=white" alt="JPA"/>
   <img src="https://img.shields.io/badge/QueryDSL-4479A1?style=for-the-badge&logoColor=white" alt="QueryDSL"/>
   <img src="https://img.shields.io/badge/Caffeine-FF9F1C?style=for-the-badge&logo=coffeescript&logoColor=white" alt="Caffeine"/>
+  <img src="https://img.shields.io/badge/Bucket4j-5A4FCF?style=for-the-badge&logoColor=white" alt="Bucket4j"/>
   <img src="https://img.shields.io/badge/JJWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JJWT"/>
 </p>
 <p>
@@ -41,499 +37,205 @@ Flutter 클라이언트에서 전달한 서비스 이벤트를 인증하고, 친
 </p>
 <p>
   <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"/>
-  <img src="https://img.shields.io/badge/Spring%20Retry-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Retry"/>
   <img src="https://img.shields.io/badge/OpenTelemetry-000000?style=for-the-badge&logo=opentelemetry&logoColor=white" alt="OpenTelemetry"/>
-  <img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white" alt="Prometheus"/>
   <img src="https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white" alt="Grafana"/>
   <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger/OpenAPI"/>
+  <img src="https://img.shields.io/badge/k6-7D64FF?style=for-the-badge&logo=k6&logoColor=white" alt="k6"/>
   <img src="https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white" alt="JUnit5"/>
-  <img src="https://img.shields.io/badge/Mockito-78A641?style=for-the-badge&logoColor=white" alt="Mockito"/>
-  <img src="https://img.shields.io/badge/H2-09476B?style=for-the-badge&logoColor=white" alt="H2"/>
   <img src="https://img.shields.io/badge/JaCoCo-1B365D?style=for-the-badge&logoColor=white" alt="JaCoCo"/>
 </p>
 
 ---
 
-## 개요
+## 1. 문제
 
-- 클라이언트 이벤트를 기반으로 한 친구 관계·알림 처리
-- Kakao/Google OIDC 로그인
-- JWT 발급 및 Refresh Token 재발급
-- 사용자, 친구, 약관, 알림, 기록, 운영 도메인 분리
-- Spring Modulith 이벤트 기반 비동기 알림 처리
-- FCM, SMS, Discord, Grafana Cloud 연동
-- REST Docs + OpenAPI 기반 API 문서화
-- 로그, 메트릭, 트레이스, 에러 알림 운영
+서울에서 거제로 이동하면서 가족에게 "이제 출발한다", "도착했다"를 계속 알려야 했는데, 이동 중에 그걸 놓쳤습니다. 여기서 문제를 이렇게 정리했습니다.
 
----
+- 출발·도착 같은 상태를 **사람이 직접 연락하지 않아도** 상대에게 닿아야 한다.
+- 상대가 앱을 쓰지 않을 수도 있다. 그래도 알림은 가야 한다.
+- 위치를 계속 들여다보는 서비스는 원하지 않는다. 필요한 건 **사건이 일어난 순간의 통지**다.
 
-## 기술 스택
+### 핵심 요구사항
 
-| 분류            | 기술                                                 |
-|---------------|----------------------------------------------------|
-| Language      | Kotlin 2.3.21                                      |
-| Runtime       | JDK 25                                             |
-| Build         | Gradle Wrapper 9.3.1                              |
-| Framework     | Spring Boot 4.1.0                                  |
-| Architecture  | Hybrid MVC + Hexagonal                             |
-| Web           | Spring MVC, Thymeleaf, Jackson, Validation       |
-| DB            | MySQL, Spring Data JPA, QueryDSL, P6Spy           |
-| Cache         | Caffeine                                           |
-| Events        | Spring Modulith, Spring Retry                     |
-| Auth          | Kakao/Google OIDC, JJWT, Spring Security           |
-| Admin Auth    | Spring Security OTT                                |
-| Push          | Firebase Admin SDK (FCM)                           |
-| SMS           | Solapi SDK                                         |
-| Alerting      | Discord Webhook                                    |
-| API Docs      | Spring REST Docs, OpenAPI 3, Swagger UI            |
-| Observability | Actuator, Micrometer, Prometheus, OpenTelemetry    |
-| Test          | JUnit 5, Mockito, AssertJ, MockMvc, H2             |
-| Coverage      | JaCoCo                                             |
-| Infra         | AWS EC2, ECR, Docker                               |
+1. 출발·도착 이벤트를 받아 정해진 사람에게 알린다.
+2. 전달 수단은 FCM(앱 푸시)과 SMS 두 가지다.
+3. 같은 사건으로 알림이 두 번 가면 안 된다.
+4. 외부 메시징 공급사(Firebase, Solapi)가 느려지거나 실패해도 서비스 전체가 같이 무너지면 안 된다.
+5. 비용이 실제로 나가는 SMS는 한 사람이 무제한으로 쏘지 못하게 막아야 한다.
+6. 친구가 아닌 사람에게는 알림이 가지 않아야 한다.
 
 ---
 
-## 서비스 도메인
+## 2. 기술 및 아키텍처
 
-### 인증
+![아키텍처](./docs/images/imHereArchitecture.png)
 
-- Kakao OIDC 로그인
-- Google OIDC 로그인
-- JWT 발급/재발급
-- Caffeine 기반 공개키 캐시
-- 어드민 OTT 로그인
+운영은 EC2 한 대 위에서 컨테이너 세 개가 돕니다. `nginx`가 외부 트래픽을 받고, Spring Boot 애플리케이션이 모든 도메인 로직을 한 JVM에서 처리하며, Grafana Alloy가
+로그·메트릭·트레이스를 수집해 Grafana Cloud로 보냅니다.
 
-### 사용자
+### 기술 스택
 
-- 회원 정보 조회/수정
-- 활성화/비활성화 흐름
+| 분류                 | 기술                                                                 |
+|--------------------|--------------------------------------------------------------------|
+| Language / Runtime | Kotlin 2.3.21, JDK 25                                              |
+| Framework          | Spring Boot 4.1.0, Spring Modulith 2.1.0                           |
+| Build              | Gradle Wrapper 9.3.1, KSP 2.3.7                                    |
+| DB                 | MySQL, Spring Data JPA, QueryDSL 7.4.0                             |
+| Cache / Rate Limit | Caffeine 3.1.8, Bucket4j 8.19.0                                    |
+| Auth               | Google·Kakao·Apple OIDC, JJWT 0.12.6, Spring Security              |
+| Push / SMS         | Firebase Admin SDK 9.8.0, Solapi SDK 1.1.0                         |
+| API Docs           | Spring REST Docs → OpenAPI 3 → Swagger UI                          |
+| Observability      | Actuator, Micrometer, OpenTelemetry, Grafana Alloy → Grafana Cloud |
+| Test               | JUnit 5, Mockito, MockMvc, H2(MySQL 모드), JaCoCo                    |
+| Infra              | AWS EC2·ECR·CloudFormation, Docker, nginx, GitHub Actions          |
+| Load Test          | k6                                                                 |
 
-### 친구
+### 모듈 구조
 
-- 친구 요청, 수락, 거절
-- 차단, 제한, 해제
-
-### 약관
-
-- 필수 약관 동의
-- 약관 버전 관리
-
-### 알림
-
-- FCM 푸시
-- SMS 발송
-- Spring Modulith 도메인 이벤트
-- DB UNIQUE 멱등성 및 DEAD 상태 재시도
-
-### 운영
-
-- 구조화 로그
-- 에러 코드 체계
-- 모니터링/트레이싱
-- 배포/롤백/인증서 운영
-
----
-
-## 아키텍처
-
-프로젝트는 하이브리드 구조를 사용한다.
-
-### MVC
-
-단순 CRUD 성격의 도메인에 적용한다.
-
-- `user`
-- `friends`
-- `terms`
-
-### Hexagonal
-
-외부 연동이 많고 비즈니스 복잡도가 높은 도메인에 적용한다.
-
-- `auth`
-- `notifications`
-
-### 패키지 구조
+Gradle 프로젝트는 하나이고, 여기서 말하는 모듈은 **Spring Modulith 애플리케이션 모듈**(패키지 경계)입니다.
 
 ```text
-src/main/kotlin/com/kdongsu5509/
-├── auth/
-├── friends/
-├── notifications/
-├── terms/
-├── user/
-├── shared/
-└── support/
-    ├── config/
-    ├── exception/
-    ├── external/
-    ├── logger/
-    └── response/
+com.kdongsu5509
+├── auth            인증: OIDC 검증, JWT 발급·갱신, Security 필터 체인, 관리자 로그인
+├── user            사용자: 등록·조회·활성화·차단·탈퇴
+├── friends         친구 관계: 요청·수락·거절·별칭·제한
+├── notifications   알림: 접수 → 상태 관리 → FCM/SMS 발송 → 실패 복구
+├── terms           약관 원문과 버전
+├── agreement       사용자의 약관 동의 이력
+├── maps            네이버 지도 API 프록시
+├── admin           운영 상태 모델 (OPEN 모듈)
+├── shared          공통 응답·이벤트·캐시 포트 (OPEN 모듈)
+└── support         설정·예외·로깅·Discord 경보·비동기 실행기 (OPEN 모듈)
 ```
 
-### 레이어 책임
+모듈 경계는 문서가 아니라 테스트(`ModularityTest`)가 지킵니다. 순환 의존이나 허용되지 않은 접근이 생기면 **빌드가 먼저 실패**합니다.
 
-- Controller: HTTP 입출력, 검증, DTO 변환
-- Service: 유스케이스, 트랜잭션, 비즈니스 로직
-- Repository: 영속성 접근
-- Domain: 순수 비즈니스 규칙
+### 핵심 흐름 — 도착 알림
+
+접수와 발송이 분리돼 있다는 점이 이 서비스의 중심입니다.
+
+```mermaid
+flowchart LR
+    A["Flutter App<br/>도착 감지"]
+    B["알림 접수<br/>NotificationService"]
+    C[("event_publication")]
+    D["202 Accepted"]
+    E["비동기 발송<br/>NotificationDeliveryFacade"]
+    F["FCM / SMS"]
+    G["실패 알림 재처리"]
+    A -->|" POST /api/notifications "| B
+    B --> C
+    B --> D
+    C -. " Commit 이후 " .-> E
+    E --> F
+    E -->|" 실패 "| G
+    G --> E
+```
+
+- 사용자는 외부 발송 결과를 기다리지 않고 `202`를 받습니다.
+- 발행 기록(`event_publication`)이 업무 데이터와 **같은 트랜잭션**에 남아, 데이터만 저장되고 알림이 증발하는 상황이 없습니다.
+- `dedupeKey`로 중복 발송을 막고, 실패분은 60초 주기 복구 스케줄러가 회수합니다.
+
+```text
+PENDING ──claim──► PROCESSING ──성공──► SENT
+                        │
+                        ├──실패(재시도 여지)──► FAILED ──재시도 3회 초과──► DEAD
+                        └──결과 불확실──────► UNKNOWN
+```
+
+### 인증과 인가
+
+- 앱이 소셜 SDK로 받은 **ID Token**을 서버가 검증합니다. Authorization Code 교환은 하지 않습니다.
+- Access Token 12시간 / Refresh Token 7일, 회전은 CAS로 처리합니다.
+- 인가는 세 겹입니다 — ① 필터 체인(로그인·권한) → ② 사용자 상태 `ACTIVE` 확인 → ③ 각 서비스의 소유권 검증.
+- 관리자 로그인은 비밀번호 해시 + TOTP 2단계이며, 5회 실패 시 7일간 차단합니다.
+
+자세한 내용은 [서버 아키텍처](docs/imhere-architecture.md)와 [Security](docs/security.md)에 있습니다.
 
 ---
 
-## 데이터 모델
+## 3. 실행 및 배포
 
-### 공통 베이스
+### 로컬 실행
 
-- `BaseTimeEntity`: `createdAt`, `updatedAt`
-- `BaseEntity`: `createdAt`, `updatedAt`, `createdBy`, `updatedBy`
-
-### 테이블 요약
-
-| 테이블                 | 도메인           | 역할                                       |
-|---------------------|---------------|------------------------------------------|
-| `users`             | User          | 사용자 계정과 OIDC 식별자 저장                      |
-| `friend_relations`  | Friends       | 두 사람 사이의 관계 한 행. 요청·친구·거절·차단을 상태로 구분해 저장 |
-| `fcm_token`         | Notifications | FCM 디바이스 토큰 저장                           |
-| `notification`      | Notifications | 발송 생애주기와 수신함 저장                          |
-| `terms`             | Terms         | 약관 버전과 본문 저장                             |
-| `user_agreement`    | Agreement     | 사용자별 약관 동의 이력 저장                         |
-| `one_time_tokens`   | Auth          | 어드민 OTT 로그인용 일회성 토큰 저장 (Spring Security) |
-| `event_publication` | (프레임워크)       | Spring Modulith가 모듈 간 이벤트 처리 상태를 기록      |
-
-### 스키마 변경
-
-이 프로젝트에는 Flyway나 Liquibase 같은 마이그레이션 도구가 없다. JPA는 `ddl-auto: validate`로
-띄우므로 스키마를 자동으로 바꾸지 않는다. 스키마의 현재 모습은
-`db/init/mysql/imhere-full-init.sql` **한 파일**이 전부 들고 있고, 항상 최신 상태로 유지한다.
-
-이 파일은 매번 전체 스키마를 새로 만든다(`DROP TABLE IF EXISTS` 후 `CREATE TABLE`). 즉
-**적용하면 기존 데이터가 사라진다.** 로컬·테스트처럼 언제든 다시 만들어도 되는 DB를 전제로 한다.
-
-`ENUM` 값 추가는 놓치기 쉽다. `validate`는 컬럼 타입만 보고 `ENUM` 안의 값 목록까지는
-검사하지 않기 때문에, 스키마를 안 고쳐도 애플리케이션은 멀쩡히 뜬다. 그러다 새 값으로
-처음 INSERT가 일어나는 순간 데이터 잘림 오류가 난다. Kotlin enum에 값을 더할 때는
-이 SQL도 함께 고친다.
+필요 환경 : `JDK 25`와 `MySQL 8`입니다.
 
 ```bash
-mysql -h "$DB_HOST" -u "$DB_USER" -p "$DB_NAME" < db/init/mysql/imhere-full-init.sql
-```
+# 1. 스키마 준비
+mysql -h 127.0.0.1 -u root -p rati < db/init/mysql/imhere-full-init.sql
 
-### 관계 요약
-
-- `users`는 모든 도메인의 기준 엔티티다.
-- `friend_relations`는 두 사람의 관계를 한 행으로 저장한다. 예전에는 요청·친구·제한을 세 테이블로
-  나눴지만, 셋은 같은 관계의 다른 시점이라 상태 전이로 다루는 편이 맞았다.
-  요청을 수락하면 새 행이 생기는 게 아니라 그 행의 `status`가 `REQUESTED`에서 `ACCEPTED`로 바뀐다.
-- 관계에는 방향이 없다. 두 사람의 식별자를 정렬해 `low_user_id` / `high_user_id`에 넣고,
-  `uk_friend_pair`로 같은 쌍이 두 행이 되는 것을 막는다. "누가 걸었는지"는 `initiated_user_id`가
-  따로 들고 있어서, 거절처럼 주체가 뒤집히는 전이도 행을 옮기지 않고 표현된다.
-- `low_alias` / `high_alias`는 각 자리의 주인이 상대를 부르는 이름이다. 별칭은 자기 칸만 바꾼다.
-- `expired_at`은 제한이 풀리는 시각이다. 거절은 한 달 뒤, 차단은 사실상 만료되지 않는다.
-- `terms`는 약관 타입과 버전을 관리한다.
-- `notification`은 알림 내용, 전달 수단, 발송 상태, 재시도와 읽음 여부를 함께 저장한다.
-
----
-
-## 인증과 보안
-
-### OIDC
-
-- Kakao와 Google ID Token의 `nonce`를 사용한다.
-- 로그인 및 회원가입 요청에서 `nonce`를 토큰의 `nonce` 클레임과 대조한다.
-- 허용 `iss`와 `aud`는 provider마다 목록으로 설정한다. Google은 `iss`를 스킴 포함/미포함 두 형태로
-  발급하고, Google은 플랫폼마다 client ID(`aud`)가 갈릴 수 있다.
-- 자세한 내용은 [docs/security.md](docs/security.md)에 있다.
-
-### JWT
-
-- Access Token과 Refresh Token을 분리한다.
-- Refresh Token은 앱 메모리 Caffeine 기반으로 관리한다.
-
-### 어드민
-
-- 어드민 로그인은 OTT(One-Time Token) 흐름을 사용한다.
-- 어드민 API와 뷰가 공존할 때는 세션과 JWT를 함께 고려한다.
-
-### 역할
-
-- `ROLE_NORMAL`: 일반 사용자
-- `ROLE_ADMIN`: 관리자
-
-### 보안 정책 핵심
-
-- JWT Secret과 OTT Webhook은 환경변수로 관리한다.
-- 공개 경로와 테스트 필터 체인을 일치시킨다.
-- 인증/인가 실패는 전역 예외 규칙을 따른다.
-
----
-
-## API 규칙
-
-### 응답 형식
-
-- 모든 응답은 `ApiResponse<T>` 하나로 통일된다: `imhereResponseCode`, `message`, `data`.
-- 성공은 `imhereResponseCode = "SUCCESS"`, 실패는 도메인별 에러 코드 문자열이다.
-
-### 에러 코드 체계
-
-- `GLOBAL-*`
-- `AUTH-*` / `TOKEN-*` (인증/토큰 분리)
-- `USER-*`
-- `FRIEND-*`
-- `TERM-*`
-- `SMS-*`
-- `FCM-*`
-
-엔드포인트별 실제 코드 예시는 자동 생성 API 문서(`src/main/resources/static/docs/openapi3.yaml`, RestDocs 기반)에 들어 있다.
-
-### 예외 처리
-
-- 도메인 예외는 enum과 `.throwIt()` 흐름을 사용한다.
-- 컨트롤러에서 try-catch를 남용하지 않는다.
-- 전역 예외 핸들러가 응답과 로그를 함께 정리한다.
-
----
-
-## 알림 시스템
-
-### 발송 구조
-
-- HTTP 요청에서 바로 외부 발송하지 않는다.
-- 발행 트랜잭션과 함께 Modulith Event Publication Registry에 기록한다.
-- 커밋 후 이벤트 리스너가 비동기로 처리한다.
-- `dedupe_key` UNIQUE 제약으로 동일 요청의 중복 발송을 억제한다.
-- 발송 직전에 알림 종류를 제목·본문·푸시 정책으로 변환한다. 이때 발신자 표시 이름도 함께 정한다
-  (친구 별칭 조회 → 없으면 닉네임).
-
-### 채널
-
-- FCM: 앱 푸시 알림
-- SMS: 문자 알림
-
-### FCM 라우팅
-
-**서버는 앱 내부 경로를 만들지 않는다.** 알림을 눌렀을 때 어느 화면으로 갈지는 클라이언트가
-`data.type`을 보고 정한다.
-
-예전에는 서버가 `/friend/requests` 같은 경로 문자열을 `path`로 내려보냈다. 그러면 앱의 화면
-구조가 바뀔 때마다 서버를 배포해야 했다. 경로는 앱의 관심사이므로 앱이 갖는 편이 맞다.
-
-- `data.path` 키는 더 이상 내려가지 않는다.
-- 클라이언트가 `type` → 화면 대응표를 갖는다.
-- 화면 이동에 추가 값이 필요하면(예: 약관 상세의 `termId`) 그 값은 `data`에 그대로 들어 있다.
-
-### 알림 이력
-
-- `notification`에 수신자, 발신자 표시 이름, 내용, 발송 상태, 시도 횟수, 실패 사유와 읽음 여부를 저장한다.
-- 발신자 표시 이름(`sender_alias`)은 **수신자가 발송자를 부르는 이름**이다. 친구 별칭이 있으면
-  별칭을, 없으면 발송자 닉네임을 담는다.
-- 친구 요청 관련 알림(`FRIEND_REQUEST_RECEIVED`, `FRIEND_REQUEST_ACCEPTED`)은 아직 별칭이 있을 수
-  없는 시점이므로 항상 닉네임을 쓴다.
-- 시스템 알림의 발신자 표시는 `ImHere`를 사용한다.
-
-### 알림 종류
-
-`NotificationType`은 이름만 갖는다. 제목·본문·푸시 정책은 서버가 발송 직전에 이 이름으로부터
-만들어 내고, 화면 이동은 클라이언트가 이 이름으로 정한다.
-
-| type                       | 제목        | 클라이언트 발송 | 필수 `data` 키    |
-|----------------------------|-----------|----------|----------------|
-| `FRIEND_REQUEST_RECEIVED`  | 새로운 친구 요청 | ✗        | -              |
-| `FRIEND_REQUEST_ACCEPTED`  | 친구 요청 수락  | ✗        | -              |
-| `LOCATION_TARGET`          | 위치 공유 대상자 알림 | ✓    | `placeName`    |
-| `ARRIVAL`                  | 도착 안내     | ✓        | `placeName`    |
-| `DEPARTURE`                | 출발 안내     | ✓        | `placeName`    |
-| `TERMS_UPDATE_NOTICE`      | 서비스 공지사항  | ✗        | -              |
-| `DELIVERY_RESULT_NOTICE`   | 발송 결과 알림  | ✗        | -              |
-| `DELIVERY_FAILED_NOTICE`   | 발송 실패 알림  | ✗        | -              |
-
-- **클라이언트 발송**이 ✗인 종류를 `POST /api/notifications`로 보내면 400이 떨어진다.
-  서버 내부 이벤트로만 발행되는 알림이다.
-- `placeName`이 필요한 종류에 값을 빼먹으면 본문을 만들 수 없어 요청이 거절된다.
-- 이 이름들은 FCM `data.type`으로 그대로 직렬화된다. 이름이 곧 와이어 계약이다.
-
-### FCM data 페이로드
-
-```json
-{
-  "type": "ARRIVAL",
-  "senderAlias": "길동이",
-  "placeName": "학교"
-}
-```
-
-`type`과 `senderAlias`는 항상 들어간다. 나머지 키는 발송 요청의 `extraData`가 그대로 실려 온 것이다.
-
-### 클라이언트 영향 (Breaking)
-
-이번 변경으로 앱이 읽던 필드가 바뀌었다. 서버 배포 전에 앱을 함께 맞춰야 한다.
-
-| 위치                             | 변경                                                   |
-|--------------------------------|------------------------------------------------------|
-| FCM `data`                     | `senderNickname` → `senderAlias`                     |
-| FCM `data`                     | `path` 제거 — `type`으로 화면을 정한다                          |
-| FCM `data`                     | `senderEmail` 제거                                     |
-| 수신함 조회 응답                      | `senderNickname` → `senderAlias`, `path` 제거          |
-| 어드민 실패 알림 응답                   | `senderEmail` 제거, `senderNickname` → `senderAlias`   |
-| `NotificationType`             | `ARRIVAL_CONFIRMATION` 삭제 — 전송 시 400                  |
-
-`ARRIVAL_CONFIRMATION`은 `ARRIVAL`과 제목·본문·푸시 정책이 완전히 같은 중복 상수였다.
-쓰고 있었다면 `ARRIVAL`로 바꾸면 된다.
-
----
-
-## 관측성과 로깅
-
-- 로그는 구조화해서 남긴다.
-- 민감 정보는 마스킹한다.
-- traceId로 요청 흐름을 추적한다.
-- 앱 로그, 메트릭, 트레이스는 Grafana Alloy를 통해 수집한다.
-- Loki, Prometheus, Tempo를 Grafana Cloud로 보낸다.
-
----
-
-## 인프라
-
-### 현재 구성
-
-- App Server
-    - Spring Boot
-    - Nginx
-    - Grafana Alloy
-- Database Server
-    - MySQL
-- In-process middleware
-    - Caffeine
-    - Spring Modulith Event Publication Registry
-
-### Compose 파일
-
-- `docker-compose.yml`: `dsko`와 운영 Nginx·Alloy 정의
-- `docker-compose.local.yml`: 로컬 `dsko`·Prometheus·Grafana 설정
-
-### 배포 관련 파일
-
-- `Dockerfile.release`
-- `infra/nginx/nginx.conf.template`
-- `infra/nginx/nginx.conf`
-- `infra/alloy/alloy-config.alloy`
-- runtime `env/*.env` (config repo)
-- `infra/scripts/pull-config.sh`
-- `infra/scripts/setting-ec2` / `infra/scripts/deploy-imhere.sh` / `infra/scripts/deploy-sub-tasks/` / `infra/scripts/deploy-sub-tasks/tls-sub-tasks/`
-- `secrets/`
-
----
-
-## 환경 설정
-
-### 프로파일
-
-- `application.yaml`
-- 로컬 기본값은 `application.yaml`의 `${VAR:기본값}`에 직접 들어 있다. 프로파일을
-  지정하지 않아도 그대로 뜬다.
-- 운영은 `SPRING_PROFILES_ACTIVE=prod`로 같은 파일의 prod 문서를 켠다. 그 문서는
-  누출되면 곤란한 변수(`JWT_SECRET`, `MGMT_BASE_PATH` 등)를 기본값 없이 다시
-  선언하므로, 값이 빠지면 운영은 로컬 더미로 뜨지 않고 기동에 실패한다.
-
-### 런타임 설정
-
-- `env/server.env`, `env/nginx.env`, `env/alloy.env`
-  (관심사별로 쪼개져 있고 컨테이너마다 필요한 것만 주입된다 — private config repo의 `env/`)
-- `secrets/imhereFirebaseKey.json`
-
-### config repo
-
-- `ImHereOfRati/config`
-- `env/*.env`
-- `imhereFirebaseKey.json`
-
-### 운영 변수
-
-- DB 접속 정보
-- Caffeine 설정
-- Grafana Cloud 자격증명
-- Firebase 키 경로
-- OIDC 관련 설정
-
-### 운영용 compose 변수 예시
-
-- `CONFIG_REPO_PAT`
-- `env/server.env`의 DB 값, `env/alloy.env`의 Grafana Cloud 값들
-
-### 로컬에서 설정이 들어가는 방식
-
-- `./gradlew bootRun`은 `application.yaml`의 기본값만으로 뜬다. 프로파일 인자가 필요 없다.
-  DB만 `localhost:3306/rati`에 떠 있으면 된다.
-- 로컬은 `docker compose -f docker-compose.yml -f docker-compose.local.yml up -d`로 `dsko`를 실행한다.
-- config repo의 `env/*.env` / `imhereFirebaseKey.json`은 운영 배포 전용이다.
-
----
-
-## 로컬 실행
-
-### 필요 환경
-
-- JDK
-- Docker
-- Docker Compose
-
-### 로컬 인프라
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
-```
-
-### 애플리케이션 실행
-
-```bash
+# 2. 실행 (프로파일 인자 없이 application.yaml 기본값으로 뜹니다)
 ./gradlew bootRun
-```
 
-### 테스트
-
-```bash
+# 3. 테스트 (H2 MySQL 모드, 별도 DB·Docker 불필요)
 ./gradlew test
 ```
 
+- 뜬 뒤 `http://localhost:8080/swagger-ui/index.html`에서 API 문서를 볼 수 있습니다.
+- OpenAPI 문서는 **테스트 스니펫에서 생성**됩니다. REST Docs를 쓰지 않은 엔드포인트는 Swagger에 나타나지 않습니다.
+- `./gradlew test`가 끝나면 JaCoCo 리포트가 함께 생성됩니다.
+
+### 배포
+
+`main`에 push하면 GitHub Actions가 처리합니다.
+
+```text
+main push
+  → 테스트 + bootJar
+  → 이미지 태그 생성 (20260915-2131-b969557 = KST 시각 + short SHA)
+  → CloudFormation 출력값에서 배포 대상 조회
+  → private config 저장소에서 env/*.env, Firebase 키 확보
+  → Dockerfile.release로 빌드 → ECR push
+  → SSH 배포 (설정 전송 → 컨테이너 교체 → TLS 발급)
+  → 헬스체크 통과해야 성공
+```
+
+- 배포 중에만 SSH 포트를 러너 IP로 열고, 실패해도 **회수 단계가 항상 실행**됩니다.
+- `docker compose up -d`는 컨테이너 생성만 보장하므로, 별도 헬스체크가 실제 응답(`"status":"UP"`)을 확인한 뒤에야 배포를 성공으로 판정합니다.
+- 운영 프로파일은 민감한 환경변수를 **기본값 없이** 선언합니다. 값이 빠지면 로컬 더미로 조용히 뜨는 대신 기동에 실패합니다.
+- 무중단 배포와 자동 롤백은 없습니다. 한계는 [배포와 운영](docs/imhere-deployment-and-operation.md)에 적어 두었습니다.
+
+### 부하 테스트
+
+AWS에 일회용 환경을 만들고, k6를 돌리고, 끝나면 리소스를 지웁니다.
+
+```bash
+./loadtest/run-loadtest.sh
+```
+
+실행 옵션은 [`loadtest/README.md`](loadtest/README.md), 측정 결과와 병목 분석은 [부하 테스트와 성능 검증](docs/loadtest.md)에 있습니다.
+
 ---
 
-## 테스트 전략
+## 4. ADR
 
-### 단계
+각 선택은 **얻은 것과 치른 값**을 함께 적습니다. 판단 근거 전문은 [서버 아키텍처](docs/imhere-architecture.md)에 있습니다.
 
-- Unit Test: 도메인, 독립 서비스
-- Slice Test: Controller, Repository
-- Integration Test: 여러 계층과 Modulith 이벤트 경계를 연결한 핵심 흐름
+| 판단                                     | 이유                                                                          | 치른 값                                           |
+|----------------------------------------|-----------------------------------------------------------------------------|------------------------------------------------|
+| **위치를 서버가 추적하지 않는다**                   | 위치 공유는 법적 신고 대상이고 심사도 까다로움. 서버 처리량이 사용자 수에 종속됨. 서비스에 필수 기능도 아니었음            | 앱의 판정을 서버가 검증할 수 없음                            |
+| **메시지 브로커를 쓰지 않는다**                    | 사용자 10명 미만, 인스턴스 1대. Modulith Event Publication Registry가 Outbox와 같은 보장을 제공 | 다중 인스턴스 전환 시 중복·순서·소유권 재설계 필요. 이벤트마다 DB 쓰기가 발생 |
+| **Redis 대신 Caffeine 로컬 캐시**            | 인스턴스 1대로 충분. 읽기 속도를 올리면서 인프라 비용 제거                                          | 확장 시 refresh 회전·SMS 한도·관리자 차단 로직을 전부 수정해야 함    |
+| **알림 접수와 발송 분리 (202)**                 | 외부 공급사 지연을 사용자 응답 시간에서 떼어내기 위해                                              | 응답 시점에 최종 발송 성공을 보장하지 않음. 상태 머신과 복구 경로를 직접 운영  |
+| **외부 호출을 트랜잭션 밖으로**                    | 공급사가 느려질 때 DB 커넥션이 묶이는 것을 막기 위해                                             | 트랜잭션이 쪼개져 중간 실패 시 상태가 어중간하게 남음(복구 스케줄러가 보완)    |
+| **속도 제한을 nginx + 애플리케이션 2계층으로**        | IP 기준만으로는 분산 어뷰징을 못 막고, 앱 기준만으로는 이미 자원을 쓴 뒤에 거절함                            | 앱 한도가 로컬 캐시라 인스턴스 수만큼 한도가 늘어남                  |
+| **타임아웃 순서 고정 (Hikari 5초 < nginx 30초)** | 5xx가 앱 실패인지 게이트웨이 타임아웃인지 구분되지 않았음                                           | — (측정으로 원인 분리 확인)                              |
+| **Hexagonal을 외부 연동에만 적용**              | 외부 SDK는 교체·대체 가능성이 높지만, CRUD에 같은 구조를 씌우면 파일만 늘어남                            | 모듈마다 구조가 달라 새로 합류한 사람이 두 규칙을 익혀야 함             |
+| **Spring Modulith로 모듈 경계 강제**          | AI 코딩 에이전트가 코드를 고치며 경계를 훼손하는 것을 결정적으로 차단하기 위해                               | 운영 단위 분리(독립 배포·확장)까지는 얻지 못함                    |
 
-### 규칙
+## 문서
 
-- Controller는 슬라이스 테스트로 검증한다.
-- 실제 인증/인가와 비즈니스 에러는 통합 테스트로 검증한다.
-- 새로운 API 엔드포인트는 Integration Test와 RestDocs를 함께 작성한다.
-
----
-
-## 운영 절차
-
-- 초기 배포는 필요한 설정 파일을 EC2에 반영한 뒤 수행한다.
-- 인증서 갱신은 호스트의 Certbot과 Nginx 조합을 사용한다.
-- 장애 시 로그와 traceId로 원인을 추적한다.
-- 알림 실패는 `Notification.DEAD` 상태와 외부 서비스 상태를 함께 본다.
-
----
-
-## 문서 인덱스
-
-상세 설계/운영 문서는 `docs/`에 있다.
-
-| 문서                                                             | 내용                                                     |
-|----------------------------------------------------------------|--------------------------------------------------------|
-| [docs/domain.md](./docs/domain.md)                             | 도메인 용어, 상태 전이, 불변식                                  |
-| [docs/database.md](./docs/database.md)                         | MySQL 설정, DDL, ERD, 제약조건                                  |
-| [docs/security.md](./docs/security.md)                         | OIDC, JWT, 계정 상태, 관리자 API, CORS                         |
-| [docs/messaging.md](./docs/messaging.md)                       | Event Publication, 알림 Retry·Recovery, 중복·실패 처리          |
-| [docs/test-strategy.md](./docs/test-strategy.md)               | 계층별 테스트 기준과 검증 공백                                  |
-| [docs/conventions/](./docs/conventions/README.md)              | Kotlin 컨벤션, 에러 응답 포맷, 테스트 전략                            |
-| [docs/imhere-deployment-and-operation-final.md](./docs/imhere-deployment-and-operation-final.md) | 배포·운영·인프라·관측성·장애 대응 |
+| 문서                                                | 내용                                                                                                                    |
+|---------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| [서버 아키텍처](docs/imhere-architecture.md)            | 모듈 경계, 요청 흐름, 인증·인가, 설계 판단과 대가                                                                                        |
+| [배포와 운영](docs/imhere-deployment-and-operation.md) | AWS 구성, CI/CD, 운영 안정성, 관측, 롤백과 한계                                                                                     |
+| [부하 테스트와 성능 검증](docs/loadtest.md)                 | 측정 환경, 전체 실행 결과, 병목 분석                                                                                                |
+| [도메인](docs/domain.md)                             | 도메인 용어, 상태 전이, 불변식                                                                                                    |
+| [데이터베이스](docs/database.md)                        | MySQL 설정, DDL, ERD, 제약조건                                                                                              |
+| [Security](docs/security.md)                      | OIDC, JWT, 계정 상태, 관리자 API, CORS                                                                                       |
+| [Messaging](docs/messaging.md)                    | 비동기 처리 기준, Event Publication, 재시도·복구                                                                                  |
+| [테스트 전략](docs/test-strategy.md)                   | 계층별 테스트 기준과 검증 공백                                                                                                     |
+| [Git 브랜치 전략](docs/git-branch-strategy.md)         | 브랜치 구조와 작업 흐름                                                                                                         |
+| [컨벤션](docs/conventions/kotlin-conventions.md)     | Kotlin 코드 컨벤션 · [응답/에러 포맷](docs/conventions/api-response-and-errors.md) · [예외 처리](docs/conventions/error-handling.md) |
 
 모바일 클라이언트 저장소: <https://github.com/ImHereOfRati/mobile>

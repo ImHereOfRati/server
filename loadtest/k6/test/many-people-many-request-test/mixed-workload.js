@@ -18,6 +18,7 @@ const responseCounts = new Counter('loadtest_response_count');
 const conflictCount = new Counter('loadtest_conflict_count');
 const serverErrorCount = new Counter('loadtest_server_error_count');
 const networkErrorCount = new Counter('loadtest_network_error_count');
+const successCount = new Counter('loadtest_success_count');
 const measuredHttpRequestCount = new Counter('loadtest_http_request_count');
 const measuredIterationCount = new Counter('loadtest_iteration_count');
 const businessDuration = new Trend('loadtest_business_duration', true);
@@ -66,13 +67,14 @@ function observe(response, name) {
   measuredHttpRequestCount.add(1, { endpoint: name });
   responseCounts.add(1, { endpoint: name, status: String(status) });
   businessDuration.add(response.timings.duration, { endpoint: name });
-  if (status === 0) networkErrorCount.add(1, { endpoint: name });
+  networkErrorCount.add(status === 0 ? 1 : 0, { endpoint: name, error_code: String(response.error_code || 0) });
   if (status === 409) conflictCount.add(1, { endpoint: name });
-  if (status >= 500) serverErrorCount.add(1, { endpoint: name });
+  serverErrorCount.add(status >= 500 ? 1 : 0, { endpoint: name });
 }
 
 function ok(response, expected, name) {
   observe(response, name);
+  successCount.add(response.status === expected ? 1 : 0, { endpoint: name });
   return check(response, { [`${name} status ${expected}`]: (r) => r.status === expected });
 }
 

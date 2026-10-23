@@ -13,7 +13,7 @@
 - **EC2**
     - Amazon Linux 2023
     - SSM Parameter Store를 통해 최신 AMI 조회
-    - 기본 인스턴스 타입 `t3.small`
+    - 기본 인스턴스 타입 `t4g.small`
         - 운영 컨테이너의 `mem_limit` 합을 약 1.43 GiB로 설정함.
             - 실제 운영 환경에서 호스트 OS와 Docker daemon의 메모리 사용량을 함께 측정해 2 GiB 메모리 내에서 운영 가능하다고 판단함.
             - 차후 메모리 사용량이 85% 이상이 지속됨을 관측되면, scale-up을 고려
@@ -231,7 +231,7 @@
 
 - EC2에서는 Grafana Alloy 컨테이너 하나만 운영.
 - `Prometheus`, `Loki`, `Tempo`, `Grafana`는 모두 `Grafana Cloud` 사용.
-- 애플리케이션 자원과 관측 백엔드 자원을 분리해 `t3.small`의 자원을 애플리케이션에 집중.
+- 애플리케이션 자원과 관측 백엔드 자원을 분리해 `t4g.small`의 자원을 애플리케이션에 집중.
 
 ```
 Spring Boot

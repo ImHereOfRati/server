@@ -7,19 +7,16 @@ Parameters:
     Description: EC2 SSH key pair name
   AppInstanceType:
     Type: String
-    Default: t3.small
+    Default: t4g.small
     AllowedValues:
-      - t3.micro
-      - t3.small
-      - t3.medium
+      - t4g.micro
+      - t4g.small
     Description: >-
       App EC2 instance type. The prod compose profile runs three containers on this
       host: dsko (app), nginx, alloy. prometheus and grafana are local-profile only
-      and never run here. Their mem_limits total 1.43 GiB, which fits t3.small (2 GiB)
-      with room for the host OS. t3.small and t3.medium are identical except for
-      memory (same 2 vCPU, same network), so pick medium only if the app's actual
-      RSS grows past the small budget. Changing this stops and restarts the instance;
-      the instance ID, root volume and EIP association all survive.
+      and never run here. Their mem_limits total 1.43 GiB, which fits t4g.small (2 GiB)
+      with room for the host OS. Switching from an x86 AMI to this ARM AMI
+      replaces the instance; data on its root volume must be recreated.
   VpcCidr:
     Type: String
     Default: 10.50.0.0/16
@@ -131,7 +128,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref AppInstanceType
-      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64}}'
       KeyName: !Ref KeyName
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
@@ -147,7 +144,7 @@ Resources:
           systemctl enable --now docker
           usermod -aG docker ec2-user || true
           mkdir -p /usr/local/lib/docker/cli-plugins
-          curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+          curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64 \
             -o /usr/local/lib/docker/cli-plugins/docker-compose
           chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
           docker compose version

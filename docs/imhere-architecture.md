@@ -11,7 +11,7 @@
 - 운영 환경
     - AWS
         - `CloudFormation`
-        - ec2 : `t3.small`
+        - ec2 : `t4g.small`
     - MySQL
         - 커넥션 30개
         - `250mb`

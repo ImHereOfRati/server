@@ -68,16 +68,16 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         saveRelation(requester, me, FriendRelationStatus.REQUESTED, message = "친구가 되고 싶습니다")
 
         // when & then
-        mockMvc.perform(get("/api/friendships/target/${friend.id}").with(user(principalOf(me))))
+        mockMvc.perform(get("/api/friendships/target/{targetUserId}", friend.id).with(user(principalOf(me))))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data").value(true))
 
-        mockMvc.perform(get("/api/friendships/target/${requester.id}").with(user(principalOf(me))))
+        mockMvc.perform(get("/api/friendships/target/{targetUserId}", requester.id).with(user(principalOf(me))))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data").value(false))
 
         // 자기 자신은 친구가 될 수 없으므로 관계를 찾지 않고 false를 준다.
-        mockMvc.perform(get("/api/friendships/target/${me.id}").with(user(principalOf(me))))
+        mockMvc.perform(get("/api/friendships/target/{targetUserId}", me.id).with(user(principalOf(me))))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data").value(false))
     }
@@ -94,13 +94,13 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         )
 
         // when & then: 같은 행을 상대가 조회하면 owner/friend가 뒤집힌다.
-        mockMvc.perform(get("/api/friendships/${relation.id}").with(user(principalOf(me))))
+        mockMvc.perform(get("/api/friendships/{id}", relation.id).with(user(principalOf(me))))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.owner.email").value(me.email))
             .andExpect(jsonPath("$.data.friend.email").value(friend.email))
             .andExpect(jsonPath("$.data.friendAlias").value("내별칭"))
 
-        mockMvc.perform(get("/api/friendships/${relation.id}").with(user(principalOf(friend))))
+        mockMvc.perform(get("/api/friendships/{id}", relation.id).with(user(principalOf(friend))))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.owner.email").value(friend.email))
             .andExpect(jsonPath("$.data.friend.email").value(me.email))
@@ -117,7 +117,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
         val relation = saveRelation(one, other, FriendRelationStatus.ACCEPTED)
 
         // when & then
-        mockMvc.perform(get("/api/friendships/${relation.id}").with(user(principalOf(me))))
+        mockMvc.perform(get("/api/friendships/{id}", relation.id).with(user(principalOf(me))))
             .andExpect(status().isForbidden)
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-200"))
             .andDo(documentation("friendship-detail-forbidden"))
@@ -136,7 +136,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            patch("/api/friendships/${relation.id}/alias")
+            patch("/api/friendships/{id}/alias", relation.id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json("alias" to "새별칭"))
                 .with(user(principalOf(me)))
@@ -159,7 +159,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            patch("/api/friendships/${relation.id}/alias")
+            patch("/api/friendships/{id}/alias", relation.id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json("alias" to "0123456789A"))
                 .with(user(principalOf(me)))
@@ -184,7 +184,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            patch("/api/friendships/${relation.id}/alias")
+            patch("/api/friendships/{id}/alias", relation.id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json("alias" to "새별칭"))
                 .with(user(principalOf(me)))
@@ -203,7 +203,7 @@ class FriendshipControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            delete("/api/friendships/${relation.id}")
+            delete("/api/friendships/{id}", relation.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isNoContent)

@@ -107,15 +107,15 @@ class FriendRelationAdminControllerIntegrationTest : WebIntegrationTestSupport()
 
         // when & then: 세 경로 모두 같은 삭제 명령을 쓰지만 화면 계약은 따로 유지된다.
         mockMvc.perform(
-            delete("/api/admin/friend-requests/${fixture.requested.id}").with(user(admin)).with(csrf())
+            delete("/api/admin/friend-requests/{id}", fixture.requested.id).with(user(admin)).with(csrf())
         ).andExpect(status().isNoContent)
 
         mockMvc.perform(
-            delete("/api/admin/friendships/${fixture.accepted.id}").with(user(admin)).with(csrf())
+            delete("/api/admin/friendships/{id}", fixture.accepted.id).with(user(admin)).with(csrf())
         ).andExpect(status().isNoContent)
 
         mockMvc.perform(
-            delete("/api/admin/friend-restrictions/${fixture.blocked.id}").with(user(admin)).with(csrf())
+            delete("/api/admin/friend-restrictions/{id}", fixture.blocked.id).with(user(admin)).with(csrf())
         ).andExpect(status().isNoContent)
 
         relationRepository.flush()

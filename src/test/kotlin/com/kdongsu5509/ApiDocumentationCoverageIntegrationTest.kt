@@ -40,7 +40,7 @@ class ApiDocumentationCoverageIntegrationTest : WebIntegrationTestSupport() {
     documented("admin-failed-notifications", get("/api/admin/failed-notifications"))
     documented("admin-failed-notification-detail", get("/api/admin/failed-notifications/{id}", id))
     documented("admin-failed-notification-delete", delete("/api/admin/failed-notifications/{id}", id))
-    documented("admin-failed-notification-redelivery", post("/api/admin/failed-notifications/redelivery-jobs"))
+    documented("admin-failed-notification-redelivery-all", post("/api/admin/failed-notifications/redelivery-jobs"))
         documented("admin-failed-notification-redelivery-detail", post("/api/admin/failed-notifications/{id}/redelivery-jobs", id))
     documented("admin-friend-requests", get("/api/admin/friend-requests"))
     documented("admin-friendships", get("/api/admin/friendships"))

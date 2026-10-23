@@ -182,7 +182,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
         val relation = saveRelation(one, other, FriendRelationStatus.REQUESTED, message = message)
 
         // when & then
-        mockMvc.perform(get("/api/friends/requests/${relation.id}").with(user(principalOf(me))))
+        mockMvc.perform(get("/api/friends/requests/{id}", relation.id).with(user(principalOf(me))))
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.imhereResponseCode").value("FRIEND-002"))
     }
@@ -197,7 +197,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            post("/api/friends/requests/${relation.id}/accept")
+            post("/api/friends/requests/{id}/accept", relation.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isOk)
@@ -226,7 +226,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            post("/api/friends/requests/${relation.id}/accept")
+            post("/api/friends/requests/{id}/accept", relation.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isBadRequest)
@@ -245,7 +245,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            post("/api/friends/requests/${relation.id}/reject")
+            post("/api/friends/requests/{relationId}/reject", relation.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isOk)
@@ -271,7 +271,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            delete("/api/friends/requests/${relation.id}")
+            delete("/api/friends/requests/{id}", relation.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isOk)
@@ -289,7 +289,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            delete("/api/friends/requests/${relation.id}/sent")
+            delete("/api/friends/requests/{id}/sent", relation.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isOk)
@@ -307,7 +307,7 @@ class FriendRequestControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            delete("/api/friends/requests/${relation.id}/sent")
+            delete("/api/friends/requests/{id}/sent", relation.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isForbidden)

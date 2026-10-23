@@ -115,6 +115,7 @@ dependencies {
     swaggerUI 'org.webjars:swagger-ui:5.32.6'
     runtimeOnly 'org.springframework.modulith:spring-modulith-actuator'
     runtimeOnly 'org.springframework.modulith:spring-modulith-observability'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
 }
 
 kotlin {
@@ -175,6 +176,10 @@ tasks.withType(GenerateSwaggerUI).configureEach {
 tasks.matching { it.name == "openapi3" }.configureEach {
     doFirst {
         delete file("build/api-spec")
+    }
+    doLast {
+        def spec = file("build/api-spec/openapi3.yaml")
+        spec.text = spec.text.replaceAll(/(?m)^(\s*operationId: .*?)-+\s*$/, '$1')
     }
 }
 

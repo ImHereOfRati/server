@@ -177,20 +177,20 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            get("/api/friends/restrictions/target/${blockedByMe.id}").with(user(principalOf(me)))
+            get("/api/friends/restrictions/target/{targetUserId}", blockedByMe.id).with(user(principalOf(me)))
         ).andExpect(status().isOk).andExpect(jsonPath("$.data").value(true))
 
         mockMvc.perform(
-            get("/api/friends/restrictions/target/${expiredTarget.id}").with(user(principalOf(me)))
+            get("/api/friends/restrictions/target/{targetUserId}", expiredTarget.id).with(user(principalOf(me)))
         ).andExpect(status().isOk).andExpect(jsonPath("$.data").value(false))
 
         // 내가 당한 차단은 내가 건 제한이 아니므로 false다.
         mockMvc.perform(
-            get("/api/friends/restrictions/target/${blockerOfMe.id}").with(user(principalOf(me)))
+            get("/api/friends/restrictions/target/{targetUserId}", blockerOfMe.id).with(user(principalOf(me)))
         ).andExpect(status().isOk).andExpect(jsonPath("$.data").value(false))
 
         mockMvc.perform(
-            get("/api/friends/restrictions/target/${me.id}").with(user(principalOf(me)))
+            get("/api/friends/restrictions/target/{targetUserId}", me.id).with(user(principalOf(me)))
         ).andExpect(status().isOk).andExpect(jsonPath("$.data").value(false))
     }
 
@@ -204,7 +204,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            delete("/api/friends/restrictions/blocked-users/${target.id}")
+            delete("/api/friends/restrictions/blocked-users/{targetUserId}", target.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isOk)
@@ -222,7 +222,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            delete("/api/friends/restrictions/blocked-users/${blocker.id}")
+            delete("/api/friends/restrictions/blocked-users/{targetUserId}", blocker.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isForbidden)
@@ -242,7 +242,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            delete("/api/friends/restrictions/blocked-users/${friend.id}")
+            delete("/api/friends/restrictions/blocked-users/{targetUserId}", friend.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isBadRequest)
@@ -261,7 +261,7 @@ class FriendRestrictionControllerIntegrationTest : WebIntegrationTestSupport() {
 
         // when & then
         mockMvc.perform(
-            delete("/api/friends/restrictions/blocked-users/${stranger.id}")
+            delete("/api/friends/restrictions/blocked-users/{targetUserId}", stranger.id)
                 .with(user(principalOf(me)))
                 .with(csrf())
         ).andExpect(status().isOk)

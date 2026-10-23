@@ -261,14 +261,6 @@ jobs:
             --port 22 \
             --cidr ${{ steps.ip.outputs.runner_ip }}/32 || true
 
-      - name: Open port 80 for Let's Encrypt HTTP-01 challenge
-        run: |
-          aws ec2 authorize-security-group-ingress \
-            --group-id "$EC2_SECURITY_GROUP_ID" \
-            --protocol tcp \
-            --port 80 \
-            --cidr 0.0.0.0/0 || true
-
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -403,15 +395,6 @@ jobs:
             --protocol tcp \
             --port 22 \
             --cidr ${{ steps.ip.outputs.runner_ip }}/32 || true
-
-      - name: Close port 80 opened for Let's Encrypt
-        if: always()
-        run: |
-          aws ec2 revoke-security-group-ingress \
-            --group-id "$EC2_SECURITY_GROUP_ID" \
-            --protocol tcp \
-            --port 80 \
-            --cidr 0.0.0.0/0 || true
 
       - name: Cleanup runner temp files
         if: always()

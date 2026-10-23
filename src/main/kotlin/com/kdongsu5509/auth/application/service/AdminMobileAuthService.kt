@@ -40,17 +40,22 @@ class AdminAuthService(
         .maximumSize(10_000)
         .expireAfterWrite(Duration.ofSeconds(properties.challengeExpirationSeconds))
         .build()
+    private val usedTotpCounters: Cache<Long, Boolean> = Caffeine.newBuilder()
+        .maximumSize(100)
+        .expireAfterWrite(Duration.ofMinutes(2))
+        .build()
+
     fun begin(admin: String, password: String, clientIp: String = "unknown"): AdminChallengeResponse {
-        loginAttemptService.ensureNotBlocked(admin, clientIp)
+        val subject = if (admin == adminId) admin else UNKNOWN_SUBJECT
+        loginAttemptService.ensureNotBlocked(subject, clientIp)
 
         if (admin != adminId || properties.passwordHash.isBlank() || !passwordEncoder.matches(password, properties.passwordHash)) {
-            loginAttemptService.recordFailure(admin, clientIp)
+            loginAttemptService.recordFailure(subject, clientIp)
             if (admin == adminId) {
                 log.warn("Admin login rate limit reached for adminId={} from clientIp={}", admin, clientIp)
             }
             reject("Invalid administrator credentials")
         }
-        loginAttemptService.recordSuccess(admin, clientIp)
         val challenge = UUID.randomUUID().toString()
         challenges.put(
             challenge,
@@ -59,7 +64,7 @@ class AdminAuthService(
         return AdminChallengeResponse(challenge, properties.challengeExpirationSeconds)
     }
 
-    fun verify(challenge: String, code: String): AdminTokenResponse {
+    fun verify(challenge: String, code: String, clientIp: String = "unknown"): AdminTokenResponse {
         val state = challenges.getIfPresent(challenge)
         if (state == null || state.expiresAt.isBefore(Instant.now())) {
             reject("Invalid MFA code")
@@ -68,6 +73,7 @@ class AdminAuthService(
             val nextAttempts = state.failedAttempts + 1
             if (nextAttempts >= MAX_MFA_FAILURES) {
                 challenges.invalidate(challenge)
+                loginAttemptService.recordFailure(adminId, clientIp)
                 log.warn("Admin MFA challenge invalidated after too many failures")
             } else {
                 challenges.put(challenge, state.copy(failedAttempts = nextAttempts))
@@ -75,6 +81,7 @@ class AdminAuthService(
             reject("Invalid MFA code")
         }
         challenges.invalidate(challenge)
+        loginAttemptService.recordSuccess(adminId, clientIp)
         val claims = claims()
         val access = issuer.createAdminAccessToken(claims)
         val refreshClaims = claims.copy(tokenId = UUID.randomUUID().toString())
@@ -113,6 +120,7 @@ class AdminAuthService(
 
     private companion object {
         const val MAX_MFA_FAILURES = 5
+        const val UNKNOWN_SUBJECT = "unknown-admin"
     }
 
 
@@ -123,8 +131,8 @@ class AdminAuthService(
         if (!normalized.matches(Regex("\\d{6}"))) return false
         val key = decodeBase32(secret)
         val counter = Instant.now().epochSecond / 30
-        return (-1L..1L).any { offset ->
-            val data = ByteBuffer.allocate(8).putLong(counter + offset).array()
+        val matched = (-1L..1L).map { counter + it }.firstOrNull { candidate ->
+            val data = ByteBuffer.allocate(8).putLong(candidate).array()
             val hash = Mac.getInstance("HmacSHA1").apply { init(SecretKeySpec(key, "HmacSHA1")) }.doFinal(data)
             val index = hash.last().toInt() and 0x0f
             val binary = ((hash[index].toInt() and 0x7f) shl 24) or
@@ -132,7 +140,8 @@ class AdminAuthService(
                 ((hash[index + 2].toInt() and 0xff) shl 8) or
                 (hash[index + 3].toInt() and 0xff)
             binary % 1_000_000 == normalized.toInt()
-        }
+        } ?: return false
+        return usedTotpCounters.asMap().putIfAbsent(matched, true) == null
     }
 
     private fun decodeBase32(value: String): ByteArray {

@@ -2,6 +2,7 @@ package com.kdongsu5509.admin
 
 import com.kdongsu5509.auth.application.service.AdminAuthService
 import com.kdongsu5509.auth.application.service.AdminLoginBlockedException
+import com.kdongsu5509.auth.security.shared.ClientIpResolver
 import com.kdongsu5509.auth.security.shared.ImHereUserDetails
 import com.kdongsu5509.friends.service.FriendRelationAdminCommandService
 import com.kdongsu5509.friends.service.FriendRelationAdminQueryService
@@ -60,7 +61,7 @@ class AdminWebController(
         session: HttpSession,
     ): String {
         return try {
-            val challenge = authService.begin(adminId, password, resolveClientIp(request)).challenge
+            val challenge = authService.begin(adminId, password, ClientIpResolver.resolve(request)).challenge
             session.setAttribute(CHALLENGE_KEY, challenge)
             "redirect:/admin/login"
         } catch (exception: AdminLoginBlockedException) {
@@ -85,7 +86,8 @@ class AdminWebController(
             return "redirect:/admin/login"
         }
         return try {
-            authService.verify(challenge, code)
+            authService.verify(challenge, code, ClientIpResolver.resolve(request))
+            request.changeSessionId()
             val principal = ImHereUserDetails(
                 email = adminId,
                 nickname = nickname,
@@ -200,9 +202,4 @@ class AdminWebController(
         const val CHALLENGE_KEY = "admin.mfa.challenge"
         const val ERROR_KEY = "admin.login.error"
     }
-
-    private fun resolveClientIp(request: HttpServletRequest): String =
-        request.getHeader("X-Real-IP")?.takeIf { it.isNotBlank() }
-            ?: request.getHeader("X-Forwarded-For")?.split(",")?.lastOrNull()?.trim()?.takeIf { !it.isNullOrBlank() }
-            ?: request.remoteAddr
 }

@@ -3,6 +3,7 @@ package com.kdongsu5509.auth.adapter.out.oauth
 import com.kdongsu5509.auth.adapter.out.oauth.dto.OIDCPublicKeyResponse
 import com.kdongsu5509.auth.application.port.out.OauthClientPort
 import com.kdongsu5509.shared.cache.CachePort
+import com.kdongsu5509.support.logger.logger
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import java.time.Duration
@@ -16,6 +17,8 @@ class OidcPublicKeyClient(
     companion object {
         private val CACHE_DURATION = Duration.ofDays(8)
     }
+
+    private val log = logger()
 
     override fun fetch(cacheKey: String, jwksUri: String): OIDCPublicKeyResponse? {
         val cached = cachePort.find(cacheKey, OIDCPublicKeyResponse::class.java)
@@ -44,6 +47,8 @@ class OidcPublicKeyClient(
                 .uri(jwksUri)
                 .retrieve()
                 .body(OIDCPublicKeyResponse::class.java)
+        }.onFailure { e ->
+            log.warn("OIDC 공개키 조회 실패: jwksUri={}, reason={}", jwksUri, e.toString())
         }.getOrNull()
     }
 }

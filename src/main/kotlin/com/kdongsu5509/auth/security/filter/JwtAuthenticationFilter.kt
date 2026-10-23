@@ -67,7 +67,7 @@ class JwtAuthenticationFilter(
                 return sendErrorResponse(response, e.errorCode as AuthException)
             } catch (e: Exception) {
                 log.error("Unexpected exception during authentication creation", e)
-                return sendErrorResponse(response, AuthException.IMHERE_ACCESS_DENIED, e.message)
+                return sendErrorResponse(response, AuthException.IMHERE_ACCESS_DENIED)
             }
         }
 

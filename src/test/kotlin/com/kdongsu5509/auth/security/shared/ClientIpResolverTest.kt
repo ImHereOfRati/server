@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.security
+package com.kdongsu5509.auth.security.shared
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName

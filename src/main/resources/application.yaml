@@ -1,9 +1,19 @@
 server:
   forward-headers-strategy: native
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        same-site: strict
 
 spring:
   application:
     name: imhere
+  http:
+    clients:
+      connect-timeout: 5s
+      read-timeout: 5s
 
   # 모든 ${VAR}에 로컬 기본값을 달아 두었다. 프로파일 없이 `bootRun`만 해도 뜬다.
   # 운영은 SPRING_PROFILES_ACTIVE=prod로 아래 prod 문서를 켜고, 그 문서가 값이
@@ -245,6 +255,12 @@ security:
 
 admin:
   id: ${ADMIN_ID}
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
 
 management:
   endpoints:

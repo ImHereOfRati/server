@@ -1,4 +1,4 @@
-package com.kdongsu5509.auth.security
+package com.kdongsu5509.auth.security.shared
 
 import jakarta.servlet.http.HttpServletRequest
 

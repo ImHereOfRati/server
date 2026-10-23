@@ -16,6 +16,7 @@ class AdminLoginAttemptService(
         }
     }
 
+    @Synchronized
     fun recordFailure(adminId: String, clientIp: String) {
         val attempts = (find(adminId, clientIp)?.failedAttempts ?: 0) + 1
         val blockedUntil = if (attempts >= MAX_FAILURES) {

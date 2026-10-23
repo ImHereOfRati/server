@@ -8,6 +8,8 @@ import com.kdongsu5509.auth.application.port.out.PublicKeyLoadPort
 import com.kdongsu5509.user.domain.OAuth2Provider
 import com.kdongsu5509.support.exception.throwIt
 import org.springframework.stereotype.Component
+import java.time.Duration
+import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class OIDCTokenPublicKeyAdapter(
@@ -27,10 +29,33 @@ class OIDCTokenPublicKeyAdapter(
     }
 
     private fun findAfterRefresh(cacheKey: String, jwksUri: String, kid: String): OIDCPublicKey {
+        if (!acquireRefreshSlot(cacheKey)) {
+            AuthException.OIDC_PUBLIC_KEY_NOT_FOUND.throwIt()
+        }
         val refreshedKeys = oauthClientPort.refresh(cacheKey, jwksUri)
             ?: AuthException.OIDC_PUBLIC_KEY_FETCH_FAILED.throwIt()
 
         return refreshedKeys.keys.firstOrNull { it.kid == kid }
             ?: AuthException.OIDC_PUBLIC_KEY_NOT_FOUND.throwIt()
     }
+
+    private fun acquireRefreshSlot(cacheKey: String): Boolean {
+        val now = System.nanoTime()
+        var acquired = false
+        lastRefreshNanos.compute(cacheKey) { _, last ->
+            if (last == null || now - last >= REFRESH_COOLDOWN_NANOS) {
+                acquired = true
+                now
+            } else {
+                last
+            }
+        }
+        return acquired
+    }
+
+    private companion object {
+        val REFRESH_COOLDOWN_NANOS: Long = Duration.ofMinutes(1).toNanos()
+    }
+
+    private val lastRefreshNanos = ConcurrentHashMap<String, Long>()
 }

@@ -23,9 +23,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.core.userdetails.User
-import org.springframework.security.core.userdetails.UserDetailsService
-import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
@@ -40,7 +37,6 @@ import org.springframework.security.config.annotation.web.invoke
 class SecurityConfig(
     private val securityWhiteList: SecurityWhiteList,
     private val imHereJwtTokenParserPort: ImHereTokenParserPort,
-    @param:Value("\${admin.id}") private val adminId: String,
     @param:Value("\${management.endpoints.web.base-path:/actuator}") private val managementBasePath: String,
 ) {
     private val permitAllPaths by lazy { securityWhiteList.permitAllPaths(managementBasePath) }
@@ -51,11 +47,6 @@ class SecurityConfig(
     fun activeUserMethodInterceptor(): Advisor = AuthorizationManagerBeforeMethodInterceptor(
         RestControllerMethodPointcut(), ActiveUserAuthorizationManager(permitAllPaths)
     )
-
-    @Bean fun userDetailsService(): UserDetailsService = UserDetailsService { email ->
-        if (email == adminId) User.withUsername(adminId).password("{noop}N/A").roles(UserRole.ADMIN.name).build()
-        else throw UsernameNotFoundException("User not found: $email")
-    }
 
     @Bean fun corsConfigurationSource(): CorsConfigurationSource = CorsConfiguration().apply {
         allowedOrigins = securityWhiteList.corsAllowedOrigins

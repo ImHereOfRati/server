@@ -158,7 +158,7 @@ class JwtAuthenticationFilterTest {
 
         verify(filterChain, never()).doFilter(request, response)
         assertThat(response.status).isEqualTo(AuthException.IMHERE_ACCESS_DENIED.httpStatus.value())
-        assertThat(response.contentAsString).contains("claims broken")
+        assertThat(response.contentAsString).doesNotContain("claims broken")
     }
 
     @Test

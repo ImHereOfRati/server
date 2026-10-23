@@ -31,7 +31,11 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
         if (splitToken.size < 2) {
             AuthException.OIDC_FORMAT_INVALID.throwIt()
         }
-        val header = String(Base64.getUrlDecoder().decode(splitToken[0]))
+        val header = try {
+            String(Base64.getUrlDecoder().decode(splitToken[0]))
+        } catch (e: IllegalArgumentException) {
+            AuthException.OIDC_FORMAT_INVALID.throwIt(cause = e)
+        }
 
         val kidMatch = KID_PATTERN.find(header)
         return kidMatch?.groupValues?.get(1) ?: AuthException.OIDC_FORMAT_INVALID.throwIt()
@@ -51,7 +55,7 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
     override fun verifySignature(token: String, modulus: String, exponent: String): Jws<Claims> {
         val publicKey = createRSAPublicKey(modulus, exponent)
 
-        return runCatching {
+        val jws = runCatching {
             Jwts.parser()
                 .verifyWith(publicKey)
                 .build()
@@ -62,6 +66,10 @@ class JjwtOIDCTokenVerifyAdapter : OIDCIdTokenVerifyPort {
                 else -> AuthException.OIDC_SIGNATURE_INVALID.throwIt(cause = e)
             }
         }
+        if (jws.payload.expiration == null) {
+            AuthException.OIDC_FORMAT_INVALID.throwIt()
+        }
+        return jws
     }
 
     private fun verifyIssuer(actualIssuer: String, allowedIssuers: Collection<String>) {

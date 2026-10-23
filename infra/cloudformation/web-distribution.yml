@@ -23,12 +23,10 @@ Parameters:
     Description: S3 bucket holding the landing page and immutable React releases.
   ApiOriginDomain:
     Type: String
-    Default: ratiko.co.kr
+    Default: imhere-server.ratiko.co.kr
     Description: >-
-      Backend origin hostname. ADR-025 points this at the EC2 nginx apex so the
-      instance's Let's Encrypt certificate and server_name already match and
-      nginx needs no change. CloudFront validates this origin's certificate,
-      which is why the EC2 host still needs a publicly trusted cert.
+      Backend origin hostname. This must match the EC2 nginx server_name and
+      its publicly trusted certificate, which CloudFront validates over HTTPS.
   AcmCertificateArn:
     Type: String
     Description: >-
@@ -182,7 +180,7 @@ Resources:
           # /admin/** 과 actuator 경로는 여기에 없다. 일부러 뺐다.
           # 앱이 ADMIN_ALLOWED_IPS로 출발지 IP를 검사하는데, CloudFront를 거치면
           # 원 IP가 X-Forwarded-For 체인 뒤로 밀려 검사가 흐려진다. 관리자 경로는
-          # ratiko.co.kr(EC2 nginx)로 직접 접근한다.
+          # imhere-server.ratiko.co.kr(EC2 nginx)로 직접 접근한다.
 
   # 버킷 정책은 배포가 만들어진 뒤에 붙는다. SourceArn으로 이 배포만 허용한다.
   # 배포는 버킷을 문자열 도메인으로만 참조하므로 순환 의존이 생기지 않는다.
